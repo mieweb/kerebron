@@ -1,0 +1,12 @@
+{
+  "name": "@kerebron/extension-tables",
+  "tasks": {},
+  "imports": {},
+  "exports": {
+    ".": "./src/ExtensionTables.ts",
+    "./NodeTable": "./src/NodeTable.ts",
+    "./NodeTableRow": "./src/NodeTableRow.ts",
+    "./NodeTableHeader": "./src/NodeTableHeader.ts",
+    "./NodeTableCell": "./src/NodeTableCell.ts"
+  }
+}

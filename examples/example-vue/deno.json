@@ -1,0 +1,19 @@
+{
+  "name": "example-vue",
+  "tasks": {
+    "//dev": "deno test --watch mod.ts",
+    "dev": "deno run -A --unstable --node-modules-dir npm:vite",
+    "build": "deno run -A --unstable --node-modules-dir npm:vite build",
+    "build-watch": "deno run -A --unstable --node-modules-dir npm:vite build --watch",
+    "preview": "deno run -A --unstable --node-modules-dir npm:vite preview",
+    "serve": "deno run --allow-net --allow-read main.ts"
+  },
+  "imports": {
+    "vite": "npm:vite@6.2.2",
+    "vue-router": "npm:vue-router@4.5.0",
+    "vue": "npm:vue@3.5.13",
+    "@vitejs/plugin-vue": "npm:@vitejs/plugin-vue@5.2.3"
+  },
+  "exports": {},
+  "license": "MIT"
+}

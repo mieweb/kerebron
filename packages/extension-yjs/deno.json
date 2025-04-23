@@ -1,0 +1,8 @@
+{
+  "name": "@kerebron/extension-yjs",
+  "tasks": {},
+  "imports": {
+    "y-prosemirror": "npm:y-prosemirror@1.2.11"
+  },
+  "exports": "./src/ExtensionYjs.ts"
+}

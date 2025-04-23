@@ -1,0 +1,13 @@
+{
+  "name": "@kerebron/extension-automerge",
+  "tasks": {},
+  "imports": {
+    "@automerge/automerge": "npm:@automerge/automerge@2.2.4",
+
+    "@automerge/automerge-repo": "npm:@automerge/automerge-repo@1.1.9",
+    "@automerge/automerge-repo-network-websocket": "npm:@automerge/automerge-repo-network-websocket@^1.1.9",
+    "@automerge/automerge-repo-storage-indexeddb": "npm:@automerge/automerge-repo-storage-indexeddb@^1.1.9",
+    "@automerge/prosemirror": "npm:@automerge/prosemirror@0.0.13"
+  },
+  "exports": "./src/ExtensionAutomerge.ts"
+}

@@ -1,0 +1,6 @@
+{
+  "name": "@kerebron/extension-menu",
+  "tasks": {},
+  "imports": {},
+  "exports": "./src/ExtensionMenu.ts"
+}

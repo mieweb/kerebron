@@ -1,0 +1,11 @@
+{
+  "name": "@kerebron/editor",
+  "tasks": {},
+  "imports": {},
+  "exports": {
+    ".": "./src/mod.ts",
+    "./commands": "./src/commands/mod.ts",
+    "./plugins/input-rules": "./src/plugins/input-rules/mod.ts",
+    "./utilities": "./src/utilities/mod.ts"
+  }
+}

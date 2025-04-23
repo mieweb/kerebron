@@ -1,0 +1,8 @@
+{
+  "name": "@kerebron/extension-markdown",
+  "tasks": {},
+  "imports": {},
+  "exports": {
+    ".": "./src/ExtensionMarkdown.ts"
+  }
+}
