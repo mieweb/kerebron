@@ -1,4 +1,4 @@
-import { MarkSpec, Mark as PmMark } from 'prosemirror-model';
+import { Mark as PmMark, MarkSpec } from 'prosemirror-model';
 import { Mark } from '@kerebron/editor';
 
 export class MarkLink extends Mark {
@@ -8,7 +8,7 @@ export class MarkLink extends Mark {
   automerge = {
     markName: 'link',
     parsers: {
-      fromAutomerge: (mark: string/*: am.MarkValue*/) => {
+      fromAutomerge: (mark: string /*: am.MarkValue*/) => {
         if (typeof mark === 'string') {
           try {
             const value = JSON.parse(mark);

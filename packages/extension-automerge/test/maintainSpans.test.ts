@@ -6,6 +6,7 @@ import { assert, assertEquals, assertFalse, AssertionError } from '@std/assert';
 import { patchSpans } from '../src/maintainSpans.ts';
 import { describe, splitBlock } from './testUtils.ts';
 import { deepEqual } from 'node:assert';
+import process from "node:process";
 
 describe('the patchSpans function', () => {
   Deno.test('should update the spans after a delete', () => {

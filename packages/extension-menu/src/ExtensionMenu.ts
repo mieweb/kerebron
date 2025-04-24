@@ -7,7 +7,7 @@ import {
   MenuItemSpec,
   wrapItem,
 } from './menu.ts';
-import { Plugin, Command, EditorState, NodeSelection } from 'prosemirror-state';
+import { Command, EditorState, NodeSelection, Plugin } from 'prosemirror-state';
 import { MarkType, NodeType, Schema } from 'prosemirror-model';
 
 import { type CoreEditor, Extension } from '@kerebron/editor';
@@ -323,7 +323,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     }),
   );
 
-/*
+  /*
   function item(label: string, cmd: (state: EditorState) => boolean) {
     return new MenuItem({ label, select: cmd, run: cmd });
   }
@@ -344,7 +344,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     item('Make cell not-green', setCellAttr('background', null)),
   ];
   menu.splice(2, 0, [new Dropdown(tableMenu, { label: 'Table' })]);
-*/
+  */
 
   return [menu, blockMenu];
 }

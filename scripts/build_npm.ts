@@ -62,6 +62,7 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
       // see JS docs for overview and more options
       deno: true,
     },
+    importMap: 'deno.json',
     package: {
       // package.json properties
       name: json.name,
