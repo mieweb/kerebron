@@ -72,7 +72,6 @@
     "npm:prosemirror-history@1.4.1": "1.4.1",
     "npm:prosemirror-inputrules@1.5.0": "1.5.0",
     "npm:prosemirror-keymap@1.2.2": "1.2.2",
-    "npm:prosemirror-markdown@1.2.0": "1.2.0",
     "npm:prosemirror-model@1.24.1": "1.24.1",
     "npm:prosemirror-state@1.4.3": "1.4.3",
     "npm:prosemirror-transform@1.10.3": "1.10.3",
@@ -914,7 +913,7 @@
       "dependencies": [
         "@babel/parser",
         "@vue/shared",
-        "entities@4.5.0",
+        "entities",
         "estree-walker",
         "source-map-js"
       ]
@@ -1108,12 +1107,6 @@
     },
     "arg@4.1.3": {
       "integrity": "sha512-58S9QDqG0Xx27YwPSt9fJxivjYl432YCwfDMfZ+71RAqUrZef7LrKQZ3LHLOwCS4FLNBplP533Zx895SeOCHvA=="
-    },
-    "argparse@1.0.10": {
-      "integrity": "sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg==",
-      "dependencies": [
-        "sprintf-js@1.0.3"
-      ]
     },
     "argparse@2.0.1": {
       "integrity": "sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q=="
@@ -1401,7 +1394,7 @@
       "dependencies": [
         "domelementtype",
         "domhandler",
-        "entities@4.5.0"
+        "entities"
       ]
     },
     "domelementtype@2.3.0": {
@@ -1472,9 +1465,6 @@
       "dependencies": [
         "once"
       ]
-    },
-    "entities@1.1.2": {
-      "integrity": "sha512-f2LZMYl1Fzu7YSBKg+RoROelpOaNrcGmE9AZubeDfrCEia483oW4MI4VyFd5VNHIgQ/7qm1I0wUHK1eJnn2y2w=="
     },
     "entities@4.5.0": {
       "integrity": "sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw=="
@@ -1703,7 +1693,7 @@
         "domelementtype",
         "domhandler",
         "domutils",
-        "entities@4.5.0"
+        "entities"
       ]
     },
     "http-proxy-agent@7.0.2": {
@@ -1748,7 +1738,7 @@
       "integrity": "sha512-zHtQzGojZXTwZTHQqra+ETKd4Sn3vgi7uBmlPoXVWZqYvuKmtI0l/VZTjqGmJY9x88GGOaZ9+G9ES8hC4T4X8g==",
       "dependencies": [
         "jsbn",
-        "sprintf-js@1.1.3"
+        "sprintf-js"
       ]
     },
     "is-extglob@2.1.1": {
@@ -1904,16 +1894,10 @@
         "immediate@3.0.6"
       ]
     },
-    "linkify-it@2.2.0": {
-      "integrity": "sha512-GnAl/knGn+i1U/wjBz3akz2stz+HrHLsxMwHQGofCDfPvlf+gDKN58UtfmUquTY4/MXeE2x7k19KQmeoZi94Iw==",
-      "dependencies": [
-        "uc.micro@1.0.6"
-      ]
-    },
     "linkify-it@5.0.0": {
       "integrity": "sha512-5aHCbzQRADcdP+ATqnDuhhJ/MRIqDkZX5pyjFHRRysS8vZ5AbqGEoFIb6pYHPZ+L/OC2Lc+xT8uHVVR5CAK/wQ==",
       "dependencies": [
-        "uc.micro@2.1.0"
+        "uc.micro"
       ]
     },
     "locate-app@2.5.0": {
@@ -1963,26 +1947,13 @@
     "markdown-it@14.1.0": {
       "integrity": "sha512-a54IwgWPaeBCAAsv13YgmALOF1elABB08FxO9i+r4VFk5Vl4pKokRPeX8u5TCgSsPi6ec1otfLjdOpVcgbpshg==",
       "dependencies": [
-        "argparse@2.0.1",
-        "entities@4.5.0",
-        "linkify-it@5.0.0",
-        "mdurl@2.0.0",
+        "argparse",
+        "entities",
+        "linkify-it",
+        "mdurl",
         "punycode.js",
-        "uc.micro@2.1.0"
+        "uc.micro"
       ]
-    },
-    "markdown-it@8.4.2": {
-      "integrity": "sha512-GcRz3AWTqSUphY3vsUqQSFMbgR38a4Lh3GWlHRh/7MRwz8mcu9n2IO7HOh+bXHrR9kOPDl5RNCaEsrneb+xhHQ==",
-      "dependencies": [
-        "argparse@1.0.10",
-        "entities@1.1.2",
-        "linkify-it@2.2.0",
-        "mdurl@1.0.1",
-        "uc.micro@1.0.6"
-      ]
-    },
-    "mdurl@1.0.1": {
-      "integrity": "sha512-/sKlQJCBYVY9Ers9hqzKou4H6V5UWc/M59TH2dvkt+84itfnq7uFOMLpOiOS4ujvHP4etln18fmIxA5R5fll0g=="
     },
     "mdurl@2.0.0": {
       "integrity": "sha512-Lf+9+2r+Tdp5wXDXC4PcIBjTDtq4UKjCPMQhKIuzpJNW0b96kVqSwW0bT7FhRSfmAiFYgP+SCRvdrDozfh0U5w=="
@@ -2107,7 +2078,7 @@
     "parse5@7.2.1": {
       "integrity": "sha512-BuBYQYlv1ckiPdQi/ohiivi9Sagc9JG+Ozs0r7b/0iK3sKmrb0b9FdWdBbOdx6hBCM/F9Ir82ofnBhtZOjCRPQ==",
       "dependencies": [
-        "entities@4.5.0"
+        "entities"
       ]
     },
     "path-key@3.1.1": {
@@ -2197,13 +2168,6 @@
       "dependencies": [
         "prosemirror-state",
         "w3c-keyname"
-      ]
-    },
-    "prosemirror-markdown@1.2.0": {
-      "integrity": "sha512-YDn6ZetQ3Q5Eo9xcxXip+KN/EarUILSFz9KnYaOwgcy48yRsVcqGbmKmKq4BAZBknOHizTBetJUArmyhHH4Zzw==",
-      "dependencies": [
-        "markdown-it@8.4.2",
-        "prosemirror-model@1.24.1"
       ]
     },
     "prosemirror-model@1.24.1": {
@@ -2448,9 +2412,6 @@
     "split2@4.2.0": {
       "integrity": "sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg=="
     },
-    "sprintf-js@1.0.3": {
-      "integrity": "sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g=="
-    },
     "sprintf-js@1.1.3": {
       "integrity": "sha512-Oo+0REFV59/rz3gfJNKQiBlwfHaSESl1pcGyABQsnnIfWOFt6JNj5gCog2U6MLZ//IGYD+nA8nI+mTShREReaA=="
     },
@@ -2585,9 +2546,6 @@
     },
     "typescript@5.8.2": {
       "integrity": "sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ=="
-    },
-    "uc.micro@1.0.6": {
-      "integrity": "sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA=="
     },
     "uc.micro@2.1.0": {
       "integrity": "sha512-ARDJmphmdvUk6Glw7y9DQ2bFkKBHwQHLi2lsaH6PPmz/Ka9sFOBsBluozhDltWmnv9u/cF6Rt87znRTPV+yp/A=="
@@ -2854,6 +2812,27 @@
       "jsr:@deno/dnt@~0.41.3",
       "jsr:@std/assert@1",
       "jsr:@std/fs@^1.0.16",
+      "npm:@codemirror/autocomplete@6.18.6",
+      "npm:@codemirror/commands@6.8.1",
+      "npm:@codemirror/lang-cpp@latest",
+      "npm:@codemirror/lang-css@latest",
+      "npm:@codemirror/lang-html@latest",
+      "npm:@codemirror/lang-java@latest",
+      "npm:@codemirror/lang-javascript@6.2.3",
+      "npm:@codemirror/lang-json@latest",
+      "npm:@codemirror/lang-lezer@latest",
+      "npm:@codemirror/lang-markdown@latest",
+      "npm:@codemirror/lang-php@latest",
+      "npm:@codemirror/lang-python@latest",
+      "npm:@codemirror/lang-rust@latest",
+      "npm:@codemirror/lang-sql@latest",
+      "npm:@codemirror/lang-wast@latest",
+      "npm:@codemirror/lang-xml@latest",
+      "npm:@codemirror/language@6.11.0",
+      "npm:@codemirror/legacy-modes@6.5.0",
+      "npm:@codemirror/search@6.5.10",
+      "npm:@codemirror/state@6.5.2",
+      "npm:@codemirror/view@6.36.5",
       "npm:lib0@0.2.42",
       "npm:markdown-it@14.1.0",
       "npm:orderedmap@latest",
@@ -2863,11 +2842,11 @@
       "npm:prosemirror-history@1.4.1",
       "npm:prosemirror-inputrules@1.5.0",
       "npm:prosemirror-keymap@1.2.2",
-      "npm:prosemirror-markdown@1.2.0",
       "npm:prosemirror-model@1.24.1",
       "npm:prosemirror-state@1.4.3",
       "npm:prosemirror-transform@1.10.3",
       "npm:prosemirror-view@1.33.6",
+      "npm:thememirror@2.0.1",
       "npm:y-protocols@1.0.6",
       "npm:y-websocket@2.1.0",
       "npm:yjs@13.6.24"
@@ -2895,32 +2874,6 @@
           "npm:@automerge/automerge-repo@1.1.9",
           "npm:@automerge/automerge@2.2.4",
           "npm:@automerge/prosemirror@0.0.13"
-        ]
-      },
-      "packages/extension-codemirror": {
-        "dependencies": [
-          "npm:@codemirror/autocomplete@6.18.6",
-          "npm:@codemirror/commands@6.8.1",
-          "npm:@codemirror/lang-cpp@latest",
-          "npm:@codemirror/lang-css@latest",
-          "npm:@codemirror/lang-html@latest",
-          "npm:@codemirror/lang-java@latest",
-          "npm:@codemirror/lang-javascript@6.2.3",
-          "npm:@codemirror/lang-json@latest",
-          "npm:@codemirror/lang-lezer@latest",
-          "npm:@codemirror/lang-markdown@latest",
-          "npm:@codemirror/lang-php@latest",
-          "npm:@codemirror/lang-python@latest",
-          "npm:@codemirror/lang-rust@latest",
-          "npm:@codemirror/lang-sql@latest",
-          "npm:@codemirror/lang-wast@latest",
-          "npm:@codemirror/lang-xml@latest",
-          "npm:@codemirror/language@6.11.0",
-          "npm:@codemirror/legacy-modes@6.5.0",
-          "npm:@codemirror/search@6.5.10",
-          "npm:@codemirror/state@6.5.2",
-          "npm:@codemirror/view@6.36.5",
-          "npm:thememirror@2.0.1"
         ]
       },
       "packages/extension-yjs": {
