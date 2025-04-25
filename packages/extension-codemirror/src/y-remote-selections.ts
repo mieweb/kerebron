@@ -126,7 +126,7 @@ export class YRemoteSelectionsPluginValue {
 
   constructor(view: cmView.EditorView) {
     this.conf = view.state.facet(ySyncFacet);
-    this._listener = ({ added, updated, removed }, s, t) => {
+    this._listener = ({ added, updated, removed }) => {
       const clients = added.concat(updated).concat(removed);
       if (
         clients.findIndex((id: number) =>
@@ -188,6 +188,11 @@ export class YRemoteSelectionsPluginValue {
       if (clientId === awareness.doc.clientID) {
         return;
       }
+
+      if (!state.user) {
+        return;
+      }
+
       const cursor = state['cm-cursor'];
       if (cursor == null || cursor.anchor == null || cursor.head == null) {
         return;
