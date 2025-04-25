@@ -76,7 +76,7 @@ export class NodeCodeMirror extends Node {
               {
                 'type': 'code_block',
                 'attrs': {
-                  'lang': null,
+                  'lang': schema.topNodeType.spec.defaultAttrs?.lang,
                 },
                 'content': [
                   {

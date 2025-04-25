@@ -8,6 +8,9 @@ export class NodeDocumentCode extends Node {
   override getNodeSpec(): NodeSpec {
     return {
       content: 'code_block',
+      defaultAttrs: {
+        'lang': this.config.lang || null,
+      },
       EMPTY_DOC: {
         'type': this.name,
         'content': [
