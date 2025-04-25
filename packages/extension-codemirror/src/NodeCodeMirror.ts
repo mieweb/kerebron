@@ -190,8 +190,9 @@ export class NodeCodeMirror extends Node {
     return [
       codeMirrorBlockPlugin({
         provider: this.config.provider,
-        ...defaultSettings,
         languageWhitelist: this.config.languageWhitelist || LANGS,
+        ...defaultSettings,
+        readOnly: this.config.readOnly,
         languageLoaders: { ...languageLoaders, ...legacyLanguageLoaders },
         undo: () => {
           editor.chain().undo().run();

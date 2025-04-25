@@ -100,7 +100,7 @@ export default {
         new ExtensionMarkdown(),
         new NodeDocumentCode({ lang: 'yaml' }),
         new ExtensionYjs({ ydoc, provider: wsProvider }),
-        new NodeCodeMirror({ ydoc, provider: wsProvider, languageWhitelist: ['yaml'] }),
+        new NodeCodeMirror({ ydoc, provider: wsProvider, languageWhitelist: ['yaml'], readOnly: false }),
       ],
       // content: pmDoc
     });
