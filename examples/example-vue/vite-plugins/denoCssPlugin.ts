@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 export function denoCssPlugin(workspaceRoot: string) {
   function addCssAliasesFromDenoDir(denoDirPath: string, config) {
     const content = fs.readFileSync(path.resolve(denoDirPath, 'deno.json'));
