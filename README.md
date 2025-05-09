@@ -1,7 +1,15 @@
 # Kerebron - Prosemirror based online editor kit
 
+
+## Watch a Demo
+<a href="https://youtube.com/shorts/OdJjhAPj-wA?feature=share" target="_blank">
+  <img src="https://github.com/user-attachments/assets/b63ec84a-0ed2-4f98-920c-76f6d3215168" alt="Alt Text" width="200">
+</a>
+
+## Playground Demo
 [playground](https://editor-test.gitgis.com) - be nice.
 
+## Overview
 Using vanilla Prosemirror modules is often impossible because of
 incompatibilities.
 
