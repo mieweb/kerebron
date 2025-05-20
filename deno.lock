@@ -1,6 +1,7 @@
 {
   "version": "4",
   "specifiers": {
+    "jsr:@b-fuze/deno-dom@*": "0.1.49",
     "jsr:@david/code-block-writer@^13.0.2": "13.0.3",
     "jsr:@deno/cache-dir@~0.10.3": "0.10.3",
     "jsr:@deno/dnt@~0.41.3": "0.41.3",
@@ -83,8 +84,10 @@
     "npm:vite@6.2.2": "6.2.2",
     "npm:vue-router@4.5.0": "4.5.0_vue@3.5.13__typescript@5.8.2_typescript@5.8.2",
     "npm:vue@3.5.13": "3.5.13_typescript@5.8.2",
+    "npm:w3c-xmlserializer@*": "5.0.0",
     "npm:webdriverio@9.12.1": "9.12.1",
     "npm:webdriverio@^9.4.5": "9.12.1",
+    "npm:xmldom@*": "0.6.0",
     "npm:y-leveldb@latest": "0.1.2_yjs@13.6.24",
     "npm:y-prosemirror@1.2.11": "1.2.11_prosemirror-model@1.24.1_prosemirror-state@1.4.3_prosemirror-view@1.33.6_y-protocols@1.0.6__yjs@13.6.24_yjs@13.6.24",
     "npm:y-protocols@1.0.6": "1.0.6_yjs@13.6.24",
@@ -92,6 +95,9 @@
     "npm:yjs@13.6.24": "13.6.24"
   },
   "jsr": {
+    "@b-fuze/deno-dom@0.1.49": {
+      "integrity": "45c40175fdd1e74ab2d4b54c4fdaabbad6e5b76ee28df12a48e076b3fa7901a9"
+    },
     "@david/code-block-writer@13.0.3": {
       "integrity": "f98c77d320f5957899a61bfb7a9bead7c6d83ad1515daee92dbacc861e13bb7f"
     },
@@ -2616,6 +2622,12 @@
     "w3c-keyname@2.2.8": {
       "integrity": "sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ=="
     },
+    "w3c-xmlserializer@5.0.0": {
+      "integrity": "sha512-o8qghlI8NZHU1lLPrpi2+Uq7abh4GGPpYANlalzWxyWteJOCsr/P+oPBA49TOLu5FTZO4d3F9MnWJfiMo4BkmA==",
+      "dependencies": [
+        "xml-name-validator"
+      ]
+    },
     "wait-port@1.1.0": {
       "integrity": "sha512-3e04qkoN3LxTMLakdqeWth8nih8usyg+sf1Bgdf9wwUkp05iuK1eSY/QpLvscT/+F/gA89+LpUmmgBtesbqI2Q==",
       "dependencies": [
@@ -2720,6 +2732,12 @@
     },
     "ws@8.18.1": {
       "integrity": "sha512-RKW2aJZMXeMxVpnZ6bck+RswznaxmzdULiBr6KY7XkTnW8uvt0iT9H5DkHUChXrc+uurzwa0rVI16n/Xzjdz1w=="
+    },
+    "xml-name-validator@5.0.0": {
+      "integrity": "sha512-EvGK8EJ3DhaHfbRlETOWAS5pO9MZITeauHKJyb8wyajUfQUenkIg2MvLDTZ4T/TgIcm3HU0TFBgWWboAZ30UHg=="
+    },
+    "xmldom@0.6.0": {
+      "integrity": "sha512-iAcin401y58LckRZ0TkI4k0VSM1Qg0KGSc3i8rU+xrxe19A/BN1zHyVSJY7uoutVlaTSzYyk/v5AmkewAP7jtg=="
     },
     "xstate@5.19.2": {
       "integrity": "sha512-B8fL2aP0ogn5aviAXFzI5oZseAMqN00fg/TeDa3ZtatyDcViYLIfuQl4y8qmHCiKZgGEzmnTyNtNQL9oeJE2gw=="

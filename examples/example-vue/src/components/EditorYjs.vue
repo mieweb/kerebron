@@ -10,6 +10,7 @@
         <button :disabled="!editor.can().setCodeBlock().run()" @click="editor.chain().setCodeBlock().run()">setCodeBlock</button>
         <button :disabled="!editor.can().insertTable().run()" @click="editor.chain().insertTable().run()">insertTable</button>
         <button @click="loadDoc">Simulate loadDoc</button>
+        <button @click="loadDoc2">loadDoc</button>
       </div>
       <div class="d-flex">
         <div ref="editor" class="w-50"></div>
@@ -44,6 +45,7 @@ import { WebsocketProvider } from 'y-websocket';
 import {CoreEditor} from "@kerebron/editor";
 import {ExtensionBasicEditor} from "@kerebron/extension-basic-editor";
 import {ExtensionMarkdown} from '@kerebron/extension-markdown';
+import {ExtensionOdt} from '@kerebron/extension-odt';
 import {ExtensionTables} from '@kerebron/extension-tables';
 
 import {ExtensionMenu} from "@kerebron/extension-menu";
@@ -133,6 +135,7 @@ export default {
         new ExtensionBasicEditor(),
         new ExtensionMenu(),
         new ExtensionMarkdown(),
+        new ExtensionOdt(),
         new ExtensionTables(),
         new ExtensionYjs({ ydoc, provider: wsProvider }),
         new NodeCodeMirror({ ydoc, provider: wsProvider }),
@@ -158,6 +161,16 @@ export default {
   methods: {
     loadDoc() {
       this.editor.setDocument('# TEST \n\n1.  aaa **bold**\n2.  bbb\n\n```js\nconsole.log("TEST")\n```\n', 'text/x-markdown');
+    },
+    loadDoc2() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.onchange = async e => {
+        const file = e.target.files[0];
+        console.log('Selected file:', file);
+        this.editor.setDocument(await file.bytes(), file.type);
+      };
+      input.click();
     }
   }
 };

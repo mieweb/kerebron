@@ -44,12 +44,13 @@ function createDocument(
 
 export class CoreEditor extends EventTarget {
   public readonly options: Partial<EditorOptions> = {
-    element: document.createElement('div'),
+    element: null, // document.createElement('div'),
     extensions: [],
   };
   private extensionManager: ExtensionManager;
   private commandManager: CommandManager;
   public view!: EditorView;
+  public state!: EditorState
 
   constructor(options: Partial<EditorOptions> = {}) {
     super();
@@ -58,7 +59,7 @@ export class CoreEditor extends EventTarget {
       ...options,
     };
 
-    this.extensionManager = this.createExtensionManager();
+    this.extensionManager = new ExtensionManager(this.options.extensions, this);
 
     // const content = this.options.content ? this.options.content : {
     //   type: this.extensionManager.schema.topNodeType.name,
@@ -77,16 +78,8 @@ export class CoreEditor extends EventTarget {
     this.setupPlugins();
   }
 
-  private createExtensionManager() {
-    return new ExtensionManager(this.options.extensions, this);
-  }
-
   public get schema() {
     return this.extensionManager.schema;
-  }
-
-  public get state(): EditorState {
-    return this.view.state;
   }
 
   public chain(): ChainedCommands {
@@ -105,36 +98,42 @@ export class CoreEditor extends EventTarget {
       { errorOnInvalidContent: false },
     );
 
-    const state = EditorState.create({ doc });
+    this.state = EditorState.create({ doc });
 
-    this.view = new EditorView(this.options.element, {
-      state,
-      dispatchTransaction: (tx: Transaction) => this.dispatchTransaction(tx),
-    });
+    if (this.options.element) {
+      this.view = new EditorView(this.options.element, {
+        state: this.state,
+        dispatchTransaction: (tx: Transaction) => this.dispatchTransaction(tx),
+      });
+    }
   }
 
   private dispatchTransaction(transaction: Transaction) {
-    const nextState = this.state.apply(transaction);
-    this.view.updateState(nextState);
-    const event = new CustomEvent('transaction', {
-      detail: {
-        editor: this,
-        transaction,
-      },
-    });
+    this.state = this.state.apply(transaction);
+    if (this.view) {
+      this.view.updateState(this.state);
+      const event = new CustomEvent('transaction', {
+        detail: {
+          editor: this,
+          transaction,
+        },
+      });
+    }
     this.dispatchEvent(event);
   }
 
   private setupPlugins() {
-    const newState = this.state.reconfigure({
+    this.state = this.state.reconfigure({
       plugins: this.extensionManager.plugins,
     });
 
-    this.view.updateState(newState);
+    if (this.view) {
+      this.view.updateState(this.state);
 
-    this.view.setProps({
-      nodeViews: this.extensionManager.nodeViews,
-    });
+      this.view.setProps({
+        nodeViews: this.extensionManager.nodeViews,
+      });
+    }
   }
 
   public getJSON(): JSONContent {
@@ -174,12 +173,14 @@ export class CoreEditor extends EventTarget {
       );
     }
 
-    const newState = EditorState.create({
+    this.state = EditorState.create({
       doc,
-      plugins: this.view.state.plugins,
-      storedMarks: this.view.state.storedMarks,
+      plugins: this.state.plugins,
+      storedMarks: this.state.storedMarks,
     });
-    this.view.updateState(newState);
+    if (this.view) {
+      this.view.updateState(this.state);
+    }
 
     const event = new CustomEvent('doc:loaded', {
       detail: {

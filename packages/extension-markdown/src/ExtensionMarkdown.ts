@@ -18,7 +18,7 @@ function listIsTight(tokens: readonly Token[], i: number) {
 export class ExtensionMarkdown extends Extension {
   name = 'markdown';
 
-  getConverters(editor: CoreEditor, schema: Schema): Record<string, Converter> {
+  getConverters(schema: Schema): Record<string, Converter> {
     const domSerializer = DOMSerializer.fromSchema(schema);
     return {
       'text/x-markdown': {
@@ -26,7 +26,9 @@ export class ExtensionMarkdown extends Extension {
           /// A serializer for the [basic schema](#schema).
           const defaultMarkdownSerializer = new MarkdownSerializer({
             html(state, node) {
-              const element = domSerializer.serializeNode(node);
+              const element = domSerializer.serializeNode(node, {
+                document: globalThis.document
+              });
               const xmlSerializer = new XMLSerializer();
               const html = xmlSerializer.serializeToString(element) + '\n';
               state.write(html.replace(/\sxmlns="[^"]*"/, ''));
@@ -181,7 +183,7 @@ export class ExtensionMarkdown extends Extension {
           /// A parser parsing unextended [CommonMark](http://commonmark.org/),
           /// without inline HTML, and producing a document in the basic schema.
           const defaultMarkdownParser = new MarkdownParser(
-            editor.schema,
+            schema,
             MarkdownIt('commonmark', { html: false }),
             {
               blockquote: { block: 'blockquote' },

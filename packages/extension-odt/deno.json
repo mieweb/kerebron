@@ -1,0 +1,8 @@
+{
+  "name": "@kerebron/extension-odt",
+  "tasks": {},
+  "imports": {},
+  "exports": {
+    ".": "./src/ExtensionOdt.ts"
+  }
+}

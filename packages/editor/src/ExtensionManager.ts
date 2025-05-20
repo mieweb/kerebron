@@ -140,7 +140,7 @@ export class ExtensionManager {
         );
         converters = {
           ...converters,
-          ...extension.getConverters(this.editor, this.schema),
+          ...extension.getConverters(this.schema),
         };
         const nodeView = extension.getNodeView();
         if (nodeView) {
@@ -170,7 +170,7 @@ export class ExtensionManager {
         );
         converters = {
           ...converters,
-          ...extension.getConverters(this.editor, this.schema),
+          ...extension.getConverters(this.schema),
         };
       }
     }

@@ -10,8 +10,10 @@
     "packages/extension-automerge",
     "packages/extension-menu",
     "packages/extension-markdown",
+    "packages/extension-odt",
     "packages/extension-yjs",
-    "packages/extension-codemirror"
+    "packages/extension-codemirror",
+    "packages/odt-wasm"
   ],
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
