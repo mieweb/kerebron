@@ -43,10 +43,10 @@ pub fn unzip(zip_data: Vec<u8>) -> HashMap<String, Vec<u8>> {
     result
 }
 
-pub fn parseContent(xml_bytes: Vec<u8>) -> DocumentContent {
+pub fn parse_content(xml_bytes: Vec<u8>) -> DocumentContent {
     from_reader(&xml_bytes[..]).unwrap()
 }
 
-pub fn parseStyles(xml_bytes: Vec<u8>) -> DocumentStyles {
+pub fn parse_styles(xml_bytes: Vec<u8>) -> DocumentStyles {
     from_reader(&xml_bytes[..]).unwrap()
 }

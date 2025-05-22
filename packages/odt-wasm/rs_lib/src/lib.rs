@@ -15,13 +15,13 @@ pub fn unzip(zip_data: Vec<u8>) -> JsValue {
 }
 
 #[wasm_bindgen]
-pub fn parseContent(xml_bytes: Vec<u8>) -> JsValue {
-    to_value(&core::parseContent(xml_bytes)).unwrap()
+pub fn parse_content(xml_bytes: Vec<u8>) -> JsValue {
+    to_value(&core::parse_content(xml_bytes)).unwrap()
 }
 
 #[wasm_bindgen]
-pub fn parseStyles(xml_bytes: Vec<u8>) -> JsValue {
-    to_value(&core::parseStyles(xml_bytes)).unwrap()
+pub fn parse_styles(xml_bytes: Vec<u8>) -> JsValue {
+    to_value(&core::parse_styles(xml_bytes)).unwrap()
 }
 
 #[wasm_bindgen]

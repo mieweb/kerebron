@@ -118,8 +118,8 @@ export class CoreEditor extends EventTarget {
           transaction,
         },
       });
+      this.dispatchEvent(event);
     }
-    this.dispatchEvent(event);
   }
 
   private setupPlugins() {

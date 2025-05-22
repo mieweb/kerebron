@@ -36,12 +36,61 @@ const mainJson = await readDenoJson(workspaceRoot);
 
 await emptyDir('./npm');
 
+async function copyRecursive(src: string, dest: string) {
+  const stat = await Deno.lstat(src);
+
+  if (stat.isFile) {
+    await Deno.copyFile(src, dest);
+  } else if (stat.isDirectory) {
+    await Deno.mkdir(dest, { recursive: true });
+
+    for await (const entry of Deno.readDir(src)) {
+      const srcPath = `${src}/${entry.name}`;
+      const destPath = `${dest}/${entry.name}`;
+      await copyRecursive(srcPath, destPath);
+    }
+  } else if (stat.isSymlink) {
+    const target = await Deno.readLink(src);
+    await Deno.symlink(target, dest);
+  } else {
+    console.warn(`Skipping unsupported file type: ${src}`);
+  }
+}
+
 await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
   const exports = 'string' === typeof json.exports
     ? { '.': json.exports }
     : json.exports;
 
   if (Object.keys(exports).length === 0) {
+    return;
+  }
+
+  if (await exists(path.resolve(workspaceRoot, 'package.json'))) {
+    // Support for WASM which is currently not supported by DNT
+    const content = Deno.readFileSync(path.resolve(workspaceRoot, 'package.json'));
+    const packageJson = JSON.parse(new TextDecoder().decode(content));
+    
+    console.info(`Copying: ${workspaceRoot} (probably wasm)`);
+
+    packageJson.version = Deno.args[0]?.replace(/^v/, '');
+    packageJson.description = packageJson.description || mainJson.description;
+    packageJson.license = packageJson.license || mainJson.license;
+
+    const outDir = path.resolve('./npm', json.name);
+
+    Deno.mkdirSync(outDir, { recursive: true });
+
+    Deno.writeFileSync(
+      path.resolve(outDir, 'package.json'), 
+      new TextEncoder().encode(JSON.stringify(packageJson, null, 2))
+    );
+
+    if (Array.isArray(packageJson.files)) {
+      for (const file of packageJson.files) {
+        await copyRecursive(path.resolve(workspaceRoot, file), path.resolve(outDir, file));
+      }
+    }
     return;
   }
 
@@ -55,47 +104,51 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
     });
   }
 
-  await build({
-    entryPoints,
-    outDir: path.resolve('./npm', json.name),
-    shims: {
-      // see JS docs for overview and more options
-      deno: true,
-    },
-    importMap: 'deno.json',
-    package: {
-      // package.json properties
-      name: json.name,
-      version: Deno.args[0]?.replace(/^v/, ''),
-      description: json.description || mainJson.description,
-      license: json.license || mainJson.license,
-    },
-    async postBuild() {
-      Deno.copyFileSync('LICENSE', path.resolve('npm', json.name, 'LICENSE'));
-      Deno.copyFileSync(
-        'README.md',
-        path.resolve('npm', json.name, 'README.md'),
-      );
-      if (await exists(path.resolve(workspaceRoot, 'README.md'))) {
+  try {
+    await build({
+      entryPoints,
+      outDir: path.resolve('./npm', json.name),
+      shims: {
+        // see JS docs for overview and more options
+        deno: true,
+      },
+      importMap: 'deno.json',
+      package: {
+        // package.json properties
+        name: json.name,
+        version: Deno.args[0]?.replace(/^v/, ''),
+        description: json.description || mainJson.description,
+        license: json.license || mainJson.license,
+      },
+      async postBuild() {
+        Deno.copyFileSync('LICENSE', path.resolve('npm', json.name, 'LICENSE'));
         Deno.copyFileSync(
-          path.resolve(workspaceRoot, 'README.md'),
+          'README.md',
           path.resolve('npm', json.name, 'README.md'),
         );
-      }
-      if (await exists(path.resolve(workspaceRoot, 'assets'))) {
-        await copy(
-          path.resolve(workspaceRoot, 'assets'),
-          path.resolve('npm', json.name, 'assets'),
-          { overwrite: true, preserveTimestamps: true },
-        );
-      }
-    },
-    mappings: {},
-    compilerOptions: {
-      lib: ['ES2021'],
-    },
-    typeCheck: false,
-    test: false,
-    scriptModule: false,
-  });
+        if (await exists(path.resolve(workspaceRoot, 'README.md'))) {
+          Deno.copyFileSync(
+            path.resolve(workspaceRoot, 'README.md'),
+            path.resolve('npm', json.name, 'README.md'),
+          );
+        }
+        if (await exists(path.resolve(workspaceRoot, 'assets'))) {
+          await copy(
+            path.resolve(workspaceRoot, 'assets'),
+            path.resolve('npm', json.name, 'assets'),
+            { overwrite: true, preserveTimestamps: true },
+          );
+        }
+      },
+      mappings: {},
+      compilerOptions: {
+        lib: ['ES2021'],
+      },
+      typeCheck: false,
+      test: false,
+      scriptModule: false,
+    });
+  } catch (err) {
+    console.error(err);
+  }
 });

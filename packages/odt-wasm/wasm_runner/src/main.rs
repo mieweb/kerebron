@@ -1,7 +1,7 @@
 use std::fs;
 use rs_lib::core::unzip;
-use rs_lib::core::parseContent;
-use rs_lib::core::parseStyles;
+use rs_lib::core::parse_content;
+use rs_lib::core::parse_styles;
 
 fn main() -> std::io::Result<()> {
     let data: Vec<u8> = fs::read("./example-document.odt")?;
@@ -11,8 +11,8 @@ fn main() -> std::io::Result<()> {
 
     // println!("files {:#?} ", files);
 
-    let content = parseContent(files.get("content.xml").unwrap().to_vec());
-    let styles = parseStyles(files.get("styles.xml").unwrap().to_vec());
+    let content = parse_content(files.get("content.xml").unwrap().to_vec());
+    let styles = parse_styles(files.get("styles.xml").unwrap().to_vec());
 
     println!("content {:#?} ", content.body.text.list);
 

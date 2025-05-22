@@ -46,3 +46,10 @@ To generate npm packages
 ```shell
 deno -A ./scripts/build_npm.ts
 ```
+
+## Run through docker
+
+```
+docker build . -t editor-test
+docker run -it -p 8000:8000 -v $PWD:/usr/src/app editor-test
+```

@@ -1,0 +1,11 @@
+{
+  "name": "@kerebron/odt-wasm",
+  "type": "module",
+  "main": "./lib/rs_lib.js",
+  "files": ["lib/"],
+  "exports": {
+    ".": {
+      "import": "./lib/rs_lib.js"
+    }
+  }
+}

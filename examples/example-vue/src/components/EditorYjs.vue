@@ -1,8 +1,8 @@
 <template>
   <a href="/">Main</a>
 
-  <div class="d-flex flex-column" style="height: 90vh">
-    <div class="h-50">
+  <div class="d-flex flex-row" style="height: 90vh">
+    <div class="w-50" style="max-height: 100%; overflow: scroll;">
       <div v-if="editor">
         <button :disabled="!editor.can().toggleStrong().run()" @click="editor.chain().toggleStrong().run()">toggleStrong</button>
         <button :disabled="!editor.can().setHorizontalRule().run()" @click="editor.chain().setHorizontalRule().run()">setHorizontalRule</button>
@@ -12,24 +12,22 @@
         <button @click="loadDoc">Simulate loadDoc</button>
         <button @click="loadDoc2">loadDoc</button>
       </div>
-      <div class="d-flex">
-        <div ref="editor" class="w-50"></div>
-        <div class="w-50">
+      <div ref="editor" class="w-50"></div>
+    </div>
+    <div class="w-50">
+      <div class="h-33">
+        <div>
           <h5>Markdown</h5>
           <pre>{{md}}</pre>
         </div>
       </div>
-    </div>
-    <div class="h-50">
-      <div class="d-flex">
-        <div class="w-50">
-          <h5>Prosemirror JSON</h5>
-          <pre>{{ JSON.stringify(lastValue, null, 2) }}</pre>
-        </div>
-        <div class="w-50">
-          <h5>ydoc</h5>
-          <pre>{{ JSON.stringify(ydoc, null, 2) }}</pre>
-        </div>
+      <div class="h-33">
+        <h5>Prosemirror JSON</h5>
+        <pre>{{ JSON.stringify(lastValue, null, 2) }}</pre>
+      </div>
+      <div class="h-33">
+        <h5>ydoc</h5>
+        <pre>{{ JSON.stringify(ydoc, null, 2) }}</pre>
       </div>
     </div>
   </div>
@@ -179,6 +177,10 @@ export default {
 </script>
 
 <style>
+.h-33 {
+  max-height: 33%;
+  overflow: scroll;
+}
 table {
   border: 1px solid red;
 }
