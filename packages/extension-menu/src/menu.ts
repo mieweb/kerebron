@@ -193,7 +193,7 @@ export class Dropdown implements MenuElement {
   /// Render the dropdown menu and sub-items.
   render(view: EditorView) {
     let content = renderDropdownItems(this.content, view);
-    let win = view.dom.ownerDocument.defaultView || window;
+    let win = view.dom.ownerDocument.defaultView;
 
     let label = document.createElement('div');
     label.classList.add(prefix + '-dropdown');
@@ -313,7 +313,7 @@ export class DropdownSubmenu implements MenuElement {
   /// Renders the submenu.
   render(view: EditorView) {
     const items = renderDropdownItems(this.content, view);
-    const win = view.dom.ownerDocument.defaultView || window;
+    const win = view.dom.ownerDocument.defaultView;
 
     const label = document.createElement('div');
     label.classList.add(prefix + '-submenu-label');
