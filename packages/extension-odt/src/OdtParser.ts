@@ -114,12 +114,8 @@ class OdtParseState {
     private readonly stylesTree: StylesTree,
     private readonly automaticStyles: AutomaticStyles,
   ) {
-    this.stack = [{
-      type: schema.topNodeType,
-      attrs: null,
-      content: [],
-      marks: Mark.none,
-    }];
+    this.stack = [];
+    this.openNode(schema.topNodeType, null);
   }
 
   top() {
@@ -140,7 +136,7 @@ class OdtParseState {
     //   nodes[nodes.length - 1] = merged;
     // } else
 
-    // console.log('addtext', node);
+    // console.log('addtext', top.type.name, "'" + text + "'");
     nodes.push(node);
   }
 
@@ -167,6 +163,7 @@ class OdtParseState {
 
   // Wrap subsequent content in a node of the given type.
   openNode(type: NodeType, attrs: Attrs | null) {
+    // console.log('openNode', type.name, attrs);
     this.stack.push({
       type: type,
       attrs: attrs,
@@ -239,7 +236,6 @@ class OdtParseState {
 
       this.closeMark(markType);
     } else if (spec.text) {
-      // console.log('aaaaaaaaaaaaaaaaaaaa', element);
       this.addText(spec.text(element));
     } else {
       if (children) {
@@ -263,7 +259,7 @@ function iterateChildren(nodes: unknown[], callback) {
       key = '$text';
       value = child;
     } else {
-      const keys = Object.keys(child);
+      const keys = Object.keys(child).filter(key => key !== 'annotation');
       key = keys[0];
       value = child[key];
     }
@@ -345,12 +341,13 @@ const tokens: { [name: string]: ParseSpec } = {
       href: tok['@href'],
       // title: tok.attrGet('title') || null,
     }),
-    children: (odtElement) => odtElement['span'],
+    children: (odtElement) => odtElement['span'].map(item => ({ 'span': item }))
   },
   '$value': {
     children: (odtElement) => iterateEnum(odtElement),
   },
   '$text': {
+    // TODO: fix trimming: https://github.com/tafia/quick-xml/issues/285
     text: (odtElement) => String(odtElement || ''),
   },
   's': {
@@ -363,12 +360,16 @@ const tokens: { [name: string]: ParseSpec } = {
     text: (odtElement) => '\t',
   },
   'table-of-content': {
+    block: 'paragraph',
     children: (odtElement) => odtElement['index-body']['p'] || [],
   },
   'frame': {
     ignore: true,
   },
   'rect': {
+    ignore: true,
+  },
+  'bookmark': {
     ignore: true,
   },
   'annotation': {
@@ -397,6 +398,11 @@ export class OdtParser {
     do {
       doc = state.closeNode();
     } while (state.stack.length);
+
+    if (!doc) {
+      throw new Error('Incorrect stack handling');
+    }
+
     return doc || null; //this.schema.topNodeType.createAndFill()!;
   }
 }
