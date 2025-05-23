@@ -68,9 +68,11 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
 
   if (await exists(path.resolve(workspaceRoot, 'package.json'))) {
     // Support for WASM which is currently not supported by DNT
-    const content = Deno.readFileSync(path.resolve(workspaceRoot, 'package.json'));
+    const content = Deno.readFileSync(
+      path.resolve(workspaceRoot, 'package.json'),
+    );
     const packageJson = JSON.parse(new TextDecoder().decode(content));
-    
+
     console.info(`Copying: ${workspaceRoot} (probably wasm)`);
 
     packageJson.version = Deno.args[0]?.replace(/^v/, '');
@@ -82,13 +84,16 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
     Deno.mkdirSync(outDir, { recursive: true });
 
     Deno.writeFileSync(
-      path.resolve(outDir, 'package.json'), 
-      new TextEncoder().encode(JSON.stringify(packageJson, null, 2))
+      path.resolve(outDir, 'package.json'),
+      new TextEncoder().encode(JSON.stringify(packageJson, null, 2)),
     );
 
     if (Array.isArray(packageJson.files)) {
       for (const file of packageJson.files) {
-        await copyRecursive(path.resolve(workspaceRoot, file), path.resolve(outDir, file));
+        await copyRecursive(
+          path.resolve(workspaceRoot, file),
+          path.resolve(outDir, file),
+        );
       }
     }
     return;
@@ -102,6 +107,34 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
       name,
       path: path.resolve(workspaceRoot, file),
     });
+  }
+
+  let configFile = import.meta.resolve('../deno.json');
+
+  if (Deno.args[0]?.replace(/^v/, '')) {
+    // Substitute wasm package with npm path. Currently, DNT do not support wasm.
+    configFile = await Deno.makeTempFileSync({
+      dir: import.meta.dirname + '/..',
+      suffix: '.json',
+    });
+    Deno.writeFileSync(
+      configFile,
+      new TextEncoder().encode(JSON.stringify(
+        {
+          ...mainJson,
+          workspace: mainJson.workspace.filter((item) =>
+            item !== 'packages/odt-wasm'
+          ),
+          imports: {
+            ...mainJson.imports,
+            '@kerebron/odt-wasm': 'npm:@kerebron/odt-wasm@latest',
+          },
+        },
+        null,
+        2,
+      )),
+    );
+    configFile = 'file:' + configFile;
   }
 
   try {
@@ -120,6 +153,7 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
         description: json.description || mainJson.description,
         license: json.license || mainJson.license,
       },
+      configFile: configFile,
       async postBuild() {
         Deno.copyFileSync('LICENSE', path.resolve('npm', json.name, 'LICENSE'));
         Deno.copyFileSync(

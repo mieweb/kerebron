@@ -1,6 +1,6 @@
-import { unzip, parse_styles } from "./lib/rs_lib.js";
+import { parse_styles, unzip } from './lib/rs_lib.js';
 
-const input = Deno.readFileSync("./example-document.odt");
+const input = Deno.readFileSync('./example-document.odt');
 const files = unzip(input);
 
 console.log(files.get('content.xml'));

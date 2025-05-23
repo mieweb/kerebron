@@ -22,8 +22,8 @@ jobs:
           node-version: '18.x'
           registry-url: 'https://registry.npmjs.org'
       - uses: actions-rust-lang/setup-rust-toolchain@v1
-#      - name: Build packages
-#        run: deno task --recursive build
+      #      - name: Build packages
+      #        run: deno task --recursive build
       - run: deno task -f @kerebron/odt-wasm build
       - run: deno task -f example-vue build
       - name: Build npm

@@ -27,7 +27,7 @@ export class ExtensionMarkdown extends Extension {
           const defaultMarkdownSerializer = new MarkdownSerializer({
             html(state, node) {
               const element = domSerializer.serializeNode(node, {
-                document: globalThis.document
+                document: globalThis.document,
               });
               const xmlSerializer = new XMLSerializer();
               const html = xmlSerializer.serializeToString(element) + '\n';

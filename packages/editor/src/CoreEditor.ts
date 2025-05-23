@@ -50,7 +50,7 @@ export class CoreEditor extends EventTarget {
   private extensionManager: ExtensionManager;
   private commandManager: CommandManager;
   public view!: EditorView;
-  public state!: EditorState
+  public state!: EditorState;
 
   constructor(options: Partial<EditorOptions> = {}) {
     super();

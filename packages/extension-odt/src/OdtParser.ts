@@ -48,43 +48,52 @@ interface Style {
 
 interface StylesTree {
   styles: {
-    'list-style': Array<ListStyle>,
-    'style': Array<Style>,
-  }
+    'list-style': Array<ListStyle>;
+    'style': Array<Style>;
+  };
 }
 
 interface AutomaticStyles {
-  'style': Array<Style>,
+  'style': Array<Style>;
 }
 
-function resolveStyle(stylesTree: StylesTree, automaticStyles: AutomaticStyles, name) {
+function resolveStyle(
+  stylesTree: StylesTree,
+  automaticStyles: AutomaticStyles,
+  name,
+) {
   let style;
 
   if (!style) {
-    style = stylesTree.styles['list-style'].find(item => item['@name'] === name);
+    style = stylesTree.styles['list-style'].find((item) =>
+      item['@name'] === name
+    );
   }
   if (!style) {
-    style = stylesTree.styles['style'].find(item => item['@name'] === name);
+    style = stylesTree.styles['style'].find((item) => item['@name'] === name);
   }
   if (!style) {
-    style = automaticStyles.style.find(item => item['@name'] === name);
+    style = automaticStyles.style.find((item) => item['@name'] === name);
   }
 
   if (!style) {
-    style = {
-    };
+    style = {};
   }
 
   style['styles'] = [name];
 
   if (style['@parent-style-name']) {
-    const parenStyle = resolveStyle(stylesTree, automaticStyles, style['@parent-style-name']);
+    const parenStyle = resolveStyle(
+      stylesTree,
+      automaticStyles,
+      style['@parent-style-name'],
+    );
     if (parenStyle) {
       const styles = [...style['styles'], ...parenStyle['styles']];
       style = {
         ...parenStyle,
         ...style,
-        styles
+        styles,
       };
     }
   }
@@ -176,7 +185,12 @@ class OdtParseState {
   handleElement(nodeType: string, element: OdtElement) {
     const spec = tokens[nodeType];
     if (!spec) {
-      console.warn('No spec for:', nodeType, element, this.stack.map(item => item.type.name));
+      console.warn(
+        'No spec for:',
+        nodeType,
+        element,
+        this.stack.map((item) => item.type.name),
+      );
       return;
     }
 
@@ -186,7 +200,11 @@ class OdtParseState {
 
     let style;
     if ('object' === typeof element && element['@style-name']) {
-      style = resolveStyle(this.stylesTree, this.automaticStyles, element['@style-name'])
+      style = resolveStyle(
+        this.stylesTree,
+        this.automaticStyles,
+        element['@style-name'],
+      );
     }
 
     if (spec.block) {
@@ -207,7 +225,6 @@ class OdtParseState {
 
       // this.addText(withoutTrailingNewline(tok.content));
       this.closeNode();
-
     } else if (spec.node) {
     } else if (spec.mark) {
       let markType = this.schema.marks[spec.mark];
@@ -221,7 +238,6 @@ class OdtParseState {
       }
 
       this.closeMark(markType);
-
     } else if (spec.text) {
       // console.log('aaaaaaaaaaaaaaaaaaaa', element);
       this.addText(spec.text(element));
@@ -232,7 +248,6 @@ class OdtParseState {
         });
       }
     }
-
   }
 }
 
@@ -257,70 +272,72 @@ function iterateChildren(nodes: unknown[], callback) {
       return;
     }
 
-
     callback(key, value);
   }
-
 }
 
 function iterateEnum($value: unknown[]) {
   if (!$value) {
     return [];
   }
-  return $value.map(item => {
-      if ('string' === typeof item) {
-        return {
-          [item]: true
-        }
-      }
-      return item;
+  return $value.map((item) => {
+    if ('string' === typeof item) {
+      return {
+        [item]: true,
+      };
     }
-  );
+    return item;
+  });
 }
 
 const tokens: { [name: string]: ParseSpec } = {
   'body': {
-    children: (odtElement) => iterateEnum(odtElement.text?.$value)
+    children: (odtElement) => iterateEnum(odtElement.text?.$value),
   },
   'p': {
     block: (odtElement: OdtElement, style) => {
-      if (style.styles.find(item => item.startsWith('Heading_20_'))) {
+      if (style.styles.find((item) => item.startsWith('Heading_20_'))) {
         return 'heading';
       }
-      return 'paragraph'
+      return 'paragraph';
     },
     getAttrs: (odtElement: OdtElement, style) => {
-      const heading = style.styles.find(item => item.startsWith('Heading_20_'));
+      const heading = style.styles.find((item) =>
+        item.startsWith('Heading_20_')
+      );
       if (heading) {
         return {
-          level: parseInt(heading.substring('Heading_20_'.length))
+          level: parseInt(heading.substring('Heading_20_'.length)),
         };
       }
     },
-    children: (odtElement) => iterateEnum(odtElement.$value)
+    children: (odtElement) => iterateEnum(odtElement.$value),
   },
   'span': {
-    children: (odtElement) => iterateEnum(odtElement.$value)
+    children: (odtElement) => iterateEnum(odtElement.$value),
   },
   'list': {
     block: 'ordered_list',
-    children: (odtElement) => odtElement['list-item'].map(item => ({'list-item': item}))
+    children: (odtElement) =>
+      odtElement['list-item'].map((item) => ({ 'list-item': item })),
   },
   'list-item': {
     block: 'list_item',
-    children: (odtElement) => iterateEnum(odtElement.$value)
+    children: (odtElement) => iterateEnum(odtElement.$value),
   },
   'table': {
     block: 'table',
-    children: (odtElement) => odtElement['table-row'].map(item => ({'table-row': item}))
+    children: (odtElement) =>
+      odtElement['table-row'].map((item) => ({ 'table-row': item })),
   },
   'table-row': {
     block: 'table_row',
-    children: (odtElement) => odtElement['table-cell'].map(item => ({'table-cell': item}))
+    children: (odtElement) =>
+      odtElement['table-cell'].map((item) => ({ 'table-cell': item })),
   },
   'table-cell': {
     block: 'table_cell',
-    children: (odtElement) => iterateEnum(odtElement.$value)
+    children: (odtElement) => iterateEnum(odtElement.$value),
   },
   'a': {
     mark: 'link',
@@ -328,48 +345,51 @@ const tokens: { [name: string]: ParseSpec } = {
       href: tok['@href'],
       // title: tok.attrGet('title') || null,
     }),
-    children: (odtElement) => odtElement['span']
+    children: (odtElement) => odtElement['span'],
   },
   '$value': {
-    children: (odtElement) => iterateEnum(odtElement)
+    children: (odtElement) => iterateEnum(odtElement),
   },
   '$text': {
-    text: (odtElement) => String(odtElement || '')
+    text: (odtElement) => String(odtElement || ''),
   },
   's': {
     text: (odtElement) => {
       const chars = odtElement['@c'] || 1;
       return '               '.substring(0, chars);
-    }
+    },
   },
   'tab': {
-    text: (odtElement) => '\t'
+    text: (odtElement) => '\t',
   },
   'table-of-content': {
-    children: (odtElement) => odtElement['index-body']['p'] || []
+    children: (odtElement) => odtElement['index-body']['p'] || [],
   },
   'frame': {
-    ignore: true
+    ignore: true,
   },
   'rect': {
-    ignore: true
+    ignore: true,
   },
   'annotation': {
-    ignore: true
+    ignore: true,
   },
-}
+};
 
 export class OdtParser {
   constructor(private readonly schema: Schema) {
     // this.tokenHandlers = tokenHandlers(schema, tokens);
   }
 
-
   parse(files: any) {
     const contentTree = files.contentTree;
     const stylesTree = files.stylesTree;
 
-    const state = new OdtParseState(this.schema, stylesTree, contentTree['automatic-styles']);
+    const state = new OdtParseState(
+      this.schema,
+      stylesTree,
+      contentTree['automatic-styles'],
+    );
 
     state.handleElement('body', contentTree.body);
 

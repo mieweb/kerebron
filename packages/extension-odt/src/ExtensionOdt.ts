@@ -3,8 +3,8 @@ import { DOMSerializer, Schema } from 'prosemirror-model';
 import { type Converter, type CoreEditor, Extension } from '@kerebron/editor';
 import { Mark } from '@kerebron/editor';
 
-import { unzip, parse_content, parse_styles } from "@kerebron/odt-wasm";
-import {OdtParser} from "./OdtParser.ts";
+import { parse_content, parse_styles, unzip } from '@kerebron/odt-wasm';
+import { OdtParser } from './OdtParser.ts';
 
 export class ExtensionOdt extends Extension {
   name = 'odt';

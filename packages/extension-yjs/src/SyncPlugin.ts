@@ -356,7 +356,8 @@ export class ProsemirrorBinding {
     return bounding.bottom >= 0 && bounding.right >= 0 &&
       bounding.left <=
         (globalThis.innerWidth || documentElement.clientWidth || 0) &&
-      bounding.top <= (globalThis.innerHeight || documentElement.clientHeight || 0);
+      bounding.top <=
+        (globalThis.innerHeight || documentElement.clientHeight || 0);
   }
 
   renderSnapshot(snapshot: Y.Snapshot, prevSnapshot: Y.Snapshot) {

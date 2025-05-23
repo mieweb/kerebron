@@ -1,5 +1,5 @@
 import * as Y from 'yjs';
-import process from "node:process";
+import process from 'node:process';
 
 // TODO
 
