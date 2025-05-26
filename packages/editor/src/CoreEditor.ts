@@ -69,8 +69,7 @@ export class CoreEditor extends EventTarget {
       ? this.options.content
       : this.extensionManager.schema.topNodeType.spec.EMPTY_DOC;
 
-    this.createView(structuredClone(content));
-    // this.createView('');
+    this.createView(content);
     this.commandManager = new CommandManager(
       this,
       this.extensionManager.commandConstructors,
