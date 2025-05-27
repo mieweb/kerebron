@@ -75,25 +75,24 @@ export class NodeTable extends Node {
 
   override getCommands(editor: CoreEditor, type: NodeType): Partial<Commands> {
     const commands: Partial<Commands> = {
-      addColumnAfter: (state, dispatch) => addColumnAfter(state, dispatch),
-      addColumnBefore: (state, dispatch) => addColumnBefore(state, dispatch),
-      addRowAfter: (state, dispatch) => addRowAfter(state, dispatch),
-      addRowBefore: (state, dispatch) => addRowBefore(state, dispatch),
-      deleteColumn: (state, dispatch) => deleteColumn(state, dispatch),
-      deleteRow: (state, dispatch) => deleteRow(state, dispatch),
-      deleteTable: (state, dispatch) => deleteTable(state, dispatch),
-      fixTables: (state, dispatch) => fixTables(state, dispatch),
-      goToNextCell: (state, dispatch) => goToNextCell(state, dispatch),
-      mergeCells: (state, dispatch) => mergeCells(state, dispatch),
-      setCellAttr: (state, dispatch) => setCellAttr(state, dispatch),
-      splitCell: (state, dispatch) => splitCell(state, dispatch),
-      toggleHeader: (state, dispatch) => toggleHeader(state, dispatch),
-      toggleHeaderCell: (state, dispatch) => toggleHeaderCell(state, dispatch),
-      toggleHeaderRow: (state, dispatch) => toggleHeaderRow(state, dispatch),
-      toggleHeaderColumn: (state, dispatch) =>
+      addColumnAfter: () => (state, dispatch) => addColumnAfter(state, dispatch),
+      addColumnBefore: () => (state, dispatch) => addColumnBefore(state, dispatch),
+      addRowAfter: () => (state, dispatch) => addRowAfter(state, dispatch),
+      addRowBefore: () => (state, dispatch) => addRowBefore(state, dispatch),
+      deleteColumn: () => (state, dispatch) => deleteColumn(state, dispatch),
+      deleteRow: () => (state, dispatch) => deleteRow(state, dispatch),
+      deleteTable: () => (state, dispatch) => deleteTable(state, dispatch),
+      fixTables: () => (state, dispatch) => fixTables(state, dispatch),
+      goToNextCell: () => (state, dispatch) => goToNextCell(state, dispatch),
+      mergeCells: () => (state, dispatch) => mergeCells(state, dispatch),
+      setCellAttr: () => (state, dispatch) => setCellAttr(state, dispatch),
+      splitCell: () => (state, dispatch) => splitCell(state, dispatch),
+      toggleHeader: () => (state, dispatch) => toggleHeader(state, dispatch),
+      toggleHeaderCell: () => (state, dispatch) => toggleHeaderCell(state, dispatch),
+      toggleHeaderRow: () => (state, dispatch) => toggleHeaderRow(state, dispatch),
+      toggleHeaderColumn: () => (state, dispatch) =>
         toggleHeaderColumn(state, dispatch),
-      insertTable:
-        ({ rows = 3, cols = 3, withHeaderRow = true } = {}) =>
+      insertTable: ({ rows = 3, cols = 3, withHeaderRow = true } = {}) =>
         (state, dispatch) => {
           const tr = state.tr;
           const node = createTable(editor.schema, rows, cols, withHeaderRow);

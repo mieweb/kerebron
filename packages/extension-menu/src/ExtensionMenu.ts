@@ -1,3 +1,9 @@
+import { Command, EditorState, NodeSelection, Plugin } from 'prosemirror-state';
+import { MarkType, NodeType, Schema } from 'prosemirror-model';
+
+import { type CoreEditor, Extension } from '@kerebron/editor';
+import { toggleMark, wrapInList } from '@kerebron/editor/commands';
+
 import {
   blockTypeItem,
   Dropdown,
@@ -7,15 +13,19 @@ import {
   MenuItemSpec,
   wrapItem,
 } from './menu.ts';
-import { Command, EditorState, NodeSelection, Plugin } from 'prosemirror-state';
-import { MarkType, NodeType, Schema } from 'prosemirror-model';
-
-import { type CoreEditor, Extension } from '@kerebron/editor';
-import { toggleMark, wrapInList } from '@kerebron/editor/commands';
-
 import { MenuPlugin } from './MenuPlugin.ts';
 import { icons } from './icons.ts';
 import { openPrompt, TextField } from './prompt.ts';
+
+export {
+  blockTypeItem,
+  Dropdown,
+  DropdownSubmenu,
+  // MenuElement,
+  MenuItem,
+  // MenuItemSpec,
+  wrapItem,
+} from './menu.ts';
 
 function canInsert(state: EditorState, nodeType: NodeType) {
   let $from = state.selection.$from;
@@ -299,10 +309,6 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
       selectParentNodeItem,
     ]),
   ];
-  r.fullMenu = r.inlineMenu.concat([[r.insertMenu, r.typeMenu]], [[
-    undoItem,
-    redoItem,
-  ]], r.blockMenu);
   */
 
   menu.push(
@@ -323,40 +329,54 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     }),
   );
 
-  /*
-  function item(label: string, cmd: (state: EditorState) => boolean) {
-    return new MenuItem({ label, select: cmd, run: cmd });
+  if (schema.nodes.table) {
+    const item = (label: string, cmdName: string) => {
+      return new MenuItem({ label, enable: () => editor.can()[cmdName]().run(), run: () => editor.chain()[cmdName]().run() });
+    };
+    const tableMenu = [
+      item('Insert table', 'insertTable'),
+      item('Insert column before', 'addColumnBefore'),
+      item('Insert column after', 'addColumnAfter'),
+      item('Delete column', 'deleteColumn'),
+      item('Insert row before', 'addRowBefore'),
+      item('Insert row after', 'addRowAfter'),
+      item('Delete row', 'deleteRow'),
+      item('Delete table', 'deleteTable'),
+      item('Merge cells', 'mergeCells'),
+      item('Split cell', 'splitCell'),
+      item('Toggle header column', 'toggleHeaderColumn'),
+      item('Toggle header row', 'toggleHeaderRow'),
+      item('Toggle header cells', 'toggleHeaderCell'),
+      // item('Make cell green', setCellAttr('background', '#dfd')),
+      // item('Make cell not-green', setCellAttr('background', null)),
+    ];
+    menu.push(new Dropdown(tableMenu, { label: 'Table' }));
   }
-  const tableMenu = [
-    item('Insert column before', addColumnBefore),
-    item('Insert column after', addColumnAfter),
-    item('Delete column', deleteColumn),
-    item('Insert row before', addRowBefore),
-    item('Insert row after', addRowAfter),
-    item('Delete row', deleteRow),
-    item('Delete table', deleteTable),
-    item('Merge cells', mergeCells),
-    item('Split cell', splitCell),
-    item('Toggle header column', toggleHeaderColumn),
-    item('Toggle header row', toggleHeaderRow),
-    item('Toggle header cells', toggleHeaderCell),
-    item('Make cell green', setCellAttr('background', '#dfd')),
-    item('Make cell not-green', setCellAttr('background', null)),
-  ];
-  menu.splice(2, 0, [new Dropdown(tableMenu, { label: 'Table' })]);
-  */
 
   return [menu, blockMenu];
+}
+
+export interface MenuConfig {
+  modifyMenu?(menus: MenuElement[][]): MenuElement[][];
+  floating: boolean;
 }
 
 export class ExtensionMenu extends Extension {
   name = 'menu';
 
+  constructor(protected config: MenuConfig = { floating: true }) {
+    super(config);
+  }
+
   override getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
+    let content = buildMenu(editor, schema);
+    if (this.config.modifyMenu) {
+      content = this.config.modifyMenu(content);
+    }
     return [
       new MenuPlugin({
-        content: buildMenu(editor, schema),
-        floating: true,
+        content,
+        floating: this.config.floating,
       }),
     ];
   }
