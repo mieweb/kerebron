@@ -1,0 +1,221 @@
+/**
+ * Kerebron Editor Styles
+ * Complete stylesheet for the Kerebron editor system
+ * Mobile-first, responsive, and accessible design
+ */
+
+/* Import all component styles in dependency order */
+@import './tokens.css';
+@import './base.css';
+@import './menu.css';
+@import './mobile.css';
+
+/* Legacy ProseMirror class mappings for backward compatibility */
+.ProseMirror-menubar {
+  @apply kb-toolbar;
+}
+
+.ProseMirror-menu {
+  @apply kb-menu;
+}
+
+.ProseMirror-menuitem {
+  @apply kb-toolbar__item;
+  margin-right: var(--kb-space-xs);
+  display: inline-block;
+}
+
+.ProseMirror-menuseparator {
+  @apply kb-toolbar__separator;
+  margin-right: var(--kb-space-xs);
+}
+
+.ProseMirror-menu-dropdown {
+  @apply kb-dropdown__trigger;
+  font-size: 90%;
+  white-space: nowrap;
+  vertical-align: 1px;
+  cursor: pointer;
+}
+
+.ProseMirror-menu-dropdown-wrap {
+  @apply kb-dropdown;
+  padding: 1px 0 1px var(--kb-space-sm);
+  display: inline-block;
+}
+
+.ProseMirror-menu-dropdown-menu {
+  @apply kb-dropdown__menu;
+  font-size: 90%;
+  white-space: nowrap;
+  z-index: 15;
+  min-width: 6em;
+}
+
+.ProseMirror-menu-dropdown-item {
+  @apply kb-dropdown__item;
+  cursor: pointer;
+}
+
+.ProseMirror-menu-submenu-wrap {
+  @apply kb-submenu;
+  margin-right: -var(--kb-space-sm);
+}
+
+.ProseMirror-menu-submenu {
+  @apply kb-submenu__menu;
+  min-width: 4em;
+}
+
+.ProseMirror-menu-submenu-label {
+  @apply kb-submenu__trigger;
+}
+
+.ProseMirror-menu-active {
+  @apply kb-toolbar__item--active;
+  border-radius: var(--kb-radius-sm);
+}
+
+.ProseMirror-menu-disabled {
+  @apply kb-toolbar__item--disabled;
+}
+
+.ProseMirror-icon {
+  @apply kb-toolbar__item;
+  display: inline-block;
+  line-height: 0.8;
+  vertical-align: -2px;
+  cursor: pointer;
+}
+
+.ProseMirror-textblock-dropdown {
+  min-width: 3em;
+}
+
+/* Prompt/dialog styles with mobile optimization */
+.ProseMirror-prompt {
+  background: var(--kb-color-surface);
+  padding: var(--kb-space-md) var(--kb-space-lg) var(--kb-space-md) var(--kb-space-lg);
+  border: 1px solid var(--kb-color-border);
+  position: fixed;
+  border-radius: var(--kb-radius-md);
+  z-index: var(--kb-z-modal);
+  box-shadow: var(--kb-shadow-lg);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 300px;
+  max-width: 90vw;
+}
+
+.ProseMirror-prompt h5 {
+  margin: 0 0 var(--kb-space-md) 0;
+  font-weight: 600;
+  font-size: var(--kb-text-base);
+  color: var(--kb-color-text);
+}
+
+.ProseMirror-prompt input[type="text"],
+.ProseMirror-prompt textarea {
+  background: var(--kb-color-surface-elevated);
+  border: 1px solid var(--kb-color-border);
+  border-radius: var(--kb-radius-sm);
+  padding: var(--kb-space-sm);
+  font-size: var(--kb-text-sm);
+  color: var(--kb-color-text);
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.ProseMirror-prompt input[type="text"]:focus,
+.ProseMirror-prompt textarea:focus {
+  border-color: var(--kb-color-primary);
+  box-shadow: 0 0 0 3px var(--kb-color-focus);
+}
+
+.ProseMirror-prompt-close {
+  position: absolute;
+  right: var(--kb-space-sm);
+  top: var(--kb-space-sm);
+  color: var(--kb-color-text-muted);
+  border: none;
+  background: transparent;
+  padding: var(--kb-space-xs);
+  cursor: pointer;
+  border-radius: var(--kb-radius-sm);
+  width: var(--kb-space-lg);
+  height: var(--kb-space-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ProseMirror-prompt-close:hover {
+  background: var(--kb-color-hover);
+  color: var(--kb-color-text);
+}
+
+.ProseMirror-prompt-close:after {
+  content: "✕";
+  font-size: var(--kb-text-sm);
+}
+
+.ProseMirror-invalid {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: var(--kb-radius-sm);
+  padding: var(--kb-space-sm) var(--kb-space-md);
+  position: absolute;
+  min-width: 10em;
+  font-size: var(--kb-text-sm);
+}
+
+.ProseMirror-prompt-buttons {
+  margin-top: var(--kb-space-md);
+  display: flex;
+  gap: var(--kb-space-sm);
+  justify-content: flex-end;
+}
+
+.ProseMirror-prompt-buttons button {
+  padding: var(--kb-space-sm) var(--kb-space-md);
+  border: 1px solid var(--kb-color-border);
+  border-radius: var(--kb-radius-sm);
+  background: var(--kb-color-surface);
+  color: var(--kb-color-text);
+  cursor: pointer;
+  font-size: var(--kb-text-sm);
+  min-height: var(--kb-touch-target-min);
+}
+
+.ProseMirror-prompt-buttons button:hover {
+  background: var(--kb-color-hover);
+}
+
+.ProseMirror-prompt-buttons button[type="submit"] {
+  background: var(--kb-color-primary);
+  color: white;
+  border-color: var(--kb-color-primary);
+}
+
+.ProseMirror-prompt-buttons button[type="submit"]:hover {
+  background: var(--kb-color-primary-hover);
+}
+
+/* Tooltip positioning */
+.ProseMirror-tooltip {
+  position: relative;
+}
+
+.ProseMirror-tooltip .ProseMirror-menu {
+  width: fit-content;
+  white-space: pre;
+}
+
+/* Ensure editor container has proper class for styling */
+.editor,
+#editor {
+  @apply kb-editor;
+}
