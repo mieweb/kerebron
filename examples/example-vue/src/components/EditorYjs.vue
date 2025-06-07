@@ -1,33 +1,65 @@
 <template>
-  <a href="/">Main</a>
-
-  <div class="d-flex flex-row" style="height: 90vh">
-    <div class="w-50" style="max-height: 100%; overflow: scroll;">
-      <div v-if="editor">
-        <button :disabled="!editor.can().toggleStrong().run()" @click="editor.chain().toggleStrong().run()">toggleStrong</button>
-        <button :disabled="!editor.can().setHorizontalRule().run()" @click="editor.chain().setHorizontalRule().run()">setHorizontalRule</button>
-        <button :disabled="!editor.can().setHardBreak().run()" @click="editor.chain().setHardBreak().run()">setHardBreak</button>
-        <button :disabled="!editor.can().setCodeBlock().run()" @click="editor.chain().setCodeBlock().run()">setCodeBlock</button>
-        <button :disabled="!editor.can().insertTable().run()" @click="editor.chain().insertTable().run()">insertTable</button>
-        <button @click="loadDoc">Simulate loadDoc</button>
-        <button @click="loadDoc2">loadDoc</button>
+  <div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding: 1rem; background: var(--kb-color-surface-elevated, #f9fafb); border-radius: 8px;">
+      <a href="/">← Main</a>
+      
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <label for="theme-selector" style="font-weight: 600;">Theme:</label>
+        <select 
+          id="theme-selector"
+          v-model="currentTheme" 
+          @change="handleThemeChange"
+          style="padding: 0.5rem; border: 1px solid var(--kb-color-border, #e5e7eb); border-radius: 4px; background: var(--kb-color-surface, white);"
+        >
+          <option value="default">Default Blue</option>
+          <option value="corporate">Corporate</option>
+          <option value="creative">Creative Purple</option>
+          <option value="forest">Forest Green</option>
+          <option value="dark">Dark Mode</option>
+          <option value="midnight">Midnight</option>
+        </select>
+        
+        <button @click="toggleAutoTheme" :style="{ 
+          padding: '0.5rem 1rem', 
+          border: '1px solid var(--kb-color-border, #e5e7eb)', 
+          borderRadius: '4px',
+          background: autoTheme ? 'var(--kb-color-primary, #3b82f6)' : 'var(--kb-color-surface, white)',
+          color: autoTheme ? 'white' : 'var(--kb-color-text, #1f2937)',
+          cursor: 'pointer'
+        }">
+          {{ autoTheme ? '🌙 Auto' : '☀️ Manual' }}
+        </button>
       </div>
-      <div ref="editor" class="w-50"></div>
     </div>
-    <div class="w-50">
-      <div class="h-33">
-        <div>
-          <h5>Markdown</h5>
-          <pre>{{md}}</pre>
+
+    <div class="d-flex flex-row" style="height: 85vh">
+      <div class="w-50" style="max-height: 100%; overflow: scroll;">
+        <div v-if="editor" style="margin-bottom: 1rem;">
+          <button :disabled="!editor.can().toggleStrong().run()" @click="editor.chain().toggleStrong().run()" class="demo-button">toggleStrong</button>
+          <button :disabled="!editor.can().setHorizontalRule().run()" @click="editor.chain().setHorizontalRule().run()" class="demo-button">setHorizontalRule</button>
+          <button :disabled="!editor.can().setHardBreak().run()" @click="editor.chain().setHardBreak().run()" class="demo-button">setHardBreak</button>
+          <button :disabled="!editor.can().setCodeBlock().run()" @click="editor.chain().setCodeBlock().run()" class="demo-button">setCodeBlock</button>
+          <button :disabled="!editor.can().insertTable().run()" @click="editor.chain().insertTable().run()" class="demo-button">insertTable</button>
+          <button @click="loadDoc" class="demo-button">Simulate loadDoc</button>
+          <button @click="loadDoc2" class="demo-button">loadDoc</button>
         </div>
+        <div ref="editor" class="w-50 kb-editor"></div>
       </div>
-      <div class="h-33">
-        <h5>Prosemirror JSON</h5>
-        <pre>{{ JSON.stringify(lastValue, null, 2) }}</pre>
-      </div>
-      <div class="h-33">
-        <h5>ydoc</h5>
-        <pre>{{ JSON.stringify(ydoc, null, 2) }}</pre>
+      <div class="w-50">
+        <div class="h-33">
+          <div>
+            <h5>Markdown</h5>
+            <pre>{{md}}</pre>
+          </div>
+        </div>
+        <div class="h-33">
+          <h5>Prosemirror JSON</h5>
+          <pre>{{ JSON.stringify(lastValue, null, 2) }}</pre>
+        </div>
+        <div class="h-33">
+          <h5>ydoc</h5>
+          <pre>{{ JSON.stringify(ydoc, null, 2) }}</pre>
+        </div>
       </div>
     </div>
   </div>
@@ -40,7 +72,7 @@ import * as Y from 'yjs';
 import * as random from 'lib0/random';
 import { WebsocketProvider } from 'y-websocket';
 
-import {CoreEditor} from "@kerebron/editor";
+import {CoreEditor, createThemeManager, detectSystemTheme, watchSystemTheme} from "@kerebron/editor";
 import {ExtensionBasicEditor} from "@kerebron/extension-basic-editor";
 import {ExtensionMarkdown} from '@kerebron/extension-markdown';
 import {ExtensionOdt} from '@kerebron/extension-odt';
@@ -60,7 +92,11 @@ export default {
       doc: {},
       ydoc: {},
       md: '',
-      editor: null
+      editor: null,
+      themeManager: null,
+      currentTheme: 'default',
+      autoTheme: false,
+      systemThemeWatcher: null
     }
   },
   async mounted() {
@@ -142,6 +178,14 @@ export default {
       // content: pmDoc
     });
 
+    // Initialize theme manager
+    this.themeManager = createThemeManager();
+    
+    // Detect system theme preference
+    const systemTheme = detectSystemTheme();
+    this.currentTheme = systemTheme === 'dark' ? 'dark' : 'default';
+    this.themeManager.setTheme(this.currentTheme);
+
     this.editor.addEventListener('transaction', (ev: CustomEvent) => {
       this.lastValue = ev.detail.transaction.doc;
       this.md = this.editor.getDocument('text/x-markdown');
@@ -169,6 +213,39 @@ export default {
         this.editor.setDocument(await file.bytes(), file.type);
       };
       input.click();
+    },
+    handleThemeChange() {
+      if (this.themeManager) {
+        this.themeManager.setTheme(this.currentTheme);
+      }
+    },
+    toggleAutoTheme() {
+      this.autoTheme = !this.autoTheme;
+      
+      if (this.autoTheme) {
+        // Start watching system theme
+        this.systemThemeWatcher = watchSystemTheme((theme) => {
+          this.currentTheme = theme === 'dark' ? 'dark' : 'default';
+          this.handleThemeChange();
+        });
+        
+        // Apply current system theme
+        const systemTheme = detectSystemTheme();
+        this.currentTheme = systemTheme === 'dark' ? 'dark' : 'default';
+        this.handleThemeChange();
+      } else {
+        // Stop watching system theme
+        if (this.systemThemeWatcher) {
+          this.systemThemeWatcher();
+          this.systemThemeWatcher = null;
+        }
+      }
+    }
+  },
+  beforeUnmount() {
+    // Clean up system theme watcher
+    if (this.systemThemeWatcher) {
+      this.systemThemeWatcher();
     }
   }
 };
@@ -194,5 +271,33 @@ table {
 table th, 
 table td {
   border: 1px solid red;
+}
+
+/* Demo button styling */
+.demo-button {
+  padding: 0.5rem 1rem;
+  margin: 0.25rem;
+  border: 1px solid var(--kb-color-border, #e5e7eb);
+  border-radius: var(--kb-radius-sm, 4px);
+  background: var(--kb-color-surface, white);
+  color: var(--kb-color-text, #1f2937);
+  cursor: pointer;
+  font-size: var(--kb-text-sm, 14px);
+  transition: all 0.2s ease;
+}
+
+.demo-button:hover {
+  background: var(--kb-color-hover, rgba(59, 130, 246, 0.05));
+  border-color: var(--kb-color-primary, #3b82f6);
+}
+
+.demo-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.demo-button:disabled:hover {
+  background: var(--kb-color-surface, white);
+  border-color: var(--kb-color-border, #e5e7eb);
 }
 </style>
