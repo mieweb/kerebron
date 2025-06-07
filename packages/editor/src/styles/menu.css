@@ -99,6 +99,12 @@
   border-color: var(--kb-color-primary);
 }
 
+.kb-toolbar__item--pressed {
+  background: var(--kb-color-active);
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}
+
 .kb-toolbar__item--disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -207,7 +213,8 @@
 
 /* Mobile: full-screen dropdown */
 @media (max-width: 767px) {
-  .kb-dropdown__menu {
+  .kb-dropdown__menu,
+  .kb-dropdown__menu--mobile {
     position: fixed;
     top: auto;
     bottom: calc(var(--kb-touch-target-comfortable) + var(--kb-space-md) * 2);
@@ -218,6 +225,13 @@
     max-height: 50vh;
     overflow-y: auto;
     padding: var(--kb-space-md);
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+  }
+  
+  .kb-editor--dark .kb-dropdown__menu,
+  .kb-editor--dark .kb-dropdown__menu--mobile {
+    background: rgba(31, 41, 55, 0.95);
   }
   
   .kb-dropdown__item {

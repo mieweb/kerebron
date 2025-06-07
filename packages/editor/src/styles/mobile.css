@@ -35,27 +35,41 @@
 @media (max-width: 767px) {
   .ProseMirror table {
     font-size: var(--kb-text-sm);
+    border-collapse: collapse;
+    width: 100%;
+    overflow-x: auto;
+    display: block;
+    white-space: nowrap;
   }
   
   .ProseMirror th,
   .ProseMirror td {
     min-width: 120px;
     padding: var(--kb-space-md);
+    border: 1px solid var(--kb-color-border);
+    vertical-align: top;
   }
   
   /* Hide complex table controls on mobile */
   .tableWrapper .column-resize-handle {
-    display: none;
+    display: none !important;
+  }
+  
+  .ProseMirror .tableWrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   
   /* Show simplified table controls */
   .kb-table-controls--mobile {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--kb-space-sm);
     padding: var(--kb-space-sm);
     background: var(--kb-color-surface-elevated);
     border-radius: var(--kb-radius-md);
     margin: var(--kb-space-sm) 0;
+    border: 1px solid var(--kb-color-border);
   }
   
   .kb-table-controls--mobile button {
@@ -68,10 +82,24 @@
     font-size: var(--kb-text-sm);
     cursor: pointer;
     flex: 1;
+    min-width: 0;
+    transition: all 0.2s ease;
   }
   
   .kb-table-controls--mobile button:active {
     background: var(--kb-color-active);
+    transform: scale(0.95);
+  }
+  
+  .kb-table-controls--mobile button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  /* Table selection visual feedback */
+  .ProseMirror .selectedCell {
+    background: rgba(var(--kb-color-primary-rgb), 0.1);
+    border: 2px solid var(--kb-color-primary);
   }
 }
 

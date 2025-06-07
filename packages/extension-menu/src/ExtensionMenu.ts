@@ -16,6 +16,9 @@ import {
 import { MenuPlugin } from './MenuPlugin.ts';
 import { icons } from './icons.ts';
 import { openPrompt, TextField } from './prompt.ts';
+import { createContextToolbar, ContextToolbarConfig } from './ContextToolbar.ts';
+import { createVirtualKeyboardPlugin, VirtualKeyboardConfig } from './VirtualKeyboard.ts';
+import { createMobileTableControlsPlugin, MobileTableControlsConfig } from './MobileTableControls.ts';
 
 export {
   blockTypeItem,
@@ -363,25 +366,62 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
 export interface MenuConfig {
   modifyMenu?(menus: MenuElement[][]): MenuElement[][];
   floating: boolean;
+  contextToolbar?: ContextToolbarConfig | boolean;
+  virtualKeyboard?: VirtualKeyboardConfig | boolean;
+  mobileTableControls?: MobileTableControlsConfig | boolean;
 }
 
 export class ExtensionMenu extends Extension {
   name = 'menu';
 
-  constructor(protected config: MenuConfig = { floating: true }) {
+  constructor(protected config: MenuConfig = { 
+    floating: true, 
+    contextToolbar: true, 
+    virtualKeyboard: true,
+    mobileTableControls: true
+  }) {
     super(config);
   }
 
   override getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
+    const plugins: Plugin[] = [];
+    
+    // Main menu plugin
     let content = buildMenu(editor, schema);
     if (this.config.modifyMenu) {
       content = this.config.modifyMenu(content);
     }
-    return [
+    plugins.push(
       new MenuPlugin({
         content,
         floating: this.config.floating,
       }),
-    ];
+    );
+    
+    // Context toolbar plugin
+    if (this.config.contextToolbar) {
+      const contextConfig = typeof this.config.contextToolbar === 'object' 
+        ? this.config.contextToolbar 
+        : {};
+      plugins.push(createContextToolbar(editor, schema, contextConfig));
+    }
+    
+    // Virtual keyboard plugin
+    if (this.config.virtualKeyboard) {
+      const keyboardConfig = typeof this.config.virtualKeyboard === 'object'
+        ? this.config.virtualKeyboard
+        : {};
+      plugins.push(createVirtualKeyboardPlugin(keyboardConfig));
+    }
+    
+    // Mobile table controls plugin
+    if (this.config.mobileTableControls) {
+      const tableConfig = typeof this.config.mobileTableControls === 'object'
+        ? this.config.mobileTableControls
+        : {};
+      plugins.push(createMobileTableControlsPlugin(editor, tableConfig));
+    }
+    
+    return plugins;
   }
 }
