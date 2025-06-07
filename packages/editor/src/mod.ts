@@ -5,3 +5,5 @@ export * from './Node.ts';
 export * from './nodeToTreeString.ts';
 export * from './styles.ts';
 export * from './theme.ts';
+export * from './accessibility.ts';
+export * from './performance.ts';

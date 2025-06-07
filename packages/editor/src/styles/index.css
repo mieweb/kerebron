@@ -9,6 +9,7 @@
 @import './base.css';
 @import './menu.css';
 @import './mobile.css';
+@import './accessibility.css';
 
 /* Legacy ProseMirror class mappings for backward compatibility */
 .ProseMirror-menubar {
