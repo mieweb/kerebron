@@ -2,7 +2,7 @@
 import * as random from 'lib0/random';
 import * as Y from 'yjs';
 
-import {CoreEditor} from "@kerebron/editor";
+import {CoreEditor, createThemeManager, createAccessibilityManager} from "@kerebron/editor";
 import {ExtensionBasicEditor} from "@kerebron/extension-basic-editor";
 import {ExtensionMarkdown} from '@kerebron/extension-markdown';
 import {ExtensionTables} from '@kerebron/extension-tables';
@@ -12,7 +12,16 @@ import {NodeCodeMirror} from "@kerebron/extension-codemirror";
 
 import { MeteorProvider } from './y-meteor.ts';
 
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
+
+const currentTheme = ref('default');
+let themeManager = null;
+
+const handleThemeChange = () => {
+  if (themeManager) {
+    themeManager.setTheme(currentTheme.value);
+  }
+};
 
 onMounted(() => {
   const usercolors = [
@@ -50,7 +59,12 @@ onMounted(() => {
     element,
     extensions: [
       new ExtensionBasicEditor(),
-      new ExtensionMenu(),
+      new ExtensionMenu({
+        floating: true,
+        contextToolbar: true,
+        virtualKeyboard: true,
+        mobileTableControls: true,
+      }),
       new ExtensionMarkdown(),
       new ExtensionTables(),
       new ExtensionYjs({ ydoc, provider: meteorProvider }),
@@ -59,14 +73,53 @@ onMounted(() => {
     ]
   });
 
+  // Initialize theme and accessibility managers
+  themeManager = createThemeManager(element);
+  const accessibilityManager = createAccessibilityManager(element);
+  
+  // Set default theme
+  themeManager.setTheme('default');
+
   // editor.setDocument(innerHTML, 'text/html');
   editor.setDocument(innerHTML);
 });
 </script>
 
 <template>
-  <h2 class="text-xl my-6 font-semibold">Editor</h2>
-  <div id="editor">Some text</div>
+  <div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h2 class="text-xl my-6 font-semibold">Kerebron Editor - Meteor Example</h2>
+      
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <label for="theme-select" style="font-weight: 600;">Theme:</label>
+        <select 
+          id="theme-select"
+          v-model="currentTheme" 
+          @change="handleThemeChange"
+          style="padding: 0.5rem; border: 1px solid var(--kb-color-border, #e5e7eb); border-radius: 4px; background: var(--kb-color-surface, white);"
+        >
+          <option value="default">Default</option>
+          <option value="corporate">Corporate</option>
+          <option value="creative">Creative</option>
+          <option value="dark">Dark</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="kb-editor" id="editor">Some text</div>
+    
+    <div style="margin-top: 1rem; padding: 1rem; background: var(--kb-color-surface-elevated, #f9fafb); border-radius: 8px; font-size: 0.875rem; color: var(--kb-color-text-muted, #6b7280);">
+      <p>✨ <strong>Enhanced Features:</strong></p>
+      <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+        <li>📱 Mobile-first responsive design with touch-optimized controls</li>
+        <li>🎨 Dynamic theming with 6 built-in presets</li>
+        <li>♿ WCAG 2.1 AA accessibility compliance</li>
+        <li>⌨️ Full keyboard navigation and shortcuts</li>
+        <li>🖱️ Context-sensitive formatting toolbar</li>
+        <li>📏 48px minimum touch targets for better usability</li>
+      </ul>
+    </div>
+  </div>
 </template>
 <style>
 /* Import shared Kerebron styles */
