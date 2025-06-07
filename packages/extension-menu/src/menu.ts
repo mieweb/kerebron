@@ -40,27 +40,90 @@ export class MenuItem implements MenuElement {
   render(view: EditorView) {
     let spec = this.spec;
     let dom = spec.render ? spec.render(view) : null;
-    if (!dom && spec.icon) {
-      dom = getIcon(view.root, spec.icon);
+    
+    if (!dom) {
+      // Create a proper button element for better accessibility
+      dom = document.createElement('button');
+      dom.setAttribute('type', 'button');
+      
+      // Add our new CSS classes while maintaining backward compatibility
+      dom.classList.add(prefix + '-item', 'kb-toolbar__item');
+      
+      if (spec.icon) {
+        const icon = getIcon(view.root, spec.icon);
+        dom.appendChild(icon);
+        dom.classList.add('kb-toolbar__item--icon-only');
+      }
+      
+      if (spec.label) {
+        const labelSpan = document.createElement('span');
+        labelSpan.appendChild(document.createTextNode(translate(view, spec.label)));
+        dom.appendChild(labelSpan);
+        if (spec.icon) {
+          dom.classList.remove('kb-toolbar__item--icon-only');
+        }
+      }
+      
+      if (!spec.icon && !spec.label) {
+        throw new RangeError('MenuItem without icon or label property');
+      }
     }
-    if (!dom && spec.label) {
-      dom = document.createElement('div');
-      dom.appendChild(document.createTextNode(translate(view, spec.label)));
-    }
-    if (!dom) throw new RangeError('MenuItem without icon or label property');
+
+    // Set accessibility attributes
     if (spec.title) {
       const title = typeof spec.title === 'function'
         ? spec.title(view.state)
         : spec.title;
-      (dom as HTMLElement).setAttribute('title', translate(view, title));
+      dom.setAttribute('title', translate(view, title));
+      dom.setAttribute('aria-label', translate(view, title));
     }
+    
     if (spec.class) dom.classList.add(spec.class);
     if (spec.css) dom.style.cssText += spec.css;
 
-    dom.addEventListener('mousedown', (e) => {
+    // Enhanced event handling for better mobile experience
+    let isPointerDown = false;
+    
+    // Handle touch and mouse events
+    const handleActivation = (e: Event) => {
       e.preventDefault();
-      if (!dom!.classList.contains(prefix + '-disabled')) {
+      if (!dom!.classList.contains(prefix + '-disabled') && 
+          !dom!.classList.contains('kb-toolbar__item--disabled')) {
         spec.run(view.state, view.dispatch);
+        view.focus();
+      }
+    };
+    
+    // Use pointer events for better cross-device support
+    dom.addEventListener('pointerdown', (e) => {
+      isPointerDown = true;
+      dom!.classList.add('kb-toolbar__item--pressed');
+    });
+    
+    dom.addEventListener('pointerup', (e) => {
+      if (isPointerDown) {
+        isPointerDown = false;
+        dom!.classList.remove('kb-toolbar__item--pressed');
+        handleActivation(e);
+      }
+    });
+    
+    dom.addEventListener('pointercancel', () => {
+      isPointerDown = false;
+      dom!.classList.remove('kb-toolbar__item--pressed');
+    });
+    
+    // Fallback for older browsers
+    dom.addEventListener('mousedown', (e) => {
+      if (!isPointerDown) {
+        handleActivation(e);
+      }
+    });
+    
+    // Keyboard accessibility
+    dom.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        handleActivation(e);
       }
     });
 
@@ -74,10 +137,14 @@ export class MenuItem implements MenuElement {
       if (spec.enable) {
         enabled = spec.enable(state) || false;
         setClass(dom!, prefix + '-disabled', !enabled);
+        setClass(dom!, 'kb-toolbar__item--disabled', !enabled);
+        dom!.setAttribute('aria-disabled', (!enabled).toString());
       }
       if (spec.active) {
         let active = enabled && spec.active(state) || false;
         setClass(dom!, prefix + '-active', active);
+        setClass(dom!, 'kb-toolbar__item--active', active);
+        dom!.setAttribute('aria-pressed', active.toString());
       }
       return true;
     }
@@ -195,8 +262,10 @@ export class Dropdown implements MenuElement {
     let content = renderDropdownItems(this.content, view);
     let win = view.dom.ownerDocument.defaultView;
 
-    let label = document.createElement('div');
-    label.classList.add(prefix + '-dropdown');
+    // Create a button element instead of div for better accessibility
+    let label = document.createElement('button');
+    label.setAttribute('type', 'button');
+    label.classList.add(prefix + '-dropdown', 'kb-dropdown__trigger', 'kb-toolbar__item');
     if (this.options.class) {
       label.classList.add(this.options.class);
     }
@@ -205,32 +274,68 @@ export class Dropdown implements MenuElement {
       document.createTextNode(translate(view, this.options.label || '')),
     );
     if (this.options.title) {
-      label.setAttribute('title', translate(view, this.options.title));
+      const title = translate(view, this.options.title);
+      label.setAttribute('title', title);
+      label.setAttribute('aria-label', title);
     }
+    
+    // Set ARIA attributes for accessibility
+    label.setAttribute('aria-haspopup', 'true');
+    label.setAttribute('aria-expanded', 'false');
+    
     let wrap = document.createElement('div');
-    wrap.classList.add(prefix + '-dropdown-wrap');
+    wrap.classList.add(prefix + '-dropdown-wrap', 'kb-dropdown');
     wrap.appendChild(label);
+    
     let open: { close: () => boolean; node: HTMLElement } | null = null;
     let listeningOnClose: (() => void) | null = null;
-    let close = () => {
+    
+    const close = () => {
       if (open && open.close()) {
         open = null;
+        label.setAttribute('aria-expanded', 'false');
+        wrap.classList.remove('kb-dropdown--open');
+        win.removeEventListener('pointerdown', listeningOnClose!);
         win.removeEventListener('mousedown', listeningOnClose!);
       }
     };
-    label.addEventListener('mousedown', (e) => {
+    
+    const toggle = (e: Event) => {
       e.preventDefault();
       markMenuEvent(e);
       if (open) {
         close();
       } else {
         open = this.expand(wrap, content.dom);
-        win.addEventListener(
-          'mousedown',
-          listeningOnClose = () => {
-            if (!isMenuEvent(wrap)) close();
-          },
-        );
+        label.setAttribute('aria-expanded', 'true');
+        wrap.classList.add('kb-dropdown--open');
+        
+        // Use both pointer and mouse events for compatibility
+        const closeHandler = (event: Event) => {
+          if (!isMenuEvent(wrap)) close();
+        };
+        
+        listeningOnClose = closeHandler;
+        win.addEventListener('pointerdown', closeHandler);
+        win.addEventListener('mousedown', closeHandler);
+      }
+    };
+    
+    // Enhanced event handling for touch devices
+    label.addEventListener('pointerdown', toggle);
+    label.addEventListener('mousedown', (e) => {
+      // Fallback for browsers that don't support pointer events
+      if (!('PointerEvent' in window)) {
+        toggle(e);
+      }
+    });
+    
+    // Keyboard accessibility
+    label.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        toggle(e);
+      } else if (e.key === 'Escape' && open) {
+        close();
       }
     });
 
@@ -246,19 +351,70 @@ export class Dropdown implements MenuElement {
   /// @internal
   expand(dom: HTMLElement, items: readonly Node[]) {
     const menuDOM = document.createElement('div');
-    menuDOM.classList.add(prefix + '-dropdown-menu');
+    menuDOM.classList.add(prefix + '-dropdown-menu', 'kb-dropdown__menu');
+    menuDOM.setAttribute('role', 'menu');
+    
     if (this.options.class) {
       menuDOM.classList.add(this.options.class);
     }
-    items.forEach((item) => menuDOM.appendChild(item));
+    
+    // Mobile optimization: check if we should use mobile layout
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      menuDOM.classList.add('kb-dropdown__menu--mobile');
+    }
+    
+    items.forEach((item, index) => {
+      // Add role and tabindex for accessibility
+      if (item instanceof HTMLElement) {
+        item.setAttribute('role', 'menuitem');
+        item.setAttribute('tabindex', index === 0 ? '0' : '-1');
+        item.classList.add('kb-dropdown__item');
+      }
+      menuDOM.appendChild(item);
+    });
+    
     let done = false;
     function close(): boolean {
       if (done) return false;
       done = true;
-      dom.removeChild(menuDOM);
+      if (menuDOM.parentNode) {
+        menuDOM.parentNode.removeChild(menuDOM);
+      }
       return true;
     }
+    
     dom.appendChild(menuDOM);
+    
+    // Focus first menu item for keyboard navigation
+    const firstItem = menuDOM.querySelector('[role="menuitem"]') as HTMLElement;
+    if (firstItem) {
+      firstItem.focus();
+    }
+    
+    // Add keyboard navigation within the menu
+    menuDOM.addEventListener('keydown', (e) => {
+      const items = Array.from(menuDOM.querySelectorAll('[role="menuitem"]')) as HTMLElement[];
+      const currentIndex = items.indexOf(e.target as HTMLElement);
+      
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          const nextIndex = (currentIndex + 1) % items.length;
+          items[nextIndex].focus();
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          const prevIndex = (currentIndex - 1 + items.length) % items.length;
+          items[prevIndex].focus();
+          break;
+        case 'Escape':
+          e.preventDefault();
+          close();
+          break;
+      }
+    });
+    
     return { close, node: menuDOM };
   }
 }
