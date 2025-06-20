@@ -1,3 +1,8 @@
+<script>
+import {Mongo} from "meteor/mongo";
+const collectionName = 'ephemeralChannel';
+const collection = new Mongo.Collection(collectionName + 'Messages');
+</script>
 <script setup>
 import * as random from 'lib0/random';
 import * as Y from 'yjs';
@@ -31,7 +36,7 @@ onMounted(() => {
   const ydoc = new Y.Doc();
 
   const roomId = 'room-abc';
-  const meteorProvider = new MeteorProvider(roomId, ydoc);
+  const meteorProvider = new MeteorProvider(roomId, ydoc, collectionName, collection);
 
   meteorProvider.on('status', event => {
     console.log('wsProvider status', event.status) // logs "connected" or "disconnected"

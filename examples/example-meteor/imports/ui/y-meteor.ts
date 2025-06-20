@@ -27,7 +27,6 @@ interface EVENTS {
 
 export class MeteorProvider extends ObservableV2<EVENTS> {
   private awareness: awarenessProtocol.Awareness;
-  private collection: Mongo.Collection<Document, Document>;
   private messageHandlers: Handler[];
   private _synced: boolean;
   private _updateHandler: (update: Uint8Array, origin: any) => void;
@@ -40,10 +39,11 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
   private wsconnected: boolean;
   private _exitHandler: () => void;
 
-  constructor(private roomId: string, private doc: Y.Doc, private collectionName = 'ephemeralChannel') {
+  constructor(private roomId: string,
+              private doc: Y.Doc,
+              private collectionName: string,
+              private collection: Mongo.Collection<Document, Document>) {
     super();
-
-    this.collection = new Mongo.Collection(collectionName + 'Messages');
 
     const awareness = this.awareness = new awarenessProtocol.Awareness(doc);
     this.setupMessageHandlers();
