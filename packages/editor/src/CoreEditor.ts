@@ -12,6 +12,7 @@ import type { Content, EditorOptions, JSONContent } from './types.ts';
 import { EditorState, Transaction } from 'prosemirror-state';
 import { createNodeFromContent } from './utilities/createNodeFromContent.ts';
 import { ChainedCommands, CommandManager } from './commands/CommandManager.ts';
+import {debugDoc} from './debugDoc.ts';
 
 export function getHTMLFromFragment(
   fragment: Fragment,
@@ -40,6 +41,35 @@ function createDocument(
     parseOptions,
     errorOnInvalidContent: options.errorOnInvalidContent,
   }) as ProseMirrorNode;
+}
+
+function ensureDocSchema(doc: ProseMirrorNode, schema: Schema) {
+  if (doc.type.schema != schema) {
+    const findNode = (nodeName: string) => {
+      if (!schema.nodes[nodeName]) {
+        throw new Error(`Not able to rewrite schema for node '${nodeName}'`);
+      }
+      return schema.nodes[nodeName];
+    }
+    const findMark = (markName: string) => {
+      if (!schema.marks[markName]) {
+        throw new Error(`Not able to rewrite schema for mark '${markName}'`);
+      }
+      return schema.marks[markName];
+    }
+
+    // TODO fix readonly warnings
+    doc.type = findNode(doc.type.name);
+    doc.marks.forEach(mark => {
+      mark.type = findMark(mark.type.name);
+    });
+    doc.descendants(node => {
+      node.type = findNode(node.type.name);
+      node.marks.forEach(mark => {
+        mark.type = findMark(mark.type.name);
+      });
+    });
+  }
 }
 
 export class CoreEditor extends EventTarget {
@@ -107,7 +137,7 @@ export class CoreEditor extends EventTarget {
     }
   }
 
-  private dispatchTransaction(transaction: Transaction) {
+  public dispatchTransaction(transaction: Transaction) {
     this.state = this.state.apply(transaction);
     if (this.view) {
       this.view.updateState(this.state);
@@ -172,6 +202,8 @@ export class CoreEditor extends EventTarget {
       );
     }
 
+    ensureDocSchema(doc, this.schema);
+
     this.state = EditorState.create({
       doc,
       plugins: this.state.plugins,
@@ -194,10 +226,27 @@ export class CoreEditor extends EventTarget {
     if (mediaType) {
       const converter = this.extensionManager.converters[mediaType];
       if (converter) {
-        return converter.fromDoc(this.state.doc);
+        const json = this.state.doc.toJSON();
+        const clonedDoc = ProseMirrorNode.fromJSON(this.state.schema, json);
+
+        return converter.fromDoc(clonedDoc);
       }
     }
 
     return this.state.doc;
+  }
+
+  public clone(options: Partial<EditorOptions> = {}): CoreEditor {
+    return new CoreEditor({
+      ...options,
+      extensions: [ ...this.options.extensions ]
+    });
+  }
+
+  public debug(doc?: ProseMirrorNode) {
+    if (!doc) {
+      doc = this.state.doc;
+    }
+    debugDoc(doc);
   }
 }
