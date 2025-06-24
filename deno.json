@@ -42,7 +42,7 @@
     "yjs": "npm:yjs@13.6.24",
     "y-protocols": "npm:y-protocols@1.0.6",
     "y-websocket": "npm:y-websocket@2.1.0",
-    "y-prosemirror": "npm:y-prosemirror@1.2.11",
+    "y-prosemirror": "npm:y-prosemirror@1.3.6",
     "lib0": "npm:lib0@0.2.42",
     "orderedmap": "npm:orderedmap@latest",
 

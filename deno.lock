@@ -88,7 +88,7 @@
     "npm:webdriverio@^9.4.5": "9.12.1",
     "npm:xmldom@*": "0.6.0",
     "npm:y-leveldb@latest": "0.1.2_yjs@13.6.24",
-    "npm:y-prosemirror@1.2.11": "1.2.11_prosemirror-model@1.24.1_prosemirror-state@1.4.3_prosemirror-view@1.33.6_y-protocols@1.0.6__yjs@13.6.24_yjs@13.6.24",
+    "npm:y-prosemirror@1.3.6": "1.3.6_prosemirror-model@1.24.1_prosemirror-state@1.4.3_prosemirror-view@1.33.6_y-protocols@1.0.6__yjs@13.6.24_yjs@13.6.24",
     "npm:y-protocols@1.0.6": "1.0.6_yjs@13.6.24",
     "npm:y-websocket@2.1.0": "2.1.0_yjs@13.6.24",
     "npm:yjs@13.6.24": "13.6.24"
@@ -1856,6 +1856,12 @@
         "isomorphic.js"
       ]
     },
+    "lib0@0.2.109": {
+      "integrity": "sha512-jP0gbnyW0kwlx1Atc4dcHkBbrVAkdHjuyHxtClUPYla7qCmwIif1qZ6vQeJdR5FrOVdn26HvQT0ko01rgW7/Xw==",
+      "dependencies": [
+        "isomorphic.js"
+      ]
+    },
     "lib0@0.2.42": {
       "integrity": "sha512-8BNM4MiokEKzMvSxTOC3gnCBisJH+jL67CnSnqzHv3jli3pUvGC8wz+0DQ2YvGr4wVQdb2R2uNNPw9LEpVvJ4Q==",
       "dependencies": [
@@ -2741,10 +2747,10 @@
         "yjs"
       ]
     },
-    "y-prosemirror@1.2.11_prosemirror-model@1.24.1_prosemirror-state@1.4.3_prosemirror-view@1.33.6_y-protocols@1.0.6__yjs@13.6.24_yjs@13.6.24": {
-      "integrity": "sha512-MUGMYyokOb9DpBRHr4Cadob2KheDCKW2LHceAM2yrWp9dfX+3HZZUNEubEPd4zszq4DF2fGCFhE3N66zOTLoxA==",
+    "y-prosemirror@1.3.6_prosemirror-model@1.24.1_prosemirror-state@1.4.3_prosemirror-view@1.33.6_y-protocols@1.0.6__yjs@13.6.24_yjs@13.6.24": {
+      "integrity": "sha512-vtS2rv8+ll/TBQRqwUiqflgSuN/DhfvUQX0r5O3o5i0pO6K4pSNgFtVkOKtNWPBVkS6l9BDQjbtnDNftZnxq7Q==",
       "dependencies": [
-        "lib0@0.2.101",
+        "lib0@0.2.109",
         "prosemirror-model@1.24.1",
         "prosemirror-state",
         "prosemirror-view@1.33.6",
@@ -2864,7 +2870,7 @@
       "npm:prosemirror-transform@1.10.4",
       "npm:prosemirror-view@1.40.0",
       "npm:thememirror@2.0.1",
-      "npm:y-prosemirror@1.2.11",
+      "npm:y-prosemirror@1.3.6",
       "npm:y-protocols@1.0.6",
       "npm:y-websocket@2.1.0",
       "npm:yjs@13.6.24"
