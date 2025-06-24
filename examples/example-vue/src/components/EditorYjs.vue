@@ -12,7 +12,7 @@
         <button @click="loadDoc">Simulate loadDoc</button>
         <button @click="loadDoc2">loadDoc</button>
       </div>
-      <div ref="editor" class="w-50"></div>
+      <div ref="editor"></div>
     </div>
     <div class="w-50">
       <div class="h-33">
