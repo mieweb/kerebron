@@ -1,12 +1,15 @@
-import { DOMSerializer, Schema } from 'prosemirror-model';
+import { DOMSerializer, Schema, Fragment } from 'prosemirror-model';
 import MarkdownIt from 'markdown-it';
 
 import Token from 'markdown-it/lib/token.mjs';
 
 import { type Converter, type CoreEditor, Extension } from '@kerebron/editor';
+import { Mark } from '@kerebron/editor';
+
 import { MarkdownSerializer } from './MarkdownSerializer.ts';
 import { MarkdownParser } from './MarkdownParser.ts';
-import { Mark } from '@kerebron/editor';
+
+import {romanize} from './utils.ts';
 
 function listIsTight(tokens: readonly Token[], i: number) {
   while (++i < tokens.length) {
@@ -15,23 +18,68 @@ function listIsTight(tokens: readonly Token[], i: number) {
   return false;
 }
 
+function removeMarkedContent(node, markType) {
+  if (node.isText) {
+    const hasMark = node.marks.some(mark => mark.type === markType);
+    return hasMark ? null : node;
+  }
+
+  if (node.isLeaf) {
+    return node;
+  }
+
+  const newContent = [];
+
+  node.content.forEach(child => {
+    const cleaned = removeMarkedContent(child, markType);
+    if (cleaned) {
+      newContent.push(cleaned);
+    }
+  });
+
+  return node.copy(Fragment.fromArray(newContent));
+}
+
+function convertDomToLowerCase(node) {
+  // If the node is an element, change its tag name and attributes
+  if (node.nodeType === 1) { // Element node
+    // Convert tag name to lowercase
+    node.nodeName = node.nodeName.toLowerCase();
+
+    // Loop through attributes and convert them to lowercase
+    for (let i = 0; i < node.attributes.length; i++) {
+      const attr = node.attributes[i];
+      node.setAttribute(attr.name.toLowerCase(), attr.value);
+    }
+  }
+
+  // Recursively convert children nodes
+  for (let i = 0; i < node.childNodes.length; i++) {
+    convertDomToLowerCase(node.childNodes[i]);
+  }
+}
+
 export class ExtensionMarkdown extends Extension {
   name = 'markdown';
 
-  getConverters(schema: Schema): Record<string, Converter> {
+  getConverters(editor: CoreEditor, schema: Schema): Record<string, Converter> {
     const domSerializer = DOMSerializer.fromSchema(schema);
+    const autoLinks = false; // TODO - config
     return {
       'text/x-markdown': {
         fromDoc(document) {
           /// A serializer for the [basic schema](#schema).
           const defaultMarkdownSerializer = new MarkdownSerializer({
             html(state, node) {
+              const domSerializer = DOMSerializer.fromSchema(schema);
               const element = domSerializer.serializeNode(node, {
                 document: globalThis.document,
               });
+              convertDomToLowerCase(element);
               const xmlSerializer = new XMLSerializer();
               const html = xmlSerializer.serializeToString(element) + '\n';
-              state.write(html.replace(/\sxmlns="[^"]*"/, ''));
+              // state.write(html.replace(/\sxmlns="[^"]*"/, ''));
+              state.write(html);
             },
             blockquote(state, node) {
               state.wrapBlock(
@@ -67,17 +115,35 @@ export class ExtensionMarkdown extends Extension {
             bullet_list(state, node) {
               state.renderList(
                 node,
-                '  ',
+                '    ',
                 () => (node.attrs.bullet || '*') + ' ',
               );
             },
             ordered_list(state, node) {
               let start = node.attrs.start || 1;
               let maxW = String(start + node.childCount - 1).length;
-              let space = state.repeat(' ', maxW + 2);
+              let space = state.repeat(' ', 4);
+
+              let numericString = (i: number) => String(i) + '. ';
+
+              if (['a'].includes(node.attrs?.type || '')) {
+                numericString = (i: number) => String.fromCharCode('a'.charCodeAt(0) + i - 1) + '.  ';
+              }
+              if (['A'].includes(node.attrs?.type || '')) {
+                numericString = (i: number) => String.fromCharCode('A'.charCodeAt(0) + i - 1) + '.  ';
+              }
+              if (['I'].includes(node.attrs?.type || '')) {
+                numericString = (i: number) => `${romanize(i)}. `;
+              }
+              if (['i'].includes(node.attrs?.type || '')) {
+                numericString = (i: number) => `${romanize(i).toLowerCase()}. `;
+              }
+
               state.renderList(node, space, (i) => {
-                let nStr = String(start + i);
-                return state.repeat(' ', maxW - nStr.length) + nStr + '. ';
+                const number = start + i;
+
+                let nStr = numericString(number);
+                return state.repeat(' ', maxW - nStr.length) + nStr;
               });
             },
             list_item(state, node) {
@@ -123,7 +189,7 @@ export class ExtensionMarkdown extends Extension {
             },
             link: {
               open(state, mark, parent, index) {
-                state.inAutolink = isPlainURL(mark, parent, index);
+                state.inAutolink = autoLinks && isPlainURL(mark, parent, index);
                 return state.inAutolink ? '<' : '[';
               },
               close(state, mark, parent, index) {
@@ -138,6 +204,20 @@ export class ExtensionMarkdown extends Extension {
                     ')';
               },
               mixable: true,
+            },
+            bookmark: {
+              open(state, mark) {
+                const id = mark.attrs.id;
+                if (state.alreadyOutputedIds.has(id)) {
+                  return '';
+                }
+
+                state.alreadyOutputedIds.add(id);
+                return `<a id="${id}"></a>`;
+              },
+              close() {
+                return '';
+              }
             },
             code: {
               open(_state, _mark, parent, index) {
@@ -176,6 +256,9 @@ export class ExtensionMarkdown extends Extension {
             return index == parent.childCount - 1 ||
               !link.isInSet(parent.child(index + 1).marks);
           }
+
+          document = removeMarkedContent(document, schema.marks.change);
+          // deleteAllMarkedText('change', state, dispatch)
 
           return defaultMarkdownSerializer.serialize(document);
         },

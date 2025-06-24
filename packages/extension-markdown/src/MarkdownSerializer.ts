@@ -1,4 +1,5 @@
-import { DOMSerializer, Mark, Node } from 'prosemirror-model';
+import { Mark, Node } from 'prosemirror-model';
+import {fixCharacters} from './utils.ts';
 
 type MarkSerializerSpec = {
   /// The string that should appear before a piece of content marked
@@ -86,7 +87,7 @@ export class MarkdownSerializer {
     options = Object.assign({}, this.options, options);
     let state = new MarkdownSerializerState(this.nodes, this.marks, options);
     state.renderContent(content);
-    return state.out;
+    return state.out + '\n';
   }
 }
 
@@ -106,6 +107,8 @@ export class MarkdownSerializerState {
   atBlockStart: boolean = false;
   /// @internal
   inTightList: boolean = false;
+
+  alreadyOutputedIds: Set<String> = new Set();
 
   /// @internal
   constructor(
@@ -137,7 +140,7 @@ export class MarkdownSerializerState {
   }
 
   /// @internal
-  flushClose(size: number = 2) {
+  flushClose(size: number = 4) {
     if (this.closed) {
       if (!this.atBlank()) this.out += '\n';
       if (size > 1) {
@@ -146,8 +149,10 @@ export class MarkdownSerializerState {
         if (trim) {
           delimMin = delimMin.slice(0, delimMin.length - trim[0].length);
         }
-        for (let i = 1; i < size; i++) {
-          this.out += delimMin + '\n';
+        if (delimMin) { // TODO: checking lists
+          for (let i = 1; i < size; i++) {
+            this.out += delimMin + '\n';
+          }
         }
       }
       this.closed = null;
@@ -388,7 +393,7 @@ export class MarkdownSerializerState {
   /// delimiter for the first line of the item.
   renderList(node: Node, delim: string, firstDelim: (index: number) => string) {
     if (this.closed && this.closed.type == node.type) {
-      this.flushClose(3);
+      this.flushClose(4);
     } else if (this.inTightList) {
       this.flushClose(1);
     }
@@ -431,6 +436,7 @@ export class MarkdownSerializerState {
     if (this.options.escapeExtraCharacters) {
       str = str.replace(this.options.escapeExtraCharacters, '\\$&');
     }
+    str = fixCharacters(str);
     return str;
   }
 
