@@ -12,7 +12,7 @@ import type { Content, EditorOptions, JSONContent } from './types.ts';
 import { EditorState, Transaction } from 'prosemirror-state';
 import { createNodeFromContent } from './utilities/createNodeFromContent.ts';
 import { ChainedCommands, CommandManager } from './commands/CommandManager.ts';
-import {debugDoc} from './debugDoc.ts';
+import {nodeToTreeString} from './nodeToTreeString.ts';
 
 export function getHTMLFromFragment(
   fragment: Fragment,
@@ -247,6 +247,6 @@ export class CoreEditor extends EventTarget {
     if (!doc) {
       doc = this.state.doc;
     }
-    debugDoc(doc);
+    console.debug(nodeToTreeString(doc));
   }
 }
