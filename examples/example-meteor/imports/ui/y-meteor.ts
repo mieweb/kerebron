@@ -2,27 +2,38 @@ import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 import { Tracker } from 'meteor/tracker';
 
-import * as Y from 'yjs' // eslint-disable-line
-import * as encoding from 'lib0/encoding'
-import * as decoding from 'lib0/decoding'
-import * as syncProtocol from 'y-protocols/sync'
-import * as authProtocol from 'y-protocols/auth'
-import * as awarenessProtocol from 'y-protocols/awareness'
-import { ObservableV2 } from 'lib0/observable'
+import * as Y from 'yjs'; // eslint-disable-line
+import * as encoding from 'lib0/encoding';
+import * as decoding from 'lib0/decoding';
+import * as syncProtocol from 'y-protocols/sync';
+import * as authProtocol from 'y-protocols/auth';
+import * as awarenessProtocol from 'y-protocols/awareness';
+import { ObservableV2 } from 'lib0/observable';
 
-export const messageSync = 0
-export const messageQueryAwareness = 3
-export const messageAwareness = 1
-export const messageAuth = 2
+export const messageSync = 0;
+export const messageQueryAwareness = 3;
+export const messageAwareness = 1;
+export const messageAuth = 2;
 
-type Handler = (encoder: encoding.Encoder, decoder: decoding.Decoder, provider: MeteorProvider, emitSynced: boolean, messageType: number) => void;
+type Handler = (
+  encoder: encoding.Encoder,
+  decoder: decoding.Decoder,
+  provider: MeteorProvider,
+  emitSynced: boolean,
+  messageType: number,
+) => void;
 
 interface EVENTS {
-  'connection-close': (event: CloseEvent | null,  provider: MeteorProvider) => any,
-  'status': (event: { status: 'connected' | 'disconnected' | 'connecting' }) => any,
-  'connection-error': (event: Event, provider: MeteorProvider) => any,
-  'sync': (state: boolean) => any,
-  'synced': (state: boolean) => any
+  'connection-close': (
+    event: CloseEvent | null,
+    provider: MeteorProvider,
+  ) => any;
+  'status': (
+    event: { status: 'connected' | 'disconnected' | 'connecting' },
+  ) => any;
+  'connection-error': (event: Event, provider: MeteorProvider) => any;
+  'sync': (state: boolean) => any;
+  'synced': (state: boolean) => any;
 }
 
 export class MeteorProvider extends ObservableV2<EVENTS> {
@@ -30,19 +41,21 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
   private messageHandlers: Handler[];
   private _synced: boolean;
   private _updateHandler: (update: Uint8Array, origin: any) => void;
-  private _awarenessUpdateHandler: ({added, updated, removed}: {
+  private _awarenessUpdateHandler: ({ added, updated, removed }: {
     added: any;
     updated: any;
-    removed: any
+    removed: any;
   }, _origin) => void;
   private handle: Meteor.LiveQueryHandle;
   private wsconnected: boolean;
   private _exitHandler: () => void;
 
-  constructor(private roomId: string,
-              private doc: Y.Doc,
-              private collectionName: string,
-              private collection: Mongo.Collection<Document, Document>) {
+  constructor(
+    private roomId: string,
+    private doc: Y.Doc,
+    private collectionName: string,
+    private collection: Mongo.Collection<Document, Document>,
+  ) {
     super();
 
     const awareness = this.awareness = new awarenessProtocol.Awareness(doc);
@@ -57,7 +70,7 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
         syncProtocol.writeUpdate(encoder, update);
         this.broadcastMessage(encoding.toUint8Array(encoder));
       }
-    }
+    };
     this.doc.on('update', this._updateHandler);
 
     this._awarenessUpdateHandler = ({ added, updated, removed }, _origin) => {
@@ -66,20 +79,20 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
       encoding.writeVarUint(encoder, messageAwareness);
       encoding.writeVarUint8Array(
         encoder,
-        awarenessProtocol.encodeAwarenessUpdate(awareness, changedClients)
+        awarenessProtocol.encodeAwarenessUpdate(awareness, changedClients),
       );
       this.broadcastMessage(encoding.toUint8Array(encoder));
-    }
+    };
 
     this._exitHandler = () => {
       awarenessProtocol.removeAwarenessStates(
         this.awareness,
         [doc.clientID],
-        'app closed'
+        'app closed',
       );
-    }
+    };
 
-    this.awareness.on('update', this._awarenessUpdateHandler)
+    this.awareness.on('update', this._awarenessUpdateHandler);
     this.connect();
 
     this.joinRoom(this.roomId, (msg) => {
@@ -94,7 +107,7 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
     Meteor.subscribe(this.collectionName, roomId, {
       onReady() {
         console.log(`Subscribed to ${roomId}`);
-      }
+      },
     });
 
     this.handle = this.collection.find().observeChanges({
@@ -103,7 +116,7 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
         onMessage({ _id: id, ...fields });
         // Optional: remove the message immediately so it doesn't pile up
         // this.collection.remove(id);
-      }
+      },
     });
 
     return () => this.handle.stop(); // to unsubscribe from handler later
@@ -115,11 +128,11 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
     }
   }
 
-  get synced () {
+  get synced() {
     return this._synced;
   }
 
-  set synced (state) {
+  set synced(state) {
     if (this._synced !== state) {
       this._synced = state;
       this.emit('synced', [state]);
@@ -162,7 +175,7 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
     this.synced = false;
 
     this.emit('status', [{
-      status: 'connecting'
+      status: 'connecting',
     }]);
 
     Tracker.autorun(() => {
@@ -174,7 +187,7 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
         case 'connected':
           this.wsconnected = true;
           this.emit('status', [{
-            status: 'connected'
+            status: 'connected',
           }]);
           // always send sync step 1 when connected
           const encoder = encoding.createEncoder();
@@ -188,8 +201,8 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
             encoding.writeVarUint8Array(
               encoderAwarenessState,
               awarenessProtocol.encodeAwarenessUpdate(this.awareness, [
-                this.doc.clientID
-              ])
+                this.doc.clientID,
+              ]),
             );
             this.broadcastMessage(encoding.toUint8Array(encoderAwarenessState));
           }
@@ -213,10 +226,10 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
         Array.from(this.awareness.getStates().keys()).filter((client) =>
           client !== this.doc.clientID
         ),
-        this
+        this,
       );
       this.emit('status', [{
-        status: 'disconnected'
+        status: 'disconnected',
       }]);
     }
   }
@@ -228,69 +241,71 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
       decoder,
       provider,
       emitSynced,
-      _messageType
+      _messageType,
     ) => {
       encoding.writeVarUint(encoder, messageSync);
       const syncMessageType = syncProtocol.readSyncMessage(
         decoder,
         encoder,
         provider.doc,
-        provider
+        provider,
       );
       if (
         emitSynced && syncMessageType === syncProtocol.messageYjsSyncStep2 &&
         !provider.synced
       ) {
-        provider.synced = true
+        provider.synced = true;
       }
-    }
+    };
 
     this.messageHandlers[messageQueryAwareness] = (
       encoder,
       _decoder,
       provider,
       _emitSynced,
-      _messageType
+      _messageType,
     ) => {
       encoding.writeVarUint(encoder, messageAwareness);
       encoding.writeVarUint8Array(
         encoder,
         awarenessProtocol.encodeAwarenessUpdate(
           provider.awareness,
-          Array.from(provider.awareness.getStates().keys())
-        )
+          Array.from(provider.awareness.getStates().keys()),
+        ),
       );
-    }
+    };
 
     this.messageHandlers[messageAwareness] = (
       _encoder,
       decoder,
       provider,
       _emitSynced,
-      _messageType
+      _messageType,
     ) => {
       awarenessProtocol.applyAwarenessUpdate(
         provider.awareness,
         decoding.readVarUint8Array(decoder),
-        provider
+        provider,
       );
-    }
+    };
 
     const permissionDeniedHandler = (provider: MeteorProvider, reason) =>
-      console.warn(`Permission denied to access ${provider.roomId}.\n${reason}`);
+      console.warn(
+        `Permission denied to access ${provider.roomId}.\n${reason}`,
+      );
 
     this.messageHandlers[messageAuth] = (
       _encoder,
       decoder,
       provider,
       _emitSynced,
-      _messageType
+      _messageType,
     ) => {
       authProtocol.readAuthMessage(
         decoder,
         provider.doc,
-        (_ydoc, reason) => permissionDeniedHandler(provider, reason)
+        (_ydoc, reason) => permissionDeniedHandler(provider, reason),
       );
-    }
+    };
   }
 }
