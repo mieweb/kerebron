@@ -7,6 +7,7 @@ export class NodeDocument extends Node {
   override getNodeSpec(): NodeSpec {
     return {
       content: 'block+',
+      marks: 'code em strong link bookmark', // TODO: why is it necessary for convertCodeParagraphsToCodeBlocks?
       EMPTY_DOC: {
         'type': this.name,
         'content': [

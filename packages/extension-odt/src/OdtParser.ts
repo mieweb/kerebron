@@ -7,6 +7,8 @@ import {
   Schema,
 } from 'prosemirror-model';
 
+const COURIER_FONTS = ['Courier New', 'Courier', 'Roboto Mono'];
+
 interface OdtElement {
 }
 
@@ -15,9 +17,11 @@ export interface ParseSpec {
 
   children?: (node: OdtElement) => OdtElement[];
 
+  custom?: (state: OdtParseState, element?: OdtElement) => void;
+
   text?: (node: OdtElement) => string;
 
-  block?: string | ((node: OdtElement) => string);
+  block?: string | ((node: OdtElement, style: any) => [string]);
 
   mark?: string;
 
@@ -60,7 +64,7 @@ interface AutomaticStyles {
 function resolveStyle(
   stylesTree: StylesTree,
   automaticStyles: AutomaticStyles,
-  name,
+  name: string,
 ) {
   let style;
 
@@ -83,22 +87,31 @@ function resolveStyle(
   style['styles'] = [name];
 
   if (style['@parent-style-name']) {
-    const parenStyle = resolveStyle(
+    const parentStyle = resolveStyle(
       stylesTree,
       automaticStyles,
       style['@parent-style-name'],
     );
-    if (parenStyle) {
-      const styles = [...style['styles'], ...parenStyle['styles']];
+    if (parentStyle) {
+      const styles = [...style['styles'], ...parentStyle['styles']];
+      for (const key in style) {
+        if (typeof style[key] === 'undefined') {
+          delete style[key];
+        }
+      }
       style = {
-        ...parenStyle,
+        ...parentStyle,
         ...style,
         styles,
       };
     }
   }
-
   return style;
+}
+
+interface TextMark {
+  markName: string;
+  markAttributes: Record<string, string>;
 }
 
 class OdtParseState {
@@ -108,9 +121,12 @@ class OdtParseState {
     content: Node[];
     marks: readonly Mark[];
   }[];
+  textMarks: Set<TextMark> = new Set();
+  nextTextMarks: Set<TextMark> = new Set();
 
   constructor(
     readonly schema: Schema,
+    readonly tokens: { [name: string]: ParseSpec },
     private readonly stylesTree: StylesTree,
     private readonly automaticStyles: AutomaticStyles,
   ) {
@@ -131,12 +147,24 @@ class OdtParseState {
   addText(text: string) {
     if (!text) return;
     let top = this.top(), nodes = top.content, last = nodes[nodes.length - 1];
-    let node = this.schema.text(text, top.marks), merged;
-    // if (last && (merged = maybeMerge(last, node))) {
-    //   nodes[nodes.length - 1] = merged;
-    // } else
 
-    // console.log('addtext', top.type.name, "'" + text + "'");
+    let marks = top.marks;
+
+    for (const textMark of this.textMarks) {
+      const markType = this.schema.marks[textMark.markName];
+      const mark = markType.create(textMark.markAttributes || {});
+      marks = mark.addToSet(marks);
+    }
+
+    for (const textMark of this.nextTextMarks) {
+      const markType = this.schema.marks[textMark.markName];
+      const mark = markType.create(textMark.markAttributes || {});
+      marks = mark.addToSet(marks);
+    }
+    this.nextTextMarks.clear();
+
+    let node = this.schema.text(text, marks), merged;
+
     nodes.push(node);
   }
 
@@ -144,6 +172,7 @@ class OdtParseState {
   openMark(mark: Mark) {
     let top = this.top();
     top.marks = mark.addToSet(top.marks);
+    return mark.type;
   }
 
   // Removes the given mark from the set of active marks.
@@ -153,9 +182,12 @@ class OdtParseState {
   }
 
   // Add a node at the current position.
-  addNode(type: NodeType, attrs: Attrs | null, content?: readonly Node[]) {
+  addNode(type: NodeType, attrs: Attrs | null, content?: readonly Node[], marks = Mark.none) {
     let top = this.top();
-    let node = type.createAndFill(attrs, content, top ? top.marks : []);
+    if (top?.marks) {
+      marks = [ ...top.marks, ...marks ];
+    }
+    let node = type.createAndFill(attrs, content, marks);
     if (!node) return null;
     this.push(node);
     return node;
@@ -163,24 +195,22 @@ class OdtParseState {
 
   // Wrap subsequent content in a node of the given type.
   openNode(type: NodeType, attrs: Attrs | null) {
-    // console.log('openNode', type.name, attrs);
     this.stack.push({
       type: type,
       attrs: attrs,
       content: [],
-      marks: Mark.none,
+      marks: Mark.none
     });
   }
 
   // Close and return the node that is currently on top of the stack.
-  closeNode() {
+  closeNode(marks = Mark.none) {
     let info = this.stack.pop()!;
-    // console.log('closeNode', info.type.name, info.attrs);
-    return this.addNode(info.type, info.attrs, info.content);
+    return this.addNode(info.type, info.attrs, info.content, marks);
   }
 
   handleElement(nodeType: string, element: OdtElement) {
-    const spec = tokens[nodeType];
+    const spec = this.tokens[nodeType];
     if (!spec) {
       console.warn(
         'No spec for:',
@@ -191,23 +221,53 @@ class OdtParseState {
       return;
     }
 
-    // console.log('handleElement', nodeType, this.stack.length);
-    const children = spec.children ? spec.children(element) : [];
-    // console.log('ccc', nodeType, children);
+    if (spec.custom) {
+      spec.custom(this, element);
+      return;
+    }
 
-    let style;
-    if ('object' === typeof element && element['@style-name']) {
-      style = resolveStyle(
-        this.stylesTree,
-        this.automaticStyles,
-        element['@style-name'],
-      );
+    const children = spec.children ? spec.children(element) : [];
+
+    const style = ('object' === typeof element && element['@style-name']) ? resolveStyle(
+      this.stylesTree,
+      this.automaticStyles,
+      element['@style-name'],
+    ) : {};
+
+    const markToClose = [];
+
+    const textProperties = style && style['text-properties'] || {};
+
+    const marks = [];
+
+    if (COURIER_FONTS.indexOf(textProperties['@font-name'] || '') > -1) {
+      this.textMarks.add({
+        markName: 'code',
+        markAttributes: {}
+      });
+
+      const markType = this.schema.mark('code');
+      marks.push(markType);
+    }
+
+    // if (style.textProperties?.fontStyle === 'italic' && style.textProperties?.fontWeight === 'bold') {
+    //   const block = this.chunks.createNode('BI');
+    //   this.chunks.append(currentTagNode, block);
+    //   currentTagNode = block;
+    // } else
+    if (textProperties['@font-style'] === 'italic') {
+      const markType = this.schema.marks['em'];
+      markToClose.push(this.openMark(markType.create(attrs(spec, element, style))));
+    } else
+    if (textProperties['@font-weight'] === 'bold') {
+      const markType = this.schema.marks['strong'];
+      markToClose.push(this.openMark(markType.create(attrs(spec, element, style))));
     }
 
     if (spec.block) {
       let block = spec.block;
       if ('string' !== typeof block) {
-        block = block(element, style);
+        block = block(element, style)[0];
       }
 
       let nodeType = this.schema.nodeType(block);
@@ -221,10 +281,10 @@ class OdtParseState {
       }
 
       // this.addText(withoutTrailingNewline(tok.content));
-      this.closeNode();
+      this.closeNode(marks);
     } else if (spec.node) {
     } else if (spec.mark) {
-      let markType = this.schema.marks[spec.mark];
+      const markType = this.schema.marks[spec.mark];
 
       this.openMark(markType.create(attrs(spec, element, style)));
 
@@ -244,7 +304,17 @@ class OdtParseState {
         });
       }
     }
+
+    while (markToClose.length > 0) {
+      const markType = markToClose.pop();
+      this.closeMark(markType);
+    }
+
+    if (COURIER_FONTS.indexOf(textProperties['@font-name'] || '') > -1) {
+      this.textMarks.forEach(x => x.markName === 'code' ? this.textMarks.delete(x) : x);
+    }
   }
+
 }
 
 function iterateChildren(nodes: unknown[], callback) {
@@ -286,108 +356,306 @@ function iterateEnum($value: unknown[]) {
   });
 }
 
-const tokens: { [name: string]: ParseSpec } = {
-  'body': {
-    children: (odtElement) => iterateEnum(odtElement.text?.$value),
-  },
-  'p': {
-    block: (odtElement: OdtElement, style) => {
-      if (style.styles.find((item) => item.startsWith('Heading_20_'))) {
-        return 'heading';
-      }
-      return 'paragraph';
-    },
-    getAttrs: (odtElement: OdtElement, style) => {
-      const heading = style.styles.find((item) =>
-        item.startsWith('Heading_20_')
-      );
-      if (heading) {
-        return {
-          level: parseInt(heading.substring('Heading_20_'.length)),
-        };
-      }
-    },
-    children: (odtElement) => iterateEnum(odtElement.$value),
-  },
-  'span': {
-    children: (odtElement) => iterateEnum(odtElement.$value),
-  },
-  'list': {
-    block: 'ordered_list',
-    children: (odtElement) =>
-      odtElement['list-item'].map((item) => ({ 'list-item': item })),
-  },
-  'list-item': {
-    block: 'list_item',
-    children: (odtElement) => iterateEnum(odtElement.$value),
-  },
-  'table': {
-    block: 'table',
-    children: (odtElement) =>
-      odtElement['table-row'].map((item) => ({ 'table-row': item })),
-  },
-  'table-row': {
-    block: 'table_row',
-    children: (odtElement) =>
-      odtElement['table-cell'].map((item) => ({ 'table-cell': item })),
-  },
-  'table-cell': {
-    block: 'table_cell',
-    children: (odtElement) => iterateEnum(odtElement.$value),
-  },
-  'a': {
-    mark: 'link',
-    getAttrs: (tok) => ({
-      href: tok['@href'],
-      // title: tok.attrGet('title') || null,
-    }),
-    children: (odtElement) => odtElement['span'].map(item => ({ 'span': item }))
-  },
-  '$value': {
-    children: (odtElement) => iterateEnum(odtElement),
-  },
-  '$text': {
-    // TODO: fix trimming: https://github.com/tafia/quick-xml/issues/285
-    text: (odtElement) => String(odtElement || ''),
-  },
-  's': {
-    text: (odtElement) => {
-      const chars = odtElement['@c'] || 1;
-      return '               '.substring(0, chars);
-    },
-  },
-  'tab': {
-    text: (odtElement) => '\t',
-  },
-  'table-of-content': {
-    block: 'paragraph',
-    children: (odtElement) => odtElement['index-body']['p'] || [],
-  },
-  'frame': {
-    ignore: true,
-  },
-  'rect': {
-    ignore: true,
-  },
-  'bookmark': {
-    ignore: true,
-  },
-  'annotation': {
-    ignore: true,
-  },
-};
+interface Config {
+  linkFromRewriter?(href: string): string;
+}
+
+class ListNumbering {
+
+  levels: {[level: number]: number} = {};
+  levelNodes: {[level: number]: Node} = {};
+
+  constructor() {
+    for (let i = 0; i < 20; i++) {
+      this.levels[i] = 1;
+    }
+  }
+
+  clearAbove(level: number) {
+    for (let i = level + 1; i < 20; i++) {
+      this.levels[i] = 1;
+    }
+  }
+
+  setLevelNode(level: number, node: Node) {
+    this.levelNodes[level] = node;
+  }
+
+}
 
 export class OdtParser {
-  constructor(private readonly schema: Schema) {
+  listStack = [];
+
+  listNumberings: Map<string, ListNumbering> = new Map<string, ListNumbering>();
+  private lastNumbering?: ListNumbering;
+  preserveMinLevel = 999;
+
+  constructor(private readonly schema: Schema, private readonly config: Config = {}) {
     // this.tokenHandlers = tokenHandlers(schema, tokens);
   }
 
   parse(files: any) {
     const contentTree = files.contentTree;
     const stylesTree = files.stylesTree;
+    const automaticStyles = contentTree['automatic-styles'];
+
+    const tokens: { [name: string]: ParseSpec } = {
+      'body': {
+        children: (odtElement) => iterateEnum(odtElement.text?.$value),
+      },
+      'p': {
+        block: (odtElement: OdtElement, style) => {
+          if (style.styles.find((item) => item.startsWith('Heading_20_'))) {
+            return ['heading'];
+          }
+          return ['paragraph'];
+        },
+        getAttrs: (odtElement: OdtElement, style) => {
+          const heading = style.styles.find((item) =>
+            item.startsWith('Heading_20_')
+          );
+          if (heading) {
+            return {
+              level: parseInt(heading.substring('Heading_20_'.length)),
+            };
+          }
+        },
+        children: (odtElement) => iterateEnum(odtElement.$value),
+      },
+      'span': {
+        children: (odtElement) => iterateEnum(odtElement.$value),
+      },
+      'list': {
+        custom: (state, odtElement) => {
+          const list = {
+            level: this.listStack.length + 1,
+            odtElement
+          };
+          this.listStack.push(list);
+
+          let style = {};
+          let listId = null;
+          for (let i = this.listStack.length - 1; i >= 0; i--) {
+            const element = this.listStack[i].odtElement;
+            if (!listId) {
+              if (element['@id']) {
+                listId = element['@id'];
+              }
+            }
+            if (!style['@style-name']) {
+              style = ('object' === typeof element && element['@style-name']) ? resolveStyle(
+                stylesTree,
+                automaticStyles,
+                element['@style-name'],
+              ) : {};
+            }
+          }
+
+          let nodeTypeName = 'bullet_list';
+          const attrs = {};
+          if (style) {
+            const numLevelStyle = style['list-level-style-number'].find(levelStyle => parseInt(levelStyle['@level']) === list.level);
+            if (numLevelStyle) {
+              attrs['type'] = numLevelStyle['@num-format'] || '1';
+              nodeTypeName = 'ordered_list';
+            }
+          }
+
+          let listNumbering = null;
+
+          if (listId && this.listNumberings.has(listId)) {
+            listNumbering = this.listNumberings.get(listId);
+          }
+
+          let isContinue = false;
+          if (odtElement['@continue-list'] && this.listNumberings.has(odtElement['@continue-list'])) {
+            listNumbering = this.listNumberings.get(odtElement['@continue-list']);
+            isContinue = true;
+          }
+          if (odtElement['@continue-numbering']) {
+            listNumbering = this.lastNumbering;
+            isContinue = true;
+          }
+
+          if (!listNumbering) {
+            listNumbering = new ListNumbering();
+          }
+
+          if (isContinue) {
+            this.preserveMinLevel = 999;
+          }
+
+          if (listId) {
+            this.listNumberings.set(listId, listNumbering);
+          }
+
+          this.lastNumbering = listNumbering;
+
+          if (this.preserveMinLevel <= list.level) {
+            listNumbering.clearAbove(list.level - 1);
+          }
+
+          if (nodeTypeName === 'ordered_list') {
+            attrs['start'] = listNumbering.levels[list.level] || 1;
+          }
+
+          let nodeType = this.schema.nodeType(nodeTypeName);
+
+          state.openNode(nodeType, attrs);
+
+          const children = odtElement['list-item'].map((item) => ({ 'list-item': item }));
+
+          if (children) {
+            iterateChildren(children, (nodeType, node) => {
+              state.handleElement(nodeType, node);
+            });
+
+            listNumbering.levels[list.level] += children.length;
+          }
+
+          state.closeNode();
+
+          if (this.preserveMinLevel >= list.level) {
+            this.preserveMinLevel = list.level;
+          }
+
+          this.listStack.pop();
+        }
+      },
+      'list-item': {
+        block: 'list_item',
+        children: (odtElement) => iterateEnum(odtElement.$value),
+      },
+      'table': {
+        block: 'table',
+        children: (odtElement) =>
+          odtElement['table-row'].map((item) => ({ 'table-row': item })),
+      },
+      'table-row': {
+        block: 'table_row',
+        children: (odtElement) =>
+          odtElement['table-cell'].map((item) => ({ 'table-cell': item })),
+      },
+      'table-cell': {
+        block: 'table_cell',
+        children: (odtElement) => iterateEnum(odtElement.$value),
+      },
+      'a': {
+        mark: 'link',
+        getAttrs: (tok) => {
+          let href = tok['@href'];
+          if (this.config.linkFromRewriter) {
+            href = this.config.linkFromRewriter(href);
+          }
+          return {
+            href,
+            // title: tok.attrGet('title') || null,
+          }
+        },
+        children: (odtElement) => iterateEnum(odtElement.$value),
+      },
+      '$value': {
+        children: (odtElement) => iterateEnum(odtElement),
+      },
+      '$text': {
+        // TODO: fix trimming: https://github.com/tafia/quick-xml/issues/285
+        text: (odtElement) => String(odtElement || ''),
+      },
+      's': {
+        text: (odtElement) => {
+          const chars = odtElement['@c'] || 1;
+          return '               '.substring(0, chars);
+        },
+      },
+      'tab': {
+        text: (odtElement) => '\t',
+      },
+      'line-break': {
+        block: 'br'
+      },
+      'soft-page-break': {
+        block: 'br'
+      },
+      'table-of-content': {
+        block: 'paragraph',
+        children: (odtElement) => odtElement['index-body']['p'] || [],
+      },
+      'change-start': {
+        custom(state) {
+          state.textMarks.add({
+            markName: 'change',
+            markAttributes: {}
+          });
+        }
+      },
+      'change-end': {
+        custom(state) {
+          state.textMarks.forEach(x => x.markName === 'change' ? state.textMarks.delete(x) : x);
+        }
+      },
+      'frame': {
+        custom: (state, odtElement) => {
+          if (odtElement.object && odtElement.object['@href']) { // TODO MathML
+            // const fileName= drawFrame.object.href.replace(/\s/g, '_').replace(/^\.\//, '') + '.xml';
+            // try {
+            //   const mathMl = this.xmlMap[fileName];
+            //   if (mathMl && mathMl.indexOf('<math ') > -1) {
+            //     const node = this.chunks.createNode('MATHML');
+            //     const latex = MathMLToLaTeX.convert(mathMl);
+            //     this.chunks.appendText(node, latex);
+            //     this.chunks.append(currentTagNode, node);
+            //   }
+            // } catch (err) {
+            //   console.warn(err);
+            // }
+          }
+          if (odtElement.image && odtElement.image['@href']) { // TODO links rewrite
+            const nodeType = this.schema.nodeType('image');
+            const alt = odtElement.description?.value || '';
+
+            state.addNode(nodeType, {
+              src: odtElement.image['@href'],
+              alt
+            }, []);
+          }
+        }
+      },
+      'rect': {
+        ignore: true,
+      },
+      'bookmark': {
+        custom(state, element) {
+          state.nextTextMarks.add({
+            markName: 'bookmark',
+            markAttributes: {
+              id: element['@name']
+            }
+          });
+        }
+      },
+      'bookmark-start': {
+        custom(state, element) {
+          state.textMarks.add({
+            markName: 'bookmark',
+            markAttributes: {
+              id: element['@name']
+            }
+          });
+        }
+      },
+      'bookmark-end': {
+        custom(state, element) {
+          state.textMarks.forEach(x => x.markName === 'bookmark' && x.markAttributes.id === element['@name'] ? state.textMarks.delete(x) : x);
+        }
+      },
+      'annotation': {
+        ignore: true,
+      },
+    };
 
     const state = new OdtParseState(
       this.schema,
+      tokens,
       stylesTree,
       contentTree['automatic-styles'],
     );

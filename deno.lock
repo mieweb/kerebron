@@ -54,6 +54,7 @@
     "npm:@codemirror/view@6.36.5": "6.36.5",
     "npm:@vitejs/plugin-vue@5.2.3": "5.2.3_vite@6.2.2_vue@3.5.13__typescript@5.8.2_typescript@5.8.2",
     "npm:debug@*": "4.4.0",
+    "npm:diff@*": "4.0.2",
     "npm:esbuild@*": "0.25.2",
     "npm:fast-check@*": "4.0.0",
     "npm:fast-check@^3.17.1": "3.23.2",
@@ -69,9 +70,12 @@
     "npm:prosemirror-inputrules@1.5.0": "1.5.0",
     "npm:prosemirror-keymap@1.2.2": "1.2.2",
     "npm:prosemirror-model@1.24.1": "1.24.1",
+    "npm:prosemirror-model@1.25.1": "1.25.1",
     "npm:prosemirror-state@1.4.3": "1.4.3",
     "npm:prosemirror-transform@1.10.3": "1.10.3",
+    "npm:prosemirror-transform@1.10.4": "1.10.4",
     "npm:prosemirror-view@1.33.6": "1.33.6",
+    "npm:prosemirror-view@1.40.0": "1.40.0",
     "npm:thememirror@2.0.1": "2.0.1_@codemirror+language@6.11.0_@codemirror+state@6.5.2_@codemirror+view@6.36.5",
     "npm:typescript@*": "5.8.2",
     "npm:vite-plugin-wasm@*": "3.4.1_vite@6.2.2",
@@ -263,8 +267,8 @@
         "prosemirror-schema-basic",
         "prosemirror-schema-list",
         "prosemirror-state",
-        "prosemirror-transform",
-        "prosemirror-view"
+        "prosemirror-transform@1.10.3",
+        "prosemirror-view@1.33.6"
       ]
     },
     "@babel/helper-string-parser@7.25.9": {
@@ -2097,15 +2101,15 @@
     "prosemirror-changeset@2.2.1": {
       "integrity": "sha512-J7msc6wbxB4ekDFj+n9gTW/jav/p53kdlivvuppHsrZXCaQdVgRghoZbSS3kwrRyAstRVQ4/+u5k7YfLgkkQvQ==",
       "dependencies": [
-        "prosemirror-transform"
+        "prosemirror-transform@1.10.3"
       ]
     },
     "prosemirror-dropcursor@1.8.1": {
       "integrity": "sha512-M30WJdJZLyXHi3N8vxN6Zh5O8ZBbQCz0gURTfPmTIBNQ5pxrdU7A58QkNqfa98YEjSAL1HUyyU34f6Pm5xBSGw==",
       "dependencies": [
         "prosemirror-state",
-        "prosemirror-transform",
-        "prosemirror-view"
+        "prosemirror-transform@1.10.3",
+        "prosemirror-view@1.33.6"
       ]
     },
     "prosemirror-gapcursor@1.3.2": {
@@ -2114,15 +2118,15 @@
         "prosemirror-keymap",
         "prosemirror-model@1.24.1",
         "prosemirror-state",
-        "prosemirror-view"
+        "prosemirror-view@1.33.6"
       ]
     },
     "prosemirror-history@1.4.1": {
       "integrity": "sha512-2JZD8z2JviJrboD9cPuX/Sv/1ChFng+xh2tChQ2X4bB2HeK+rra/bmJ3xGntCcjhOqIzSDG6Id7e8RJ9QPXLEQ==",
       "dependencies": [
         "prosemirror-state",
-        "prosemirror-transform",
-        "prosemirror-view",
+        "prosemirror-transform@1.10.3",
+        "prosemirror-view@1.33.6",
         "rope-sequence"
       ]
     },
@@ -2130,7 +2134,7 @@
       "integrity": "sha512-K0xJRCmt+uSw7xesnHmcn72yBGTbY45vm8gXI4LZXbx2Z0jwh5aF9xrGQgrVPu0WbyFVFF3E/o9VhJYz6SQWnA==",
       "dependencies": [
         "prosemirror-state",
-        "prosemirror-transform"
+        "prosemirror-transform@1.10.3"
       ]
     },
     "prosemirror-keymap@1.2.2": {
@@ -2152,6 +2156,12 @@
         "orderedmap"
       ]
     },
+    "prosemirror-model@1.25.1": {
+      "integrity": "sha512-AUvbm7qqmpZa5d9fPKMvH1Q5bqYQvAZWOGRvxsB6iFLyycvC9MwNemNVjHVrWgjaoxAfY8XVg7DbvQ/qxvI9Eg==",
+      "dependencies": [
+        "orderedmap"
+      ]
+    },
     "prosemirror-schema-basic@1.2.4": {
       "integrity": "sha512-ELxP4TlX3yr2v5rM7Sb70SqStq5NvI15c0j9j/gjsrO5vaw+fnnpovCLEGIcpeGfifkuqJwl4fon6b+KdrODYQ==",
       "dependencies": [
@@ -2163,15 +2173,15 @@
       "dependencies": [
         "prosemirror-model@1.25.0",
         "prosemirror-state",
-        "prosemirror-transform"
+        "prosemirror-transform@1.10.3"
       ]
     },
     "prosemirror-state@1.4.3": {
       "integrity": "sha512-goFKORVbvPuAQaXhpbemJFRKJ2aixr+AZMGiquiqKxaucC6hlpHNZHWgz5R7dS4roHiwq9vDctE//CZ++o0W1Q==",
       "dependencies": [
         "prosemirror-model@1.24.1",
-        "prosemirror-transform",
-        "prosemirror-view"
+        "prosemirror-transform@1.10.3",
+        "prosemirror-view@1.33.6"
       ]
     },
     "prosemirror-transform@1.10.3": {
@@ -2180,12 +2190,26 @@
         "prosemirror-model@1.24.1"
       ]
     },
+    "prosemirror-transform@1.10.4": {
+      "integrity": "sha512-pwDy22nAnGqNR1feOQKHxoFkkUtepoFAd3r2hbEDsnf4wp57kKA36hXsB3njA9FtONBEwSDnDeCiJe+ItD+ykw==",
+      "dependencies": [
+        "prosemirror-model@1.25.1"
+      ]
+    },
     "prosemirror-view@1.33.6": {
       "integrity": "sha512-zRLUNgLIQfd8IfGprsXxWTjdA8xEAFJe8cDNrOptj6Mop9sj+BMeVbJvceyAYCm5G2dOdT2prctH7K9dfnpIMw==",
       "dependencies": [
         "prosemirror-model@1.24.1",
         "prosemirror-state",
-        "prosemirror-transform"
+        "prosemirror-transform@1.10.3"
+      ]
+    },
+    "prosemirror-view@1.40.0": {
+      "integrity": "sha512-2G3svX0Cr1sJjkD/DYWSe3cfV5VPVTBOxI9XQEGWJDFEpsZb/gh4MV29ctv+OJx2RFX4BLt09i+6zaGM/ldkCw==",
+      "dependencies": [
+        "prosemirror-model@1.25.1",
+        "prosemirror-state",
+        "prosemirror-transform@1.10.4"
       ]
     },
     "proxy-agent@6.5.0": {
@@ -2723,7 +2747,7 @@
         "lib0@0.2.101",
         "prosemirror-model@1.24.1",
         "prosemirror-state",
-        "prosemirror-view",
+        "prosemirror-view@1.33.6",
         "y-protocols",
         "yjs"
       ]
@@ -2789,6 +2813,12 @@
       ]
     }
   },
+  "remote": {
+    "https://deno.land/std@0.178.0/fmt/colors.ts": "938c5d44d889fb82eff6c358bea8baa7e85950a16c9f6dae3ec3a7a729164471",
+    "https://deno.land/std@0.178.0/testing/_diff.ts": "1a3c044aedf77647d6cac86b798c6417603361b66b54c53331b312caeb447aea",
+    "https://deno.land/std@0.178.0/testing/_format.ts": "a69126e8a469009adf4cf2a50af889aca364c349797e63174884a52ff75cf4c7",
+    "https://deno.land/std@0.178.0/testing/asserts.ts": "984ab0bfb3faeed92ffaa3a6b06536c66811185328c5dd146257c702c41b01ab"
+  },
   "workspace": {
     "dependencies": [
       "jsr:@deno/dnt@~0.42.1",
@@ -2829,10 +2859,10 @@
       "npm:prosemirror-history@1.4.1",
       "npm:prosemirror-inputrules@1.5.0",
       "npm:prosemirror-keymap@1.2.2",
-      "npm:prosemirror-model@1.24.1",
+      "npm:prosemirror-model@1.25.1",
       "npm:prosemirror-state@1.4.3",
-      "npm:prosemirror-transform@1.10.3",
-      "npm:prosemirror-view@1.33.6",
+      "npm:prosemirror-transform@1.10.4",
+      "npm:prosemirror-view@1.40.0",
       "npm:thememirror@2.0.1",
       "npm:y-prosemirror@1.2.11",
       "npm:y-protocols@1.0.6",

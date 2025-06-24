@@ -19,6 +19,8 @@ import { MarkStrong } from './MarkStrong.ts';
 import { MarkItalic } from './MarkItalic.ts';
 import { MarkUnderline } from './MarkUnderline.ts';
 import { MarkCode } from './MarkCode.ts';
+import { MarkChange } from './MarkChange.ts';
+import { MarkBookmark } from './MarkBookmark.ts';
 
 export class ExtensionBasicEditor extends Extension {
   name = 'basic-editor';
@@ -43,5 +45,7 @@ export class ExtensionBasicEditor extends Extension {
     new MarkStrong(),
     new MarkUnderline(),
     new MarkCode(),
+    new MarkChange(),
+    new MarkBookmark(),
   ];
 }

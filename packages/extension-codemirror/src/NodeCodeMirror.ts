@@ -51,6 +51,7 @@ export class NodeCodeMirror extends Node {
   };
 
   override getConverters(
+    editor: CoreEditor,
     schema: Schema,
   ): Record<string, Converter> {
     return {

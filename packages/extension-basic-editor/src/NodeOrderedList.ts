@@ -19,6 +19,14 @@ export class NodeOrderedList extends Node {
   requires = ['doc'];
 
   attributes = {
+    type: {
+      default: '1',
+      fromDom(element: HTMLElement) {
+        return element.hasAttribute('type')
+          ? element.getAttribute('type')
+          : '1';
+      },
+    },
     start: {
       default: 1,
       fromDom(element: HTMLElement) {
