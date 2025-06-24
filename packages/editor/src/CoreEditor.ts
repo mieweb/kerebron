@@ -1,47 +1,15 @@
 import { EditorView } from 'prosemirror-view';
 import {
-  DOMSerializer,
-  Fragment,
   Node as ProseMirrorNode,
-  ParseOptions,
   type Schema,
 } from 'prosemirror-model';
 
 import { ExtensionManager } from './ExtensionManager.ts';
-import type { Content, EditorOptions, JSONContent } from './types.ts';
+import type { EditorOptions, JSONContent } from './types.ts';
 import { EditorState, Transaction } from 'prosemirror-state';
 import { createNodeFromContent } from './utilities/createNodeFromContent.ts';
 import { ChainedCommands, CommandManager } from './commands/CommandManager.ts';
 import {nodeToTreeString} from './nodeToTreeString.ts';
-
-export function getHTMLFromFragment(
-  fragment: Fragment,
-  schema: Schema,
-): string {
-  const documentFragment = DOMSerializer.fromSchema(schema).serializeFragment(
-    fragment,
-  );
-
-  const temporaryDocument = document.implementation.createHTMLDocument();
-  const container = temporaryDocument.createElement('div');
-
-  container.appendChild(documentFragment);
-
-  return container.innerHTML;
-}
-
-function createDocument(
-  content: Content | ProseMirrorNode | Fragment,
-  schema: Schema,
-  parseOptions: ParseOptions = {},
-  options: { errorOnInvalidContent?: boolean } = {},
-): ProseMirrorNode {
-  return createNodeFromContent(content, schema, {
-    slice: false,
-    parseOptions,
-    errorOnInvalidContent: options.errorOnInvalidContent,
-  }) as ProseMirrorNode;
-}
 
 function ensureDocSchema(doc: ProseMirrorNode, schema: Schema) {
   if (doc.type.schema != schema) {
@@ -120,12 +88,7 @@ export class CoreEditor extends EventTarget {
   }
 
   private createView(content: any) {
-    let doc = createDocument(
-      content,
-      this.schema,
-      this.options.parseOptions,
-      { errorOnInvalidContent: false },
-    );
+    const doc = createNodeFromContent(content, this.schema);
 
     this.state = EditorState.create({ doc });
 
@@ -165,24 +128,12 @@ export class CoreEditor extends EventTarget {
     }
   }
 
-  public getJSON(): JSONContent {
-    return this.state.doc.toJSON();
-  }
-
-  /**
-   * Get the document as HTML.
-   */
-  public getHTML(): string {
-    return getHTMLFromFragment(this.state.doc.content, this.schema);
-  }
-
   public setDocument(content?: any, mediaType?: string) {
-    if (!content) { // clear
+    if (!content) {
       content = {
         type: this.extensionManager.schema.topNodeType.name,
         content:
           this.extensionManager.schema.topNodeType.spec.EMPTY_DOC.content,
-        // content: this.extensionManager.schema.topNodeType.createAndFill(),
       };
       mediaType = undefined;
     }
@@ -194,12 +145,7 @@ export class CoreEditor extends EventTarget {
         doc = converter.toDoc(content);
       }
     } else {
-      doc = createDocument(
-        content,
-        this.schema,
-        this.options.parseOptions,
-        { errorOnInvalidContent: false },
-      );
+      doc = createNodeFromContent(content, this.schema);
     }
 
     ensureDocSchema(doc, this.schema);
@@ -231,9 +177,17 @@ export class CoreEditor extends EventTarget {
 
         return converter.fromDoc(clonedDoc);
       }
+
+      if (mediaType === 'text/json') {
+        return this.getJSON();
+      }
     }
 
     return this.state.doc;
+  }
+
+  public getJSON(): JSONContent {
+    return this.state.doc.toJSON();
   }
 
   public clone(options: Partial<EditorOptions> = {}): CoreEditor {

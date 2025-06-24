@@ -21,6 +21,7 @@ import { MarkUnderline } from './MarkUnderline.ts';
 import { MarkCode } from './MarkCode.ts';
 import { MarkChange } from './MarkChange.ts';
 import { MarkBookmark } from './MarkBookmark.ts';
+import { ExtensionHtml } from './ExtensionHtml.ts';
 
 export class ExtensionBasicEditor extends Extension {
   name = 'basic-editor';
@@ -28,6 +29,7 @@ export class ExtensionBasicEditor extends Extension {
     new ExtensionBaseKeymap(),
     new ExtensionDropcursor(),
     new ExtensionGapcursor(),
+    new ExtensionHtml(),
     new NodeDocument(),
     new NodeText(),
     new NodeParagraph(),

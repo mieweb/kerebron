@@ -40,7 +40,7 @@ export abstract class Extension {
     return {};
   }
 
-  getConverters(): Record<string, Converter> {
+  getConverters(editor: CoreEditor, schema: Schema): Record<string, Converter> {
     return {};
   }
 
