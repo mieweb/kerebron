@@ -37,6 +37,7 @@ pub struct TableCell {
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct TableColumn {
 //     #[serde(rename = "@table:number-columns-repeated")]
+    #[serde(default)]
     #[serde(rename = "@number-columns-repeated")]
     pub number_columns: u32
 }
@@ -115,6 +116,16 @@ pub struct TextSpan {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub enum TextLinkItem {
+//     #[serde(rename = "text:span")]
+    #[serde(rename = "span")]
+    TextSpan(TextSpan),
+
+    #[serde(rename = "$text")]
+    Text(String)
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct TextLink {
 //     #[serde(rename = "@xlink:href")]
     #[serde(rename = "@href")]
@@ -124,13 +135,27 @@ pub struct TextLink {
     #[serde(rename = "@style-name")]
     pub style_name: String,
 
-//     #[serde(rename = "text:span")]
-    #[serde(rename = "span")]
-    pub list: Vec<TextSpan>
+    #[serde(default)]
+    #[serde(rename = "$value")]
+    pub list: Vec<TextLinkItem>,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct TextBookmark {
+//     #[serde(rename = "@text:name")]
+    #[serde(rename = "@name")]
+    pub name: String
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct TextBookmarkStart {
+//     #[serde(rename = "@text:name")]
+    #[serde(rename = "@name")]
+    pub name: String
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct TextBookmarkEnd {
 //     #[serde(rename = "@text:name")]
     #[serde(rename = "@name")]
     pub name: String
@@ -174,11 +199,14 @@ pub struct SvgDesc {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct DrawFrame {
-    #[serde(rename = "draw:object")]
+//     #[serde(rename = "draw:object")]
+    #[serde(rename = "object")]
     object: Option<DrawObject>,
-    #[serde(rename = "draw:image")]
+//     #[serde(rename = "draw:image")]
+    #[serde(rename = "image")]
     image: Option<DrawImage>,
-    #[serde(rename = "svg:desc")]
+//     #[serde(rename = "svg:desc")]
+    #[serde(rename = "desc")]
     description: Option<SvgDesc>
 }
 
@@ -249,6 +277,10 @@ pub struct TextLineBreak {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct SoftPageBreak {
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct TextChangeStart {
 //     #[serde(rename = "@text:change-id")]
     #[serde(rename = "@change-id")]
@@ -276,6 +308,10 @@ pub enum TextParagraphItem {
 //     #[serde(rename = "text:line-break")]
     #[serde(rename = "line-break")]
     TextLineBreak,
+
+//     #[serde(rename = "text:soft-page-break")]
+    #[serde(rename = "soft-page-break")]
+    SoftPageBreak,
 //     #[serde(rename = "text:s")]
     #[serde(rename = "s")]
     TextSpace(TextSpace),
@@ -288,6 +324,10 @@ pub enum TextParagraphItem {
 //     #[serde(rename = "text:bookmark")]
     #[serde(rename = "bookmark")]
     TextBookmark(TextBookmark),
+    #[serde(rename = "bookmark-start")]
+    TextBookmarkStart(TextBookmarkStart),
+    #[serde(rename = "bookmark-end")]
+    TextBookmarkEnd(TextBookmarkEnd),
 
 //     #[serde(rename = "draw:rect")]
     #[serde(rename = "rect")]
