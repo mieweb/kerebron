@@ -1,5 +1,6 @@
 export function spaces(num: number) {
-  return '                                                                '.substring(0, num || 0);
+  return '                                                                '
+    .substring(0, num || 0);
 }
 
 export function inchesToSpaces(value: string): number {
@@ -37,7 +38,7 @@ export function inchesToPixels(value): number {
 
 export function fixCharacters(text) {
   return text
-    .replace(/’/g, '\'')
+    .replace(/’/g, "'")
     .replace(/“/g, '"')
     .replace(/”/g, '"')
     // deno-lint-ignore no-control-regex
@@ -60,7 +61,7 @@ export function romanize(num: number): string {
     ['IX', 9],
     ['V', 5],
     ['IV', 4],
-    ['I', 1]
+    ['I', 1],
   ];
 
   let roman = '';

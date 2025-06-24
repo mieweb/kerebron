@@ -1,15 +1,12 @@
 import { EditorView } from 'prosemirror-view';
-import {
-  Node as ProseMirrorNode,
-  type Schema,
-} from 'prosemirror-model';
+import { Node as ProseMirrorNode, type Schema } from 'prosemirror-model';
 
 import { ExtensionManager } from './ExtensionManager.ts';
 import type { EditorOptions, JSONContent } from './types.ts';
 import { EditorState, Transaction } from 'prosemirror-state';
 import { createNodeFromContent } from './utilities/createNodeFromContent.ts';
 import { ChainedCommands, CommandManager } from './commands/CommandManager.ts';
-import {nodeToTreeString} from './nodeToTreeString.ts';
+import { nodeToTreeString } from './nodeToTreeString.ts';
 
 function ensureDocSchema(doc: ProseMirrorNode, schema: Schema) {
   if (doc.type.schema != schema) {
@@ -18,22 +15,22 @@ function ensureDocSchema(doc: ProseMirrorNode, schema: Schema) {
         throw new Error(`Not able to rewrite schema for node '${nodeName}'`);
       }
       return schema.nodes[nodeName];
-    }
+    };
     const findMark = (markName: string) => {
       if (!schema.marks[markName]) {
         throw new Error(`Not able to rewrite schema for mark '${markName}'`);
       }
       return schema.marks[markName];
-    }
+    };
 
     // TODO fix readonly warnings
     doc.type = findNode(doc.type.name);
-    doc.marks.forEach(mark => {
+    doc.marks.forEach((mark) => {
       mark.type = findMark(mark.type.name);
     });
-    doc.descendants(node => {
+    doc.descendants((node) => {
       node.type = findNode(node.type.name);
-      node.marks.forEach(mark => {
+      node.marks.forEach((mark) => {
         mark.type = findMark(mark.type.name);
       });
     });
@@ -193,7 +190,7 @@ export class CoreEditor extends EventTarget {
   public clone(options: Partial<EditorOptions> = {}): CoreEditor {
     return new CoreEditor({
       ...options,
-      extensions: [ ...this.options.extensions ]
+      extensions: [...this.options.extensions],
     });
   }
 

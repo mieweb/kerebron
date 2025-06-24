@@ -1,8 +1,4 @@
-import {
-  Fragment,
-  Node as ProseMirrorNode,
-  Schema,
-} from 'prosemirror-model';
+import { Fragment, Node as ProseMirrorNode, Schema } from 'prosemirror-model';
 
 import type { Content } from '../types.ts';
 

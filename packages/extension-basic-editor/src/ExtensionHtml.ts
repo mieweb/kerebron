@@ -1,10 +1,10 @@
 import {
   DOMParser,
+  DOMSerializer,
   Fragment,
   Node,
   type ParseOptions,
   Schema,
-  DOMSerializer,
 } from 'prosemirror-model';
 
 import { type Converter, type CoreEditor, Extension } from '@kerebron/editor';
@@ -129,14 +129,17 @@ export function createFragmentFromHTML(
   }
 
   const parser = DOMParser.fromSchema(schema);
-  return parser.parseSlice(elementFromString(content), options.parseOptions).content;
+  return parser.parseSlice(elementFromString(content), options.parseOptions)
+    .content;
 }
-
 
 export class ExtensionHtml extends Extension {
   name = 'html';
 
-  override getConverters(editor: CoreEditor, schema: Schema): Record<string, Converter> {
+  override getConverters(
+    editor: CoreEditor,
+    schema: Schema,
+  ): Record<string, Converter> {
     const config = this.config;
     return {
       'text/html': {

@@ -1,4 +1,4 @@
-import { DOMSerializer, Schema, Fragment } from 'prosemirror-model';
+import { DOMSerializer, Fragment, Schema } from 'prosemirror-model';
 import MarkdownIt from 'markdown-it';
 
 import Token from 'markdown-it/lib/token.mjs';
@@ -9,7 +9,7 @@ import { Mark } from '@kerebron/editor';
 import { MarkdownSerializer } from './MarkdownSerializer.ts';
 import { MarkdownParser } from './MarkdownParser.ts';
 
-import {romanize} from './utils.ts';
+import { romanize } from './utils.ts';
 
 function listIsTight(tokens: readonly Token[], i: number) {
   while (++i < tokens.length) {
@@ -20,7 +20,7 @@ function listIsTight(tokens: readonly Token[], i: number) {
 
 function removeMarkedContent(node, markType) {
   if (node.isText) {
-    const hasMark = node.marks.some(mark => mark.type === markType);
+    const hasMark = node.marks.some((mark) => mark.type === markType);
     return hasMark ? null : node;
   }
 
@@ -30,7 +30,7 @@ function removeMarkedContent(node, markType) {
 
   const newContent = [];
 
-  node.content.forEach(child => {
+  node.content.forEach((child) => {
     const cleaned = removeMarkedContent(child, markType);
     if (cleaned) {
       newContent.push(cleaned);
@@ -127,10 +127,12 @@ export class ExtensionMarkdown extends Extension {
               let numericString = (i: number) => String(i) + '. ';
 
               if (['a'].includes(node.attrs?.type || '')) {
-                numericString = (i: number) => String.fromCharCode('a'.charCodeAt(0) + i - 1) + '.  ';
+                numericString = (i: number) =>
+                  String.fromCharCode('a'.charCodeAt(0) + i - 1) + '.  ';
               }
               if (['A'].includes(node.attrs?.type || '')) {
-                numericString = (i: number) => String.fromCharCode('A'.charCodeAt(0) + i - 1) + '.  ';
+                numericString = (i: number) =>
+                  String.fromCharCode('A'.charCodeAt(0) + i - 1) + '.  ';
               }
               if (['I'].includes(node.attrs?.type || '')) {
                 numericString = (i: number) => `${romanize(i)}. `;
@@ -217,7 +219,7 @@ export class ExtensionMarkdown extends Extension {
               },
               close() {
                 return '';
-              }
+              },
             },
             code: {
               open(_state, _mark, parent, index) {

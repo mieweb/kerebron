@@ -14,7 +14,10 @@ import { XMLSerializer } from 'npm:xmldom';
 
 globalThis.DOMParser = DOMParser;
 globalThis.XMLSerializer = XMLSerializer;
-const doc = new DOMParser().parseFromString('<html><body></body></html>', "text/html")!;
+const doc = new DOMParser().parseFromString(
+  '<html><body></body></html>',
+  'text/html',
+)!;
 // const doc = new DOMParser().parseFromString('<html><body></body></html>', "application/xhtml+xml")!;
 
 globalThis.document = doc;
@@ -23,12 +26,12 @@ globalThis.document = doc;
 
 console.log('document', doc.body.namespaceURI);
 
-import {CoreEditor} from "@kerebron/editor";
-import {ExtensionBasicEditor} from "@kerebron/extension-basic-editor";
-import {ExtensionMarkdown} from '@kerebron/extension-markdown';
-import {ExtensionOdt} from '@kerebron/extension-odt';
-import {ExtensionTables} from '@kerebron/extension-tables';
-import {NodeCodeMirror} from "@kerebron/extension-codemirror";
+import { CoreEditor } from '@kerebron/editor';
+import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
+import { ExtensionMarkdown } from '@kerebron/extension-markdown';
+import { ExtensionOdt } from '@kerebron/extension-odt';
+import { ExtensionTables } from '@kerebron/extension-tables';
+import { NodeCodeMirror } from '@kerebron/extension-codemirror';
 
 const __dirname = import.meta.dirname;
 
@@ -41,16 +44,16 @@ Deno.test('convert odt to md', function addTest() {
     new NodeCodeMirror(),
     new ExtensionTables(),
     extMd,
-    extOdt
+    extOdt,
   ];
 
   // const extensionManager = new ExtensionManager(extensions, this);
 
   const editor = new CoreEditor({
-    extensions
+    extensions,
   });
 
-  const input = Deno.readFileSync(__dirname + "/example-document.odt");
+  const input = Deno.readFileSync(__dirname + '/example-document.odt');
 
   editor.setDocument(input, 'application/vnd.oasis.opendocument.text');
 

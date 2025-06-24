@@ -1,24 +1,20 @@
-import {
-  MarkType,
-  Node,
-  Fragment,
-} from 'prosemirror-model';
-import {
-  Command,
-  Transaction,
-} from 'prosemirror-state';
+import { Fragment, MarkType, Node } from 'prosemirror-model';
+import { Command, Transaction } from 'prosemirror-state';
 
-function onlyHasCodeMarkedText(paragraph: Node, codeMarkType: MarkType): boolean {
+function onlyHasCodeMarkedText(
+  paragraph: Node,
+  codeMarkType: MarkType,
+): boolean {
   if (paragraph.content.size === 0) {
-    return paragraph.marks.some(mark => mark.type.name === codeMarkType.name);
+    return paragraph.marks.some((mark) => mark.type.name === codeMarkType.name);
   }
 
   let allAreCodeMarked = true;
 
-  paragraph.content.forEach(child => {
+  paragraph.content.forEach((child) => {
     if (
       !child.isText ||
-      !child.marks.some(mark => mark.type.name === codeMarkType.name)
+      !child.marks.some((mark) => mark.type.name === codeMarkType.name)
     ) {
       allAreCodeMarked = false;
     }
@@ -27,7 +23,10 @@ function onlyHasCodeMarkedText(paragraph: Node, codeMarkType: MarkType): boolean
   return allAreCodeMarked;
 }
 
-export const convertCodeParagraphsToCodeBlocks: Command = (state, dispatch): boolean => {
+export const convertCodeParagraphsToCodeBlocks: Command = (
+  state,
+  dispatch,
+): boolean => {
   const doc: Node = state.doc;
   const schema = state.schema;
   let tr: Transaction = state.tr;
@@ -40,9 +39,7 @@ export const convertCodeParagraphsToCodeBlocks: Command = (state, dispatch): boo
     }
 
     const textNode = schema.text(paragraphsToMerge.innerText);
-    const codeBlock = schema.nodes.code_block.createAndFill(null,
-      [textNode]
-    );
+    const codeBlock = schema.nodes.code_block.createAndFill(null, [textNode]);
 
     const startPos = tr.mapping.map(paragraphsToMerge.startPos);
     const endPos = tr.mapping.map(paragraphsToMerge.endPos);
@@ -59,7 +56,7 @@ export const convertCodeParagraphsToCodeBlocks: Command = (state, dispatch): boo
 
     let retVal = '';
 
-    fragment.content.forEach(node => {
+    fragment.content.forEach((node) => {
       if (node.isText) {
         retVal += node.text;
       } else {
@@ -77,10 +74,17 @@ export const convertCodeParagraphsToCodeBlocks: Command = (state, dispatch): boo
 
       if (isCodeOnly) {
         if (paragraphsToMerge === null) {
-          paragraphsToMerge = { startPos: pos, endPos: pos + node.nodeSize, innerText: nodesToText(node.content) };
+          paragraphsToMerge = {
+            startPos: pos,
+            endPos: pos + node.nodeSize,
+            innerText: nodesToText(node.content),
+          };
         } else {
-          paragraphsToMerge = { startPos: paragraphsToMerge.startPos, endPos: pos + node.nodeSize,
-            innerText: paragraphsToMerge.innerText + '\n' + nodesToText(node.content)
+          paragraphsToMerge = {
+            startPos: paragraphsToMerge.startPos,
+            endPos: pos + node.nodeSize,
+            innerText: paragraphsToMerge.innerText + '\n' +
+              nodesToText(node.content),
           };
         }
         return;
@@ -90,7 +94,6 @@ export const convertCodeParagraphsToCodeBlocks: Command = (state, dispatch): boo
     if (paragraphsToMerge !== null) {
       flushCodeBlock();
     }
-
   });
 
   if (paragraphsToMerge !== null) {
@@ -102,4 +105,4 @@ export const convertCodeParagraphsToCodeBlocks: Command = (state, dispatch): boo
   }
 
   return tr.steps.length > 0;
-}
+};

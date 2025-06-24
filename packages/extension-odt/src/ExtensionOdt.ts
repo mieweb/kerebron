@@ -4,7 +4,7 @@ import { type Converter, type CoreEditor, Extension } from '@kerebron/editor';
 import { parse_content, parse_styles, unzip } from '@kerebron/odt-wasm';
 
 import { OdtParser } from './OdtParser.ts';
-import {getDefaultsPostProcessFilters} from './postprocess/postProcess.ts';
+import { getDefaultsPostProcessFilters } from './postprocess/postProcess.ts';
 
 export interface OdtConfig {
   linkFromRewriter?(href: string): string;
@@ -45,7 +45,10 @@ export class ExtensionOdt extends Extension {
             subEditor.setDocument(doc);
 
             for (const filter of filterCommands) {
-              filter(subEditor.state, tr => subEditor.dispatchTransaction(tr));
+              filter(
+                subEditor.state,
+                (tr) => subEditor.dispatchTransaction(tr),
+              );
             }
 
             return subEditor.getDocument();

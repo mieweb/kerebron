@@ -1,5 +1,5 @@
 import { Mark, Node } from 'prosemirror-model';
-import {fixCharacters} from './utils.ts';
+import { fixCharacters } from './utils.ts';
 
 type MarkSerializerSpec = {
   /// The string that should appear before a piece of content marked

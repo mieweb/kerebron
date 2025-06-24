@@ -331,7 +331,11 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
 
   if (schema.nodes.table) {
     const item = (label: string, cmdName: string) => {
-      return new MenuItem({ label, enable: () => editor.can()[cmdName]().run(), run: () => editor.chain()[cmdName]().run() });
+      return new MenuItem({
+        label,
+        enable: () => editor.can()[cmdName]().run(),
+        run: () => editor.chain()[cmdName]().run(),
+      });
     };
     const tableMenu = [
       item('Insert table', 'insertTable'),

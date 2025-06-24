@@ -1,11 +1,7 @@
-import {
-  Node,
-  Fragment,
-  Slice,
-} from 'prosemirror-model';
+import { Fragment, Node, Slice } from 'prosemirror-model';
 import { Command } from 'prosemirror-state';
 
-import {nodeToTreeString} from '@kerebron/editor';
+import { nodeToTreeString } from '@kerebron/editor';
 
 const ANY_LIST = ['ordered_list', 'bullet_list'];
 
@@ -44,8 +40,7 @@ function convertToStitchingLevels(list: Node, array: Array<Slice> = []) {
 
   if (firstChildParagraph?.content.size === 0) {
     if (list?.firstChild.children.length < 2) {
-
-      array.push(new Slice(Fragment.from([]), 0 ,0));
+      array.push(new Slice(Fragment.from([]), 0, 0));
       // array.push(list.slice(list.firstChild.nodeSize, list.firstChild.nodeSize)) // empty slice
       return array;
     }

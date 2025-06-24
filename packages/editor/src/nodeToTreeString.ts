@@ -1,4 +1,4 @@
-import {Node} from 'prosemirror-model';
+import { Node } from 'prosemirror-model';
 
 function trimText(str: string, maxLen = 20): string {
   str = str.replaceAll('\n', '\\n');
@@ -10,7 +10,11 @@ function trimText(str: string, maxLen = 20): string {
   return str.slice(0, maxLen) + '...';
 }
 
-export function nodeToTreeString(node: Node | Node[] | readonly Node[], level = 0, currentPos = 0) {
+export function nodeToTreeString(
+  node: Node | Node[] | readonly Node[],
+  level = 0,
+  currentPos = 0,
+) {
   let delim = '';
   for (let i = 0; i < level; i++) {
     delim += '  ';
@@ -19,7 +23,9 @@ export function nodeToTreeString(node: Node | Node[] | readonly Node[], level = 
   let output = '';
   if (Array.isArray(node)) {
     for (const child of node) {
-      output += delim + nodeToTreeString(child, level + 1, currentPos).replace(/\s+$/gm, '') + '\n';
+      output += delim +
+        nodeToTreeString(child, level + 1, currentPos).replace(/\s+$/gm, '') +
+        '\n';
     }
     return output;
   }
@@ -28,7 +34,7 @@ export function nodeToTreeString(node: Node | Node[] | readonly Node[], level = 
 
   let line = '';
   // if (node.type) {
-    line += ` - [${node.type.name}] `;
+  line += ` - [${node.type.name}] `;
   // } else {
   //   line += ` - `;
   // }
@@ -57,7 +63,11 @@ export function nodeToTreeString(node: Node | Node[] | readonly Node[], level = 
   }
 
   node.forEach((child, offset) => {
-    output += nodeToTreeString(child, level + 1, currentPos + offset + 1).replace(/\s+$/gm, '') + '\n'; // + (node.isLeaf ? 1 : 2)
+    output +=
+      nodeToTreeString(child, level + 1, currentPos + offset + 1).replace(
+        /\s+$/gm,
+        '',
+      ) + '\n'; // + (node.isLeaf ? 1 : 2)
   });
 
   return output;

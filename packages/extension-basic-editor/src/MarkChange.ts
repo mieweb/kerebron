@@ -8,8 +8,7 @@ export class MarkChange extends Mark {
 
   getMarkSpec(): MarkSpec {
     return {
-      parseDOM: [
-      ],
+      parseDOM: [],
       toDOM() {
         return ['change', 0];
       },

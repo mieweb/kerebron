@@ -182,10 +182,15 @@ class OdtParseState {
   }
 
   // Add a node at the current position.
-  addNode(type: NodeType, attrs: Attrs | null, content?: readonly Node[], marks = Mark.none) {
+  addNode(
+    type: NodeType,
+    attrs: Attrs | null,
+    content?: readonly Node[],
+    marks = Mark.none,
+  ) {
     let top = this.top();
     if (top?.marks) {
-      marks = [ ...top.marks, ...marks ];
+      marks = [...top.marks, ...marks];
     }
     let node = type.createAndFill(attrs, content, marks);
     if (!node) return null;
@@ -199,7 +204,7 @@ class OdtParseState {
       type: type,
       attrs: attrs,
       content: [],
-      marks: Mark.none
+      marks: Mark.none,
     });
   }
 
@@ -228,11 +233,13 @@ class OdtParseState {
 
     const children = spec.children ? spec.children(element) : [];
 
-    const style = ('object' === typeof element && element['@style-name']) ? resolveStyle(
-      this.stylesTree,
-      this.automaticStyles,
-      element['@style-name'],
-    ) : {};
+    const style = ('object' === typeof element && element['@style-name'])
+      ? resolveStyle(
+        this.stylesTree,
+        this.automaticStyles,
+        element['@style-name'],
+      )
+      : {};
 
     const markToClose = [];
 
@@ -243,7 +250,7 @@ class OdtParseState {
     if (COURIER_FONTS.indexOf(textProperties['@font-name'] || '') > -1) {
       this.textMarks.add({
         markName: 'code',
-        markAttributes: {}
+        markAttributes: {},
       });
 
       const markType = this.schema.mark('code');
@@ -257,11 +264,14 @@ class OdtParseState {
     // } else
     if (textProperties['@font-style'] === 'italic') {
       const markType = this.schema.marks['em'];
-      markToClose.push(this.openMark(markType.create(attrs(spec, element, style))));
-    } else
-    if (textProperties['@font-weight'] === 'bold') {
+      markToClose.push(
+        this.openMark(markType.create(attrs(spec, element, style))),
+      );
+    } else if (textProperties['@font-weight'] === 'bold') {
       const markType = this.schema.marks['strong'];
-      markToClose.push(this.openMark(markType.create(attrs(spec, element, style))));
+      markToClose.push(
+        this.openMark(markType.create(attrs(spec, element, style))),
+      );
     }
 
     if (spec.block) {
@@ -311,10 +321,11 @@ class OdtParseState {
     }
 
     if (COURIER_FONTS.indexOf(textProperties['@font-name'] || '') > -1) {
-      this.textMarks.forEach(x => x.markName === 'code' ? this.textMarks.delete(x) : x);
+      this.textMarks.forEach((x) =>
+        x.markName === 'code' ? this.textMarks.delete(x) : x
+      );
     }
   }
-
 }
 
 function iterateChildren(nodes: unknown[], callback) {
@@ -329,7 +340,7 @@ function iterateChildren(nodes: unknown[], callback) {
       key = '$text';
       value = child;
     } else {
-      const keys = Object.keys(child).filter(key => key !== 'annotation');
+      const keys = Object.keys(child).filter((key) => key !== 'annotation');
       key = keys[0];
       value = child[key];
     }
@@ -361,9 +372,8 @@ interface Config {
 }
 
 class ListNumbering {
-
-  levels: {[level: number]: number} = {};
-  levelNodes: {[level: number]: Node} = {};
+  levels: { [level: number]: number } = {};
+  levelNodes: { [level: number]: Node } = {};
 
   constructor() {
     for (let i = 0; i < 20; i++) {
@@ -380,7 +390,6 @@ class ListNumbering {
   setLevelNode(level: number, node: Node) {
     this.levelNodes[level] = node;
   }
-
 }
 
 export class OdtParser {
@@ -390,7 +399,10 @@ export class OdtParser {
   private lastNumbering?: ListNumbering;
   preserveMinLevel = 999;
 
-  constructor(private readonly schema: Schema, private readonly config: Config = {}) {
+  constructor(
+    private readonly schema: Schema,
+    private readonly config: Config = {},
+  ) {
     // this.tokenHandlers = tokenHandlers(schema, tokens);
   }
 
@@ -429,7 +441,7 @@ export class OdtParser {
         custom: (state, odtElement) => {
           const list = {
             level: this.listStack.length + 1,
-            odtElement
+            odtElement,
           };
           this.listStack.push(list);
 
@@ -443,18 +455,22 @@ export class OdtParser {
               }
             }
             if (!style['@style-name']) {
-              style = ('object' === typeof element && element['@style-name']) ? resolveStyle(
-                stylesTree,
-                automaticStyles,
-                element['@style-name'],
-              ) : {};
+              style = ('object' === typeof element && element['@style-name'])
+                ? resolveStyle(
+                  stylesTree,
+                  automaticStyles,
+                  element['@style-name'],
+                )
+                : {};
             }
           }
 
           let nodeTypeName = 'bullet_list';
           const attrs = {};
           if (style) {
-            const numLevelStyle = style['list-level-style-number'].find(levelStyle => parseInt(levelStyle['@level']) === list.level);
+            const numLevelStyle = style['list-level-style-number'].find(
+              (levelStyle) => parseInt(levelStyle['@level']) === list.level,
+            );
             if (numLevelStyle) {
               attrs['type'] = numLevelStyle['@num-format'] || '1';
               nodeTypeName = 'ordered_list';
@@ -468,8 +484,13 @@ export class OdtParser {
           }
 
           let isContinue = false;
-          if (odtElement['@continue-list'] && this.listNumberings.has(odtElement['@continue-list'])) {
-            listNumbering = this.listNumberings.get(odtElement['@continue-list']);
+          if (
+            odtElement['@continue-list'] &&
+            this.listNumberings.has(odtElement['@continue-list'])
+          ) {
+            listNumbering = this.listNumberings.get(
+              odtElement['@continue-list'],
+            );
             isContinue = true;
           }
           if (odtElement['@continue-numbering']) {
@@ -503,7 +524,9 @@ export class OdtParser {
 
           state.openNode(nodeType, attrs);
 
-          const children = odtElement['list-item'].map((item) => ({ 'list-item': item }));
+          const children = odtElement['list-item'].map((item) => ({
+            'list-item': item,
+          }));
 
           if (children) {
             iterateChildren(children, (nodeType, node) => {
@@ -520,7 +543,7 @@ export class OdtParser {
           }
 
           this.listStack.pop();
-        }
+        },
       },
       'list-item': {
         block: 'list_item',
@@ -550,7 +573,7 @@ export class OdtParser {
           return {
             href,
             // title: tok.attrGet('title') || null,
-          }
+          };
         },
         children: (odtElement) => iterateEnum(odtElement.$value),
       },
@@ -571,10 +594,10 @@ export class OdtParser {
         text: (odtElement) => '\t',
       },
       'line-break': {
-        block: 'br'
+        block: 'br',
       },
       'soft-page-break': {
-        block: 'br'
+        block: 'br',
       },
       'table-of-content': {
         block: 'paragraph',
@@ -584,14 +607,16 @@ export class OdtParser {
         custom(state) {
           state.textMarks.add({
             markName: 'change',
-            markAttributes: {}
+            markAttributes: {},
           });
-        }
+        },
       },
       'change-end': {
         custom(state) {
-          state.textMarks.forEach(x => x.markName === 'change' ? state.textMarks.delete(x) : x);
-        }
+          state.textMarks.forEach((x) =>
+            x.markName === 'change' ? state.textMarks.delete(x) : x
+          );
+        },
       },
       'frame': {
         custom: (state, odtElement) => {
@@ -615,10 +640,10 @@ export class OdtParser {
 
             state.addNode(nodeType, {
               src: odtElement.image['@href'],
-              alt
+              alt,
             }, []);
           }
-        }
+        },
       },
       'rect': {
         ignore: true,
@@ -628,25 +653,30 @@ export class OdtParser {
           state.nextTextMarks.add({
             markName: 'bookmark',
             markAttributes: {
-              id: element['@name']
-            }
+              id: element['@name'],
+            },
           });
-        }
+        },
       },
       'bookmark-start': {
         custom(state, element) {
           state.textMarks.add({
             markName: 'bookmark',
             markAttributes: {
-              id: element['@name']
-            }
+              id: element['@name'],
+            },
           });
-        }
+        },
       },
       'bookmark-end': {
         custom(state, element) {
-          state.textMarks.forEach(x => x.markName === 'bookmark' && x.markAttributes.id === element['@name'] ? state.textMarks.delete(x) : x);
-        }
+          state.textMarks.forEach((x) =>
+            x.markName === 'bookmark' &&
+              x.markAttributes.id === element['@name']
+              ? state.textMarks.delete(x)
+              : x
+          );
+        },
       },
       'annotation': {
         ignore: true,

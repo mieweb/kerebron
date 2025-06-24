@@ -131,7 +131,7 @@ class MenuBarView {
         let border = (parent.offsetWidth - parent.clientWidth) / 2;
         this.menu.style.left = (editorRect.left + border) + 'px';
         this.menu.style.display = editorRect.top >
-            (this.editorView.dom.ownerDocument.defaultView)
+            this.editorView.dom.ownerDocument.defaultView
               .innerHeight
           ? 'none'
           : '';
