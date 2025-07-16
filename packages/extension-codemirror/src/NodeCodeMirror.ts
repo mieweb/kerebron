@@ -139,7 +139,10 @@ export class NodeCodeMirror extends Node {
 
             if (!lang) {
               for (const className of dom.classList) {
-                if (className.startsWith('lang-') && langs.indexOf(className.substring('lang-'.length)) > -1) {
+                if (
+                  className.startsWith('lang-') &&
+                  langs.indexOf(className.substring('lang-'.length)) > -1
+                ) {
                   lang = className.substring('lang-'.length);
                   break;
                 }

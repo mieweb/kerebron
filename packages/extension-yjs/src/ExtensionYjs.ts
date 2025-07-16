@@ -4,7 +4,7 @@ import { CoreEditor, Extension } from '@kerebron/editor';
 import { initProseMirrorDoc, redo, undo, yUndoPlugin } from 'y-prosemirror';
 
 import { Commands, CommandShortcuts } from '@kerebron/editor/commands';
-import { ySyncPlugin } from 'y-prosemirror';
+import { ySyncPlugin } from './ySyncPlugin.ts';
 import { yCursorPlugin } from './yCursorPlugin.ts';
 
 export class ExtensionYjs extends Extension {
