@@ -76,8 +76,8 @@ class YRemoteCaretWidget extends cmView.WidgetType {
 
   toDOM(): HTMLElement {
     return <HTMLElement> (dom.element('span', [
-      pair.create('class', 'ProseMirror-yjs-cursor ProseMirror-widget'),
-      pair.create('style', `border-color: ${this.color}; position: fixed;`),
+      pair.create('class', 'kb-yjs__cursor kb-widget'),
+      pair.create('style', `border-color: ${this.color};`),
     ], [
       dom.text('\u2060'),
       dom.element('div', [

@@ -1,0 +1,35 @@
+/* Typography */
+.kb-editor p {
+  margin-bottom: 1em;
+}
+
+.kb-editor p:first-child,
+.kb-editor h1:first-child,
+.kb-editor h2:first-child,
+.kb-editor h3:first-child,
+.kb-editor h4:first-child,
+.kb-editor h5:first-child,
+.kb-editor h6:first-child {
+  margin-top: var(--kb-space-md);
+}
+
+.kb-editor pre {
+  white-space: pre-wrap;
+}
+
+.kb-editor li {
+  position: relative;
+}
+
+.kb-editor ul,
+.kb-editor ol {
+  padding-left: 30px;
+}
+
+.kb-editor blockquote {
+  padding-left: 1em;
+  border-left: 3px solid var(--kb-color-border);
+  margin-left: 0;
+  margin-right: 0;
+  color: var(--kb-color-text-muted);
+}

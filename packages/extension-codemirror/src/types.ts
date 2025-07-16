@@ -51,4 +51,5 @@ export type CodeBlockSettings = {
   themes: ThemeItem[];
   getCurrentTheme?: () => string;
   codeBlockName?: string;
+  shadowRoot?: ShadowRoot;
 };

@@ -138,7 +138,7 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
   }
 
   try {
-    await build({
+    const opts = {
       entryPoints,
       outDir: path.resolve('./npm', json.name),
       shims: {
@@ -181,7 +181,18 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
       typeCheck: false,
       test: false,
       scriptModule: false,
-    });
+    };
+
+    if (await exists(path.resolve(workspaceRoot, 'assets'))) {
+      opts.package['files'] = [
+        'assets/*.css',
+      ];
+    }
+    if (await exists(path.resolve(workspaceRoot, 'assets', 'index.css'))) {
+      opts['style'] = 'assets/index.css';
+    }
+
+    await build(opts);
   } catch (err) {
     console.error(err);
   }

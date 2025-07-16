@@ -37,8 +37,8 @@ export const defaultAwarenessStateFilter = (
  */
 export const defaultCursorBuilder = (user) => {
   const cursor = document.createElement('span');
-  cursor.classList.add('ProseMirror-yjs-cursor');
-  cursor.setAttribute('style', `border-color: ${user.color}`);
+  cursor.classList.add('kb-yjs__cursor');
+  cursor.setAttribute('style', `border-color: ${user.color};`);
   const userDiv = document.createElement('div');
   userDiv.setAttribute('style', `background-color: ${user.color}`);
   userDiv.insertBefore(document.createTextNode(user.name), null);
@@ -59,7 +59,7 @@ export const defaultCursorBuilder = (user) => {
 export const defaultSelectionBuilder = (user) => {
   return {
     style: `background-color: ${user.color}70`,
-    class: 'ProseMirror-yjs-selection',
+    class: 'kb-yjs__selection',
   };
 };
 

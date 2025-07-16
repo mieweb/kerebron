@@ -3,7 +3,7 @@ import { EditorState, Plugin, Selection } from 'prosemirror-state';
 
 import { MenuElement, renderGrouped } from './menu.ts';
 
-const prefix = 'ProseMirror-menubar';
+const CSS_PREFIX = 'kb-menu';
 
 function isIOS() {
   if (typeof navigator == 'undefined') return false;
@@ -29,11 +29,11 @@ class MenuBarView {
   ) {
     this.root = editorView.root;
     this.wrapper = document.createElement('div');
-    this.wrapper.classList.add(prefix + '-wrapper');
+    this.wrapper.classList.add(CSS_PREFIX + '__wrapper');
     this.menu = document.createElement('div');
-    this.menu.classList.add(prefix);
+    this.menu.classList.add(CSS_PREFIX);
     this.wrapper.appendChild(this.menu);
-    this.menu.className = prefix;
+    this.menu.className = CSS_PREFIX;
 
     if (editorView.dom.parentNode) {
       editorView.dom.parentNode.replaceChild(this.wrapper, editorView.dom);
@@ -89,7 +89,6 @@ class MenuBarView {
       }
       if (this.menu.offsetHeight > this.maxHeight) {
         this.maxHeight = this.menu.offsetHeight;
-        this.menu.style.minHeight = this.maxHeight + 'px';
       }
     }
   }
@@ -148,7 +147,7 @@ class MenuBarView {
         if (scrollAncestor) this.menu.style.top = top + 'px';
         this.menu.style.position = 'fixed';
         this.spacer = document.createElement('div');
-        this.spacer.classList.add(prefix + '-spacer');
+        this.spacer.classList.add(CSS_PREFIX + '__spacer');
         this.spacer.style.height = `${menuRect.height}px`;
         parent.insertBefore(this.spacer, this.menu);
       }

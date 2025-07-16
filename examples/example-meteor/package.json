@@ -36,6 +36,7 @@
     "@codemirror/lang-xml": "latest",
     "@codemirror/language": "latest",
     "@codemirror/legacy-modes": "latest",
+    "thememirror": "2.0.1",
 
     "meteor-node-stubs": "^1.2.7",
     "vue": "^3.3.9",

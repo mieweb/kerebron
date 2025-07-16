@@ -138,27 +138,13 @@ export default {
     }
   }
 };
-//@import "@kerebron/extension-tables/tables.css";
 
 </script>
 
 <style>
-/* Import shared Kerebron styles */
-@import "@kerebron/editor/src/styles/index.css";
-
-/* Local utility classes */
-.h-33 {
-  max-height: 33%;
-  overflow: scroll;
-}
-
-/* Example-specific table styling */
-table {
-  border: 1px solid red;
-}
-
-table th, 
-table td {
-  border: 1px solid red;
-}
+@import "@kerebron/editor/assets/vars.css";
+@import "@kerebron/editor/assets/index.css";
+@import "@kerebron/extension-tables/assets/tables.css";
+@import "@kerebron/extension-menu/assets/menu.css";
+@import "@kerebron/extension-codemirror/assets/codemirror.css";
 </style>

@@ -9,10 +9,12 @@
     "serve": "deno run --allow-net --allow-read main.ts"
   },
   "imports": {
-    "vite": "npm:vite@6.2.2",
-    "vue-router": "npm:vue-router@4.5.0",
-    "vue": "npm:vue@3.5.13",
-    "@vitejs/plugin-vue": "npm:@vitejs/plugin-vue@5.2.3"
+    "vite": "npm:vite@7.0.4",
+    "vue-router": "npm:vue-router@4.5.1",
+    "vue": "npm:vue@3.5.17",
+    "@vue/devtools-api": "npm:@vue/devtools-api@7.7.7",
+    "@vitejs/plugin-vue": "npm:@vitejs/plugin-vue@6.0.0",
+    "vite-plugin-wasm": "npm:vite-plugin-wasm@3.5.0"
   },
   "exports": {},
   "license": "MIT"

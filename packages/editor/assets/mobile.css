@@ -1,0 +1,33 @@
+/* Mobile viewport handling */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific fixes */
+  .kb-component {
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Selection handles for mobile text selection */
+@media (max-width: 767px) {
+  .kb-editor::selection {
+    background: rgba(var(--kb-color-primary-rgb), 0.3);
+  }
+
+  .kb-editor::-moz-selection {
+    background: rgba(var(--kb-color-primary-rgb), 0.3);
+  }
+}
+
+/* Print styles */
+@media print {
+  .kb-component {
+    border: none;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .kb-editor {
+    padding: 0;
+  }
+}

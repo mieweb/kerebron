@@ -1,26 +1,27 @@
-.ProseMirror .tableWrapper {
+.kb-editor .tableWrapper {
   overflow-x: auto;
 }
-.ProseMirror table {
+.kb-editor table {
   border-collapse: collapse;
   table-layout: fixed;
   width: 100%;
   overflow: hidden;
 }
-.ProseMirror td,
-.ProseMirror th {
+.kb-editor td,
+.kb-editor th {
   vertical-align: top;
   box-sizing: border-box;
   position: relative;
+  border: 1px solid var(--kb-color-border);
 }
 
-.ProseMirror td:not([data-colwidth]):not(.column-resize-dragging),
-.ProseMirror th:not([data-colwidth]):not(.column-resize-dragging) {
+.kb-editor td:not([data-colwidth]):not(.column-resize-dragging),
+.kb-editor th:not([data-colwidth]):not(.column-resize-dragging) {
   /* if there's no explicit width set and the column is not being resized, set a default width */
   min-width: var(--default-cell-min-width);
 }
 
-.ProseMirror .column-resize-handle {
+.kb-editor .column-resize-handle {
   position: absolute;
   right: -2px;
   top: 0;
@@ -30,12 +31,12 @@
   background-color: #adf;
   pointer-events: none;
 }
-.ProseMirror.resize-cursor {
+.kb-editor.resize-cursor {
   cursor: ew-resize;
   cursor: col-resize;
 }
 /* Give selected cells a blue overlay */
-.ProseMirror .selectedCell:after {
+.kb-editor .selectedCell:after {
   z-index: 2;
   position: absolute;
   content: '';
@@ -45,4 +46,40 @@
   bottom: 0;
   background: rgba(200, 200, 255, 0.4);
   pointer-events: none;
+}
+
+/* Touch-optimized table editing */
+@media (max-width: 767px) {
+  .kb-editor table {
+    font-size: var(--kb-text-sm);
+    border-collapse: collapse;
+    width: 100%;
+    overflow-x: auto;
+    display: block;
+    white-space: nowrap;
+  }
+
+  .kb-editor th,
+  .kb-editor td {
+    min-width: 120px;
+    padding: var(--kb-space-md);
+    border: 1px solid var(--kb-color-border);
+    vertical-align: top;
+  }
+
+  /* Hide complex table controls on mobile */
+  .tableWrapper .column-resize-handle {
+    display: none !important;
+  }
+
+  .kb-editor .tableWrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Table selection visual feedback */
+  .kb-editor .selectedCell {
+    background: rgba(var(--kb-color-primary-rgb), 0.1);
+    border: 2px solid var(--kb-color-primary);
+  }
 }

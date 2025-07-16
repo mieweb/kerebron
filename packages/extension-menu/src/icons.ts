@@ -3,7 +3,7 @@ import { IconSpec } from './menu.ts';
 const SVG = 'http://www.w3.org/2000/svg';
 const XLINK = 'http://www.w3.org/1999/xlink';
 
-const prefix = 'ProseMirror-icon';
+const prefix = 'kb-icon';
 
 function hashPath(path: string) {
   let hash = 0;
