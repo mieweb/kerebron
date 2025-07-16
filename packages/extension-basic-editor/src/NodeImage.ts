@@ -1,4 +1,4 @@
-import { type Node as PmNode, type NodeSpec } from 'prosemirror-model';
+import { type NodeSpec } from 'prosemirror-model';
 import { Node } from '@kerebron/editor';
 
 export class NodeImage extends Node {

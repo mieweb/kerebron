@@ -47,7 +47,7 @@
     "orderedmap": "npm:orderedmap@latest",
 
     "@codemirror/state": "npm:@codemirror/state@6.5.2",
-    "@codemirror/view": "npm:@codemirror/view@6.36.5",
+    "@codemirror/view": "npm:@codemirror/view@6.38.1",
     "@codemirror/commands": "npm:@codemirror/commands@6.8.1",
     "@codemirror/search": "npm:@codemirror/search@6.5.10",
     "@codemirror/language": "npm:@codemirror/language@6.11.0",

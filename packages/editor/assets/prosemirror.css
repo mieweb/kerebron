@@ -1,0 +1,20 @@
+.ProseMirror-selectednode {
+  outline: 2px solid var(--kb-color-primary);
+  outline-offset: 2px;
+}
+
+/* List item selection styling */
+li.ProseMirror-selectednode {
+  outline: none;
+}
+
+li.ProseMirror-selectednode:after {
+  content: '';
+  position: absolute;
+  left: -32px;
+  right: -2px;
+  top: -2px;
+  bottom: -2px;
+  border: 2px solid var(--kb-color-primary);
+  pointer-events: none;
+}

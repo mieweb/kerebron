@@ -44,7 +44,11 @@ function convertDomToLowerCase(node) {
   // If the node is an element, change its tag name and attributes
   if (node.nodeType === 1) { // Element node
     // Convert tag name to lowercase
-    node.nodeName = node.nodeName.toLowerCase();
+    try {
+      node.nodeName = node.nodeName.toLowerCase();
+    } catch (ignore) {
+      /* HACK FOR: Uncaught TypeError: setting getter-only property "nodeName" */
+    }
 
     // Loop through attributes and convert them to lowercase
     for (let i = 0; i < node.attributes.length; i++) {

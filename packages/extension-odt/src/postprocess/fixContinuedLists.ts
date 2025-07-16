@@ -73,9 +73,6 @@ export const fixContinuedLists: Command = (state, dispatch): boolean => {
       const end = start + child.nodeSize;
 
       if (previousList) {
-        console.log('xxxxx');
-        console.debug(nodeToTreeString(child));
-
         const stitchingLevels = convertToStitchingLevels(child);
 
         if (stitchingLevels.length <= previousList.stitchingDepth) {

@@ -92,6 +92,9 @@ export class CoreEditor extends EventTarget {
     if (this.options.element) {
       this.view = new EditorView(this.options.element, {
         state: this.state,
+        attributes: {
+          class: 'kb-editor',
+        },
         dispatchTransaction: (tx: Transaction) => this.dispatchTransaction(tx),
       });
     }

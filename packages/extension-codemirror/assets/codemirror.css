@@ -1,0 +1,80 @@
+.codeblock-select {
+  position: absolute;
+  right: 0;
+  z-index: 100;
+  opacity: 0;
+  transition: all 0.3s ease;
+  margin: 6px 14px;
+}
+
+.codeblock-root {
+  position: relative;
+}
+
+.codeblock-root:hover .codeblock-select {
+  opacity: 1;
+}
+
+/* Code block mobile optimization */
+@media (max-width: 767px) {
+  .kb-editor pre {
+    font-size: var(--kb-text-sm);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .codeblock-select {
+    opacity: 1;
+    position: static;
+    margin: var(--kb-space-sm);
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .codeblock-select select {
+    min-height: var(--kb-touch-target-min);
+    padding: var(--kb-space-sm);
+    border: 1px solid var(--kb-color-border);
+    border-radius: var(--kb-radius-sm);
+    background: var(--kb-color-surface);
+    color: var(--kb-color-text);
+  }
+}
+
+.kb-yjs__cursor {
+  position: fixed;
+  margin-left: -1px;
+  margin-right: -1px;
+  /*border-left: 1px solid black;*/
+  /*border-right: 1px solid black;*/
+  /*border-color: orange;*/
+  word-break: normal;
+  pointer-events: none;
+}
+
+/* This renders the username above the caret */
+.kb-yjs__cursor > div {
+  position: absolute;
+  top: -1.05em;
+  left: -1px;
+  font-size: 13px;
+  background-color: rgb(250, 129, 0);
+  font-family: serif;
+  font-style: normal;
+  font-weight: normal;
+  line-height: normal;
+  user-select: none;
+  color: white;
+  padding-left: 2px;
+  padding-right: 2px;
+  white-space: nowrap;
+}
+
+/* Collaborative cursor optimization for mobile */
+@media (max-width: 767px) {
+  .kb-yjs__cursor > div {
+    font-size: var(--kb-text-xs);
+    padding: 1px var(--kb-space-xs);
+    border-radius: var(--kb-radius-sm);
+  }
+}

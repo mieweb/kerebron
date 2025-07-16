@@ -187,8 +187,11 @@ class CodeMirrorBlockNodeView implements NodeView {
       doc: node.textContent,
     });
 
+    const root = settings.shadowRoot || document;
+
     this.codeMirrorView = new CodeMirror({
       state,
+      root,
       dispatch: (tr) => {
         this.codeMirrorView.update([tr]);
         if (!this.updating) {

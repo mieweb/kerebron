@@ -15,7 +15,6 @@ import { CodeBlockSettings } from './types.ts';
 import { codeMirrorBlockNodeView } from './codeMirrorBlockNodeView.ts';
 import { defaultSettings } from './defaults.ts';
 import languageLoaders, { legacyLanguageLoaders } from './languageLoaders.ts';
-import { dracula } from 'thememirror';
 import { createNodeFromObject } from '@kerebron/editor/utilities';
 
 export const codeMirrorBlockKey = new PluginKey('codemirror-block');
@@ -37,6 +36,27 @@ function arrowHandler(dir: 'left' | 'right' | 'up' | 'down') {
     return false;
   };
 }
+
+const LANGS = [
+  'diff',
+  'dockerfile',
+  'http',
+  'nginx',
+  'properties',
+  'shell',
+  'toml',
+  'yaml',
+  'sql',
+  'javascript',
+  'cpp',
+  'css',
+  'xml',
+  'java',
+  'json',
+  'markdown',
+  'rust',
+  'html',
+];
 
 export class NodeCodeMirror extends Node {
   override name = 'code_block';
@@ -102,6 +122,8 @@ export class NodeCodeMirror extends Node {
   }
 
   override getNodeSpec(): NodeSpec {
+    const langs = this.config.languageWhitelist || LANGS;
+
     return {
       content: 'text*',
       marks: '',
@@ -113,8 +135,19 @@ export class NodeCodeMirror extends Node {
           tag: 'pre',
           preserveWhitespace: 'full',
           getAttrs(dom: HTMLElement) {
+            let lang = dom.getAttribute('lang');
+
+            if (!lang) {
+              for (const className of dom.classList) {
+                if (className.startsWith('lang-') && langs.indexOf(className.substring('lang-'.length)) > -1) {
+                  lang = className.substring('lang-'.length);
+                  break;
+                }
+              }
+            }
+
             return {
-              lang: dom.getAttribute('lang'),
+              lang,
             };
           },
         },
@@ -166,31 +199,11 @@ export class NodeCodeMirror extends Node {
         },
       });
 
-    const LANGS = [
-      'diff',
-      'dockerfile',
-      'http',
-      'nginx',
-      'properties',
-      'shell',
-      'toml',
-      'yaml',
-      'sql',
-      'javascript',
-      'cpp',
-      'css',
-      'xml',
-      'java',
-      'json',
-      'markdown',
-      'rust',
-      'html',
-    ];
-
     return [
       codeMirrorBlockPlugin({
         provider: this.config.provider,
         languageWhitelist: this.config.languageWhitelist || LANGS,
+        shadowRoot: this.config.shadowRoot,
         ...defaultSettings,
         readOnly: this.config.readOnly,
         languageLoaders: { ...languageLoaders, ...legacyLanguageLoaders },
@@ -200,7 +213,7 @@ export class NodeCodeMirror extends Node {
         redo: () => {
           editor.chain().redo().run();
         },
-        theme: [dracula],
+        theme: [...(this.config.theme || [])],
       }),
       // keymap(codeBlockKeymap),
     ];

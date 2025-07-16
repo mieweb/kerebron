@@ -24,10 +24,10 @@ export interface MenuElement {
   ): { dom: HTMLElement; update: (state: EditorState) => boolean };
 }
 
-const prefix = 'ProseMirror-menu';
-
 /// An icon or label that, when clicked, executes a command.
 export class MenuItem implements MenuElement {
+  CSS_PREFIX = 'kb-menu__button';
+
   /// Create a menu item.
   constructor(
     /// The spec used to create this item.
@@ -40,26 +40,50 @@ export class MenuItem implements MenuElement {
   render(view: EditorView) {
     let spec = this.spec;
     let dom = spec.render ? spec.render(view) : null;
-    if (!dom && spec.icon) {
-      dom = getIcon(view.root, spec.icon);
+    if (!dom) {
+      // Create a proper button element for better accessibility
+      dom = document.createElement('button');
+      dom.setAttribute('type', 'button');
+
+      // Add our new CSS classes while maintaining backward compatibility
+      dom.classList.add(this.CSS_PREFIX);
+
+      if (spec.icon) {
+        const icon = getIcon(view.root, spec.icon);
+        dom.appendChild(icon);
+        dom.classList.add(this.CSS_PREFIX + '--icon-only');
+      }
+
+      if (spec.label) {
+        const labelSpan = document.createElement('span');
+        labelSpan.appendChild(
+          document.createTextNode(translate(view, spec.label)),
+        );
+        dom.appendChild(labelSpan);
+        if (spec.icon) {
+          dom.classList.remove(this.CSS_PREFIX + '--icon-only');
+        }
+      }
+
+      if (!spec.icon && !spec.label) {
+        throw new RangeError('MenuItem without icon or label property');
+      }
     }
-    if (!dom && spec.label) {
-      dom = document.createElement('div');
-      dom.appendChild(document.createTextNode(translate(view, spec.label)));
-    }
-    if (!dom) throw new RangeError('MenuItem without icon or label property');
+
     if (spec.title) {
       const title = typeof spec.title === 'function'
         ? spec.title(view.state)
         : spec.title;
-      (dom as HTMLElement).setAttribute('title', translate(view, title));
+      dom.setAttribute('title', translate(view, title));
+      dom.setAttribute('aria-label', translate(view, title));
     }
+
     if (spec.class) dom.classList.add(spec.class);
     if (spec.css) dom.style.cssText += spec.css;
 
     dom.addEventListener('mousedown', (e) => {
       e.preventDefault();
-      if (!dom!.classList.contains(prefix + '-disabled')) {
+      if (!dom!.classList.contains(this.CSS_PREFIX + '--disabled')) {
         spec.run(view.state, view.dispatch);
       }
     });
@@ -73,11 +97,13 @@ export class MenuItem implements MenuElement {
       let enabled = true;
       if (spec.enable) {
         enabled = spec.enable(state) || false;
-        setClass(dom!, prefix + '-disabled', !enabled);
+        setClass(dom!, this.CSS_PREFIX + '--disabled', !enabled);
+        dom!.setAttribute('aria-disabled', (!enabled).toString());
       }
       if (spec.active) {
         let active = enabled && spec.active(state) || false;
-        setClass(dom!, prefix + '-active', active);
+        setClass(dom!, this.CSS_PREFIX + '--active', active);
+        dom!.setAttribute('aria-pressed', active.toString());
       }
       return true;
     }
@@ -163,6 +189,7 @@ function isMenuEvent(wrapper: HTMLElement) {
 /// A drop-down menu, displayed as a label with a downwards-pointing
 /// triangle to the right of it.
 export class Dropdown implements MenuElement {
+  CSS_PREFIX = 'kb-dropdown';
   /// @internal
   content: readonly MenuElement[];
 
@@ -195,8 +222,10 @@ export class Dropdown implements MenuElement {
     let content = renderDropdownItems(this.content, view);
     let win = view.dom.ownerDocument.defaultView;
 
-    let label = document.createElement('div');
-    label.classList.add(prefix + '-dropdown');
+    // Create a button element instead of div for better accessibility
+    let label = document.createElement('button');
+    label.setAttribute('type', 'button');
+    label.classList.add(this.CSS_PREFIX + '__label');
     if (this.options.class) {
       label.classList.add(this.options.class);
     }
@@ -205,10 +234,17 @@ export class Dropdown implements MenuElement {
       document.createTextNode(translate(view, this.options.label || '')),
     );
     if (this.options.title) {
-      label.setAttribute('title', translate(view, this.options.title));
+      const title = translate(view, this.options.title);
+      label.setAttribute('title', title);
+      label.setAttribute('aria-label', title);
     }
+
+    // Set ARIA attributes for accessibility
+    label.setAttribute('aria-haspopup', 'true');
+    label.setAttribute('aria-expanded', 'false');
+
     let wrap = document.createElement('div');
-    wrap.classList.add(prefix + '-dropdown-wrap');
+    wrap.classList.add(this.CSS_PREFIX);
     wrap.appendChild(label);
     let open: { close: () => boolean; node: HTMLElement } | null = null;
     let listeningOnClose: (() => void) | null = null;
@@ -223,8 +259,10 @@ export class Dropdown implements MenuElement {
       markMenuEvent(e);
       if (open) {
         close();
+        wrap.classList.remove('kb-dropdown--open');
       } else {
         open = this.expand(wrap, content.dom);
+        wrap.classList.add('kb-dropdown--open');
         win.addEventListener(
           'mousedown',
           listeningOnClose = () => {
@@ -246,7 +284,9 @@ export class Dropdown implements MenuElement {
   /// @internal
   expand(dom: HTMLElement, items: readonly Node[]) {
     const menuDOM = document.createElement('div');
-    menuDOM.classList.add(prefix + '-dropdown-menu');
+    menuDOM.classList.add('kb-dropdown__menu');
+    menuDOM.setAttribute('role', 'menu');
+
     if (this.options.class) {
       menuDOM.classList.add(this.options.class);
     }
@@ -268,7 +308,7 @@ function renderDropdownItems(items: readonly MenuElement[], view: EditorView) {
   for (let i = 0; i < items.length; i++) {
     let { dom, update } = items[i].render(view);
     const item = document.createElement('div');
-    item.classList.add(prefix + '-dropdown-item');
+    item.classList.add('kb-dropdown__item');
     item.appendChild(dom);
     rendered.push(item);
     updates.push(update);
@@ -312,33 +352,37 @@ export class DropdownSubmenu implements MenuElement {
 
   /// Renders the submenu.
   render(view: EditorView) {
+    const CSS_PREFIX = 'kb-submenu';
+
     const items = renderDropdownItems(this.content, view);
     const win = view.dom.ownerDocument.defaultView;
 
+    const wrap = document.createElement('div');
+    wrap.classList.add(CSS_PREFIX);
+
     const label = document.createElement('div');
-    label.classList.add(prefix + '-submenu-label');
+    label.classList.add(CSS_PREFIX + '__label');
     label.appendChild(
       document.createTextNode(translate(view, this.options.label || '')),
     );
-
-    const wrap = document.createElement('div');
-    wrap.classList.add(prefix + '-submenu-wrap');
     wrap.appendChild(label);
+
     const submenu = document.createElement('div');
-    submenu.classList.add(prefix + '-submenu');
+    submenu.classList.add(CSS_PREFIX + '__content');
     items.dom.forEach((item) => submenu.appendChild(item));
     wrap.appendChild(submenu);
+
     let listeningOnClose: (() => void) | null = null;
     label.addEventListener('mousedown', (e) => {
       e.preventDefault();
       markMenuEvent(e);
-      setClass(wrap, prefix + '-submenu-wrap-active', false);
+      setClass(wrap, CSS_PREFIX + '--open', false);
       if (!listeningOnClose) {
         win.addEventListener(
           'mousedown',
           listeningOnClose = () => {
             if (!isMenuEvent(wrap)) {
-              wrap.classList.remove(prefix + '-submenu-wrap-active');
+              wrap.classList.remove(CSS_PREFIX + '--open');
               win.removeEventListener('mousedown', listeningOnClose!);
               listeningOnClose = null;
             }
@@ -372,7 +416,7 @@ export function renderGrouped(
     for (let j = 0; j < items.length; j++) {
       let { dom, update } = items[j].render(view);
       let span = document.createElement('span');
-      span.classList.add(prefix + 'item');
+      span.classList.add('kb-menu__item');
       span.appendChild(dom);
       result.appendChild(span);
       localNodes.push(span);
@@ -403,7 +447,7 @@ export function renderGrouped(
 
 function separator() {
   const elem = document.createElement('div');
-  elem.classList.add(prefix + 'separator');
+  elem.classList.add('kb-menu__separator');
   return elem;
 }
 

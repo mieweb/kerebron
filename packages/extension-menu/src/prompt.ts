@@ -1,6 +1,6 @@
 import { Attrs } from 'prosemirror-model';
 
-const prefix = 'ProseMirror-prompt';
+const CSS_PREFIX = 'kb-prompt';
 
 export function openPrompt(options: {
   title: string;
@@ -8,7 +8,7 @@ export function openPrompt(options: {
   callback: (attrs: Attrs) => void;
 }) {
   let wrapper = document.body.appendChild(document.createElement('div'));
-  wrapper.className = prefix;
+  wrapper.className = CSS_PREFIX;
 
   let mouseOutside = (e: MouseEvent) => {
     if (!wrapper.contains(e.target as HTMLElement)) close();
@@ -26,11 +26,11 @@ export function openPrompt(options: {
 
   let submitButton = document.createElement('button');
   submitButton.type = 'submit';
-  submitButton.className = prefix + '-submit';
+  submitButton.className = CSS_PREFIX + '--submit';
   submitButton.textContent = 'OK';
   let cancelButton = document.createElement('button');
   cancelButton.type = 'button';
-  cancelButton.className = prefix + '-cancel';
+  cancelButton.className = CSS_PREFIX + '--cancel';
   cancelButton.textContent = 'Cancel';
   cancelButton.addEventListener('click', close);
 
@@ -42,7 +42,7 @@ export function openPrompt(options: {
     form.appendChild(document.createElement('div')).appendChild(field);
   });
   let buttons = form.appendChild(document.createElement('div'));
-  buttons.className = prefix + '-buttons';
+  buttons.className = CSS_PREFIX + '__buttons';
   buttons.appendChild(submitButton);
   buttons.appendChild(document.createTextNode(' '));
   buttons.appendChild(cancelButton);
@@ -105,7 +105,7 @@ function reportInvalid(dom: HTMLElement, message: string) {
   let msg = parent.appendChild(document.createElement('div'));
   msg.style.left = (dom.offsetLeft + dom.offsetWidth + 2) + 'px';
   msg.style.top = (dom.offsetTop - 5) + 'px';
-  msg.className = 'ProseMirror-invalid';
+  msg.className = 'kb-invalid';
   msg.textContent = message;
   setTimeout(() => parent.removeChild(msg), 1500);
 }

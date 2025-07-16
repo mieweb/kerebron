@@ -1,6 +1,6 @@
 import { defineConfig } from 'npm:vite';
 import vue from '@vitejs/plugin-vue';
-import wasm from 'npm:vite-plugin-wasm';
+import wasm from 'vite-plugin-wasm';
 import { VitePluginWatchWorkspace } from './vite-plugins/VitePluginWatchWorkspace.ts';
 import denoPlugin from './vite-plugins/resolvePlugin.ts';
 import denoPrefixPlugin from './vite-plugins/prefixPlugin.ts';
@@ -13,7 +13,13 @@ const cache = new Map<string, DenoResolveResult>();
 export default defineConfig({
   // plugins: [vue(), wasm(), denoPlugin(cache), denoPrefixPlugin(cache), denoCssPlugin(__dirname + '/../../'), VitePluginWatchWorkspace({
   plugins: [
-    vue(),
+    vue({
+      template: {
+        compilerOptions: {
+          isCustomElement: (tag) => tag.includes('my-'),
+        },
+      },
+    }),
     wasm(),
     // deno(),
     denoPrefixPlugin(cache),
@@ -29,6 +35,14 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      '@kerebron/editor/assets': __dirname + '/../../' +
+        'packages/editor/assets',
+      '@kerebron/extension-tables/assets': __dirname + '/../../' +
+        'packages/extension-tables/assets',
+      '@kerebron/extension-menu/assets': __dirname + '/../../' +
+        'packages/extension-menu/assets',
+      '@kerebron/extension-codemirror/assets': __dirname + '/../../' +
+        'packages/extension-codemirror/assets',
       'punycode.js': __dirname + '/src/punycode.ts',
     },
   },

@@ -2,5 +2,8 @@
   "name": "@kerebron/extension-yjs",
   "tasks": {},
   "imports": {},
-  "exports": "./src/ExtensionYjs.ts"
+  "exports": {
+    ".": "./src/ExtensionYjs.ts",
+    "./userColors": "./src/userColors.ts"
+  }
 }

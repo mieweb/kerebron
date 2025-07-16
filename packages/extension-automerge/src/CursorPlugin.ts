@@ -32,13 +32,13 @@ export const defaultSelectionBuilder = (user) => {
   return {
     style: `background-color: ${user.color}70`,
     // assets: `border-left: 1px solid ${user.color}70`,
-    class: 'ProseMirror-yjs-selection',
+    class: 'kb-automerge__selection',
   };
 };
 
 export const defaultCursorBuilder = (user) => {
   const cursor = document.createElement('span');
-  cursor.classList.add('ProseMirror-yjs-cursor');
+  cursor.classList.add('kb-automerge__cursor');
   cursor.setAttribute('style', `border-color: ${user.color}`);
   const userDiv = document.createElement('div');
   userDiv.setAttribute('style', `background-color: ${user.color}`);
