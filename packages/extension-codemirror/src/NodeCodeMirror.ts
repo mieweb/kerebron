@@ -62,14 +62,6 @@ export class NodeCodeMirror extends Node {
   override name = 'code_block';
   // requires = ['doc'];
 
-  automerge = {
-    block: this.name,
-    attrParsers: {
-      fromAutomerge: (block) => ({ lang: block.attrs.lang }),
-      fromProsemirror: (node) => ({ lang: node.attrs.lang }),
-    },
-  };
-
   override getConverters(
     editor: CoreEditor,
     schema: Schema,

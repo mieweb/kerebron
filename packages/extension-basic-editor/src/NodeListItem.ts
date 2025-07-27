@@ -261,10 +261,6 @@ export class NodeListItem extends Node {
   override name = 'list_item';
   requires = ['doc'];
 
-  automerge = {
-    block: 'list_item',
-  };
-
   override getNodeSpec(): NodeSpec {
     return {
       content: 'paragraph block*',

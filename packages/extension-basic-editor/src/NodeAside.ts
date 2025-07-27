@@ -5,10 +5,6 @@ export class NodeAside extends Node {
   override name = 'aside';
   requires = ['doc'];
 
-  automerge = {
-    block: 'aside',
-  };
-
   override getNodeSpec(): NodeSpec {
     return {
       content: 'block+',

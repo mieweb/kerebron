@@ -40,10 +40,6 @@ export class NodeTable extends Node {
   override name = 'table';
   requires = ['doc'];
 
-  automerge = {
-    block: 'table',
-  };
-
   attributes = {
     class: {
       default: 'table',

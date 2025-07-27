@@ -266,18 +266,12 @@ export class ExtensionManager {
     for (const extension of nodeExtensions) {
       nodes[extension.name] = extension.getNodeSpec();
       addAttributesToSchema(nodes[extension.name], extension);
-      if ('automerge' in extension) {
-        nodes[extension.name].automerge = extension.automerge;
-      }
     }
 
     const marks: { [name: string]: MarkSpec } = {};
     for (const extension of markExtensions) {
       marks[extension.name] = extension.getMarkSpec();
       addAttributesToSchema(marks[extension.name], extension);
-      if ('automerge' in extension) {
-        marks[extension.name].automerge = extension.automerge;
-      }
     }
 
     const spec = {

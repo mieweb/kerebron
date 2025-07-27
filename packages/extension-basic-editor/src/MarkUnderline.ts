@@ -9,10 +9,6 @@ export class MarkUnderline extends Mark {
   override name = 'underline';
   requires = ['doc'];
 
-  automerge = {
-    markName: 'u',
-  };
-
   getMarkSpec(): MarkSpec {
     return {
       parseDOM: [

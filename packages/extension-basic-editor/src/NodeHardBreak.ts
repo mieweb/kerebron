@@ -96,6 +96,4 @@ export class NodeHardBreak extends Node {
 
     return shortcuts;
   }
-
-  // TODO automerge
 }

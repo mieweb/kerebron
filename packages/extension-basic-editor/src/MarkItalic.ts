@@ -9,10 +9,6 @@ export class MarkItalic extends Mark {
   override name = 'em';
   requires = ['doc'];
 
-  automerge = {
-    markName: 'em',
-  };
-
   getMarkSpec(): MarkSpec {
     return {
       parseDOM: [

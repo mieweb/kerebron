@@ -15,11 +15,6 @@ const router = VueRouter.createRouter({
       component: () => import('./components/MainPage.vue'),
     },
     {
-      path: '/editor-am',
-      name: 'editor-am',
-      component: () => import('./components/EditorAutomerge.vue'),
-    },
-    {
       path: '/editor-yjs',
       name: 'editor-yjs',
       component: () => import('./components/EditorYjs.vue'),

@@ -5,34 +5,6 @@ export class MarkLink extends Mark {
   override name = 'link';
   requires = ['doc'];
 
-  automerge = {
-    markName: 'link',
-    parsers: {
-      fromAutomerge: (mark: string /*: am.MarkValue*/) => {
-        if (typeof mark === 'string') {
-          try {
-            const value = JSON.parse(mark);
-            return {
-              href: value.href || '',
-              title: value.title || '',
-            };
-          } catch (e) {
-            console.warn('failed to parse link mark as JSON');
-          }
-        }
-        return {
-          href: '',
-          title: '',
-        };
-      },
-      fromProsemirror: (mark: PmMark) =>
-        JSON.stringify({
-          href: mark.attrs.href,
-          title: mark.attrs.title,
-        }),
-    },
-  };
-
   override getMarkSpec(): MarkSpec {
     return {
       attrs: {

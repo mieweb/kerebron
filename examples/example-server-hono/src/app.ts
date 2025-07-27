@@ -2,36 +2,13 @@ import { Hono } from 'hono';
 import { proxy } from 'hono/proxy';
 import { serveStatic, upgradeWebSocket } from 'hono/deno';
 import { cors } from 'hono/cors';
-import { Repo } from '@automerge/automerge-repo';
+import { createServer as createViteServer } from 'npm:vite';
 
-import { HonoWSServerAdapter } from './automerge/HonoWSServerAdapter.ts';
-import { MemoryStorageAdapter } from './automerge/MemoryStorageAdapter.ts';
+import { getRoomNames, HonoYjsAdapter } from './yjs/HonoYjsAdapter.ts';
 
-const adapter = new HonoWSServerAdapter();
-const storage = new MemoryStorageAdapter();
-
-const repo = new Repo({
-  network: [adapter],
-  storage,
-  sharePolicy: () => Promise.resolve(false),
-  // peerId: `storage-example-server-hono-hostname`,
-});
+const __dirname = import.meta.dirname;
 
 const app = new Hono();
-
-app.get('/api/peers', (c) => {
-  const retVal = Array.from(repo.peers.values());
-  return c.json(retVal);
-});
-
-app.get('/api/docs', async (c) => {
-  const retVal = await storage.getKeys();
-  return c.json(
-    retVal
-      .filter((name) => name.indexOf('snapshot') > -1)
-      .map((name) => name.split('-')[0]),
-  );
-});
 
 app.get('/api/rooms', async (c) => {
   const retVal = await getRoomNames();
@@ -47,17 +24,6 @@ app.get(
   }),
 );
 
-app.get(
-  '/automerge',
-  upgradeWebSocket((c) => {
-    return adapter.upgradeWebSocket();
-  }),
-);
-
-const __dirname = import.meta.dirname;
-
-import { createServer as createViteServer } from 'npm:vite';
-import { getRoomNames, HonoYjsAdapter } from './yjs/HonoYjsAdapter.ts';
 
 // const viteDevServer = null;
 const viteDevServer = await createViteServer({
@@ -93,12 +59,10 @@ app.use('/*', cors());
 
 export class Server {
   public app;
-  public repo;
   public fetch;
 
   constructor() {
     this.app = app;
-    this.repo = repo;
     this.fetch = app.fetch;
   }
 }

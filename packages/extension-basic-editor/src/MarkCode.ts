@@ -10,10 +10,6 @@ export class MarkCode extends Mark {
   override name = 'code';
   requires = ['doc'];
 
-  automerge = {
-    markName: 'code',
-  };
-
   getMarkSpec(): MarkSpec {
     return {
       parseDOM: [{ tag: 'code' }],

@@ -1,6 +1,0 @@
-{
-  "name": "@kerebron/extension-automerge",
-  "tasks": {},
-  "imports": {},
-  "exports": "./src/ExtensionAutomerge.ts"
-}

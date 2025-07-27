@@ -36,10 +36,6 @@ export class NodeTableCell extends Node {
   override name = 'table_cell';
   requires = ['table_row'];
 
-  automerge = {
-    block: 'table_cell',
-  };
-
   override getNodeSpec(): NodeSpec {
     return {
       content: 'block+',

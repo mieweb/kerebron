@@ -15,10 +15,6 @@ export class NodeBlockquote extends Node {
   override name = 'blockquote';
   requires = ['doc'];
 
-  automerge = {
-    block: 'blockquote',
-  };
-
   override getNodeSpec(): NodeSpec {
     return {
       content: 'block+',

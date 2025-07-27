@@ -10,12 +10,6 @@
   <ul>
     <li v-for="id in roomIDs"><a :href="'/editor-code#room:'+id">{{ id }}</a></li>
   </ul>
-
-<!--  <h2>Automerge demo</h2>
-  <a href="/editor-am">New doc</a>
-  <ul>
-    <li v-for="id in docs"><a :href="'/editor-yjs#automerge:'+id">{{ id }}</a></li>
-  </ul>-->
 </template>
 
 <script>

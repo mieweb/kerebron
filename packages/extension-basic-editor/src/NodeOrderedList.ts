@@ -72,8 +72,4 @@ export class NodeOrderedList extends Node {
       'Shift-Ctrl-9': 'toggleOrderedList',
     };
   }
-
-  automerge = {
-    block: 'ordered_list',
-  };
 }

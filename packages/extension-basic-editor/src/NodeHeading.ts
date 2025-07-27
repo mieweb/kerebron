@@ -17,14 +17,6 @@ export class NodeHeading extends Node {
   override name = 'heading';
   requires = ['doc'];
 
-  automerge = {
-    block: 'heading',
-    attrParsers: {
-      fromAutomerge: (block) => ({ level: block.attrs.level }),
-      fromProsemirror: (node) => ({ level: node.attrs.level }),
-    },
-  };
-
   override getNodeSpec(): NodeSpec {
     return {
       attrs: { level: { default: 1 } },

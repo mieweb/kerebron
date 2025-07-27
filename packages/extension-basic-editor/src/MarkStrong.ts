@@ -10,10 +10,6 @@ export class MarkStrong extends Mark {
   override name = 'strong';
   requires = ['doc'];
 
-  automerge = {
-    markName: 'strong',
-  };
-
   getMarkSpec(): MarkSpec {
     return {
       parseDOM: [

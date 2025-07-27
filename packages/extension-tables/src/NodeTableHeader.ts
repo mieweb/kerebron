@@ -36,10 +36,6 @@ export class NodeTableHeader extends Node {
   override name = 'table_header';
   requires = ['table'];
 
-  automerge = {
-    block: 'table_header',
-  };
-
   override getNodeSpec(): NodeSpec {
     return {
       content: 'block+',

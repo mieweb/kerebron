@@ -10,10 +10,6 @@ export class NodeParagraph extends Node {
   override name = 'paragraph';
   requires = ['doc'];
 
-  automerge = {
-    block: 'paragraph',
-  };
-
   override getNodeSpec(): NodeSpec {
     return {
       content: 'inline*',

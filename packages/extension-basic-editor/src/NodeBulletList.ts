@@ -46,8 +46,4 @@ export class NodeBulletList extends Node {
       'Shift-Ctrl-8': 'toggleBulletList',
     };
   }
-
-  automerge = {
-    block: 'bullet_list',
-  };
 }

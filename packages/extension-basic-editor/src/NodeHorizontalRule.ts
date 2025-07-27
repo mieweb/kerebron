@@ -34,6 +34,4 @@ export class NodeHorizontalRule extends Node {
       'Mod-_': 'setHorizontalRule',
     };
   }
-
-  // TODO automerge
 }
