@@ -1,11 +1,12 @@
-import { NodeType, Schema } from 'prosemirror-model';
+import { Schema } from 'prosemirror-model';
 import { Plugin } from 'prosemirror-state';
 import { CoreEditor, Extension } from '@kerebron/editor';
-import { initProseMirrorDoc, redo, undo, yUndoPlugin } from 'y-prosemirror';
 
 import { Commands, CommandShortcuts } from '@kerebron/editor/commands';
 import { ySyncPlugin } from './ySyncPlugin.ts';
 import { yCursorPlugin } from './yCursorPlugin.ts';
+import { redo, undo, yUndoPlugin } from './yUndoPlugin.ts';
+import { initProseMirrorDoc } from './lib.ts';
 
 export class ExtensionYjs extends Extension {
   name = 'yjs';

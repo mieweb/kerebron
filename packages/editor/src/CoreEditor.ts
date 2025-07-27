@@ -7,6 +7,7 @@ import { EditorState, Transaction } from 'prosemirror-state';
 import { createNodeFromContent } from './utilities/createNodeFromContent.ts';
 import { ChainedCommands, CommandManager } from './commands/CommandManager.ts';
 import { nodeToTreeString } from './nodeToTreeString.ts';
+import { DummyEditorView } from './DummyEditorView.ts';
 
 function ensureDocSchema(doc: ProseMirrorNode, schema: Schema) {
   if (doc.type.schema != schema) {
@@ -95,6 +96,11 @@ export class CoreEditor extends EventTarget {
         attributes: {
           class: 'kb-editor',
         },
+        dispatchTransaction: (tx: Transaction) => this.dispatchTransaction(tx),
+      });
+    } else {
+      this.view = new DummyEditorView({
+        state: this.state,
         dispatchTransaction: (tx: Transaction) => this.dispatchTransaction(tx),
       });
     }

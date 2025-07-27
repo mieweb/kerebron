@@ -3,25 +3,20 @@ import * as awarenessProtocol from 'y-protocols/awareness';
 
 import { Decoration, DecorationSet } from 'prosemirror-view'; // eslint-disable-line
 import { EditorState, Plugin } from 'prosemirror-state'; // eslint-disable-line
-import { DecorationAttrs } from 'prosemirror-view';
+import { type DecorationAttrs } from 'prosemirror-view';
 
 import {
   absolutePositionToRelativePosition,
   relativePositionToAbsolutePosition,
   setMeta,
-} from 'y-prosemirror';
+} from './lib.ts';
 
-import { yCursorPluginKey, ySyncPluginKey } from 'y-prosemirror';
+import { yCursorPluginKey, ySyncPluginKey } from './keys.ts';
 
 import * as math from 'lib0/math';
 
 /**
  * Default awareness state filter
- *
- * @param {number} currentClientId current client id
- * @param {number} userClientId user client id
- * @param {any} _user user data
- * @return {boolean}
  */
 export const defaultAwarenessStateFilter = (
   currentClientId: number,
@@ -31,11 +26,8 @@ export const defaultAwarenessStateFilter = (
 
 /**
  * Default generator for a cursor element
- *
- * @param {any} user user data
- * @return {HTMLElement}
  */
-export const defaultCursorBuilder = (user) => {
+export const defaultCursorBuilder = (user: any): HTMLElement => {
   const cursor = document.createElement('span');
   cursor.classList.add('kb-yjs__cursor');
   cursor.setAttribute('style', `border-color: ${user.color};`);
@@ -52,11 +44,8 @@ export const defaultCursorBuilder = (user) => {
 
 /**
  * Default generator for the selection attributes
- *
- * @param {any} user user data
- * @return {import('prosemirror-view').DecorationAttrs}
  */
-export const defaultSelectionBuilder = (user) => {
+export const defaultSelectionBuilder = (user: any): DecorationAttrs => {
   return {
     style: `background-color: ${user.color}70`,
     class: 'kb-yjs__selection',
@@ -188,6 +177,43 @@ export const yCursorPlugin = (
     props: {
       decorations: (state) => {
         return yCursorPluginKey.getState(state);
+      },
+      updateCursorInfo(state) {
+        const ystate = ySyncPluginKey.getState(state);
+        // @note We make implicit checks when checking for the cursor property
+        const current = awareness.getLocalState() || {};
+
+        const selection = getSelection(state);
+        const anchor: Y.RelativePosition = absolutePositionToRelativePosition(
+          selection.anchor,
+          ystate.type,
+          ystate.binding.mapping,
+        );
+        const head: Y.RelativePosition = absolutePositionToRelativePosition(
+          selection.head,
+          ystate.type,
+          ystate.binding.mapping,
+        );
+        if (
+          current.cursor == null ||
+          !Y.compareRelativePositions(
+            Y.createRelativePositionFromJSON(current.cursor.anchor),
+            anchor,
+          ) ||
+          !Y.compareRelativePositions(
+            Y.createRelativePositionFromJSON(current.cursor.head),
+            head,
+          )
+        ) {
+          awareness.setLocalStateField(cursorStateField, {
+            anchor,
+            head,
+          });
+          awareness.setLocalStateField('cm-cursor', null);
+        }
+
+        // delete cursor information if current cursor information is owned by this editor binding
+        // awareness.setLocalStateField(cursorStateField, null);
       },
     },
     view: (view) => {
