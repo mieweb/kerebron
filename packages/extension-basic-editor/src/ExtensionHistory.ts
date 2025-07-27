@@ -25,8 +25,9 @@ export class ExtensionHistory extends Extension {
   }
 
   override getKeyboardShortcuts(): Partial<CommandShortcuts> {
+    // https://stackoverflow.com/a/73619128
     const mac = typeof navigator != 'undefined'
-      ? /Mac|iP(hone|[oa]d)/.test(navigator.platform)
+      ? /Mac|iP(hone|[oa]d)/.test(navigator?.platform)
       : false;
 
     const shortcuts = {

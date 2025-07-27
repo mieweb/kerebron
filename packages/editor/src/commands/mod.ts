@@ -1180,7 +1180,7 @@ const macBaseKeymap: { [key: string]: Command } = {
 };
 for (let key in pcBaseKeymap) (macBaseKeymap as any)[key] = pcBaseKeymap[key];
 
-const mac = /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
+const mac = /(Mac|iPhone|iPod|iPad)/i.test(navigator?.platform);
 
 /// Depending on the detected platform, this will hold
 /// [`pcBasekeymap`](#commands.pcBaseKeymap) or

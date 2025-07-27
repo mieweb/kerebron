@@ -7,7 +7,7 @@ const CSS_PREFIX = 'kb-menu';
 
 function isIOS() {
   if (typeof navigator == 'undefined') return false;
-  let agent = navigator.userAgent;
+  let agent = navigator?.userAgent;
   return !/Edge\/\d/.test(agent) && /AppleWebKit/.test(agent) &&
     /Mobile\/\w+/.test(agent);
 }
