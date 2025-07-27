@@ -1178,13 +1178,13 @@ export const updateYFragment = (
         if (updateLeft && updateRight) {
           // decide which element to update
           const equalityLeft = computeChildEqualityFactor(
-            (leftY),
-            (leftP),
+            leftY,
+            leftP,
             meta,
           );
           const equalityRight = computeChildEqualityFactor(
-            (rightY),
-            (rightP),
+            rightY,
+            rightP,
             meta,
           );
           if (

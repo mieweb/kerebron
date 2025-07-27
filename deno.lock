@@ -2720,8 +2720,6 @@
       "npm:lib0@0.2.109",
       "npm:markdown-it@14.1.0",
       "npm:orderedmap@latest",
-      "npm:prosemirror-dropcursor@1.8.1",
-      "npm:prosemirror-gapcursor@1.3.2",
       "npm:prosemirror-history@1.4.1",
       "npm:prosemirror-model@1.25.1",
       "npm:prosemirror-state@1.4.3",

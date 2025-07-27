@@ -7,10 +7,7 @@ import {
   PluginView,
   Transaction,
 } from 'prosemirror-state';
-import {
-  Mark,
-  Node,
-} from 'prosemirror-model';
+import { Mark, Node } from 'prosemirror-model';
 
 import { MarkView, NodeView } from 'prosemirror-view';
 
