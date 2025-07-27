@@ -12,7 +12,8 @@
     "packages/odt-wasm",
 
     "examples/example-server-hono",
-    "examples/example-vue"
+    "examples/example-vue",
+    "examples/mcptest"
   ],
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
@@ -32,7 +33,6 @@
     "prosemirror-dropcursor": "npm:prosemirror-dropcursor@1.8.1",
     "prosemirror-gapcursor": "npm:prosemirror-gapcursor@1.3.2",
     "prosemirror-history": "npm:prosemirror-history@1.4.1",
-    "prosemirror-inputrules": "npm:prosemirror-inputrules@1.5.0",
 
     "markdown-it": "npm:markdown-it@14.1.0",
 
