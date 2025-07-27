@@ -1,6 +1,5 @@
 import { MarkSpec, NodeSpec, Schema } from 'prosemirror-model';
 import { Plugin } from 'prosemirror-state';
-import { keymap } from 'prosemirror-keymap';
 import { NodeViewConstructor } from 'prosemirror-view';
 
 import { Converter, Extension } from './Extension.ts';
@@ -12,6 +11,7 @@ import {
   InputRule,
   InputRulesPlugin,
 } from './plugins/input-rules/InputRulesPlugin.ts';
+import { KeymapPlugin } from './plugins/keymap/keymap.ts';
 import { chainCommands } from './commands/mod.ts';
 import { type Command } from 'prosemirror-state';
 import { addAttributesToSchema } from './utilities/getHtmlAttributes.ts';
@@ -191,7 +191,7 @@ export class ExtensionManager {
     this.converters = converters;
 
     plugins.push(new InputRulesPlugin(inputRules));
-    plugins.push(keymap(Object.fromEntries(keyBindings)));
+    plugins.push(new KeymapPlugin(Object.fromEntries(keyBindings)));
 
     return plugins;
   }

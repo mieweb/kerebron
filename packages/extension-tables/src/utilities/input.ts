@@ -1,7 +1,6 @@
 // This file defines a number of helpers for wiring up user input to
 // table-related functionality.
 
-import { keydownHandler } from 'prosemirror-keymap';
 import { Fragment, ResolvedPos, Slice } from 'prosemirror-model';
 import {
   Command,
@@ -12,6 +11,9 @@ import {
 } from 'prosemirror-state';
 
 import { EditorView } from 'prosemirror-view';
+
+import { keydownHandler } from '@kerebron/editor/plugins/keymap';
+
 import { CellSelection } from './CellSelection.ts';
 import { deleteCellSelection } from './commands.ts';
 import { clipCells, fitSlice, insertCells, pastedCells } from './copypaste.ts';
