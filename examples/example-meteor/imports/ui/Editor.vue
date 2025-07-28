@@ -1,5 +1,5 @@
 <script>
-import {Mongo} from 'meteor/mongo';
+import { Mongo } from 'meteor/mongo';
 const collectionName = 'ephemeralChannel';
 const collection = new Mongo.Collection(collectionName + 'Messages');
 </script>
@@ -7,17 +7,17 @@ const collection = new Mongo.Collection(collectionName + 'Messages');
 import * as random from 'lib0/random';
 import * as Y from 'yjs';
 
-import {CoreEditor} from '@kerebron/editor';
-import {ExtensionBasicEditor} from "@kerebron/extension-basic-editor";
-import {ExtensionMarkdown} from '@kerebron/extension-markdown';
-import {ExtensionTables} from '@kerebron/extension-tables';
-import {ExtensionMenu} from '@kerebron/extension-menu';
-import {ExtensionYjs} from '@kerebron/extension-yjs';
-import {NodeCodeMirror} from "@kerebron/extension-codemirror";
+import { CoreEditor } from '@kerebron/editor';
+import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
+import { ExtensionMarkdown } from '@kerebron/extension-markdown';
+import { ExtensionTables } from '@kerebron/extension-tables';
+import { ExtensionMenu } from '@kerebron/extension-menu';
+import { ExtensionYjs } from '@kerebron/extension-yjs';
+import { NodeCodeMirror } from '@kerebron/extension-codemirror';
 
 import { MeteorProvider } from './y-meteor.ts';
 
-import {userColors} from '@kerebron/extension-yjs/userColors';
+import { userColors } from '@kerebron/extension-yjs/userColors';
 import { dracula } from 'thememirror';
 
 import { onMounted } from 'vue';
@@ -26,9 +26,15 @@ onMounted(() => {
   const ydoc = new Y.Doc();
 
   const roomId = 'room-abc';
-  const meteorProvider = new MeteorProvider(roomId, ydoc, collectionName, collection);
 
-  meteorProvider.on('status', event => {
+  const meteorProvider = new MeteorProvider(
+    roomId,
+    ydoc,
+    collectionName,
+    collection,
+  );
+
+  meteorProvider.on('status', (event) => {
     console.log('wsProvider status', event.status); // logs "connected" or "disconnected"
   });
 
@@ -36,7 +42,7 @@ onMounted(() => {
   meteorProvider.awareness.setLocalStateField('user', {
     name: 'Anonymous ' + Math.floor(Math.random() * 100),
     color: userColor.color,
-    colorLight: userColor.light
+    colorLight: userColor.light,
   });
 
   const element = document.getElementById('editor');
@@ -54,7 +60,7 @@ onMounted(() => {
       new ExtensionYjs({ ydoc, provider: meteorProvider }),
       new NodeCodeMirror({ theme: [dracula], ydoc, provider: meteorProvider }),
       // new NodeCodeMirror(),
-    ]
+    ],
   });
 
   // editor.setDocument(innerHTML, 'text/html');
@@ -68,8 +74,8 @@ onMounted(() => {
   </div>
 </template>
 <style>
-@import "@kerebron/editor/assets/index.css";
-@import "@kerebron/extension-tables/assets/tables.css";
-@import "@kerebron/extension-menu/assets/menu.css";
-@import "@kerebron/extension-codemirror/assets/codemirror.css";
+@import '@kerebron/editor/assets/index.css';
+@import '@kerebron/extension-tables/assets/tables.css';
+@import '@kerebron/extension-menu/assets/menu.css';
+@import '@kerebron/extension-codemirror/assets/codemirror.css';
 </style>

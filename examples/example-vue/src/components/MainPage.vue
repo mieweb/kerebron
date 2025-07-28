@@ -2,13 +2,17 @@
   <h2>YJS demo</h2>
   <a href="/editor-yjs">New doc</a>
   <ul>
-    <li v-for="id in roomIDs"><a :href="'/editor-yjs#room:'+id">{{ id }}</a></li>
+    <li v-for="id in roomIDs">
+      <a :href="'/editor-yjs#room:' + id">{{ id }}</a>
+    </li>
   </ul>
 
   <h2>YJS codemirror demo</h2>
   <a href="/editor-code">New doc</a>
   <ul>
-    <li v-for="id in roomIDs"><a :href="'/editor-code#room:'+id">{{ id }}</a></li>
+    <li v-for="id in roomIDs">
+      <a :href="'/editor-code#room:' + id">{{ id }}</a>
+    </li>
   </ul>
 </template>
 
@@ -17,8 +21,8 @@ export default {
   data() {
     return {
       roomIDs: [],
-      docs: []
-    }
+      docs: [],
+    };
   },
   created() {
     this.fetch();
@@ -29,7 +33,7 @@ export default {
       this.roomIDs = await response.json();
       const response2 = await fetch('/api/docs');
       this.docs = await response2.json();
-    }
-  }
+    },
+  },
 };
 </script>

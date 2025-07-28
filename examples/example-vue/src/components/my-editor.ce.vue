@@ -20,22 +20,27 @@
   </div>
 </template>
 <script lang="ts">
-import {CoreEditor} from '@kerebron/editor';
-import {ExtensionBasicEditor} from '@kerebron/extension-basic-editor';
-import {ExtensionMarkdown} from '@kerebron/extension-markdown';
-import {ExtensionOdt} from '@kerebron/extension-odt';
-import {ExtensionTables} from '@kerebron/extension-tables';
+import { CoreEditor } from '@kerebron/editor';
+import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
+import { ExtensionMarkdown } from '@kerebron/extension-markdown';
+import { ExtensionOdt } from '@kerebron/extension-odt';
+import { ExtensionTables } from '@kerebron/extension-tables';
 
-import {ExtensionMenu, type MenuElement, MenuItem, Dropdown} from "@kerebron/extension-menu";
+import {
+  Dropdown,
+  ExtensionMenu,
+  type MenuElement,
+  MenuItem,
+} from '@kerebron/extension-menu';
 
-import {ExtensionYjs} from "@kerebron/extension-yjs";
-import {userColors} from "@kerebron/extension-yjs/userColors";
-import {NodeCodeMirror} from "@kerebron/extension-codemirror";
+import { ExtensionYjs } from '@kerebron/extension-yjs';
+import { userColors } from '@kerebron/extension-yjs/userColors';
+import { NodeCodeMirror } from '@kerebron/extension-codemirror';
 
 import * as Y from 'yjs';
 import * as random from 'lib0/random';
 import { WebsocketProvider } from 'y-websocket';
-import {dracula} from 'thememirror';
+import { dracula } from 'thememirror';
 
 export default {
   name: 'my-editor',
@@ -50,11 +55,10 @@ export default {
       spans: [],
       marks: [],
       md: '',
-      editor: null
-    }
+      editor: null,
+    };
   },
   async mounted() {
-
     this.$nextTick(() => {
       const docUrl = globalThis.location.hash.slice(1);
       let roomId;
@@ -74,17 +78,23 @@ export default {
       const ydoc = new Y.Doc();
       this.ydoc = ydoc;
 
-      const protocol = globalThis.location.protocol === 'http:' ? 'ws:' : 'wss:';
-      const wsProvider = new WebsocketProvider(protocol + '//' + globalThis.location.host + '/yjs', roomId, ydoc);
+      const protocol = globalThis.location.protocol === 'http:'
+        ? 'ws:'
+        : 'wss:';
+      const wsProvider = new WebsocketProvider(
+        protocol + '//' + globalThis.location.host + '/yjs',
+        roomId,
+        ydoc,
+      );
 
-      wsProvider.on('status', event => {
-        console.log('wsProvider status', event.status) // logs "connected" or "disconnected"
+      wsProvider.on('status', (event) => {
+        console.log('wsProvider status', event.status); // logs "connected" or "disconnected"
       });
 
       wsProvider.awareness.setLocalStateField('user', {
         name: 'Anonymous ' + Math.floor(Math.random() * 100),
         color: userColor.color,
-        colorLight: userColor.light
+        colorLight: userColor.light,
       });
 
       this.editor = new CoreEditor({
@@ -97,23 +107,28 @@ export default {
                 new MenuItem({
                   label: 'Simulate loadDoc',
                   enable: () => true,
-                  run: () => this.loadDoc()
+                  run: () => this.loadDoc(),
                 }),
                 new MenuItem({
                   label: 'Load',
                   enable: () => true,
-                  run: () => this.loadDoc2()
-                })
+                  run: () => this.loadDoc2(),
+                }),
               ];
               menus[0].unshift(new Dropdown(fileMenu, { label: 'File' }));
               return menus;
-            }
+            },
           }),
           new ExtensionMarkdown(),
           new ExtensionOdt(),
           new ExtensionTables(),
           new ExtensionYjs({ ydoc, provider: wsProvider }),
-          new NodeCodeMirror({ theme: [dracula], ydoc, provider: wsProvider, shadowRoot: this.$.shadowRoot }),
+          new NodeCodeMirror({
+            theme: [dracula],
+            ydoc,
+            provider: wsProvider,
+            shadowRoot: this.$.shadowRoot,
+          }),
           // new NodeCodeMirror({ theme: [dracula] }),
         ],
         // content: pmDoc
@@ -125,8 +140,6 @@ export default {
         // this.$emit('input', this.lastValue);
       });
     });
-
-
   },
   watch: {
     value(newValue) {
@@ -134,28 +147,31 @@ export default {
         // this.state = createState(newValue, this.handle);
         // this.view.updateState(this.state);
       }
-    }
+    },
   },
   methods: {
     loadDoc() {
-      this.editor.setDocument('# TEST \n\n1.  aaa **bold**\n2.  bbb\n\n```js\nconsole.log("TEST")\n```\n', 'text/x-markdown');
+      this.editor.setDocument(
+        '# TEST \n\n1.  aaa **bold**\n2.  bbb\n\n```js\nconsole.log("TEST")\n```\n',
+        'text/x-markdown',
+      );
     },
     loadDoc2() {
       const input = document.createElement('input');
       input.type = 'file';
-      input.onchange = async e => {
+      input.onchange = async (e) => {
         const file = e.target.files[0];
         console.log('Selected file:', file);
         this.editor.setDocument(await file.bytes(), file.type);
       };
       input.click();
     },
-  }
+  },
 };
 </script>
 <style>
-@import "@kerebron/editor/assets/index.css";
-@import "@kerebron/extension-tables/assets/tables.css";
-@import "@kerebron/extension-menu/assets/menu.css";
-@import "@kerebron/extension-codemirror/assets/codemirror.css";
+@import '@kerebron/editor/assets/index.css';
+@import '@kerebron/extension-tables/assets/tables.css';
+@import '@kerebron/extension-menu/assets/menu.css';
+@import '@kerebron/extension-codemirror/assets/codemirror.css';
 </style>

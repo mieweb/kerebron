@@ -34,15 +34,18 @@ import * as Y from 'yjs';
 import * as random from 'lib0/random';
 import { WebsocketProvider } from 'y-websocket';
 
-import {CoreEditor} from '@kerebron/editor';
-import {ExtensionBasicEditor} from '@kerebron/extension-basic-editor';
-import {ExtensionMarkdown} from '@kerebron/extension-markdown';
-import {ExtensionYjs} from '@kerebron/extension-yjs';
-import {NodeCodeMirror, NodeDocumentCode} from '@kerebron/extension-codemirror';
-import {userColors} from '@kerebron/extension-yjs/userColors';
+import { CoreEditor } from '@kerebron/editor';
+import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
+import { ExtensionMarkdown } from '@kerebron/extension-markdown';
+import { ExtensionYjs } from '@kerebron/extension-yjs';
+import {
+  NodeCodeMirror,
+  NodeDocumentCode,
+} from '@kerebron/extension-codemirror';
+import { userColors } from '@kerebron/extension-yjs/userColors';
 
 export default {
-  name: "EditorCode",
+  name: 'EditorCode',
   props: ['modelValue'],
   data() {
     return {
@@ -50,8 +53,8 @@ export default {
       doc: {},
       ydoc: {},
       code: '',
-      editor: null
-    }
+      editor: null,
+    };
   },
   async mounted() {
     const docUrl = globalThis.location.hash.slice(1);
@@ -65,16 +68,20 @@ export default {
     const ydoc = this.ydoc = new Y.Doc();
 
     const protocol = globalThis.location.protocol === 'http:' ? 'ws:' : 'wss:';
-    const wsProvider = new WebsocketProvider(protocol + '//' + globalThis.location.host + '/yjs', roomId, ydoc);
-    wsProvider.on('status', event => {
-      console.log('wsProvider status', event.status) // logs "connected" or "disconnected"
+    const wsProvider = new WebsocketProvider(
+      protocol + '//' + globalThis.location.host + '/yjs',
+      roomId,
+      ydoc,
+    );
+    wsProvider.on('status', (event) => {
+      console.log('wsProvider status', event.status); // logs "connected" or "disconnected"
     });
 
     const userColor = userColors[random.uint32() % userColors.length];
     wsProvider.awareness.setLocalStateField('user', {
       name: 'Anonymous ' + Math.floor(Math.random() * 100),
       color: userColor.color,
-      colorLight: userColor.light
+      colorLight: userColor.light,
     });
 
     this.editor = new CoreEditor({
@@ -85,7 +92,12 @@ export default {
         new ExtensionMarkdown(),
         new NodeDocumentCode({ lang: 'yaml' }),
         new ExtensionYjs({ ydoc, provider: wsProvider }),
-        new NodeCodeMirror({ ydoc, provider: wsProvider, languageWhitelist: ['yaml'], readOnly: false }),
+        new NodeCodeMirror({
+          ydoc,
+          provider: wsProvider,
+          languageWhitelist: ['yaml'],
+          readOnly: false,
+        }),
       ],
       // content: pmDoc
     });
@@ -102,22 +114,25 @@ export default {
         // this.state = createState(newValue, this.handle);
         // this.view.updateState(this.state);
       }
-    }
+    },
   },
   methods: {
     loadDoc() {
-      this.editor.setDocument('# Multiline string with literal block syntax -preserved new lines\n' +
-        'string1: |\n' +
-        '   Line1\n' +
-        '   line2\n' +
-        '   "line3"\n' +
-        '  line4\n', 'text/code-only');
-    }
-  }
+      this.editor.setDocument(
+        '# Multiline string with literal block syntax -preserved new lines\n' +
+          'string1: |\n' +
+          '   Line1\n' +
+          '   line2\n' +
+          '   "line3"\n' +
+          '  line4\n',
+        'text/code-only',
+      );
+    },
+  },
 };
 </script>
 
 <style>
-@import "@kerebron/editor/assets/index.css";
-@import "@kerebron/extension-codemirror/assets/codemirror.css";
+@import '@kerebron/editor/assets/index.css';
+@import '@kerebron/extension-codemirror/assets/codemirror.css';
 </style>
