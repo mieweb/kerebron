@@ -178,43 +178,6 @@ export const yCursorPlugin = (
       decorations: (state) => {
         return yCursorPluginKey.getState(state);
       },
-      updateCursorInfo(state) {
-        const ystate = ySyncPluginKey.getState(state);
-        // @note We make implicit checks when checking for the cursor property
-        const current = awareness.getLocalState() || {};
-
-        const selection = getSelection(state);
-        const anchor: Y.RelativePosition = absolutePositionToRelativePosition(
-          selection.anchor,
-          ystate.type,
-          ystate.binding.mapping,
-        );
-        const head: Y.RelativePosition = absolutePositionToRelativePosition(
-          selection.head,
-          ystate.type,
-          ystate.binding.mapping,
-        );
-        if (
-          current.cursor == null ||
-          !Y.compareRelativePositions(
-            Y.createRelativePositionFromJSON(current.cursor.anchor),
-            anchor,
-          ) ||
-          !Y.compareRelativePositions(
-            Y.createRelativePositionFromJSON(current.cursor.head),
-            head,
-          )
-        ) {
-          awareness.setLocalStateField(cursorStateField, {
-            anchor,
-            head,
-          });
-          awareness.setLocalStateField('cm-cursor', null);
-        }
-
-        // delete cursor information if current cursor information is owned by this editor binding
-        // awareness.setLocalStateField(cursorStateField, null);
-      },
     },
     view: (view) => {
       const awarenessListener = () => {
@@ -290,6 +253,43 @@ export const yCursorPlugin = (
           awareness.setLocalStateField(cursorStateField, null);
         },
       };
+    },
+    updateCursorInfo(state: EditorState) {
+      const ystate = ySyncPluginKey.getState(state);
+      // @note We make implicit checks when checking for the cursor property
+      const current = awareness.getLocalState() || {};
+
+      const selection = getSelection(state);
+      const anchor: Y.RelativePosition = absolutePositionToRelativePosition(
+        selection.anchor,
+        ystate.type,
+        ystate.binding.mapping,
+      );
+      const head: Y.RelativePosition = absolutePositionToRelativePosition(
+        selection.head,
+        ystate.type,
+        ystate.binding.mapping,
+      );
+      if (
+        current.cursor == null ||
+        !Y.compareRelativePositions(
+          Y.createRelativePositionFromJSON(current.cursor.anchor),
+          anchor,
+        ) ||
+        !Y.compareRelativePositions(
+          Y.createRelativePositionFromJSON(current.cursor.head),
+          head,
+        )
+      ) {
+        awareness.setLocalStateField(cursorStateField, {
+          anchor,
+          head,
+        });
+        awareness.setLocalStateField('cm-cursor', null);
+      }
+
+      // delete cursor information if current cursor information is owned by this editor binding
+      // awareness.setLocalStateField(cursorStateField, null);
     },
   });
 };

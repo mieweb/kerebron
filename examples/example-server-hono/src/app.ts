@@ -5,7 +5,6 @@ import { cors } from 'hono/cors';
 import { createServer as createViteServer } from 'npm:vite';
 
 import { getRoomNames, HonoYjsAdapter } from './yjs/HonoYjsAdapter.ts';
-import { mcpRouter } from './mcp/router.ts';
 
 const __dirname = import.meta.dirname;
 
@@ -24,8 +23,6 @@ app.get(
     return yjsAdapter.upgradeWebSocket(c.req.param('room'));
   }),
 );
-
-app.route('/mcp', mcpRouter);
 
 // const viteDevServer = null;
 const viteDevServer = await createViteServer({
