@@ -7,6 +7,7 @@
     "./commands": "./src/commands/mod.ts",
     "./plugins/input-rules": "./src/plugins/input-rules/mod.ts",
     "./plugins/keymap": "./src/plugins/keymap/mod.ts",
+    "./search": "./src/search/mod.ts",
     "./utilities": "./src/utilities/mod.ts"
   }
 }
