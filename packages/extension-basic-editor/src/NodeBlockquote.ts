@@ -1,8 +1,8 @@
 import { NodeSpec, NodeType } from 'prosemirror-model';
 
-import { Node } from '@kerebron/editor';
+import { type CoreEditor, Node } from '@kerebron/editor';
 import {
-  type Commands,
+  type CommandFactories,
   type CommandShortcuts,
   wrapInList,
 } from '@kerebron/editor/commands';
@@ -35,13 +35,16 @@ export class NodeBlockquote extends Node {
     ];
   }
 
-  getCommands(editor: CoreEditor, type: NodeType): Partial<Commands> {
+  override getCommandFactories(
+    editor: CoreEditor,
+    type: NodeType,
+  ): Partial<CommandFactories> {
     return {
       'toggleBlockquote': () => wrapInList(type),
     };
   }
 
-  getKeyboardShortcuts(): Partial<CommandShortcuts> {
+  override getKeyboardShortcuts(): Partial<CommandShortcuts> {
     return {
       'Ctrl->': 'toggleBlockquote',
     };

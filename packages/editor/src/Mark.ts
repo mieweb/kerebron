@@ -1,8 +1,9 @@
-import { MarkSpec, MarkType } from 'prosemirror-model';
+import type { MarkSpec, MarkType } from 'prosemirror-model';
 
-import { InputRule } from './plugins/input-rules/InputRulesPlugin.ts';
-import { CoreEditor } from './CoreEditor.ts';
-import { Commands, CommandShortcuts } from './commands/mod.ts';
+import type { InputRule } from './plugins/input-rules/InputRulesPlugin.ts';
+import type { CoreEditor } from './CoreEditor.ts';
+import type { CommandFactories, CommandShortcuts } from './commands/mod.ts';
+import { Attribute } from './types.ts';
 
 export interface MarkConfig {
   // @ts-ignore - this is a dynamic key
@@ -12,6 +13,8 @@ export interface MarkConfig {
 export abstract class Mark {
   readonly type = 'mark';
   name: string = 'node';
+
+  public readonly attributes: Record<string, Attribute<any>> = {};
 
   public constructor(protected config: Partial<MarkConfig> = {}) {}
 
@@ -23,11 +26,14 @@ export abstract class Mark {
     return [];
   }
 
-  getCommands(editor: CoreEditor, type: MarkType): Partial<Commands> {
+  getCommandFactories(
+    editor: CoreEditor,
+    type: MarkType,
+  ): Partial<CommandFactories> {
     return {};
   }
 
-  getKeyboardShortcuts(): Partial<CommandShortcuts> {
+  getKeyboardShortcuts(editor: CoreEditor): Partial<CommandShortcuts> {
     return {};
   }
 }

@@ -1,9 +1,10 @@
 import { TextSelection } from 'prosemirror-state';
 import { NodeSpec, NodeType } from 'prosemirror-model';
+import { Node as ProseMirrorNode } from 'prosemirror-model';
 
 import { type CoreEditor, Node } from '@kerebron/editor';
 import {
-  type Commands,
+  type CommandFactories,
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
 import { type InputRule } from '@kerebron/editor/plugins/input-rules';
@@ -35,12 +36,13 @@ import {
   toggleHeaderRow,
 } from './utilities/commands.ts';
 import { Plugin } from 'prosemirror-state';
+import { Direction } from './utilities/input.ts';
 
 export class NodeTable extends Node {
   override name = 'table';
   requires = ['doc'];
 
-  attributes = {
+  override attributes = {
     class: {
       default: 'table',
       fromDom(element: HTMLElement) {
@@ -61,7 +63,9 @@ export class NodeTable extends Node {
         tag: 'table',
         getAttrs: (element) => setHtmlAttributes(this, element),
       }],
-      toDOM: (node) => ['table', getHtmlAttributes(this, node), ['tbody', 0]],
+      toDOM: (
+        node: ProseMirrorNode,
+      ) => ['table', getHtmlAttributes(this, node), ['tbody', 0]],
     };
   }
 
@@ -69,8 +73,11 @@ export class NodeTable extends Node {
     return [];
   }
 
-  override getCommands(editor: CoreEditor, type: NodeType): Partial<Commands> {
-    const commands: Partial<Commands> = {
+  override getCommandFactories(
+    editor: CoreEditor,
+    type: NodeType,
+  ): Partial<CommandFactories> {
+    const commands: Partial<CommandFactories> = {
       addColumnAfter: () => (state, dispatch) =>
         addColumnAfter(state, dispatch),
       addColumnBefore: () => (state, dispatch) =>
@@ -80,12 +87,11 @@ export class NodeTable extends Node {
       deleteColumn: () => (state, dispatch) => deleteColumn(state, dispatch),
       deleteRow: () => (state, dispatch) => deleteRow(state, dispatch),
       deleteTable: () => (state, dispatch) => deleteTable(state, dispatch),
-      fixTables: () => (state, dispatch) => fixTables(state, dispatch),
-      goToNextCell: () => (state, dispatch) => goToNextCell(state, dispatch),
+      goToNextCell: (direction: Direction) => goToNextCell(direction),
       mergeCells: () => (state, dispatch) => mergeCells(state, dispatch),
-      setCellAttr: () => (state, dispatch) => setCellAttr(state, dispatch),
+      setCellAttr: (...args) => setCellAttr(...args),
       splitCell: () => (state, dispatch) => splitCell(state, dispatch),
-      toggleHeader: () => (state, dispatch) => toggleHeader(state, dispatch),
+      toggleHeader: (...args) => toggleHeader(...args),
       toggleHeaderCell: () => (state, dispatch) =>
         toggleHeaderCell(state, dispatch),
       toggleHeaderRow: () => (state, dispatch) =>
@@ -116,8 +122,7 @@ export class NodeTable extends Node {
             position.headCell,
           );
 
-          state.setSelection(selection);
-          // state.tr.setSelection(selection)
+          state.tr.setSelection(selection);
         }
         return true;
       },

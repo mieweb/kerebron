@@ -1,24 +1,26 @@
 import { NodeSpec, NodeType } from 'prosemirror-model';
 
-import { CoreEditor, Node } from '@kerebron/editor';
-import { getHtmlAttributes } from '@kerebron/editor/utilities';
+import { type CoreEditor, Node } from '@kerebron/editor';
+import {
+  getHtmlAttributes,
+  setHtmlAttributes,
+} from '@kerebron/editor/utilities';
 
 import {
   type InputRule,
   wrappingInputRule,
 } from '@kerebron/editor/plugins/input-rules';
 import {
-  type Commands,
+  type CommandFactories,
   type CommandShortcuts,
   wrapInList,
 } from '@kerebron/editor/commands';
-import { setHtmlAttributes } from '@kerebron/editor/utilities';
 
 export class NodeOrderedList extends Node {
   override name = 'ordered_list';
   requires = ['doc'];
 
-  attributes = {
+  override attributes = {
     type: {
       default: '1',
       fromDom(element: HTMLElement) {
@@ -61,7 +63,10 @@ export class NodeOrderedList extends Node {
     ];
   }
 
-  override getCommands(editor: CoreEditor, type: NodeType): Partial<Commands> {
+  override getCommandFactories(
+    editor: CoreEditor,
+    type: NodeType,
+  ): Partial<CommandFactories> {
     return {
       'toggleOrderedList': () => wrapInList(type),
     };

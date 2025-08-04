@@ -1131,68 +1131,24 @@ export function alternativeCommands(...commands: readonly Command[]): Command {
   };
 }
 
-let backspace = chainCommands(
-  deleteSelection,
-  joinBackward,
-  selectNodeBackward,
-);
-let del = chainCommands(deleteSelection, joinForward, selectNodeForward);
+export type CommandFactory = (...args: any[]) => Command;
 
-/// A basic keymap containing bindings not specific to any schema.
-/// Binds the following keys (when multiple commands are listed, they
-/// are chained with [`chainCommands`](#commands.chainCommands)):
-///
-/// * **Enter** to `newlineInCode`, `createParagraphNear`, `liftEmptyBlock`, `splitBlock`
-/// * **Mod-Enter** to `exitCode`
-/// * **Backspace** and **Mod-Backspace** to `deleteSelection`, `joinBackward`, `selectNodeBackward`
-/// * **Delete** and **Mod-Delete** to `deleteSelection`, `joinForward`, `selectNodeForward`
-/// * **Mod-Delete** to `deleteSelection`, `joinForward`, `selectNodeForward`
-/// * **Mod-a** to `selectAll`
-const pcBaseKeymap: { [key: string]: Command } = {
-  'Enter': chainCommands(
-    newlineInCode,
-    createParagraphNear,
-    liftEmptyBlock,
-    splitBlock,
-  ),
-  'Mod-Enter': exitCode,
-  'Backspace': backspace,
-  'Mod-Backspace': backspace,
-  'Shift-Backspace': backspace,
-  'Delete': del,
-  'Mod-Delete': del,
-  'Mod-a': selectAll,
-};
+export interface Commands {
+  [name: string]: Command;
+}
 
-/// A copy of `pcBaseKeymap` that also binds **Ctrl-h** like Backspace,
-/// **Ctrl-d** like Delete, **Alt-Backspace** like Ctrl-Backspace, and
-/// **Ctrl-Alt-Backspace**, **Alt-Delete**, and **Alt-d** like
-/// Ctrl-Delete.
-const macBaseKeymap: { [key: string]: Command } = {
-  'Ctrl-h': pcBaseKeymap['Backspace'],
-  'Alt-Backspace': pcBaseKeymap['Mod-Backspace'],
-  'Ctrl-d': pcBaseKeymap['Delete'],
-  'Ctrl-Alt-Backspace': pcBaseKeymap['Mod-Delete'],
-  'Alt-Delete': pcBaseKeymap['Mod-Delete'],
-  'Alt-d': pcBaseKeymap['Mod-Delete'],
-  'Ctrl-a': selectTextblockStart,
-  'Ctrl-e': selectTextblockEnd,
-};
-for (let key in pcBaseKeymap) (macBaseKeymap as any)[key] = pcBaseKeymap[key];
-
-const mac = /(Mac|iPhone|iPod|iPad)/i.test(navigator?.platform);
-
-/// Depending on the detected platform, this will hold
-/// [`pcBasekeymap`](#commands.pcBaseKeymap) or
-/// [`macBaseKeymap`](#commands.macBaseKeymap).
-export const baseKeymap: { [key: string]: Command } = mac
-  ? macBaseKeymap
-  : pcBaseKeymap;
-
-export type Commands = {
-  [name: string]: (...args: any[]) => Command;
-};
+export interface CommandFactories {
+  [name: string]: CommandFactory;
+}
 
 export type CommandShortcuts = {
   [name: string]: string;
 };
+
+export type ChainedCommands =
+  & {
+    [Item in keyof Commands]: (...args: unknown[]) => ChainedCommands;
+  }
+  & {
+    run: () => boolean;
+  };

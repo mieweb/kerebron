@@ -3,7 +3,7 @@ import { Command, Plugin } from 'prosemirror-state';
 
 import { type CoreEditor, Extension } from '@kerebron/editor';
 import {
-  type Commands,
+  type CommandFactories,
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
 
@@ -47,7 +47,7 @@ export class ExtensionHistory extends Extension {
     newGroupDelay: 500,
   };
 
-  override getCommands(editor: CoreEditor): Partial<Commands> {
+  override getCommandFactories(editor: CoreEditor): Partial<CommandFactories> {
     return {
       'undo': () => undo,
       'redo': () => redo,

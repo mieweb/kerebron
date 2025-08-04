@@ -1,7 +1,6 @@
 import { Command, Plugin } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { base, keyName } from './w3c-keyname.ts';
-import { InputRule } from '../input-rules/InputRulesPlugin';
 
 const mac = typeof navigator != 'undefined' &&
   /Mac|iP(hone|[oa]d)/.test(navigator?.platform);

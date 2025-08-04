@@ -1,24 +1,17 @@
 import { Fragment, Node as ProseMirrorNode, Schema } from 'prosemirror-model';
 
-import type { Content } from '../types.ts';
+import type { Content, JSONContent } from '../types.ts';
 
 export type CreateNodeFromContentOptions = {
   errorOnInvalidContent?: boolean;
 };
 
 export function createNodeFromObject(
-  content: Content | ProseMirrorNode | Fragment,
+  content: JSONContent | ProseMirrorNode | Fragment,
   schema: Schema,
   options?: CreateNodeFromContentOptions,
-): ProseMirrorNode | Fragment {
+): ProseMirrorNode {
   try {
-    // if the JSON Content is an array of nodes, create a fragment for each node
-    if (Array.isArray(content) && content.length > 0) {
-      return Fragment.fromArray(
-        content.map((item) => schema.nodeFromJSON(item)),
-      );
-    }
-
     const node = schema.nodeFromJSON(content);
 
     if (options?.errorOnInvalidContent) {
@@ -45,8 +38,17 @@ export function createNodeFromObject(
   }
 }
 
+export function createNodeFromArray(
+  content: JSONContent[],
+  schema: Schema,
+): Fragment {
+  return Fragment.fromArray(
+    content.map((item) => schema.nodeFromJSON(item)),
+  );
+}
+
 export function createNodeFromContent(
-  content: Content | ProseMirrorNode | Fragment,
+  content: JSONContent | ProseMirrorNode | Fragment,
   schema: Schema,
   options?: CreateNodeFromContentOptions,
 ): ProseMirrorNode | Fragment {
@@ -57,7 +59,7 @@ export function createNodeFromContent(
   const isJSONContent = typeof content === 'object' && content !== null;
 
   if (isJSONContent) {
-    createNodeFromObject(content, schema, options);
+    return createNodeFromObject(content, schema, options);
   }
 
   return schema.topNodeType.createAndFill(null, [])!;

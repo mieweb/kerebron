@@ -1,8 +1,8 @@
-import { NodeSpec, NodeType } from 'prosemirror-model';
+import type { NodeSpec, NodeType } from 'prosemirror-model';
 
-import { CoreEditor, Node } from '@kerebron/editor';
+import { type CoreEditor, Node } from '@kerebron/editor';
 import {
-  type Commands,
+  type CommandFactories,
   type CommandShortcuts,
   wrapInList,
 } from '@kerebron/editor/commands';
@@ -35,13 +35,16 @@ export class NodeBulletList extends Node {
     ];
   }
 
-  getCommands(editor: CoreEditor, type: NodeType): Partial<Commands> {
+  override getCommandFactories(
+    editor: CoreEditor,
+    type: NodeType,
+  ): Partial<CommandFactories> {
     return {
       'toggleBulletList': () => wrapInList(type),
     };
   }
 
-  getKeyboardShortcuts(): Partial<CommandShortcuts> {
+  override getKeyboardShortcuts(): Partial<CommandShortcuts> {
     return {
       'Shift-Ctrl-8': 'toggleBulletList',
     };

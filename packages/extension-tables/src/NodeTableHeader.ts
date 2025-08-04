@@ -1,11 +1,5 @@
-import { Attrs, Node as PmNode, NodeSpec, NodeType } from 'prosemirror-model';
-
-import { type CoreEditor, Node } from '@kerebron/editor';
-import {
-  type Commands,
-  type CommandShortcuts,
-} from '@kerebron/editor/commands';
-import { type InputRule } from '@kerebron/editor/plugins/input-rules';
+import type { Attrs, Node as PmNode, NodeSpec } from 'prosemirror-model';
+import { Node } from '@kerebron/editor';
 
 function getCellAttrs(dom: HTMLElement | string): Attrs {
   if (typeof dom === 'string') {
@@ -51,19 +45,5 @@ export class NodeTableHeader extends Node {
       ],
       toDOM: (node) => ['th', setCellAttrs(node), 0],
     };
-  }
-
-  override getInputRules(type: NodeType): InputRule[] {
-    return [];
-  }
-
-  override getCommands(editor: CoreEditor, type: NodeType): Partial<Commands> {
-    const commands = {};
-    return commands;
-  }
-
-  override getKeyboardShortcuts(): Partial<CommandShortcuts> {
-    const keys = {};
-    return keys;
   }
 }

@@ -213,7 +213,7 @@ export class ExtensionDropcursor extends Extension {
     class: undefined,
   };
 
-  getProseMirrorPlugins(): Plugin[] {
+  override getProseMirrorPlugins(): Plugin[] {
     return [
       dropCursor(this.options),
     ];

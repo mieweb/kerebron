@@ -120,14 +120,14 @@ export class InputRulesPlugin extends Plugin<PluginState> {
 
       props: {
         handleTextInput(view, from, to, text) {
-          return run(view, from, to, text, rules, InputRulesPlugin);
+          return run(view, from, to, text, rules, this);
         },
         handleDOMEvents: {
           compositionend: (view) => {
             setTimeout(() => {
               let { $cursor } = view.state.selection as TextSelection;
               if ($cursor) {
-                run(view, $cursor.pos, $cursor.pos, '', rules, plugin);
+                run(view, $cursor.pos, $cursor.pos, '', rules, this);
               }
             });
           },

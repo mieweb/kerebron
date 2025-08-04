@@ -35,7 +35,7 @@ import { NodeCodeMirror } from '@kerebron/extension-codemirror';
 
 const __dirname = import.meta.dirname;
 
-Deno.test('convert odt to md', function addTest() {
+Deno.test('convert odt to md', () => {
   const extMd = new ExtensionMarkdown();
   const extOdt = new ExtensionOdt();
 

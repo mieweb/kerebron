@@ -4,6 +4,7 @@
   "imports": {},
   "exports": {
     ".": "./src/ExtensionBasicEditor.ts",
+    "./ExtensionSelection": "./src/ExtensionSelection.ts",
     "./ExtensionBaseKeymap": "./src/ExtensionBaseKeymap.ts",
     "./ExtensionHistory": "./src/ExtensionHistory.ts",
     "./ExtensionDropcursor": "./src/ExtensionDropcursor.ts",

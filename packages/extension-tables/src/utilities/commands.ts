@@ -29,6 +29,7 @@ import {
   removeColSpan,
   selectionCell,
 } from './util.ts';
+import { CommandFactory } from '@kerebron/editor/commands';
 
 /**
  * @public
@@ -497,9 +498,9 @@ export interface GetCellTypeOptions {
  *
  * @public
  */
-export function splitCellWithType(
+export const splitCellWithType: CommandFactory = (
   getCellType: (options: GetCellTypeOptions) => NodeType,
-): Command {
+) => {
   return (state, dispatch) => {
     const sel = state.selection;
     let cellNode: Node | null | undefined;
@@ -566,7 +567,7 @@ export function splitCellWithType(
     }
     return true;
   };
-}
+};
 
 /**
  * Returns a command that sets the given attribute to the given value,
@@ -575,7 +576,7 @@ export function splitCellWithType(
  *
  * @public
  */
-export function setCellAttr(name: string, value: unknown): Command {
+export const setCellAttr: CommandFactory = (name: string, value: unknown) => {
   return function (state, dispatch) {
     if (!isInTable(state)) return false;
     const $cell = selectionCell(state);
@@ -601,7 +602,7 @@ export function setCellAttr(name: string, value: unknown): Command {
     }
     return true;
   };
-}
+};
 
 function deprecated_toggleHeader(type: ToggleHeaderType): Command {
   return function (state, dispatch) {
@@ -694,10 +695,10 @@ export type ToggleHeaderType = 'column' | 'row' | 'cell';
  *
  * @public
  */
-export function toggleHeader(
+export const toggleHeader: CommandFactory = (
   type: ToggleHeaderType,
   options?: { useDeprecatedLogic: boolean } | undefined,
-): Command {
+) => {
   options = options || { useDeprecatedLogic: false };
 
   if (options.useDeprecatedLogic) return deprecated_toggleHeader(type);
@@ -759,7 +760,7 @@ export function toggleHeader(
     }
     return true;
   };
-}
+};
 
 /**
  * Toggles whether the selected row contains header cells.
@@ -828,7 +829,7 @@ function findNextCell($cell: ResolvedPos, dir: Direction): number | null {
  *
  * @public
  */
-export function goToNextCell(direction: Direction): Command {
+export const goToNextCell: CommandFactory = (direction: Direction) => {
   return function (state, dispatch) {
     if (!isInTable(state)) return false;
     const cell = findNextCell(selectionCell(state), direction);
@@ -843,7 +844,7 @@ export function goToNextCell(direction: Direction): Command {
     }
     return true;
   };
-}
+};
 
 /**
  * Deletes the table around the selection, if any.

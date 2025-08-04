@@ -1,15 +1,16 @@
-import { CoreEditor, Mark } from '@kerebron/editor';
+import { type CoreEditor, Mark } from '@kerebron/editor';
 import {
-  Commands,
-  CommandShortcuts,
+  type CommandFactories,
+  type CommandShortcuts,
   toggleMark,
 } from '@kerebron/editor/commands';
+import type { MarkSpec, MarkType } from 'prosemirror-model';
 
 export class MarkItalic extends Mark {
   override name = 'em';
   requires = ['doc'];
 
-  getMarkSpec(): MarkSpec {
+  override getMarkSpec(): MarkSpec {
     return {
       parseDOM: [
         { tag: 'i' },
@@ -23,13 +24,16 @@ export class MarkItalic extends Mark {
     };
   }
 
-  getCommands(editor: CoreEditor, type: MarkType): Partial<Commands> {
+  override getCommandFactories(
+    editor: CoreEditor,
+    type: MarkType,
+  ): Partial<CommandFactories> {
     return {
       'toggleItalic': () => toggleMark(type),
     };
   }
 
-  getKeyboardShortcuts(): Partial<CommandShortcuts> {
+  override getKeyboardShortcuts(): Partial<CommandShortcuts> {
     return {
       'Mod-i': 'toggleItalic',
       'Mod-I': 'toggleItalic',

@@ -1,17 +1,12 @@
 import { type Command, EditorState, Transaction } from 'prosemirror-state';
 import { CoreEditor } from '../CoreEditor.ts';
 import { createChainableState } from './createChainableState.ts';
-
-export type ChainedCommands = {
-  [key: string]: ChainedCommands;
-} & {
-  run: () => boolean;
-};
+import { ChainedCommands, CommandFactory } from './mod.ts';
 
 export class CommandManager {
   constructor(
     private editor: CoreEditor,
-    private rawCommands: { [key: string]: () => Command } = {},
+    private commandFactories: { [key: string]: CommandFactory } = {},
   ) {
   }
 
@@ -31,7 +26,7 @@ export class CommandManager {
     startTr?: Transaction,
     shouldDispatch = true,
   ): ChainedCommands {
-    const { rawCommands, editor, state } = this;
+    const { commandFactories, editor, state } = this;
     const { view } = editor;
     const callbacks: boolean[] = [];
     const hasStartTransaction = !!startTr;
@@ -42,9 +37,10 @@ export class CommandManager {
 
     const chain = {
       ...Object.fromEntries(
-        Object.entries(rawCommands).map(([name, command]) => {
+        Object.entries(commandFactories).map(([name, commandFactory]) => {
           const chainedCommand = (...args: never[]) => {
-            const callback = command(...args)(
+            const command = commandFactory(...args);
+            const callback = command(
               chainedState,
               shouldDispatch ? fakeDispatch : undefined,
             );

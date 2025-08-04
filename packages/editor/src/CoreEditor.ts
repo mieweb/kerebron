@@ -1,51 +1,35 @@
 import { EditorView } from 'prosemirror-view';
-import { Node as ProseMirrorNode, type Schema } from 'prosemirror-model';
+import { Node as ProseMirrorNode, Schema } from 'prosemirror-model';
 
 import { ExtensionManager } from './ExtensionManager.ts';
 import type { EditorOptions, JSONContent } from './types.ts';
 import { EditorState, Transaction } from 'prosemirror-state';
-import { createNodeFromContent } from './utilities/createNodeFromContent.ts';
-import { ChainedCommands, CommandManager } from './commands/CommandManager.ts';
+import { CommandManager } from './commands/CommandManager.ts';
 import { nodeToTreeString } from './nodeToTreeString.ts';
 import { DummyEditorView } from './DummyEditorView.ts';
+import { ChainedCommands } from '@kerebron/editor/commands';
+import { createNodeFromObject } from './utilities/createNodeFromContent.ts';
 
-function ensureDocSchema(doc: ProseMirrorNode, schema: Schema) {
-  if (doc.type.schema != schema) {
-    const findNode = (nodeName: string) => {
-      if (!schema.nodes[nodeName]) {
-        throw new Error(`Not able to rewrite schema for node '${nodeName}'`);
-      }
-      return schema.nodes[nodeName];
-    };
-    const findMark = (markName: string) => {
-      if (!schema.marks[markName]) {
-        throw new Error(`Not able to rewrite schema for mark '${markName}'`);
-      }
-      return schema.marks[markName];
-    };
-
-    // TODO fix readonly warnings
-    doc.type = findNode(doc.type.name);
-    doc.marks.forEach((mark) => {
-      mark.type = findMark(mark.type.name);
-    });
-    doc.descendants((node) => {
-      node.type = findNode(node.type.name);
-      node.marks.forEach((mark) => {
-        mark.type = findMark(mark.type.name);
-      });
-    });
+function ensureDocSchema(
+  doc: ProseMirrorNode,
+  schema: Schema,
+): ProseMirrorNode {
+  if (doc.type.schema === schema) {
+    return doc;
   }
+
+  const json = doc.toJSON();
+  return ProseMirrorNode.fromJSON(schema, json);
 }
 
 export class CoreEditor extends EventTarget {
   public readonly options: Partial<EditorOptions> = {
-    element: null, // document.createElement('div'),
+    element: undefined,
     extensions: [],
   };
   private extensionManager: ExtensionManager;
   private commandManager: CommandManager;
-  public view!: EditorView;
+  public view!: EditorView | DummyEditorView;
   public state!: EditorState;
 
   constructor(options: Partial<EditorOptions> = {}) {
@@ -55,7 +39,10 @@ export class CoreEditor extends EventTarget {
       ...options,
     };
 
-    this.extensionManager = new ExtensionManager(this.options.extensions, this);
+    this.extensionManager = new ExtensionManager(
+      this.options.extensions || [],
+      this,
+    );
 
     // const content = this.options.content ? this.options.content : {
     //   type: this.extensionManager.schema.topNodeType.name,
@@ -68,9 +55,13 @@ export class CoreEditor extends EventTarget {
     this.createView(content);
     this.commandManager = new CommandManager(
       this,
-      this.extensionManager.commandConstructors,
+      this.extensionManager.commandFactories,
     );
     this.setupPlugins();
+  }
+
+  getExtension(name: string) {
+    return this.extensionManager.getExtension(name);
   }
 
   public get schema() {
@@ -78,15 +69,15 @@ export class CoreEditor extends EventTarget {
   }
 
   public chain(): ChainedCommands {
-    return this.commandManager.chain();
+    return this.commandManager.createChain();
   }
 
   public can(): ChainedCommands {
-    return this.commandManager.can();
+    return this.commandManager.createCan();
   }
 
   private createView(content: any) {
-    const doc = createNodeFromContent(content, this.schema);
+    const doc = createNodeFromObject(content, this.schema);
 
     this.state = EditorState.create({ doc });
 
@@ -151,10 +142,10 @@ export class CoreEditor extends EventTarget {
         doc = converter.toDoc(content);
       }
     } else {
-      doc = createNodeFromContent(content, this.schema);
+      doc = createNodeFromObject(content, this.schema);
     }
 
-    ensureDocSchema(doc, this.schema);
+    doc = ensureDocSchema(doc, this.schema);
 
     this.state = EditorState.create({
       doc,
@@ -199,7 +190,7 @@ export class CoreEditor extends EventTarget {
   public clone(options: Partial<EditorOptions> = {}): CoreEditor {
     return new CoreEditor({
       ...options,
-      extensions: [...this.options.extensions],
+      extensions: [...(this.options.extensions || [])],
     });
   }
 

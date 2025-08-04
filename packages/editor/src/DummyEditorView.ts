@@ -9,7 +9,7 @@ import {
 } from 'prosemirror-state';
 import { Mark, Node } from 'prosemirror-model';
 
-import { MarkView, NodeView } from 'prosemirror-view';
+import { EditorView, MarkView, NodeView } from 'prosemirror-view';
 
 import { Decoration, DecorationSource } from 'prosemirror-view';
 
@@ -60,6 +60,7 @@ export class DummyEditorView {
   get dom() {
     return {
       addEventListener() {},
+      removeEventListener() {},
     };
   }
 
@@ -169,16 +170,20 @@ export class DummyEditorView {
       this.destroyPluginViews();
       for (let i = 0; i < this.directPlugins.length; i++) {
         let plugin = this.directPlugins[i];
-        if (plugin.spec.view) this.pluginViews.push(plugin.spec.view(this));
+        if (plugin.spec.view) {
+          this.pluginViews.push(plugin.spec.view(<any> this));
+        }
       }
       for (let i = 0; i < this.state.plugins.length; i++) {
         let plugin = this.state.plugins[i];
-        if (plugin.spec.view) this.pluginViews.push(plugin.spec.view(this));
+        if (plugin.spec.view) {
+          this.pluginViews.push(plugin.spec.view(<any> this));
+        }
       }
     } else {
       for (let i = 0; i < this.pluginViews.length; i++) {
         let pluginView = this.pluginViews[i];
-        if (pluginView.update) pluginView.update(this, prevState);
+        if (pluginView.update) pluginView.update(<any> this, prevState);
       }
     }
   }
@@ -245,7 +250,6 @@ export class DummyEditorView {
 
   /// Used for testing.
   dispatchEvent(event: Event) {
-    return dispatchEvent(this, event);
   }
 
   /// Dispatch a transaction. Will call
@@ -259,7 +263,7 @@ export class DummyEditorView {
 }
 
 DummyEditorView.prototype.dispatch = function (tr: Transaction) {
-  let dispatchTransaction = this._props.dispatchTransaction;
+  let dispatchTransaction = this.props.dispatchTransaction;
   if (dispatchTransaction) dispatchTransaction.call(this, tr);
   else this.updateState(this.state.apply(tr));
 };
@@ -307,7 +311,7 @@ function checkStateComponent(plugin: Plugin) {
 /// create [node views](#view.NodeView).
 export type NodeViewConstructor = (
   node: Node,
-  view: DummyEditorView,
+  view: EditorView,
   getPos: () => number | undefined,
   decorations: readonly Decoration[],
   innerDecorations: DecorationSource,
@@ -317,7 +321,7 @@ export type NodeViewConstructor = (
 /// mark views.
 export type MarkViewConstructor = (
   mark: Mark,
-  view: DummyEditorView,
+  view: EditorView,
   inline: boolean,
 ) => MarkView;
 

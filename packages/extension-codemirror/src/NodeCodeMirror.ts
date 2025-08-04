@@ -163,7 +163,10 @@ export class NodeCodeMirror extends Node {
     ];
   }
 
-  override getCommands(editor: CoreEditor, type: NodeType): Partial<Commands> {
+  override getCommandFactories(
+    editor: CoreEditor,
+    type: NodeType,
+  ): Partial<CommandFactories> {
     return {
       'setCodeBlock': (lang?: string) => setBlockType(type, { lang }),
       ArrowLeft: () => arrowHandler('left'),

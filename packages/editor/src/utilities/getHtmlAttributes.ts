@@ -1,5 +1,19 @@
-export function getHtmlAttributes(extension, node) {
-  const attrs = {};
+import type {
+  MarkSpec,
+  Node as ProseMirrorNode,
+  NodeSpec,
+} from 'prosemirror-model';
+
+import type { Mark } from '../Mark.ts';
+import type { Node } from '../Node.ts';
+
+type MarkOfNode = Mark | Node;
+
+export function getHtmlAttributes(
+  extension: MarkOfNode,
+  node: ProseMirrorNode,
+) {
+  const attrs: Record<string, any> = {};
 
   if (extension.attributes) {
     for (const [key, value] of Object.entries(extension.attributes)) {
@@ -18,8 +32,8 @@ export function getHtmlAttributes(extension, node) {
   return attrs;
 }
 
-export function setHtmlAttributes(extension, element) {
-  const attrs = {};
+export function setHtmlAttributes(extension: MarkOfNode, element: HTMLElement) {
+  const attrs: Record<string, any> = {};
 
   if (extension.attributes) {
     for (const [key, value] of Object.entries(extension.attributes)) {
@@ -34,7 +48,10 @@ export function setHtmlAttributes(extension, element) {
   return attrs;
 }
 
-export function addAttributesToSchema(spec, extension) {
+export function addAttributesToSchema(
+  spec: MarkSpec | NodeSpec,
+  extension: MarkOfNode,
+) {
   const attrs = {};
 
   if (extension.attributes) {

@@ -1,8 +1,8 @@
-import { NodeSpec, NodeType } from 'prosemirror-model';
+import type { NodeSpec, NodeType } from 'prosemirror-model';
 
 import { type CoreEditor, Node } from '@kerebron/editor';
 import {
-  type Commands,
+  type CommandFactories,
   type CommandShortcuts,
   setBlockType,
 } from '@kerebron/editor/commands';
@@ -51,8 +51,11 @@ export class NodeHeading extends Node {
     ];
   }
 
-  override getCommands(editor: CoreEditor, type: NodeType): Partial<Commands> {
-    const commands: Partial<Commands> = {};
+  override getCommandFactories(
+    editor: CoreEditor,
+    type: NodeType,
+  ): Partial<CommandFactories> {
+    const commands: Partial<CommandFactories> = {};
 
     for (let i = 1; i <= maxLevel; i++) {
       commands['setHeading' + i] = () => setBlockType(type, { level: i });

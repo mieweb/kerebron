@@ -6,7 +6,7 @@ export class MarkBookmark extends Mark {
   override name = 'bookmark';
   requires = ['doc'];
 
-  getMarkSpec(): MarkSpec {
+  override getMarkSpec(): MarkSpec {
     return {
       attrs: {
         id: {},

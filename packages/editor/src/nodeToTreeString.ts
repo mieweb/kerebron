@@ -34,32 +34,34 @@ export function nodeToTreeString(
 
   let line = '';
   // if (node.type) {
-  line += ` - [${node.type.name}] `;
-  // } else {
-  //   line += ` - `;
-  // }
-  line += `pos: ${currentPos}, `;
-  line += `nodeSize: ${node.nodeSize}, `; // isLeaf ? 1 : 2 + this.content.size
-  line += `epos: ${currentPos + node.nodeSize}, `; // isLeaf ? 1 : 2 + this.content.size
-  if (node.content) {
-    line += `fragment.size: ${node.content.size}, `;
-  }
-
-  output += (delim + line) + '\n';
-
-  let marksLine = '';
-  if (node.marks) {
-    for (const mark of node.marks) {
-      marksLine += `(${mark.type.name}), `;
+  if ('type' in node) {
+    line += ` - [${node.type.name}] `;
+    // } else {
+    //   line += ` - `;
+    // }
+    line += `pos: ${currentPos}, `;
+    line += `nodeSize: ${node.nodeSize}, `; // isLeaf ? 1 : 2 + this.content.size
+    line += `epos: ${currentPos + node.nodeSize}, `; // isLeaf ? 1 : 2 + this.content.size
+    if (node.content) {
+      line += `fragment.size: ${node.content.size}, `;
     }
-  }
 
-  if (marksLine) {
-    output += (delim + '    ' + marksLine) + '\n';
-  }
+    output += (delim + line) + '\n';
 
-  if (node.text) {
-    output += (delim + '    "' + trimText(node.text) + '"') + '\n';
+    let marksLine = '';
+    if (node.marks) {
+      for (const mark of node.marks) {
+        marksLine += `(${mark.type.name}), `;
+      }
+    }
+
+    if (marksLine) {
+      output += (delim + '    ' + marksLine) + '\n';
+    }
+
+    if (node.text) {
+      output += (delim + '    "' + trimText(node.text) + '"') + '\n';
+    }
   }
 
   node.forEach((child, offset) => {

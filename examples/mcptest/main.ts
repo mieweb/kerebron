@@ -9,7 +9,7 @@ import { WebsocketProvider } from 'y-websocket';
 
 import { userColors } from '@kerebron/extension-yjs/userColors';
 import * as Y from 'yjs';
-import { SelectionExtension } from './SelectionExtension.ts';
+import { ExtensionSelection } from '@kerebron/extension-basic-editor/ExtensionSelection';
 
 const ydoc = new Y.Doc();
 
@@ -22,8 +22,6 @@ const wsProvider = new WebsocketProvider(
   ydoc,
 );
 
-const selectionExtension = new SelectionExtension();
-
 wsProvider.awareness.setLocalStateField('user', {
   name: 'BOT ' + Math.floor(Math.random() * 100),
   color: userColor.color,
@@ -32,7 +30,6 @@ wsProvider.awareness.setLocalStateField('user', {
 
 const editor = new CoreEditor({
   extensions: [
-    selectionExtension,
     new ExtensionBasicEditor(),
     new ExtensionMarkdown(),
     new ExtensionTables(),
@@ -56,16 +53,22 @@ wsProvider.on('status', (event) => {
   }
 });
 
+const extensionSelection = <ExtensionSelection> editor.getExtension(
+  'selection',
+);
+
 ydoc.on('update', () => {
   console.log('doc update');
-  selectionExtension.selectAll();
+  if (!extensionSelection) {
+    return;
+  }
+  editor.chain().selectAll().run();
   if (cursorPlugin) {
     cursorPlugin.updateCursorInfo(editor.state);
   }
-  const slice = selectionExtension.extractSelection();
+  const slice = extensionSelection.extractSelection();
 
   const editor2 = new CoreEditor({
-    content: slice,
     extensions: [
       new ExtensionBasicEditor(),
       new ExtensionMarkdown(),
@@ -73,6 +76,8 @@ ydoc.on('update', () => {
       new NodeCodeMirror(),
     ],
   });
+
+  editor2.setDocument(slice);
 
   const md = editor2.getDocument('text/x-markdown');
   console.log('md', md);

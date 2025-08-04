@@ -26,7 +26,7 @@ export class GapCursor extends Selection {
     return GapCursor.valid($pos) ? new GapCursor($pos) : Selection.near($pos);
   }
 
-  content() {
+  override content() {
     return Slice.empty;
   }
 
@@ -39,7 +39,7 @@ export class GapCursor extends Selection {
   }
 
   /// @internal
-  static fromJSON(doc: Node, json: any): GapCursor {
+  static fromJSONToGapCursor(doc: Node, json: any): GapCursor {
     if (typeof json.pos != 'number') {
       throw new RangeError('Invalid input for GapCursor.fromJSON');
     }
@@ -47,7 +47,7 @@ export class GapCursor extends Selection {
   }
 
   /// @internal
-  getBookmark() {
+  override getBookmark() {
     return new GapBookmark(this.anchor);
   }
 

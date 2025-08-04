@@ -1,9 +1,30 @@
+import {
+  type Attrs,
+  Fragment,
+  NodeRange,
+  NodeSpec,
+  type NodeType,
+  Slice,
+} from 'prosemirror-model';
+import type {
+  Command,
+  EditorState,
+  NodeSelection,
+  Transaction,
+} from 'prosemirror-state';
+import { Selection } from 'prosemirror-state';
 import { type CoreEditor, Node } from '@kerebron/editor';
 import {
-  type Commands,
+  type CommandFactories,
   type CommandShortcuts,
   setBlockType,
 } from '@kerebron/editor/commands';
+import {
+  canJoin,
+  canSplit,
+  liftTarget,
+  ReplaceAroundStep,
+} from 'prosemirror-transform';
 
 /// Build a command that splits a non-empty textblock at the top level
 /// of a list item by also splitting that list item.
@@ -272,7 +293,10 @@ export class NodeListItem extends Node {
     };
   }
 
-  getCommands(editor: CoreEditor, type: NodeType): Partial<Commands> {
+  override getCommandFactories(
+    editor: CoreEditor,
+    type: NodeType,
+  ): Partial<CommandFactories> {
     return {
       'splitListItem': () => splitListItem(type),
       'liftListItem': () => liftListItem(type),
@@ -280,7 +304,7 @@ export class NodeListItem extends Node {
     };
   }
 
-  getKeyboardShortcuts(): Partial<CommandShortcuts> {
+  override getKeyboardShortcuts(): Partial<CommandShortcuts> {
     return {
       // 'Enter': 'splitListItem',
       'Mod-[': 'liftListItem',

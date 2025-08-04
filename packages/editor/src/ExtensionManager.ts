@@ -3,7 +3,7 @@ import { Plugin } from 'prosemirror-state';
 import { NodeViewConstructor } from 'prosemirror-view';
 
 import { Converter, Extension } from './Extension.ts';
-import { AnyExtension } from './types.ts';
+import { AnyExtension, AnyExtensionOrReq } from './types.ts';
 import { CoreEditor } from './CoreEditor.ts';
 import { Mark } from './Mark.ts';
 import { Node } from './Node.ts';
@@ -12,9 +12,15 @@ import {
   InputRulesPlugin,
 } from './plugins/input-rules/InputRulesPlugin.ts';
 import { KeymapPlugin } from './plugins/keymap/keymap.ts';
-import { chainCommands } from './commands/mod.ts';
+import {
+  chainCommands,
+  CommandFactories,
+  CommandFactory,
+  CommandShortcuts,
+} from './commands/mod.ts';
 import { type Command } from 'prosemirror-state';
 import { addAttributesToSchema } from './utilities/getHtmlAttributes.ts';
+import { base } from './plugins/keymap/w3c-keyname.ts';
 
 export function findDuplicates(items: any[]): any[] {
   const filtered = items.filter((el, index) => items.indexOf(el) !== index);
@@ -47,13 +53,13 @@ export class ExtensionManager {
   readonly plugins: Plugin[];
   readonly nodeViews: Record<string, NodeViewConstructor> = {};
 
-  readonly commandConstructors: { [key: string]: () => Command } = {};
-  private converters: Record<string, Converter> = {};
+  readonly commandFactories: { [key: string]: CommandFactory } = {};
+  public converters: Record<string, Converter> = {};
 
   private debug = true;
 
-  constructor(extensions: Set<AnyExtension>, private editor: CoreEditor) {
-    this.setupExtensions(extensions);
+  constructor(extensions: AnyExtensionOrReq[], private editor: CoreEditor) {
+    this.setupExtensions(new Set(extensions));
     this.schema = this.getSchemaByResolvedExtensions(editor);
 
     const event = new CustomEvent('schema:ready', {
@@ -66,23 +72,38 @@ export class ExtensionManager {
     this.plugins = this.getPlugins();
   }
 
+  getExtension(name: string): Extension | undefined {
+    const { nodeExtensions, markExtensions, baseExtensions } = splitExtensions(
+      this.extensions,
+    );
+
+    for (const extension of baseExtensions) {
+      if (extension.name === name) {
+        return extension;
+      }
+    }
+  }
+
   private getPlugins() {
     const plugins: Plugin[] = [];
 
     const inputRules: InputRule[] = [];
-    const commands: Map<string, () => Command> = new Map();
+    const commands: Map<string, CommandFactory> = new Map();
     const keyBindings: Map<string, Command> = new Map();
 
     const mergeCommands = (
-      toInsert: Record<string, () => Command>,
+      toInsert: Partial<CommandFactories>,
       extName: string,
     ) => {
       for (const key in toInsert) {
-        const commandConstructor = toInsert[key];
+        const commandFactory = toInsert[key];
+        if (!commandFactory) {
+          continue;
+        }
 
         if (this.debug) {
-          const wrappedConstructor = () => {
-            const realCommand = commandConstructor();
+          const wrappedFactory = (...args: unknown[]) => {
+            const realCommand = commandFactory(...args);
 
             const command: Command = (state, dispatch, view) => {
               if (dispatch) {
@@ -94,23 +115,30 @@ export class ExtensionManager {
             return command;
           };
 
-          commands.set(key, wrappedConstructor);
-          this.commandConstructors[key] = wrappedConstructor;
+          commands.set(key, wrappedFactory);
+          this.commandFactories[key] = wrappedFactory;
         } else {
-          commands.set(key, commandConstructor);
-          this.commandConstructors[key] = commandConstructor;
+          commands.set(key, commandFactory);
+          this.commandFactories[key] = commandFactory;
         }
       }
     };
 
-    function mergeShortcuts(toInsert: Record<string, string>, extName: string) {
+    function mergeShortcuts(
+      toInsert: Partial<CommandShortcuts>,
+      extName: string,
+    ) {
       for (const key in toInsert) {
-        const commandConstructor = commands.get(toInsert[key]);
-        if (!commandConstructor) {
+        if (!toInsert[key]) {
+          continue;
+        }
+
+        const commandFactory = commands.get(toInsert[key]);
+        if (!commandFactory) {
           console.warn(`No command constructor: ${toInsert[key]}`);
           continue;
         }
-        const command = commandConstructor();
+        const command = commandFactory();
 
         const keyBinding = keyBindings.get(key);
         if (keyBinding) {
@@ -131,7 +159,7 @@ export class ExtensionManager {
           ...extension.getProseMirrorPlugins(this.editor, this.schema),
         );
         mergeCommands(
-          extension.getCommands(this.editor, nodeType),
+          extension.getCommandFactories(this.editor, nodeType),
           extension.name,
         );
         mergeShortcuts(
@@ -151,7 +179,7 @@ export class ExtensionManager {
         const markType = this.schema.marks[extension.name];
         inputRules.push(...extension.getInputRules(markType));
         mergeCommands(
-          extension.getCommands(this.editor, markType),
+          extension.getCommandFactories(this.editor, markType),
           extension.name,
         );
         mergeShortcuts(
@@ -163,7 +191,10 @@ export class ExtensionManager {
         plugins.push(
           ...extension.getProseMirrorPlugins(this.editor, this.schema),
         );
-        mergeCommands(extension.getCommands(this.editor), extension.name);
+        mergeCommands(
+          extension.getCommandFactories(this.editor),
+          extension.name,
+        );
         mergeShortcuts(
           extension.getKeyboardShortcuts(this.editor),
           extension.name,
@@ -177,13 +208,18 @@ export class ExtensionManager {
 
     if (this.debug) {
       for (const key in keyBindings) {
+        const keyBinding = keyBindings.get(key);
+        if (!keyBinding) {
+          continue;
+        }
+
         const wrapperCommand: Command = (state, dispatch, view) => {
           console.debug(`Key: ${key}`);
           return true;
         };
         keyBindings.set(
           key,
-          chainCommands(wrapperCommand, keyBindings.get(key)),
+          chainCommands(wrapperCommand, keyBinding),
         );
       }
     }
@@ -196,13 +232,15 @@ export class ExtensionManager {
     return plugins;
   }
 
-  private setupExtensions(extensions: Set<AnyExtension>) {
-    const allExtensions = new Map<string, AnyExtension>();
+  private setupExtensions(extensions: Set<AnyExtensionOrReq>) {
+    const allExtensions = new Map<string, AnyExtensionOrReq>();
 
-    const createMap = (extensions: Set<AnyExtension>) => {
+    const createMap = (extensions: Set<AnyExtensionOrReq>) => {
       for (const extension of extensions) {
-        allExtensions.set(extension.name, extension);
-        if (extension.requires) {
+        if ('name' in extension) {
+          allExtensions.set(extension.name, extension);
+        }
+        if ('requires' in extension) {
           const childExtensions = Array.from(extension.requires).filter((e) =>
             typeof e !== 'string'
           );
@@ -220,29 +258,34 @@ export class ExtensionManager {
       this.extensions.add(extension);
     };
 
-    function recursiveInitializeExtension(extension: AnyExtension) {
-      if (initialized.has(extension.name)) {
+    function recursiveInitializeExtension(extension: AnyExtensionOrReq) {
+      if ('name' in extension && initialized.has(extension.name)) {
         return;
       }
 
-      const requires = (extension.requires || []).map((e) =>
-        typeof e === 'string' ? e : e.name
-      );
+      if ('requires' in extension) {
+        const requires = extension.requires || [];
+        const requireNames = requires.map((
+          e: string | AnyExtensionOrReq,
+        ): string => typeof e === 'string' ? e : ('name' in e ? e.name : ''));
 
-      for (const require of requires) {
-        if (!initialized.has(require)) {
-          const requiredExtension = allExtensions.get(require);
-          if (!requiredExtension) {
-            throw new Error('Required extension not found: ' + require);
+        for (const require of requireNames) {
+          if (!initialized.has(require)) {
+            const requiredExtension = allExtensions.get(require);
+            if (!requiredExtension) {
+              throw new Error('Required extension not found: ' + require);
+            }
+            recursiveInitializeExtension(requiredExtension);
           }
-          recursiveInitializeExtension(requiredExtension);
         }
       }
 
-      initializeExtension(extension);
+      if ('name' in extension) {
+        initializeExtension(extension);
 
-      initialized.add(extension.name);
-      allExtensions.delete(extension.name);
+        initialized.add(extension.name);
+        allExtensions.delete(extension.name);
+      }
     }
 
     for (const extension of allExtensions.values()) {
@@ -282,7 +325,7 @@ export class ExtensionManager {
 
     for (const extension of baseExtensions) {
       if ('setupSpec' in baseExtensions) {
-        baseExtensions.setupSpec(spec);
+        extension.setupSpec(spec);
       }
     }
 

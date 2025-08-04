@@ -1,24 +1,27 @@
-import { NodeSpec, NodeType } from 'prosemirror-model';
-import { NodeViewConstructor } from 'prosemirror-view';
-import { Plugin } from 'prosemirror-state';
+import type { NodeSpec, NodeType, Schema } from 'prosemirror-model';
+import type { NodeViewConstructor } from 'prosemirror-view';
+import type { Plugin } from 'prosemirror-state';
 
-import { InputRule } from './plugins/input-rules/InputRulesPlugin.ts';
-import { CoreEditor } from './CoreEditor.ts';
-import { Command, Commands, CommandShortcuts } from './commands/mod.ts';
-import { Converter } from './Extension.ts';
+import type { InputRule } from './plugins/input-rules/InputRulesPlugin.ts';
+import type { CoreEditor } from './CoreEditor.ts';
+import type { Command, CommandShortcuts } from './commands/mod.ts';
+import type { Converter } from './Extension.ts';
+import { Attribute } from './types.ts';
 
 export interface NodeConfig {
   // @ts-ignore - this is a dynamic key
   [key: string]: any;
 }
 
-export interface CommandConstructors {
+export interface CommandFactories {
   [key: string]: () => Command;
 }
 
 export abstract class Node {
   readonly type = 'node';
   name: string = 'node';
+
+  public readonly attributes: Record<string, Attribute<any>> = {};
 
   public constructor(protected config: Partial<NodeConfig> = {}) {}
 
@@ -30,18 +33,18 @@ export abstract class Node {
     return [];
   }
 
-  getProseMirrorPlugins(editor: CoreEditor): Plugin[] {
+  getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
     return [];
   }
 
-  getCommands(
+  getCommandFactories(
     editor: CoreEditor,
     type: NodeType,
-  ): Partial<CommandConstructors> {
+  ): Partial<CommandFactories> {
     return {};
   }
 
-  getKeyboardShortcuts(): Partial<CommandShortcuts> {
+  getKeyboardShortcuts(editor: CoreEditor): Partial<CommandShortcuts> {
     return {};
   }
 
@@ -49,7 +52,7 @@ export abstract class Node {
     return undefined;
   }
 
-  getConverters(): Record<string, Converter> {
+  getConverters(editor: CoreEditor, schema: Schema): Record<string, Converter> {
     return {};
   }
 }

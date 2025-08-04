@@ -5,11 +5,21 @@ import {
   ResolvedPos,
   Slice,
 } from 'npm:prosemirror-model@latest';
-import { AllSelection } from 'npm:prosemirror-state@latest';
+import {
+  AllSelection,
+  Command,
+  EditorState,
+  TextSelection,
+  Transaction,
+} from 'npm:prosemirror-state@latest';
 
 import { CoreEditor, Extension } from '@kerebron/editor';
-import { type Commands } from '@kerebron/editor/commands';
+import type {
+  CommandFactories,
+  CommandFactory,
+} from '@kerebron/editor/commands';
 import { createNodeFromObject } from '@kerebron/editor/utilities';
+import { EditorView } from 'prosemirror-view';
 
 function normalizeSiblings(fragment: Fragment, $context: ResolvedPos) {
   if (fragment.childCount < 2) return fragment;
@@ -184,14 +194,42 @@ function sliceHasOnlyText(slice: Slice) {
   return slice.content.content.every((node) => node.isInline);
 }
 
-export class SelectionExtension extends Extension {
+const selectAll: CommandFactory = () => {
+  return function (
+    state: EditorState,
+    dispatch?: (tr: Transaction) => void,
+    view?: EditorView,
+  ) {
+    const tr = state.tr.setSelection(new AllSelection(state.doc));
+    if (view) {
+      view.dispatch(tr);
+    }
+
+    return true;
+  };
+};
+
+const selectText: CommandFactory = (start: number, end: number) => {
+  return function (
+    state: EditorState,
+    dispatch?: (tr: Transaction) => void,
+    view?: EditorView,
+  ) {
+    const $anchor = state.doc.resolve(start);
+    const $head = state.doc.resolve(end);
+
+    const tr = state.tr.setSelection(new TextSelection($anchor, $head));
+    if (view) {
+      view.dispatch(tr);
+    }
+
+    return true;
+  };
+};
+
+export class ExtensionSelection extends Extension {
   name = 'selection';
   private editor!: CoreEditor;
-
-  override getCommands(editor: CoreEditor): Partial<Commands> {
-    this.editor = editor;
-    return {};
-  }
 
   extractSelection() {
     const state = this.editor.state;
@@ -248,13 +286,11 @@ export class SelectionExtension extends Extension {
     view.dispatch(tr.scrollIntoView());
   }
 
-  selectAll() {
-    const view = this.editor.view;
-    const state = this.editor.state;
-
-    const tr = state.tr.setSelection(new AllSelection(state.doc));
-    if (view) {
-      view.dispatch(tr);
-    }
+  override getCommandFactories(editor: CoreEditor): Partial<CommandFactories> {
+    this.editor = editor;
+    return {
+      'selectAll': () => selectAll(),
+      'selectText': (start: number, end: number) => selectText(start, end),
+    };
   }
 }

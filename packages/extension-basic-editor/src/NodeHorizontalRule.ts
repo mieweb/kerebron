@@ -1,6 +1,9 @@
-import { NodeSpec, NodeType } from 'prosemirror-model';
-import { CoreEditor, Node } from '@kerebron/editor';
-import { Commands, CommandShortcuts } from '@kerebron/editor/commands';
+import type { NodeSpec, NodeType } from 'prosemirror-model';
+import { type CoreEditor, Node } from '@kerebron/editor';
+import type {
+  CommandFactories,
+  CommandShortcuts,
+} from '@kerebron/editor/commands';
 
 export class NodeHorizontalRule extends Node {
   override name = 'hr';
@@ -16,7 +19,10 @@ export class NodeHorizontalRule extends Node {
     };
   }
 
-  override getCommands(editor: CoreEditor, type: NodeType): Partial<Commands> {
+  override getCommandFactories(
+    editor: CoreEditor,
+    type: NodeType,
+  ): Partial<CommandFactories> {
     return {
       'setHorizontalRule': () => (state, dispatch) => {
         if (dispatch) {

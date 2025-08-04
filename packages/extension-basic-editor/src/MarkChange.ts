@@ -6,7 +6,7 @@ export class MarkChange extends Mark {
   override name = 'change';
   requires = ['doc'];
 
-  getMarkSpec(): MarkSpec {
+  override getMarkSpec(): MarkSpec {
     return {
       parseDOM: [],
       toDOM() {

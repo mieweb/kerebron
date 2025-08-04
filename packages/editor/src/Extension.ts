@@ -2,7 +2,11 @@ import { Plugin } from 'prosemirror-state';
 
 import { type CoreEditor } from './CoreEditor.ts';
 import { InputRule } from './plugins/input-rules/InputRulesPlugin.ts';
-import { Commands, CommandShortcuts } from './commands/mod.ts';
+import {
+  CommandFactories,
+  Commands,
+  CommandShortcuts,
+} from './commands/mod.ts';
 import { Schema, type SchemaSpec } from 'prosemirror-model';
 
 export interface ExtensionConfig {
@@ -21,7 +25,7 @@ export abstract class Extension {
   readonly type = 'extension';
   abstract name: string;
 
-  protected constructor(protected config: Partial<ExtensionConfig> = {}) {
+  public constructor(protected config: Partial<ExtensionConfig> = {}) {
   }
 
   getInputRules(): InputRule[] {
@@ -32,11 +36,11 @@ export abstract class Extension {
     return [];
   }
 
-  getCommands(editor: CoreEditor): Partial<Commands> {
+  getCommandFactories(editor: CoreEditor): Partial<CommandFactories> {
     return {};
   }
 
-  getKeyboardShortcuts(): Partial<CommandShortcuts> {
+  getKeyboardShortcuts(editor: CoreEditor): Partial<CommandShortcuts> {
     return {};
   }
 

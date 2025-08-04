@@ -1,7 +1,7 @@
 import type { NodeSpec, NodeType } from 'prosemirror-model';
 import { type CoreEditor, Node } from '@kerebron/editor';
 import {
-  type Commands,
+  type CommandFactories,
   type CommandShortcuts,
   exitCode,
 } from '@kerebron/editor/commands';
@@ -28,7 +28,10 @@ export class NodeHardBreak extends Node {
   return true
 }},*/
 
-  override getCommands(editor: CoreEditor, type: NodeType): Partial<Commands> {
+  override getCommandFactories(
+    editor: CoreEditor,
+    type: NodeType,
+  ): Partial<CommandFactories> {
     return {
       // 'first': commands => first(commands),
       'setHardBreak': () => (state, dispatch) => {

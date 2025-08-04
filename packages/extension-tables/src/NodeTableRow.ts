@@ -2,7 +2,7 @@ import { NodeSpec, NodeType } from 'prosemirror-model';
 
 import { type CoreEditor, Node } from '@kerebron/editor';
 import {
-  type Commands,
+  type CommandFactories,
   type CommandShortcuts,
   setBlockType,
 } from '@kerebron/editor/commands';
@@ -30,7 +30,10 @@ export class NodeTableRow extends Node {
     return [];
   }
 
-  override getCommands(editor: CoreEditor, type: NodeType): Partial<Commands> {
+  override getCommandFactories(
+    editor: CoreEditor,
+    type: NodeType,
+  ): Partial<CommandFactories> {
     const commands = {};
 
     return commands;

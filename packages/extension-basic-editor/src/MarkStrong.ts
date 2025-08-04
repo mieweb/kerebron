@@ -1,16 +1,16 @@
-import { CoreEditor, Mark } from '@kerebron/editor';
+import { type CoreEditor, Mark } from '@kerebron/editor';
 import {
-  Commands,
-  CommandShortcuts,
+  type CommandFactories,
+  type CommandShortcuts,
   toggleMark,
 } from '@kerebron/editor/commands';
-import { MarkType } from 'prosemirror-model';
+import { MarkSpec, type MarkType } from 'prosemirror-model';
 
 export class MarkStrong extends Mark {
   override name = 'strong';
   requires = ['doc'];
 
-  getMarkSpec(): MarkSpec {
+  override getMarkSpec(): MarkSpec {
     return {
       parseDOM: [
         { tag: 'strong' },
@@ -35,13 +35,16 @@ export class MarkStrong extends Mark {
     };
   }
 
-  getCommands(editor: CoreEditor, type: MarkType): Partial<Commands> {
+  override getCommandFactories(
+    editor: CoreEditor,
+    type: MarkType,
+  ): Partial<CommandFactories> {
     return {
       'toggleStrong': () => toggleMark(type),
     };
   }
 
-  getKeyboardShortcuts(): Partial<CommandShortcuts> {
+  override getKeyboardShortcuts(): Partial<CommandShortcuts> {
     return {
       'Mod-b': 'toggleStrong',
       'Mod-B': 'toggleStrong',

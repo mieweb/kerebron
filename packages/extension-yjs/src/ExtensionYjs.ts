@@ -1,8 +1,8 @@
-import { Schema } from 'prosemirror-model';
-import { Plugin } from 'prosemirror-state';
-import { CoreEditor, Extension } from '@kerebron/editor';
+import type { Schema } from 'prosemirror-model';
+import type { Plugin } from 'prosemirror-state';
+import { type CoreEditor, Extension } from '@kerebron/editor';
 
-import { Commands, CommandShortcuts } from '@kerebron/editor/commands';
+import type { CommandFactories, CommandShortcuts } from '@kerebron/editor/commands';
 import { ySyncPlugin } from './ySyncPlugin.ts';
 import { yCursorPlugin } from './yCursorPlugin.ts';
 import { redo, undo, yUndoPlugin } from './yUndoPlugin.ts';
@@ -13,7 +13,7 @@ export class ExtensionYjs extends Extension {
   doc: any;
 
   // declare type Command = (state: EditorState, dispatch?: (tr: Transaction) => void, view?: EditorView) => boolean;
-  override getCommands(editor: CoreEditor): Partial<Commands> {
+  override getCommandFactories(): Partial<CommandFactories> {
     return {
       'undo': () => undo,
       'redo': () => redo,

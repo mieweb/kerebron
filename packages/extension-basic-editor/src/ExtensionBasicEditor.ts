@@ -22,6 +22,7 @@ import { MarkCode } from './MarkCode.ts';
 import { MarkChange } from './MarkChange.ts';
 import { MarkBookmark } from './MarkBookmark.ts';
 import { ExtensionHtml } from './ExtensionHtml.ts';
+import { ExtensionSelection } from '@kerebron/extension-basic-editor/ExtensionSelection';
 
 export class ExtensionBasicEditor extends Extension {
   name = 'basic-editor';
@@ -30,6 +31,7 @@ export class ExtensionBasicEditor extends Extension {
     new ExtensionDropcursor(),
     new ExtensionGapcursor(),
     new ExtensionHtml(),
+    new ExtensionSelection(),
     new NodeDocument(),
     new NodeText(),
     new NodeParagraph(),

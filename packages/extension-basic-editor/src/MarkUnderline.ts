@@ -1,15 +1,16 @@
 import { CoreEditor, Mark } from '@kerebron/editor';
 import {
-  Commands,
-  CommandShortcuts,
+  type CommandFactories,
+  type CommandShortcuts,
   toggleMark,
 } from '@kerebron/editor/commands';
+import type { MarkSpec, MarkType } from 'prosemirror-model';
 
 export class MarkUnderline extends Mark {
   override name = 'underline';
   requires = ['doc'];
 
-  getMarkSpec(): MarkSpec {
+  override getMarkSpec(): MarkSpec {
     return {
       parseDOM: [
         {
@@ -29,13 +30,16 @@ export class MarkUnderline extends Mark {
     };
   }
 
-  getCommands(editor: CoreEditor, type: MarkType): Partial<Commands> {
+  override getCommandFactories(
+    editor: CoreEditor,
+    type: MarkType,
+  ): Partial<CommandFactories> {
     return {
       'toggleUnderline': () => toggleMark(type),
     };
   }
 
-  getKeyboardShortcuts(): Partial<CommandShortcuts> {
+  override getKeyboardShortcuts(): Partial<CommandShortcuts> {
     return {
       'Mod-u': 'toggleUnderline',
       'Mod-U': 'toggleUnderline',

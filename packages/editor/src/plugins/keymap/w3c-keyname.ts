@@ -1,4 +1,4 @@
-export var base = {
+export const base: Record<number, string> = {
   8: 'Backspace',
   9: 'Tab',
   10: 'Enter',
@@ -53,7 +53,7 @@ export var base = {
   222: "'",
 };
 
-export var shift = {
+export const shift: Record<number, string> = {
   48: ')',
   49: '!',
   50: '@',
@@ -80,35 +80,35 @@ export var shift = {
   222: '"',
 };
 
-var mac = typeof navigator != 'undefined' && /Mac/.test(navigator.platform);
-var ie = typeof navigator != 'undefined' &&
+const mac = typeof navigator != 'undefined' && /Mac/.test(navigator.platform);
+const ie = typeof navigator != 'undefined' &&
   /MSIE \d|Trident\/(?:[7-9]|\d{2,})\..*rv:(\d+)/.exec(navigator.userAgent);
 
 // Fill in the digit keys
-for (var i = 0; i < 10; i++) base[48 + i] = base[96 + i] = String(i);
+for (let i = 0; i < 10; i++) base[48 + i] = base[96 + i] = String(i);
 
 // The function keys
-for (var i = 1; i <= 24; i++) base[i + 111] = 'F' + i;
+for (let i = 1; i <= 24; i++) base[i + 111] = 'F' + i;
 
 // And the alphabetic keys
-for (var i = 65; i <= 90; i++) {
+for (let i = 65; i <= 90; i++) {
   base[i] = String.fromCharCode(i + 32);
   shift[i] = String.fromCharCode(i);
 }
 
 // For each code that doesn't have a shift-equivalent, copy the base name
-for (var code in base) {
+for (const code in base) {
   if (!shift.hasOwnProperty(code)) shift[code] = base[code];
 }
 
-export function keyName(event) {
+export function keyName(event: KeyboardEvent) {
   // On macOS, keys held with Shift and Cmd don't reflect the effect of Shift in `.key`.
   // On IE, shift effect is never included in `.key`.
-  var ignoreKey =
+  const ignoreKey =
     mac && event.metaKey && event.shiftKey && !event.ctrlKey && !event.altKey ||
     ie && event.shiftKey && event.key && event.key.length == 1 ||
     event.key == 'Unidentified';
-  var name = (!ignoreKey && event.key) ||
+  let name: string = (!ignoreKey && event.key) ||
     (event.shiftKey ? shift : base)[event.keyCode] ||
     event.key || 'Unidentified';
   // Edge sometimes produces wrong names (Issue #3)

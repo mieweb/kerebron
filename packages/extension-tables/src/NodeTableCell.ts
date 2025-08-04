@@ -2,7 +2,7 @@ import { Attrs, Node as PmNode, NodeSpec, NodeType } from 'prosemirror-model';
 
 import { type CoreEditor, Node } from '@kerebron/editor';
 import {
-  type Commands,
+  type CommandFactories,
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
 import { type InputRule } from '@kerebron/editor/plugins/input-rules';
@@ -59,7 +59,10 @@ export class NodeTableCell extends Node {
     return [];
   }
 
-  override getCommands(editor: CoreEditor, type: NodeType): Partial<Commands> {
+  override getCommandFactories(
+    editor: CoreEditor,
+    type: NodeType,
+  ): Partial<CommandFactories> {
     const commands = {};
     return commands;
   }

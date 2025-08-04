@@ -1,7 +1,7 @@
 import { type NodeSpec, type NodeType } from 'prosemirror-model';
 import { type CoreEditor, Node } from '@kerebron/editor';
 import {
-  type Commands,
+  type CommandFactories,
   type CommandShortcuts,
   setBlockType,
 } from '@kerebron/editor/commands';
@@ -21,7 +21,10 @@ export class NodeParagraph extends Node {
     };
   }
 
-  override getCommands(editor: CoreEditor, type: NodeType): Partial<Commands> {
+  override getCommandFactories(
+    editor: CoreEditor,
+    type: NodeType,
+  ): Partial<CommandFactories> {
     return {
       'setParagraph': () => setBlockType(type),
     };
