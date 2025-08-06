@@ -23,9 +23,11 @@ this.editor = new CoreEditor({
 ```
 
 ```js
-this.editor.setDocument('# TEST \n\n1.  aaa\n2.  bbb', 'text/x-markdown');
+const buffer = new TextEncoder().encode('# TEST \n\n1.  aaa\n2.  bbb');
+await this.editor.loadDocument('text/x-markdown', buffer);
 ```
 
 ```js
-const markdown = this.editor.getDocument('text/x-markdown');
+const buffer = await this.editor.saveDocument('text/x-markdown');
+const markdown = new TextDecoder().decode(buffer);
 ```

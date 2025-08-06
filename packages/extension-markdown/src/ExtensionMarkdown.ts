@@ -1,4 +1,5 @@
-import { DOMSerializer, Fragment, Schema } from 'prosemirror-model';
+import type { Node, Schema } from 'prosemirror-model';
+import { DOMSerializer, Fragment } from 'prosemirror-model';
 import MarkdownIt from 'markdown-it';
 
 import Token from 'markdown-it/lib/token.mjs';
@@ -66,12 +67,15 @@ function convertDomToLowerCase(node) {
 export class ExtensionMarkdown extends Extension {
   name = 'markdown';
 
-  getConverters(editor: CoreEditor, schema: Schema): Record<string, Converter> {
+  override getConverters(
+    editor: CoreEditor,
+    schema: Schema,
+  ): Record<string, Converter> {
     const domSerializer = DOMSerializer.fromSchema(schema);
     const autoLinks = false; // TODO - config
     return {
       'text/x-markdown': {
-        fromDoc(document) {
+        fromDoc: async (document: Node): Promise<Uint8Array> => {
           /// A serializer for the [basic schema](#schema).
           const defaultMarkdownSerializer = new MarkdownSerializer({
             html(state, node) {
@@ -266,9 +270,12 @@ export class ExtensionMarkdown extends Extension {
           document = removeMarkedContent(document, schema.marks.change);
           // deleteAllMarkedText('change', state, dispatch)
 
-          return defaultMarkdownSerializer.serialize(document);
+          return new TextEncoder().encode(
+            defaultMarkdownSerializer.serialize(document),
+          );
         },
-        toDoc(content) {
+        toDoc: async (buffer: Uint8Array): Promise<Node> => {
+          const content = new TextDecoder().decode(buffer);
           /// A parser parsing unextended [CommonMark](http://commonmark.org/),
           /// without inline HTML, and producing a document in the basic schema.
           const defaultMarkdownParser = new MarkdownParser(
@@ -299,7 +306,7 @@ export class ExtensionMarkdown extends Extension {
                 getAttrs: (tok) => ({ params: tok.info || '' }),
                 noCloseToken: true,
               },
-              horizontal_rule: { node: 'hr' },
+              hr: { node: 'hr' },
               image: {
                 node: 'image',
                 getAttrs: (tok) => ({

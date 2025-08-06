@@ -1,4 +1,4 @@
-import { Schema } from 'prosemirror-model';
+import type { Node, Schema } from 'prosemirror-model';
 
 import { type Converter, type CoreEditor, Extension } from '@kerebron/editor';
 import { parse_content, parse_styles, unzip } from '@kerebron/odt-wasm';
@@ -17,15 +17,18 @@ export class ExtensionOdt extends Extension {
     super(config);
   }
 
-  getConverters(editor: CoreEditor, schema: Schema): Record<string, Converter> {
+  override getConverters(
+    editor: CoreEditor,
+    schema: Schema,
+  ): Record<string, Converter> {
     const config = this.config;
     return {
       'application/vnd.oasis.opendocument.text': {
-        fromDoc(document) {
+        fromDoc: async (document: Node): Promise<Uint8Array> => {
           throw new Error('Not implemented');
         },
-        toDoc(content: Uint8Array) {
-          const files = unzip(content);
+        toDoc: async (buffer: Uint8Array): Promise<Node> => {
+          const files = unzip(buffer);
 
           const stylesTree = parse_styles(files.get('styles.xml'));
           const contentTree = parse_content(files.get('content.xml'));

@@ -57,7 +57,7 @@ const extensionSelection = <ExtensionSelection> editor.getExtension(
   'selection',
 );
 
-ydoc.on('update', () => {
+ydoc.on('update', async () => {
   console.log('doc update');
   if (!extensionSelection) {
     return;
@@ -79,6 +79,7 @@ ydoc.on('update', () => {
 
   editor2.setDocument(slice);
 
-  const md = editor2.getDocument('text/x-markdown');
+  const buffer = await editor2.saveDocument('text/x-markdown');
+  const md = new TextDecoder().decode(buffer);
   console.log('md', md);
 });

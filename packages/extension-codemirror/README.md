@@ -22,15 +22,16 @@ this.editor = new CoreEditor({
 ```
 
 ```js
-this.editor.setDocument(
+const buffer = new TextEncoder().encode(
   '# Multiline string with literal block syntax -preserved new lines\n' +
     'string1: |\n' +
     '   Line1\n' +
     '   line2\n' +
     '   "line3"\n' +
     '  line4\n',
-  'text/code-only',
 );
+this.editor.loadDocument('text/code-only', buffer);
 
-const code = this.editor.getDocument('text/code-only');
+const buffer = await this.editor.saveDocument('text/code-only');
+const code = new TextDecoder().decode(buffer);
 ```

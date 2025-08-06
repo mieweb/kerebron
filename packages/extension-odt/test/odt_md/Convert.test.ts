@@ -35,7 +35,7 @@ import { NodeCodeMirror } from '@kerebron/extension-codemirror';
 
 const __dirname = import.meta.dirname;
 
-Deno.test('convert odt to md', () => {
+Deno.test('convert odt to md', async () => {
   const extMd = new ExtensionMarkdown();
   const extOdt = new ExtensionOdt();
 
@@ -55,20 +55,18 @@ Deno.test('convert odt to md', () => {
 
   const input = Deno.readFileSync(__dirname + '/example-document.odt');
 
-  editor.setDocument(input, 'application/vnd.oasis.opendocument.text');
+  await editor.loadDocument('application/vnd.oasis.opendocument.text', input);
 
   const json = editor.getDocument().toJSON();
 
   // console.log(json);
 
-  const md = editor.getDocument('text/x-markdown');
+  const buffer = await editor.saveDocument('text/x-markdown');
+  const md = new TextDecoder().decode(buffer);
 
   console.log('MD', md);
 
   // extMd.getConverters(editor, schema);
-
-  // editor.setDocument('# TEST \n\n1.  aaa **bold**\n2.  bbb\n\n```js\nconsole.log("TEST")\n```\n', 'text/x-markdown');
   // console.log(editor.getDocument().toJSON())
-
   // assertEquals(x, 5);
 });

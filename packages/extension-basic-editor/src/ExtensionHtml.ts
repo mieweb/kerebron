@@ -18,8 +18,10 @@ export function getHTMLFromFragment(
   fragment: Fragment,
   schema: Schema,
 ): string {
+  const document = globalThis.document;
   const documentFragment = DOMSerializer.fromSchema(schema).serializeFragment(
     fragment,
+    { document },
   );
 
   const temporaryDocument = document.implementation.createHTMLDocument();
@@ -143,10 +145,12 @@ export class ExtensionHtml extends Extension {
     const config = this.config;
     return {
       'text/html': {
-        fromDoc(document: Node): string {
-          return getHTMLFromFragment(document.content, editor.schema);
+        fromDoc: async (document: Node): Promise<Uint8Array> => {
+          const html = getHTMLFromFragment(document.content, editor.schema);
+          return new TextEncoder().encode(html);
         },
-        toDoc(html: string): Node {
+        toDoc: async (buffer: Uint8Array): Promise<Node> => {
+          const html = new TextDecoder().decode(buffer);
           return createNodeFromHTML(html, editor.schema);
         },
       },

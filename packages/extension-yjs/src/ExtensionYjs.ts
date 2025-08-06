@@ -2,7 +2,10 @@ import type { Schema } from 'prosemirror-model';
 import type { Plugin } from 'prosemirror-state';
 import { type CoreEditor, Extension } from '@kerebron/editor';
 
-import type { CommandFactories, CommandShortcuts } from '@kerebron/editor/commands';
+import type {
+  CommandFactories,
+  CommandShortcuts,
+} from '@kerebron/editor/commands';
 import { ySyncPlugin } from './ySyncPlugin.ts';
 import { yCursorPlugin } from './yCursorPlugin.ts';
 import { redo, undo, yUndoPlugin } from './yUndoPlugin.ts';

@@ -125,26 +125,17 @@ export class CoreEditor extends EventTarget {
     }
   }
 
-  public setDocument(content?: any, mediaType?: string) {
-    if (!content) {
-      content = {
-        type: this.extensionManager.schema.topNodeType.name,
-        content:
-          this.extensionManager.schema.topNodeType.spec.EMPTY_DOC.content,
-      };
-      mediaType = undefined;
-    }
+  public clearDocument() {
+    const content = {
+      type: this.extensionManager.schema.topNodeType.name,
+      content: this.extensionManager.schema.topNodeType.spec.EMPTY_DOC.content,
+    };
 
-    let doc;
-    if (mediaType) {
-      const converter = this.extensionManager.converters[mediaType];
-      if (converter) {
-        doc = converter.toDoc(content);
-      }
-    } else {
-      doc = createNodeFromObject(content, this.schema);
-    }
+    this.setDocument(content);
+  }
 
+  public setDocument(content: any) {
+    let doc = createNodeFromObject(content, this.schema);
     doc = ensureDocSchema(doc, this.schema);
 
     this.state = EditorState.create({
@@ -152,6 +143,7 @@ export class CoreEditor extends EventTarget {
       plugins: this.state.plugins,
       storedMarks: this.state.storedMarks,
     });
+
     if (this.view) {
       this.view.updateState(this.state);
     }
@@ -165,22 +157,46 @@ export class CoreEditor extends EventTarget {
     this.dispatchEvent(event);
   }
 
-  public getDocument(mediaType?: string) {
-    if (mediaType) {
-      const converter = this.extensionManager.converters[mediaType];
-      if (converter) {
-        const json = this.state.doc.toJSON();
-        const clonedDoc = ProseMirrorNode.fromJSON(this.state.schema, json);
+  public getDocument() {
+    return this.state.doc;
+  }
 
-        return converter.fromDoc(clonedDoc);
-      }
+  public async loadDocument(mediaType: string, content: Uint8Array) {
+    const converter = this.extensionManager.converters[mediaType];
+    if (!converter) {
+      throw new Error('Converter not found for: ' + mediaType);
+    }
+    const doc = await converter.toDoc(content);
 
-      if (mediaType === 'text/json') {
-        return this.getJSON();
-      }
+    this.state = EditorState.create({
+      doc,
+      plugins: this.state.plugins,
+      storedMarks: this.state.storedMarks,
+    });
+
+    if (this.view) {
+      this.view.updateState(this.state);
     }
 
-    return this.state.doc;
+    const event = new CustomEvent('doc:loaded', {
+      detail: {
+        editor: this,
+        doc,
+      },
+    });
+    this.dispatchEvent(event);
+  }
+
+  public async saveDocument(mediaType: string): Promise<Uint8Array> {
+    const converter = this.extensionManager.converters[mediaType];
+    if (!converter) {
+      throw new Error('Converter not found for: ' + mediaType);
+    }
+
+    const json = this.state.doc.toJSON();
+    const clonedDoc = ProseMirrorNode.fromJSON(this.state.schema, json);
+
+    return await converter.fromDoc(clonedDoc);
   }
 
   public getJSON(): JSONContent {

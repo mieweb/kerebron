@@ -68,7 +68,7 @@ export class NodeCodeMirror extends Node {
   ): Record<string, Converter> {
     return {
       'text/code-only': {
-        fromDoc(document: any) {
+        fromDoc: async (document: Node): Promise<Uint8Array> => {
           const retVal = [];
           if (document.content) {
             for (const node of document.content.toJSON()) {
@@ -81,7 +81,7 @@ export class NodeCodeMirror extends Node {
           }
           return retVal.join('');
         },
-        toDoc(code: string) {
+        toDoc: async (buffer: Uint8Array): Promise<Node> => {
           const content = {
             'type': 'doc_code',
             'content': [

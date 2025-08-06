@@ -6,7 +6,7 @@
     <div>
       <div>
         <h5>Markdown</h5>
-        <pre>{{md}}</pre>
+        <pre>{{ md }}</pre>
       </div>
       <div>
         <h5>Prosemirror JSON</h5>
@@ -67,10 +67,6 @@ export default {
       } else {
         roomId = String(Math.random());
         globalThis.location.hash = 'room:' + roomId;
-        // this.editor.setDocument('# TEST \n\n1.  aaa\n2.  bbb', 'text/x-markdown');
-        // this.editor.setDocument(pmDoc);
-        // this.editor.setDocument('# TEST \n\n1.  aaa\n2.  bbb\n\n<table><tr><td>CELL</td></tr></table>', 'text/x-markdown');
-        // this.editor.setDocument(null);
       }
 
       const userColor = userColors[random.uint32() % userColors.length];
@@ -134,9 +130,10 @@ export default {
         // content: pmDoc
       });
 
-      this.editor.addEventListener('transaction', (ev: CustomEvent) => {
+      this.editor.addEventListener('transaction', async (ev: CustomEvent) => {
         this.lastValue = ev.detail.transaction.doc;
-        this.md = this.editor.getDocument('text/x-markdown');
+        const buffer = await this.editor.saveDocument('text/x-markdown');
+        this.md = new TextDecoder().decode(buffer);
         // this.$emit('input', this.lastValue);
       });
     });
@@ -150,11 +147,11 @@ export default {
     },
   },
   methods: {
-    loadDoc() {
-      this.editor.setDocument(
+    async loadDoc() {
+      const buffer = new TextEncoder().encode(
         '# TEST \n\n1.  aaa **bold**\n2.  bbb\n\n```js\nconsole.log("TEST")\n```\n',
-        'text/x-markdown',
       );
+      await this.editor.loadDocument('text/x-markdown', buffer);
     },
     loadDoc2() {
       const input = document.createElement('input');
@@ -162,7 +159,7 @@ export default {
       input.onchange = async (e) => {
         const file = e.target.files[0];
         console.log('Selected file:', file);
-        this.editor.setDocument(await file.bytes(), file.type);
+        await this.editor.loadDocument(file.type, await file.bytes());
       };
       input.click();
     },

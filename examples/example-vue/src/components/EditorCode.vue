@@ -102,9 +102,10 @@ export default {
       // content: pmDoc
     });
 
-    this.editor.addEventListener('transaction', (ev: CustomEvent) => {
+    this.editor.addEventListener('transaction', async (ev: CustomEvent) => {
       this.lastValue = ev.detail.transaction.doc;
-      this.code = this.editor.getDocument('text/code-only');
+      const buffer = await this.editor.saveDocument('text/code-only');
+      this.code = new TextDecoder().decode(buffer);
       // this.$emit('input', this.lastValue);
     });
   },
@@ -117,16 +118,16 @@ export default {
     },
   },
   methods: {
-    loadDoc() {
-      this.editor.setDocument(
+    async loadDoc() {
+      const buffer = new TextEncoder().encode(
         '# Multiline string with literal block syntax -preserved new lines\n' +
-          'string1: |\n' +
-          '   Line1\n' +
-          '   line2\n' +
-          '   "line3"\n' +
-          '  line4\n',
-        'text/code-only',
+        'string1: |\n' +
+        '   Line1\n' +
+        '   line2\n' +
+        '   "line3"\n' +
+        '  line4\n',
       );
+      await this.editor.loadDocument('text/code-only', buffer);
     },
   },
 };

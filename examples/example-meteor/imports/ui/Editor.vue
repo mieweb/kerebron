@@ -22,7 +22,7 @@ import { dracula } from 'thememirror';
 
 import { onMounted } from 'vue';
 
-onMounted(() => {
+onMounted(async () => {
   const ydoc = new Y.Doc();
 
   const roomId = 'room-abc';
@@ -63,8 +63,8 @@ onMounted(() => {
     ],
   });
 
-  // editor.setDocument(innerHTML, 'text/html');
-  editor.setDocument(innerHTML);
+  const buffer = new TextEncoder().encode(innerHTML);
+  await editor.loadDocument("text/html", buffer);
 });
 </script>
 

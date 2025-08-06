@@ -1,13 +1,12 @@
-import { Plugin } from 'prosemirror-state';
+import type { Plugin } from 'prosemirror-state';
+import type { Node, Schema, SchemaSpec } from 'prosemirror-model';
 
 import { type CoreEditor } from './CoreEditor.ts';
-import { InputRule } from './plugins/input-rules/InputRulesPlugin.ts';
+import type { InputRule } from './plugins/input-rules/InputRulesPlugin.ts';
 import {
   CommandFactories,
-  Commands,
   CommandShortcuts,
 } from './commands/mod.ts';
-import { Schema, type SchemaSpec } from 'prosemirror-model';
 
 export interface ExtensionConfig {
   // @ts-ignore - this is a dynamic key
@@ -17,8 +16,8 @@ export interface ExtensionConfig {
 }
 
 export interface Converter {
-  fromDoc(document: unknown): void;
-  toDoc(content: unknown): any;
+  fromDoc(document: Node): Promise<Uint8Array>;
+  toDoc(content: Uint8Array): Promise<Node>;
 }
 
 export abstract class Extension {
