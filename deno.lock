@@ -1458,6 +1458,11 @@
       "npm:yjs@13.6.24"
     ],
     "members": {
+      "examples/example-html-generator": {
+        "dependencies": [
+          "jsr:@std/assert@1"
+        ]
+      },
       "examples/example-server-hono": {
         "dependencies": [
           "jsr:@hono/hono@^4.7.4",

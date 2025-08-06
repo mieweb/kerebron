@@ -11,6 +11,7 @@
     "packages/extension-codemirror",
     "packages/odt-wasm",
 
+    "examples/example-html-generator",
     "examples/example-server-hono",
     "examples/example-vue",
     "examples/mcptest"
