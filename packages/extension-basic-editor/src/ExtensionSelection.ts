@@ -209,14 +209,79 @@ const selectAll: CommandFactory = () => {
   };
 };
 
-const selectText: CommandFactory = (start: number, end: number) => {
+function textPositionsToResolvedPos(textPosVec: number[], doc: Node, paraNum: number): ResolvedPos[] {
+  const retVal = textPosVec.map(x => -1);
+
+  let currentTextPos = 0;
+  let inParaRange = false;
+
+  function callback(currentPos: number, level: number, idx: number, textLen: number) {
+    if (!inParaRange) {
+      return;
+    }
+
+    for (let i = 0; i < textPosVec.length; i++) {
+      const val = textPosVec[i]
+      if (val >= currentTextPos && val < currentTextPos + textLen) {
+        retVal[i] = currentPos + (val - currentTextPos);
+      }
+    }
+
+    currentTextPos += textLen;
+  }
+
+  function treeTraverse(
+    node: Node,
+    level = 0,
+    idx = 0,
+    currentPos = 0,
+  ) {
+    if (level === 1 && idx === paraNum) {
+      inParaRange = true;
+    }
+
+    let textLen = 0;
+    if (node.isText && node.text) {
+      textLen = node.text?.length;
+    } else
+    if (node.isLeaf) {
+      textLen = 1;
+    }
+
+    if (textLen > 0) {
+      callback(currentPos, level, idx, textLen);
+    }
+
+    node.forEach((child, offset, childIndex) => {
+      treeTraverse(child, level + 1, childIndex, currentPos + offset + 1);
+    });
+  }
+
+  treeTraverse(doc);
+
+  if (inParaRange) {
+    for (let i = 0; i < textPosVec.length; i++) {
+      const val = textPosVec[i]
+      if (retVal[i] === -1) {
+        if (val < currentTextPos) {
+          retVal[i] = 1;
+        } else {
+          retVal[i] = doc.nodeSize - 1;
+        }
+      }
+    }
+  }
+
+  return retVal.map(x => doc.resolve(x - 1));
+}
+
+const selectText: CommandFactory = (textStart: number, length: number, paraNum = 0) => {
   return function (
     state: EditorState,
     dispatch?: (tr: Transaction) => void,
     view?: EditorView,
   ) {
-    const $anchor = state.doc.resolve(start);
-    const $head = state.doc.resolve(end);
+    const [$head, $anchor] = textPositionsToResolvedPos([textStart + length, textStart], state.doc, paraNum);
 
     const tr = state.tr.setSelection(new TextSelection($anchor, $head));
     if (view) {
@@ -231,17 +296,17 @@ export class ExtensionSelection extends Extension {
   name = 'selection';
   private editor!: CoreEditor;
 
-  extractSelection() {
+  extractSelection(): Node {
     const state = this.editor.state;
     const { from, to } = state.selection;
     const slice = state.doc.slice(from, to);
 
     if (sliceHasOnlyText(slice)) {
       const para = state.schema.nodes.paragraph.create(null, slice.content);
-      return state.schema.topNodeType.createAndFill(null, [para]);
+      return state.schema.topNodeType.createAndFill(null, [para])!;
     }
 
-    return state.schema.topNodeType.createAndFill(null, slice.content);
+    return state.schema.topNodeType.createAndFill(null, slice.content)!;
   }
 
   replaceSelection(otherDoc: Node) {
@@ -290,7 +355,7 @@ export class ExtensionSelection extends Extension {
     this.editor = editor;
     return {
       'selectAll': () => selectAll(),
-      'selectText': (start: number, end: number) => selectText(start, end),
+      'selectText': (...args) => selectText(...args),
     };
   }
 }

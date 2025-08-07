@@ -9,6 +9,7 @@ import { nodeToTreeString } from './nodeToTreeString.ts';
 import { DummyEditorView } from './DummyEditorView.ts';
 import { ChainedCommands } from '@kerebron/editor/commands';
 import { createNodeFromObject } from './utilities/createNodeFromContent.ts';
+import { Extension } from './Extension.ts';
 
 function ensureDocSchema(
   doc: ProseMirrorNode,
@@ -60,8 +61,8 @@ export class CoreEditor extends EventTarget {
     this.setupPlugins();
   }
 
-  getExtension(name: string) {
-    return this.extensionManager.getExtension(name);
+  getExtension<T extends Extension>(name: string): T | undefined {
+    return this.extensionManager.getExtension<T>(name);
   }
 
   public get schema() {

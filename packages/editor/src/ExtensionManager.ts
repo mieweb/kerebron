@@ -72,14 +72,14 @@ export class ExtensionManager {
     this.plugins = this.getPlugins();
   }
 
-  getExtension(name: string): Extension | undefined {
+  getExtension<T extends Extension>(name: string): T | undefined {
     const { nodeExtensions, markExtensions, baseExtensions } = splitExtensions(
       this.extensions,
     );
 
     for (const extension of baseExtensions) {
       if (extension.name === name) {
-        return extension;
+        return <T>extension;
       }
     }
   }

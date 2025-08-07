@@ -3,7 +3,7 @@ import type { NodeSpec, NodeType, Schema } from 'prosemirror-model';
 
 import { Converter, type CoreEditor, Node } from '@kerebron/editor';
 import {
-  type Commands,
+  type CommandFactories,
   type CommandShortcuts,
   setBlockType,
 } from '@kerebron/editor/commands';
