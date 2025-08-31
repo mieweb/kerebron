@@ -3,6 +3,7 @@
   "tasks": {},
   "imports": {},
   "exports": {
-    ".": "./src/ExtensionMarkdown.ts"
+    ".": "./src/ExtensionMarkdown.ts",
+    "./MarkdownSerializer": "./src/MarkdownSerializer.ts"
   }
 }

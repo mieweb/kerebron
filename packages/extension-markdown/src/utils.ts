@@ -1,6 +1,5 @@
 export function spaces(num: number) {
-  return '                                                                '
-    .substring(0, num || 0);
+  return ' '.repeat(num || 0);
 }
 
 export function inchesToSpaces(value: string): number {
@@ -45,6 +44,26 @@ export function fixCharacters(text) {
     .replace(/\x0b/g, ' ')
     .replace(/\u201d/g, '"')
     .replace(/\u201c/g, '"');
+}
+
+export function numberString(num: number, symbol = '1') {
+  if (['a'].includes(symbol)) {
+    return String.fromCharCode('a'.charCodeAt(0) + num - 1) + '.  ';
+  }
+  if (['A'].includes(symbol)) {
+    return String.fromCharCode('A'.charCodeAt(0) + num - 1) + '.  ';
+  }
+  if (['I'].includes(symbol)) {
+    return `${romanize(num)}. `;
+  }
+  if (['i'].includes(symbol)) {
+    return `${romanize(num).toLowerCase()}. `;
+  }
+  if (['1'].includes(symbol)) {
+    return `${num}. `;
+  }
+
+  return `${num}. `;
 }
 
 export function romanize(num: number): string {
