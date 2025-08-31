@@ -1,0 +1,8 @@
+{
+  "name": "@kerebron/test-utils",
+  "tasks": {},
+  "imports": {},
+  "exports": {
+    ".": "./src/test-utils.ts"
+  }
+}

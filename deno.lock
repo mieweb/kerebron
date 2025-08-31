@@ -26,12 +26,15 @@
     "npm:@codemirror/search@6.5.10": "6.5.10",
     "npm:@codemirror/state@6.5.2": "6.5.2",
     "npm:@codemirror/view@6.38.1": "6.38.1",
+    "npm:@types/markdown-it@14.1.2": "14.1.2",
     "npm:@vitejs/plugin-vue@6.0.0": "6.0.0_vite@7.0.4__picomatch@4.0.3_vue@3.5.17_typescript@5.9.2",
     "npm:@vue/devtools-api@7.7.7": "7.7.7",
     "npm:debug@*": "4.4.1",
     "npm:esbuild@*": "0.25.8",
     "npm:fast-glob@*": "3.3.3",
     "npm:lib0@0.2.109": "0.2.109",
+    "npm:markdown-it-deflist@3.0.0": "3.0.0",
+    "npm:markdown-it-footnote@4.0.0": "4.0.0",
     "npm:markdown-it@14.1.0": "14.1.0",
     "npm:orderedmap@latest": "2.1.1",
     "npm:prosemirror-history@1.4.1": "1.4.1",
@@ -673,6 +676,19 @@
     "@types/estree@1.0.8": {
       "integrity": "sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w=="
     },
+    "@types/linkify-it@5.0.0": {
+      "integrity": "sha512-sVDA58zAw4eWAffKOaQH5/5j3XeayukzDk+ewSsnv3p4yJEZHCCzMDiZM8e0OUrRvmpGZ85jf4yDHkHsgBNr9Q=="
+    },
+    "@types/markdown-it@14.1.2": {
+      "integrity": "sha512-promo4eFwuiW+TfGxhi+0x3czqTYJkG8qB17ZUJiVF10Xm7NLVRSLUsfRTU/6h1e24VvRnXCx+hG7li58lkzog==",
+      "dependencies": [
+        "@types/linkify-it",
+        "@types/mdurl"
+      ]
+    },
+    "@types/mdurl@2.0.0": {
+      "integrity": "sha512-RGdgjQUZba5p6QEFAVx2OGb8rQDL/cPRG7GiedRzMcJ1tYnUANBncjbSB1NRGwbvjcPeikRABz2nshyPk1bhWg=="
+    },
     "@vitejs/plugin-vue@6.0.0_vite@7.0.4__picomatch@4.0.3_vue@3.5.17": {
       "integrity": "sha512-iAliE72WsdhjzTOp2DtvKThq1VBC4REhwRcaA+zPAAph6I+OQhUXv+Xu2KS7ElxYtb7Zc/3R30Hwv1DxEo7NXQ==",
       "dependencies": [
@@ -1089,6 +1105,12 @@
         "@jridgewell/sourcemap-codec"
       ]
     },
+    "markdown-it-deflist@3.0.0": {
+      "integrity": "sha512-OxPmQ/keJZwbubjiQWOvKLHwpV2wZ5I3Smc81OjhwbfJsjdRrvD5aLTQxmZzzePeO0kbGzAo3Krk4QLgA8PWLg=="
+    },
+    "markdown-it-footnote@4.0.0": {
+      "integrity": "sha512-WYJ7urf+khJYl3DqofQpYfEYkZKbmXmwxQV8c8mO/hGIhgZ1wOe7R4HLFNwqx7TjILbnC98fuyeSsin19JdFcQ=="
+    },
     "markdown-it@14.1.0": {
       "integrity": "sha512-a54IwgWPaeBCAAsv13YgmALOF1elABB08FxO9i+r4VFk5Vl4pKokRPeX8u5TCgSsPi6ec1otfLjdOpVcgbpshg==",
       "dependencies": [
@@ -1444,6 +1466,7 @@
       "npm:@codemirror/search@6.5.10",
       "npm:@codemirror/state@6.5.2",
       "npm:@codemirror/view@6.38.1",
+      "npm:@types/markdown-it@14.1.2",
       "npm:lib0@0.2.109",
       "npm:markdown-it@14.1.0",
       "npm:orderedmap@latest",

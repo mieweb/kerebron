@@ -10,6 +10,7 @@
     "packages/extension-yjs",
     "packages/extension-codemirror",
     "packages/odt-wasm",
+    "packages/test-utils",
 
     "examples/example-html-generator",
     "examples/example-server-hono",
@@ -17,7 +18,8 @@
     "examples/mcptest"
   ],
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
+    "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"],
+    "types": ["npm:@types/markdown-it@14.1.2"]
   },
   "tasks": {},
   "imports": {
