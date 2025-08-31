@@ -27,20 +27,22 @@ Deno.test('ExtensionSelection should handle commands', () => {
             'text': 'dolor sit amet',
           },
         ],
-      }
+      },
     ],
   };
 
   const editor = new CoreEditor({
     extensions: [new ExtensionBasicEditor()],
-    content
+    content,
   });
 
   // debugNode(editor.getDocument());
 
   editor.chain().selectAll().run();
   {
-    const extensionSelection = editor.getExtension<ExtensionSelection>('selection');
+    const extensionSelection = editor.getExtension<ExtensionSelection>(
+      'selection',
+    );
     if (!extensionSelection) {
       throw new Error('No ExtensionSelection loader');
     }
@@ -50,7 +52,9 @@ Deno.test('ExtensionSelection should handle commands', () => {
 
   editor.chain().selectText(1, 4).run();
   {
-    const extensionSelection = editor.getExtension<ExtensionSelection>('selection');
+    const extensionSelection = editor.getExtension<ExtensionSelection>(
+      'selection',
+    );
     if (!extensionSelection) {
       throw new Error('No ExtensionSelection loader');
     }
@@ -60,7 +64,9 @@ Deno.test('ExtensionSelection should handle commands', () => {
 
   editor.chain().selectText(1, 4, 1).run();
   {
-    const extensionSelection = editor.getExtension<ExtensionSelection>('selection');
+    const extensionSelection = editor.getExtension<ExtensionSelection>(
+      'selection',
+    );
     if (!extensionSelection) {
       throw new Error('No ExtensionSelection loader');
     }
@@ -68,10 +74,11 @@ Deno.test('ExtensionSelection should handle commands', () => {
     assertEquals('dolo', slice.textContent.toString());
   }
 
-
   editor.chain().selectText(1, 400, 1).run();
   {
-    const extensionSelection = editor.getExtension<ExtensionSelection>('selection');
+    const extensionSelection = editor.getExtension<ExtensionSelection>(
+      'selection',
+    );
     if (!extensionSelection) {
       throw new Error('No ExtensionSelection loader');
     }

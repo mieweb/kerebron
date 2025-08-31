@@ -20,7 +20,7 @@ Deno.test('MarkStrong should handle commands', () => {
 
   const editor = new CoreEditor({
     extensions: [new ExtensionBasicEditor()],
-    content
+    content,
   });
 
   editor.chain().selectText(2, 4).run();
@@ -47,7 +47,6 @@ Deno.test('MarkStrong should handle commands', () => {
 
     assertEquals(modified.content[0].content?.length, 1);
   }
-
 });
 
 Deno.test('MarkStrong and MarkItalic should handle commands', () => {
@@ -68,7 +67,7 @@ Deno.test('MarkStrong and MarkItalic should handle commands', () => {
 
   const editor = new CoreEditor({
     extensions: [new ExtensionBasicEditor()],
-    content
+    content,
   });
 
   editor.chain().selectText(2, 4).run();
@@ -83,7 +82,7 @@ Deno.test('MarkStrong and MarkItalic should handle commands', () => {
     assertEquals(modified.content[0].content?.length, 3);
     assertEquals(modified.content[0].content[1].marks, [
       {
-        type: 'em'
+        type: 'em',
       },
       {
         type: 'strong',
@@ -127,5 +126,4 @@ Deno.test('MarkStrong and MarkItalic should handle commands', () => {
       },
     ]);
   }
-
 });

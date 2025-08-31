@@ -26,13 +26,13 @@ Deno.test('NodeOrderedList should handle commands', () => {
             'text': 'dolor sit amet',
           },
         ],
-      }
+      },
     ],
   };
 
   const editor = new CoreEditor({
     extensions: [new ExtensionBasicEditor()],
-    content
+    content,
   });
 
   editor.chain().selectText(2, 20).run();
@@ -57,5 +57,4 @@ Deno.test('NodeOrderedList should handle commands', () => {
     const modified = editor.getJSON();
     console.log(JSON.stringify(modified.content, null, 2));
   }
-
 });

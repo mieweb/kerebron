@@ -209,19 +209,28 @@ const selectAll: CommandFactory = () => {
   };
 };
 
-function textPositionsToResolvedPos(textPosVec: number[], doc: Node, paraNum: number): ResolvedPos[] {
-  const retVal = textPosVec.map(x => -1);
+function textPositionsToResolvedPos(
+  textPosVec: number[],
+  doc: Node,
+  paraNum: number,
+): ResolvedPos[] {
+  const retVal = textPosVec.map((x) => -1);
 
   let currentTextPos = 0;
   let inParaRange = false;
 
-  function callback(currentPos: number, level: number, idx: number, textLen: number) {
+  function callback(
+    currentPos: number,
+    level: number,
+    idx: number,
+    textLen: number,
+  ) {
     if (!inParaRange) {
       return;
     }
 
     for (let i = 0; i < textPosVec.length; i++) {
-      const val = textPosVec[i]
+      const val = textPosVec[i];
       if (val >= currentTextPos && val < currentTextPos + textLen) {
         retVal[i] = currentPos + (val - currentTextPos);
       }
@@ -243,8 +252,7 @@ function textPositionsToResolvedPos(textPosVec: number[], doc: Node, paraNum: nu
     let textLen = 0;
     if (node.isText && node.text) {
       textLen = node.text?.length;
-    } else
-    if (node.isLeaf) {
+    } else if (node.isLeaf) {
       textLen = 1;
     }
 
@@ -261,7 +269,7 @@ function textPositionsToResolvedPos(textPosVec: number[], doc: Node, paraNum: nu
 
   if (inParaRange) {
     for (let i = 0; i < textPosVec.length; i++) {
-      const val = textPosVec[i]
+      const val = textPosVec[i];
       if (retVal[i] === -1) {
         if (val < currentTextPos) {
           retVal[i] = 1;
@@ -272,16 +280,24 @@ function textPositionsToResolvedPos(textPosVec: number[], doc: Node, paraNum: nu
     }
   }
 
-  return retVal.map(x => doc.resolve(x - 1));
+  return retVal.map((x) => doc.resolve(x - 1));
 }
 
-const selectText: CommandFactory = (textStart: number, length: number, paraNum = 0) => {
+const selectText: CommandFactory = (
+  textStart: number,
+  length: number,
+  paraNum = 0,
+) => {
   return function (
     state: EditorState,
     dispatch?: (tr: Transaction) => void,
     view?: EditorView,
   ) {
-    const [$head, $anchor] = textPositionsToResolvedPos([textStart + length, textStart], state.doc, paraNum);
+    const [$head, $anchor] = textPositionsToResolvedPos(
+      [textStart + length, textStart],
+      state.doc,
+      paraNum,
+    );
 
     const tr = state.tr.setSelection(new TextSelection($anchor, $head));
     if (view) {

@@ -20,7 +20,7 @@ Deno.test('MarkItalic should handle commands', () => {
 
   const editor = new CoreEditor({
     extensions: [new ExtensionBasicEditor()],
-    content
+    content,
   });
 
   editor.chain().selectText(2, 4).run();
@@ -41,5 +41,4 @@ Deno.test('MarkItalic should handle commands', () => {
     const modified = editor.getJSON();
     assertEquals(modified.content[0].content?.length, 1);
   }
-
 });
