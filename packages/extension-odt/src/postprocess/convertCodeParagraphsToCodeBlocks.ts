@@ -23,6 +23,12 @@ function onlyHasCodeMarkedText(
   return allAreCodeMarked;
 }
 
+interface ParagraphsToMerge {
+  startPos: number;
+  endPos: number;
+  innerText: string;
+}
+
 export const convertCodeParagraphsToCodeBlocks: Command = (
   state,
   dispatch,
@@ -31,7 +37,7 @@ export const convertCodeParagraphsToCodeBlocks: Command = (
   const schema = state.schema;
   let tr: Transaction = state.tr;
 
-  let paragraphsToMerge = null;
+  let paragraphsToMerge: ParagraphsToMerge | null = null;
 
   function flushCodeBlock() {
     if (paragraphsToMerge === null) {
@@ -44,7 +50,9 @@ export const convertCodeParagraphsToCodeBlocks: Command = (
     const startPos = tr.mapping.map(paragraphsToMerge.startPos);
     const endPos = tr.mapping.map(paragraphsToMerge.endPos);
 
-    tr.replaceRangeWith(startPos, endPos, codeBlock);
+    if (codeBlock) {
+      tr.replaceRangeWith(startPos, endPos, codeBlock);
+    }
 
     paragraphsToMerge = null;
   }

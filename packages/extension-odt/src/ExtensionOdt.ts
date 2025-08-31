@@ -13,7 +13,7 @@ export interface OdtConfig {
 export class ExtensionOdt extends Extension {
   name = 'odt';
 
-  constructor(protected config: OdtConfig = {}) {
+  constructor(config: OdtConfig = {}) {
     super(config);
   }
 
@@ -22,44 +22,47 @@ export class ExtensionOdt extends Extension {
     schema: Schema,
   ): Record<string, Converter> {
     const config = this.config;
-    return {
-      'application/vnd.oasis.opendocument.text': {
-        fromDoc: async (document: Node): Promise<Uint8Array> => {
-          throw new Error('Not implemented');
-        },
-        toDoc: async (buffer: Uint8Array): Promise<Node> => {
-          const files = unzip(buffer);
 
-          const stylesTree = parse_styles(files.get('styles.xml'));
-          const contentTree = parse_content(files.get('content.xml'));
+    const odtConverter = {
+      fromDoc: async (document: Node): Promise<Uint8Array> => {
+        throw new Error('Not implemented');
+      },
+      toDoc: async (buffer: Uint8Array): Promise<Node> => {
+        const doc = await odtConverter.odtToJson(buffer);
 
-          // console.log(JSON.stringify(stylesTree, null, 2).split('\n').slice(0, 20).join('\n'));
-          // console.log(JSON.stringify(contentTree, null, 2).split('\n').slice(0, 20).join('\n'));
+        const filterCommands = getDefaultsPostProcessFilters();
 
+        if (filterCommands.length > 0) {
           const subEditor = editor.clone();
+          subEditor.setDocument(doc.toJSON());
 
-          const parser = new OdtParser(subEditor.schema, config);
-
-          const doc = parser.parse({ ...files, contentTree, stylesTree });
-
-          const filterCommands = getDefaultsPostProcessFilters();
-
-          if (filterCommands.length > 0) {
-            subEditor.setDocument(doc);
-
-            for (const filter of filterCommands) {
-              filter(
-                subEditor.state,
-                (tr) => subEditor.dispatchTransaction(tr),
-              );
-            }
-
-            return subEditor.getDocument();
+          for (const filter of filterCommands) {
+            filter(
+              subEditor.state,
+              (tr) => subEditor.dispatchTransaction(tr),
+            );
           }
 
-          return doc;
-        },
+          return subEditor.getDocument();
+        }
+
+        return doc;
       },
+      odtToJson: async (buffer: Uint8Array) => {
+        const files = unzip(buffer);
+
+        const stylesTree = parse_styles(files.get('styles.xml'));
+        const contentTree = parse_content(files.get('content.xml'));
+
+        const parser = new OdtParser(editor.schema, config);
+
+        const doc = parser.parse({ ...files, contentTree, stylesTree });
+        return doc;
+      },
+    };
+
+    return {
+      'application/vnd.oasis.opendocument.text': odtConverter,
     };
   }
 }
