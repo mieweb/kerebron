@@ -136,7 +136,9 @@ export class CoreEditor extends EventTarget {
   }
 
   public setDocument(content: any) {
-    let doc = createNodeFromObject(content, this.schema);
+    let doc = createNodeFromObject(content, this.schema, {
+      errorOnInvalidContent: true,
+    });
     doc = ensureDocSchema(doc, this.schema);
 
     this.state = EditorState.create({

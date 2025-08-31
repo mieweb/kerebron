@@ -79,7 +79,7 @@ export class ExtensionManager {
 
     for (const extension of baseExtensions) {
       if (extension.name === name) {
-        return <T>extension;
+        return <T> extension;
       }
     }
   }

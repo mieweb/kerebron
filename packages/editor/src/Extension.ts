@@ -3,10 +3,7 @@ import type { Node, Schema, SchemaSpec } from 'prosemirror-model';
 
 import { type CoreEditor } from './CoreEditor.ts';
 import type { InputRule } from './plugins/input-rules/InputRulesPlugin.ts';
-import {
-  CommandFactories,
-  CommandShortcuts,
-} from './commands/mod.ts';
+import { CommandFactories, CommandShortcuts } from './commands/mod.ts';
 
 export interface ExtensionConfig {
   // @ts-ignore - this is a dynamic key

@@ -1,4 +1,5 @@
-import { Node } from 'prosemirror-model';
+import type { Node } from 'prosemirror-model';
+import { SmartOutput } from './utilities/SmartOutput.ts';
 
 function trimText(str: string, maxLen = 20): string {
   str = str.replaceAll('\n', '\\n');
@@ -10,7 +11,13 @@ function trimText(str: string, maxLen = 20): string {
   return str.slice(0, maxLen) + '...';
 }
 
-export function nodeToTreeString(
+export interface NodeAndPos {
+  node: Node;
+  pos: number;
+}
+
+export function nodeToTreeStringOutput(
+  output: SmartOutput<NodeAndPos>,
   node: Node | Node[] | readonly Node[],
   level = 0,
   currentPos = 0,
@@ -20,14 +27,14 @@ export function nodeToTreeString(
     delim += '  ';
   }
 
-  let output = '';
   if (Array.isArray(node)) {
     for (const child of node) {
-      output += delim +
-        nodeToTreeString(child, level + 1, currentPos).replace(/\s+$/gm, '') +
-        '\n';
+      output.log(delim, { node: child, pos: currentPos });
+      nodeToTreeStringOutput(output, child, level + 1, currentPos);
+      // .replace(/\s+$/gm, '') +
+      // '\n'
     }
-    return output;
+    return;
   }
 
   // https://prosemirror.net/docs/guide/#doc.indexing
@@ -46,7 +53,7 @@ export function nodeToTreeString(
       line += `fragment.size: ${node.content.size}, `;
     }
 
-    output += (delim + line) + '\n';
+    output.log((delim + line) + '\n', { node, pos: currentPos });
 
     let marksLine = '';
     if (node.marks) {
@@ -56,23 +63,36 @@ export function nodeToTreeString(
     }
 
     if (marksLine) {
-      output += (delim + '    ' + marksLine) + '\n';
+      output.log((delim + '    ' + marksLine) + '\n', {
+        node,
+        pos: currentPos,
+      });
     }
 
     if (node.text) {
-      output += (delim + '    "' + trimText(node.text) + '"') + '\n';
+      output.log((delim + '    "' + trimText(node.text) + '"') + '\n', {
+        node,
+        pos: currentPos,
+      });
     }
   }
 
   node.forEach((child, offset) => {
-    output +=
-      nodeToTreeString(child, level + 1, currentPos + offset + 1).replace(
-        /\s+$/gm,
-        '',
-      ) + '\n'; // + (node.isLeaf ? 1 : 2)
+    // output +=
+    nodeToTreeStringOutput(output, child, level + 1, currentPos + offset + 1);
+    //   .replace(
+    //   /\s+$/gm,
+    //   '',
+    // ) + '\n'; // + (node.isLeaf ? 1 : 2)
   });
 
   return output;
+}
+
+export function nodeToTreeString(node: Node | Node[] | readonly Node[]) {
+  const output = new SmartOutput<NodeAndPos>();
+  nodeToTreeStringOutput(output, node);
+  return output.toString();
 }
 
 export function debugNode(node: Node | Node[]) {
