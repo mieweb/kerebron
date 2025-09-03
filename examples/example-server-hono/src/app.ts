@@ -7,15 +7,14 @@ import { HonoYjsMemAdapter } from '@kerebron/extension-server-hono/HonoYjsMemAda
 
 const __dirname = import.meta.dirname;
 
-const app = new Hono();
-
 const yjsAdapter = new HonoYjsMemAdapter();
 
 export class Server {
   public app;
   public fetch;
 
-  constructor(private opts: { devProxyUrl?: string } = {}) {
+  constructor(private opts: { devProxyUrls: Record<string, string> } = { devProxyUrls: {} }) {
+    const app = new Hono();
     this.app = app;
     this.fetch = app.fetch;
 
@@ -31,28 +30,40 @@ export class Server {
       }),
     );
 
-    if (opts.devProxyUrl) {
-      this.app.get('*', (c) => {
+    for (const path in this.opts.devProxyUrls) {
+      const devProxyUrl = this.opts.devProxyUrls[path];
+      console.log(`Proxy: ${path} => ${devProxyUrl}`);
+      this.app.all(path + '/*', (c) => {
         const queryString = c.req.url
           .split('?')
           .map((e: string, idx: number) => {
             return idx > 0 ? e : '';
           })
           .join('?');
-        return proxy(`${opts.devProxyUrl}${c.req.path}${queryString}`);
+
+        const subPath = c.req.path;
+        return proxy(`${devProxyUrl}${subPath}${queryString}`, {
+          ...c.req, // optional, specify only when forwarding all the request data (including credentials) is necessary.
+          headers: {
+            ...c.req.header(),
+            'X-Forwarded-For': '127.0.0.1',
+            'X-Forwarded-Host': c.req.header('host'),
+            Authorization: undefined, // do not propagate request headers contained in c.req.header('Authorization')
+          },
+        });
       });
-    } else {
-      this.app.notFound((c) => {
-        const file = Deno.readFileSync(
-          __dirname + '/../../example-vue/dist/index.html',
-        );
-        return c.html(new TextDecoder().decode(file));
-      });
-      this.app.use(
-        '*',
-        serveStatic({ root: __dirname + '/../../example-vue/dist' }),
-      );
     }
+
+    this.app.notFound((c) => {
+      const file = Deno.readFileSync(
+        __dirname + '/../public/index.html',
+      );
+      return c.html(new TextDecoder().decode(file));
+    });
+    this.app.use(
+      '*',
+      serveStatic({ root: __dirname + '/../public' }),
+    );
 
     this.app.use('/*', cors());
   }

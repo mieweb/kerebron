@@ -1,7 +1,7 @@
 {
   "name": "example-server-hono",
   "tasks": {
-    "dev": "deno test --allow-net --allow-ffi --allow-read --watch ./src/*.ts",
+    "dev": "deno run --allow-net --allow-ffi --allow-read --allow-env --allow-sys --allow-write --allow-run --unstable-detect-cjs --node-modules-dir ./src/dev.ts",
     "start": "deno run --allow-net --allow-ffi --allow-read --allow-env --allow-sys --allow-write --allow-run --unstable-detect-cjs --node-modules-dir ./src/main.ts"
   },
   "license": "MIT",
