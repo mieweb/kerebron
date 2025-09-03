@@ -16,6 +16,7 @@
     "examples/example-html-generator",
     "examples/example-server-hono",
     "examples/example-vue",
+    "examples/example-vue-custom-element",
     "examples/mcptest"
   ],
   "compilerOptions": {

@@ -1,5 +1,5 @@
 {
-  "name": "example-vue",
+  "name": "example-vue-custom-element",
   "tasks": {
     "//dev": "deno test --watch mod.ts",
     "dev": "deno run -A npm:vite",

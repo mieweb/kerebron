@@ -36,7 +36,13 @@ deno task -f example-server-hono start
 
 ## Build
 
-# NPM packages are generated using DNT
+### Build static examples
+
+```shell
+deno task -r build
+```
+
+### NPM packages are generated using DNT
 
 - https://deno.com/blog/publish-esm-cjs-module-dnt - the easiest way to publish
   a hybrid npm module for ESM and CommonJS
