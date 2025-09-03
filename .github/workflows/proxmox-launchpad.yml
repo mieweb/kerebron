@@ -1,4 +1,4 @@
-noname: Proxmox Container Management
+name: Proxmox Container Management
 
 on:
   push:
