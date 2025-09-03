@@ -46,7 +46,7 @@ deno task -f example-server-hono start
 To generate npm packages
 
 ```shell
-deno -A ./scripts/build_npm.ts
+deno -A ./build/build_npm.ts
 ```
 
 ## Run through docker

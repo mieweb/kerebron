@@ -75,5 +75,6 @@
   },
   "fmt": {
     "singleQuote": true
-  }
+  },
+  "nodeModulesDir": "auto"
 }

@@ -1,11 +1,11 @@
 import { defineConfig } from 'npm:vite';
 import vue from '@vitejs/plugin-vue';
 import wasm from 'vite-plugin-wasm';
-import { VitePluginWatchWorkspace } from './vite-plugins/VitePluginWatchWorkspace.ts';
-import denoPlugin from './vite-plugins/resolvePlugin.ts';
-import denoPrefixPlugin from './vite-plugins/prefixPlugin.ts';
-import { DenoResolveResult } from './vite-plugins/resolver.ts';
-import { denoCssPlugin } from './vite-plugins/denoCssPlugin.ts';
+import { VitePluginWatchWorkspace } from '../../build/vite-plugins/VitePluginWatchWorkspace.ts';
+import denoPlugin from '../../build/vite-plugins/resolvePlugin.ts';
+import denoPrefixPlugin from '../../build/vite-plugins/prefixPlugin.ts';
+import { DenoResolveResult } from '../../build/vite-plugins/resolver.ts';
+import { denoCssPlugin } from '../../build/vite-plugins/denoCssPlugin.ts';
 
 const __dirname = import.meta.dirname!;
 
