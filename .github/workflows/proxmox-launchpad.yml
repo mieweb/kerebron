@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: maxklema/proxmox-launchpad@main
         with:
-          proxmox_username: your-username
+          proxmox_username: ${{ secrets.PROXMOX_USERNAME }}
           proxmox_password: ${{ secrets.PROXMOX_PASSWORD }}
 
           project_root: ""
