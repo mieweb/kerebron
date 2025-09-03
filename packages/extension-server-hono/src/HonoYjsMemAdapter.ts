@@ -6,10 +6,12 @@ import * as awarenessProtocol from 'y-protocols/awareness';
 
 import * as encoding from 'lib0/encoding';
 import * as decoding from 'lib0/decoding';
+import { HonoWsAdapter } from './mod.ts';
 
-const messageSync = 0;
-const messageAwareness = 1;
-// const messageAuth = 2
+export const messageType = {
+  sync: 0,
+  awareness: 1,
+};
 
 export const docs: Map<string, Y.Doc> = new Map();
 
@@ -73,7 +75,7 @@ export class Room {
         }
         // broadcast awareness update
         const encoder = encoding.createEncoder();
-        encoding.writeVarUint(encoder, messageAwareness);
+        encoding.writeVarUint(encoder, messageType.awareness);
         encoding.writeVarUint8Array(
           encoder,
           awarenessProtocol.encodeAwarenessUpdate(
@@ -92,7 +94,7 @@ export class Room {
       'update',
       (update) => {
         const encoder = encoding.createEncoder();
-        encoding.writeVarUint(encoder, messageSync);
+        encoding.writeVarUint(encoder, messageType.sync);
         syncProtocol.writeUpdate(encoder, update);
         const message = encoding.toUint8Array(encoder);
         for (const socket of this.socketContexts.keys()) {
@@ -104,16 +106,17 @@ export class Room {
 }
 
 const rooms: Map<string, Room> = new Map();
-export async function getRoomNames() {
-  return Array.from(rooms.keys());
-}
 
-export class HonoYjsAdapter {
+export class HonoYjsMemAdapter implements HonoWsAdapter {
   readonly sockets: Map<WebSocket, SocketContext> = new Map();
   readonly rooms: Map<string, Room>;
 
   constructor() {
     this.rooms = rooms;
+  }
+
+  async getRoomNames() {
+    return Array.from(rooms.keys());
   }
 
   upgradeWebSocket(roomName: string): WSEvents<WebSocket> {
@@ -135,13 +138,13 @@ export class HonoYjsAdapter {
         room.socketContexts.set(wsContext.raw, socketContext);
 
         const encoder = encoding.createEncoder();
-        encoding.writeVarUint(encoder, messageSync);
+        encoding.writeVarUint(encoder, messageType.sync);
         syncProtocol.writeSyncStep1(encoder, doc);
         this.send(wsContext.raw, encoding.toUint8Array(encoder));
         const awarenessStates = room.awareness.getStates();
         if (awarenessStates.size > 0) {
           const encoder = encoding.createEncoder();
-          encoding.writeVarUint(encoder, messageAwareness);
+          encoding.writeVarUint(encoder, messageType.awareness);
           encoding.writeVarUint8Array(
             encoder,
             awarenessProtocol.encodeAwarenessUpdate(
@@ -195,10 +198,10 @@ export class HonoYjsAdapter {
 
       const encoder = encoding.createEncoder();
       const decoder = decoding.createDecoder(messageBytes);
-      const messageType = decoding.readVarUint(decoder);
-      switch (messageType) {
-        case messageSync:
-          encoding.writeVarUint(encoder, messageSync);
+      const type = decoding.readVarUint(decoder);
+      switch (type) {
+        case messageType.sync:
+          encoding.writeVarUint(encoder, messageType.sync);
           syncProtocol.readSyncMessage(decoder, encoder, room.doc, conn);
 
           // If the `encoder` only contains the type of reply message and no
@@ -208,7 +211,7 @@ export class HonoYjsAdapter {
             this.send(conn, encoding.toUint8Array(encoder));
           }
           break;
-        case messageAwareness: {
+        case messageType.awareness: {
           awarenessProtocol.applyAwarenessUpdate(
             room.awareness,
             decoding.readVarUint8Array(decoder),

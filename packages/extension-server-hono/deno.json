@@ -1,0 +1,11 @@
+{
+  "name": "@kerebron/extension-server-hono",
+  "tasks": {},
+  "imports": {
+    "hono": "jsr:@hono/hono@^4.7.4"
+  },
+  "exports": {
+    ".": "./src/mod.ts",
+    "./HonoYjsMemAdapter": "./src/HonoYjsMemAdapter.ts"
+  }
+}
