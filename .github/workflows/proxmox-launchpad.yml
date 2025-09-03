@@ -1,4 +1,4 @@
-name: Proxmox Container Management
+noname: Proxmox Container Management
 
 on:
   push:
@@ -17,4 +17,4 @@ jobs:
           project_root: ""
           install_command: "deno install; deno task --recursive build"
           start_command: "deno task --filter example-server-hono start"
-          runtime_language: "deno"
+          runtime_language: "nodejs"
