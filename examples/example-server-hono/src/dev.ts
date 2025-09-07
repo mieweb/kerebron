@@ -6,8 +6,9 @@ const __dirname = import.meta.dirname;
 // const viteDevServer = null;
 const viteDevServer = await createViteServer({
   // any valid user config options, plus `mode` and `configFile`
-  configFile: __dirname + '/../../example-vue/vite.config.ts',
-  root: __dirname + '/../../example-vue',
+  base: '/examples/example-vue-custom-element',
+  configFile: __dirname + '/../../example-vue-custom-element/vite.config.ts',
+  root: __dirname + '/../../example-vue-custom-element',
   server: {
     // middlewareMode: true
     port: 1337,
@@ -16,5 +17,5 @@ const viteDevServer = await createViteServer({
 });
 await viteDevServer.listen();
 
-const server = new Server({ devProxyUrl: 'http://localhost:1337' });
+const server = new Server({ devProxyUrls: { '/examples/example-vue-custom-element': 'http://localhost:1337' } });
 Deno.serve(server.fetch);
