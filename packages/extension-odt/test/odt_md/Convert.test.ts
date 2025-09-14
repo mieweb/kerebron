@@ -47,6 +47,8 @@ Deno.test('convert odt to md', async () => {
   const buffer = await editor.saveDocument('text/x-markdown');
   const md = new TextDecoder().decode(buffer);
 
-  const referenceMd = new TextDecoder().decode(Deno.readFileSync(__dirname + '/example-document.md'));
+  const referenceMd = new TextDecoder().decode(
+    Deno.readFileSync(__dirname + '/example-document.md'),
+  );
   assertEquals(md, referenceMd);
 });

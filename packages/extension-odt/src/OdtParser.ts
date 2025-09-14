@@ -1,8 +1,11 @@
-import {Mark, Node, Schema,} from 'prosemirror-model';
-import {getBasicNodesHandlers, getInlineNodesHandlers,} from './node_handlers/basic_node_handlers.ts';
-import {getListNodesHandlers} from './node_handlers/list_node_handlers.ts';
-import {getTableNodesHandlers} from './node_handlers/table_node_handlers.ts';
-import {ListTracker} from './lists.ts';
+import { Mark, Node, Schema } from 'prosemirror-model';
+import {
+  getBasicNodesHandlers,
+  getInlineNodesHandlers,
+} from './node_handlers/basic_node_handlers.ts';
+import { getListNodesHandlers } from './node_handlers/list_node_handlers.ts';
+import { getTableNodesHandlers } from './node_handlers/table_node_handlers.ts';
+import { ListTracker } from './lists.ts';
 
 const COURIER_FONTS = ['Courier New', 'Courier', 'Roboto Mono'];
 
@@ -272,7 +275,6 @@ export class OdtStashContext {
 }
 
 export class OdtParser {
-
   constructor(
     private readonly schema: Schema,
     private readonly config: Config = {},
@@ -328,7 +330,6 @@ export class OdtParser {
             src: odtElement.image['@href'],
             alt,
           });
-
         }
         // },
       },

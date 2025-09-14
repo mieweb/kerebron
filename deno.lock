@@ -51,10 +51,8 @@
     "npm:markdown-it@14.1.0": "14.1.0",
     "npm:orderedmap@latest": "2.1.1",
     "npm:prosemirror-history@1.4.1": "1.4.1",
-    "npm:prosemirror-model@1.25.2": "1.25.2",
-    "npm:prosemirror-model@latest": "1.25.2",
+    "npm:prosemirror-model@1.25.3": "1.25.3",
     "npm:prosemirror-state@1.4.3": "1.4.3",
-    "npm:prosemirror-state@latest": "1.4.3",
     "npm:prosemirror-transform@1.10.4": "1.10.4",
     "npm:prosemirror-view@1.40.0": "1.40.0",
     "npm:thememirror@2.0.1": "2.0.1_@codemirror+language@6.11.0_@codemirror+state@6.5.2_@codemirror+view@6.38.1",
@@ -1262,8 +1260,8 @@
         "rope-sequence"
       ]
     },
-    "prosemirror-model@1.25.2": {
-      "integrity": "sha512-BVypCAJ4SL6jOiTsDffP3Wp6wD69lRhI4zg/iT8JXjp3ccZFiq5WyguxvMKmdKFC3prhaig7wSr8dneDToHE1Q==",
+    "prosemirror-model@1.25.3": {
+      "integrity": "sha512-dY2HdaNXlARknJbrManZ1WyUtos+AP97AmvqdOQtWtrrC5g4mohVX5DTi9rXNFSk09eczLq9GuNTtq3EfMeMGA==",
       "dependencies": [
         "orderedmap"
       ]
@@ -1584,7 +1582,7 @@
       "npm:markdown-it@14.1.0",
       "npm:orderedmap@latest",
       "npm:prosemirror-history@1.4.1",
-      "npm:prosemirror-model@1.25.2",
+      "npm:prosemirror-model@1.25.3",
       "npm:prosemirror-state@1.4.3",
       "npm:prosemirror-transform@1.10.4",
       "npm:prosemirror-view@1.40.0",

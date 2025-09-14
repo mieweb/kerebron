@@ -1,8 +1,4 @@
-import {
-  iterateChildren,
-  NodeHandler,
-  OdtStashContext,
-} from '../OdtParser.ts';
+import { iterateChildren, NodeHandler, OdtStashContext } from '../OdtParser.ts';
 
 export function getInlineNodesHandlers(): Record<string, NodeHandler> {
   return {
