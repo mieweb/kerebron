@@ -9,8 +9,6 @@ import { denoCssPlugin } from '../../build/vite-plugins/denoCssPlugin.ts';
 
 const __dirname = import.meta.dirname!;
 
-console.log('test');
-
 const cache = new Map<string, DenoResolveResult>();
 export default defineConfig({
   base: '',
