@@ -14,7 +14,6 @@ WORKDIR "/usr/src/app"
 
 RUN deno install
 # deno task --recursive build # TODO make somehow vite dependent on wasm
-RUN deno task -f @kerebron/odt-wasm build
-RUN deno task -f example-vue build
+RUN deno task --recursive build
 
 CMD [ "sh", "-c", "deno task -f example-server-hono start" ]

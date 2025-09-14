@@ -1,4 +1,4 @@
-import path from 'npm:path';
+import * as path from '@std/path';
 import { copy, exists } from '@std/fs';
 import { build, emptyDir } from '@deno/dnt';
 
@@ -114,7 +114,7 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
   if (Deno.args[0]?.replace(/^v/, '')) {
     // Substitute wasm package with npm path. Currently, DNT do not support wasm.
     configFile = await Deno.makeTempFileSync({
-      dir: import.meta.dirname + '/..',
+      dir: __dirname + '/..',
       suffix: '.json',
     });
     Deno.writeFileSync(
