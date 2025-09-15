@@ -4,7 +4,7 @@ import { Server } from './app.mjs';
 const server = new Server();
 const nodejsServer = serve({
   fetch: server.fetch,
-  port: 8787,
+  port: 8080,
 });
 server.injectWebSocket(nodejsServer);
 

@@ -9,12 +9,14 @@ jobs:
   manage-container:
     runs-on: self-hosted # Use your runner label here
     steps:
+      - uses: actions/checkout@v4
       - uses: maxklema/proxmox-launchpad@main
         with:
           proxmox_username: ${{ secrets.PROXMOX_USERNAME }}
           proxmox_password: ${{ secrets.PROXMOX_PASSWORD }}
+          http_port: 8080
 
-          project_root: "examples/example-server-nodejs"
-          install_command: "npm ci"
-          start_command: "npm run start"
+          project_root: ""
+          install_command: "cd examples/example-server-nodejs && npm ci"
+          start_command: "cd examples/example-server-nodejs && npm run start"
           runtime_language: "nodejs"
