@@ -33,7 +33,7 @@
 
     "prosemirror-state": "npm:prosemirror-state@1.4.3",
     "prosemirror-view": "npm:prosemirror-view@1.40.0",
-    "prosemirror-model": "npm:prosemirror-model@1.25.2",
+    "prosemirror-model": "npm:prosemirror-model@1.25.3",
     "prosemirror-transform": "npm:prosemirror-transform@1.10.4",
     "prosemirror-history": "npm:prosemirror-history@1.4.1",
 

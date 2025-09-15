@@ -1,6 +1,9 @@
+import fs from 'node:fs';
+
 import { Hono } from 'hono';
 import { proxy } from 'hono/proxy';
-import { serveStatic, upgradeWebSocket } from 'hono/deno';
+import { serveStatic } from '@hono/node-server/serve-static'
+import { createNodeWebSocket } from '@hono/node-ws';
 import { cors } from 'hono/cors';
 
 import { HonoYjsMemAdapter } from '@kerebron/extension-server-hono/HonoYjsMemAdapter';
@@ -10,10 +13,9 @@ const __dirname = import.meta.dirname;
 const yjsAdapter = new HonoYjsMemAdapter();
 
 export class Server {
-  public app;
-  public fetch;
 
-  constructor(private opts: { devProxyUrls: Record<string, string> } = { devProxyUrls: {} }) {
+  constructor(opts = { devProxyUrls: {} }) {
+    this.opts = opts;
     const app = new Hono();
     this.app = app;
     this.fetch = app.fetch;
@@ -23,9 +25,14 @@ export class Server {
       return c.json(retVal);
     });
 
+    // Create WebSocket helpers
+    const { upgradeWebSocket, injectWebSocket } = createNodeWebSocket({ app });
+    this.injectWebSocket = injectWebSocket;
+
     this.app.get(
       '/yjs/:room',
       upgradeWebSocket((c) => {
+        console.log('upgradeWebSocket', c.req.path);
         return yjsAdapter.upgradeWebSocket(c.req.param('room'));
       }),
     );
@@ -36,7 +43,7 @@ export class Server {
       this.app.all(path + '/*', (c) => {
         const queryString = c.req.url
           .split('?')
-          .map((e: string, idx: number) => {
+          .map((e, idx) => {
             return idx > 0 ? e : '';
           })
           .join('?');
@@ -55,7 +62,7 @@ export class Server {
     }
 
     this.app.notFound((c) => {
-      const file = Deno.readFileSync(
+      const file = fs.readFileSync(
         __dirname + '/../public/index.html',
       );
       return c.html(new TextDecoder().decode(file));

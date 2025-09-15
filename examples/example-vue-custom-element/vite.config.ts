@@ -1,4 +1,4 @@
-import { defineConfig } from 'npm:vite';
+import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import wasm from 'vite-plugin-wasm';
 import { VitePluginWatchWorkspace } from '../../build/vite-plugins/VitePluginWatchWorkspace.ts';
@@ -8,8 +8,6 @@ import { DenoResolveResult } from '../../build/vite-plugins/resolver.ts';
 import { denoCssPlugin } from '../../build/vite-plugins/denoCssPlugin.ts';
 
 const __dirname = import.meta.dirname!;
-
-console.log('test');
 
 const cache = new Map<string, DenoResolveResult>();
 export default defineConfig({
