@@ -1,4 +1,4 @@
-import { defineConfig } from 'npm:vite';
+import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import wasm from 'vite-plugin-wasm';
 import { VitePluginWatchWorkspace } from '../../build/vite-plugins/VitePluginWatchWorkspace.ts';

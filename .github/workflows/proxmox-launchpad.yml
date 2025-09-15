@@ -14,7 +14,7 @@ jobs:
           proxmox_username: ${{ secrets.PROXMOX_USERNAME }}
           proxmox_password: ${{ secrets.PROXMOX_PASSWORD }}
 
-          project_root: ""
-          install_command: "sudo apt install -y unzip && curl -fsSL https://deno.land/install.sh | sudo bash -s -- -y && cp /root/.deno/bin/deno /usr/bin && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sudo bash -s -- -y && deno install && deno task --recursive build"
-          start_command: "deno task --filter example-server-hono start"
+          project_root: "examples/example-server-nodejs"
+          install_command: "npm ci"
+          start_command: "npm run start"
           runtime_language: "nodejs"
