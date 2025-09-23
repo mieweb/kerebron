@@ -23,7 +23,9 @@
     "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"],
     "types": ["npm:@types/markdown-it@14.1.2"]
   },
-  "tasks": {},
+  "tasks": {
+    "build": "cd packages/odt-wasm && deno task build && cd ../../examples/example-vue && deno task build && cd ../example-vue-custom-element && deno task build && cd ../.."
+  },
   "imports": {
     "@deno/dnt": "jsr:@deno/dnt@^0.42.1",
     "@std/assert": "jsr:@std/assert@1",
