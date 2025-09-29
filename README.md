@@ -8,7 +8,7 @@
 
 ## Playground Demo
 
-[playground](https://editor-test.gitgis.com) - be nice.
+[playground](https://demo.kerebron.com) - be nice.
 
 ## Overview
 
@@ -31,8 +31,12 @@ number of output npm modules.
 To start example server:
 
 ```
-deno task -f example-server-hono start
+deno task -f server-deno-hono start
 ```
+
+## Examples
+
+TODO
 
 ## Build
 

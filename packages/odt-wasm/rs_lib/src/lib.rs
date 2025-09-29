@@ -1,27 +1,27 @@
 pub mod core;
 pub mod ods_structs;
 
-use wasm_bindgen::prelude::*;
 use serde_wasm_bindgen::to_value;
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub fn echo(zip_data: Vec<u8>) -> Vec<u8> {
-    zip_data
+  zip_data
 }
 
 #[wasm_bindgen]
 pub fn unzip(zip_data: Vec<u8>) -> JsValue {
-    to_value(&core::unzip(zip_data)).unwrap()
+  to_value(&core::unzip(zip_data)).unwrap()
 }
 
 #[wasm_bindgen]
 pub fn parse_content(xml_bytes: Vec<u8>) -> JsValue {
-    to_value(&core::parse_content(xml_bytes)).unwrap()
+  to_value(&core::parse_content(xml_bytes)).unwrap()
 }
 
 #[wasm_bindgen]
 pub fn parse_styles(xml_bytes: Vec<u8>) -> JsValue {
-    to_value(&core::parse_styles(xml_bytes)).unwrap()
+  to_value(&core::parse_styles(xml_bytes)).unwrap()
 }
 
 #[wasm_bindgen]
@@ -45,9 +45,6 @@ impl Greeter {
     format!("Hello {}!", self.name)
   }
 }
-
-
-
 
 #[cfg(test)]
 mod tests {

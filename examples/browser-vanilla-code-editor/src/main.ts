@@ -72,15 +72,14 @@ window.addEventListener('load', () => {
     // this.$emit('input', this.lastValue);
   });
 
-
   document.getElementById('loadDoc')?.addEventListener('click', async () => {
     const buffer = new TextEncoder().encode(
       '# Multiline string with literal block syntax -preserved new lines\n' +
-      'string1: |\n' +
-      '   Line1\n' +
-      '   line2\n' +
-      '   "line3"\n' +
-      '  line4\n',
+        'string1: |\n' +
+        '   Line1\n' +
+        '   line2\n' +
+        '   "line3"\n' +
+        '  line4\n',
     );
     await editor.loadDocument('text/code-only', buffer);
   });
