@@ -5,6 +5,7 @@ import {
   AllSelection,
   NodeSelection,
   Plugin,
+  Selection,
   TextSelection,
   Transaction,
 } from 'prosemirror-state';
@@ -29,15 +30,15 @@ import {
   relativePositionToAbsolutePosition,
 } from './lib.ts';
 
-interface BindingMetadata {
+export type TransactFunc<T> = (
+  f: (arg0?: Y.Transaction) => T,
+  origin?: any,
+) => T;
+
+export interface BindingMetadata {
   mapping: ProsemirrorMapping;
   isOMark: Map<MarkType, boolean>;
 }
-
-export const createEmptyMeta = (): BindingMetadata => ({
-  mapping: new Map(),
-  isOMark: new Map(),
-});
 
 export const isVisible = (item: Y.Item, snapshot: Y.Snapshot) =>
   snapshot === undefined
@@ -83,7 +84,7 @@ const getUserColor = (
     }
     colorMapping.set(user, random.oneOf(colors));
   }
-  return /** @type {ColorDef} */ (colorMapping.get(user));
+  return colorMapping.get(user);
 };
 
 /**
@@ -128,7 +129,7 @@ export const ySyncPlugin = (yXmlFragment: Y.XmlFragment, {
           permanentUserData,
         };
       },
-      apply: (tr, pluginState) => {
+      apply: (tr, pluginState: PluginState) => {
         const change = tr.getMeta(ySyncPluginKey);
         if (change !== undefined) {
           pluginState = Object.assign({}, pluginState);
@@ -148,7 +149,7 @@ export const ySyncPlugin = (yXmlFragment: Y.XmlFragment, {
             (change.snapshot != null || change.prevSnapshot != null)
           ) {
             // snapshot changed, rerender next
-            eventloop.timeout(0, () => {
+            setTimeout(() => {
               if (binding.prosemirrorView == null) {
                 return;
               }
@@ -174,7 +175,7 @@ export const ySyncPlugin = (yXmlFragment: Y.XmlFragment, {
                   );
                 });
               }
-            });
+            }, 0);
           }
         }
         return pluginState;
@@ -199,7 +200,7 @@ export const ySyncPlugin = (yXmlFragment: Y.XmlFragment, {
               // represent it in Yjs
               initialContentChanged ||
               view.state.doc.content.findDiffStart(
-                  view.state.doc.type.createAndFill().content,
+                  view.state.doc.type.createAndFill()!.content,
                 ) !== null
             ) {
               initialContentChanged = true;
@@ -208,14 +209,12 @@ export const ySyncPlugin = (yXmlFragment: Y.XmlFragment, {
                 !pluginState.isChangeOrigin
               ) {
                 const yUndoPluginState = yUndoPluginKey.getState(view.state);
-                const um: Y.UndoManager = yUndoPluginState &&
-                  yUndoPluginState.undoManager;
-                if (um) {
-                  um.stopCapturing();
+                if (yUndoPluginState?.undoManager) {
+                  yUndoPluginState.undoManager.stopCapturing();
                 }
               }
               binding.mux(() => {
-                /** @type {Y.Doc} */ (pluginState.doc).transact((tr) => {
+                pluginState.doc.transact((tr) => {
                   tr.meta.set('addToHistory', pluginState.addToHistory);
                   binding._prosemirrorChanged(view.state.doc);
                 }, ySyncPluginKey);
@@ -242,7 +241,7 @@ const restoreRelativeSelection = (
       tr.setSelection(new AllSelection(tr.doc));
     } else if (relSel.type === 'node') {
       const anchor = relativePositionToAbsolutePosition(
-        binding.doc,
+        binding.ydoc,
         binding.type,
         relSel.anchor,
         binding.mapping,
@@ -250,13 +249,13 @@ const restoreRelativeSelection = (
       tr.setSelection(NodeSelection.create(tr.doc, anchor));
     } else {
       const anchor = relativePositionToAbsolutePosition(
-        binding.doc,
+        binding.ydoc,
         binding.type,
         relSel.anchor,
         binding.mapping,
       );
       const head = relativePositionToAbsolutePosition(
-        binding.doc,
+        binding.ydoc,
         binding.type,
         relSel.head,
         binding.mapping,
@@ -272,11 +271,30 @@ const restoreRelativeSelection = (
   }
 };
 
+interface TransactionSelection {
+  type: string;
+  anchor: Y.RelativePosition;
+  head: Y.RelativePosition;
+}
+
+function getSelectionType(selection: Selection) {
+  if (selection instanceof TextSelection) {
+    return 'text';
+  }
+  if (selection instanceof AllSelection) {
+    return 'all';
+  }
+  if (selection instanceof NodeSelection) {
+    return 'node';
+  }
+  return 'other_selection';
+}
+
 export const getRelativeSelection = (
   pmbinding: ProsemirrorBinding,
   state: EditorState,
-) => ({
-  type: /** @type {any} */ (state.selection).jsonID,
+): TransactionSelection => ({
+  type: getSelectionType(state.selection),
   anchor: absolutePositionToRelativePosition(
     state.selection.anchor,
     pmbinding.type,
@@ -289,45 +307,56 @@ export const getRelativeSelection = (
   ),
 });
 
+interface PluginState {
+  addToHistory: boolean;
+  isChangeOrigin: boolean;
+  restore: any;
+  snapshot?: Y.Snapshot;
+  prevSnapshot?: Y.Snapshot;
+  isUndoRedoOperation: boolean;
+  colors: Array<ColorDef>;
+  colorMapping: Map<string, ColorDef>;
+  permanentUserData: Y.PermanentUserData;
+}
+
 /**
  * Binding for prosemirror.
  *
  * @protected
  */
-export class ProsemirrorBinding {
-  public doc: Y.Doc;
-  private type: Y.XmlFragment;
+export class ProsemirrorBinding implements BindingMetadata {
+  public ydoc: Y.Doc;
+  public isOMark: Map<MarkType, boolean>;
+  public type: Y.XmlFragment;
   private mux: any;
-  private prosemirrorView: EditorView;
-  private isOMark: Map<MarkType, boolean>;
-  private _observeFunction: any;
-  private mapping: ProsemirrorMapping;
-  private _beforeTransactionSelection: null;
+  public prosemirrorView: EditorView | null;
+  private _beforeTransactionSelection: TransactionSelection | null;
 
   private beforeAllTransactions: () => void;
   private afterAllTransactions: () => void;
-  private _domSelectionInView: null;
-  get beforeTransactionSelection(): null {
+  private _observeFunction: (event: any, transaction: any) => void;
+  private _domSelectionInView: boolean = false;
+  get beforeTransactionSelection(): TransactionSelection {
     return this._beforeTransactionSelection;
   }
-  set beforeTransactionSelection(value: null) {
+  set beforeTransactionSelection(value: TransactionSelection) {
     this._beforeTransactionSelection = value;
   }
 
   constructor(
     yXmlFragment: Y.XmlFragment,
-    mapping: ProsemirrorMapping = new Map(),
+    public mapping: ProsemirrorMapping = new Map(),
   ) {
     this.type = yXmlFragment;
     this.prosemirrorView = null;
     this.mux = createMutex();
-    this.mapping = mapping;
     /**
      * Is overlapping mark - i.e. mark does not exclude itself.
      */
     this.isOMark = new Map();
-    this._observeFunction = this._typeChanged.bind(this);
-    this.doc = yXmlFragment.doc;
+    this._observeFunction = (event, transaction) =>
+      this.yXmlChanged(event, transaction);
+    this.ydoc = yXmlFragment.doc!;
     /**
      * current selection as relative positions in the Yjs model
      */
@@ -346,34 +375,29 @@ export class ProsemirrorBinding {
     this.afterAllTransactions = () => {
       this._beforeTransactionSelection = null;
     };
-    this._domSelectionInView = null;
+    this._domSelectionInView = false;
   }
 
-  /**
-   * Create a transaction for changing the prosemirror state.
-   *
-   * @returns
-   */
-  get _tr() {
-    return this.prosemirrorView.state.tr.setMeta('addToHistory', false);
+  debug(msg = 'ydoc.prosemirror') {
+    console.log(msg, this.type.toString());
   }
 
-  _isLocalCursorInView() {
-    if (!this.prosemirrorView.hasFocus()) return false;
-    if (environment.isBrowser && this._domSelectionInView === null) {
+  _isLocalCursorInView(): boolean {
+    if (!this.prosemirrorView?.hasFocus()) return false;
+    if (environment.isBrowser && this._domSelectionInView === false) {
       // Calculate the domSelectionInView and clear by next tick after all events are finished
       eventloop.timeout(0, () => {
-        this._domSelectionInView = null;
+        this._domSelectionInView = false;
       });
       this._domSelectionInView = this._isDomSelectionInView();
     }
     return this._domSelectionInView;
   }
 
-  _isDomSelectionInView() {
-    const selection = this.prosemirrorView.root.getSelection(); // https://stackoverflow.com/questions/62054839/shadowroot-getselection
+  _isDomSelectionInView(): boolean {
+    const selection = this.prosemirrorView?.root?.getSelection(); // https://stackoverflow.com/questions/62054839/shadowroot-getselection
 
-    if (selection == null || selection.anchorNode == null) return false;
+    if (!selection || selection.anchorNode == null) return false;
 
     const range = dom.doc.createRange(); // https://github.com/yjs/y-prosemirror/pull/193
     range.setStart(selection.anchorNode, selection.anchorOffset);
@@ -403,25 +427,33 @@ export class ProsemirrorBinding {
     if (!prevSnapshot) {
       prevSnapshot = Y.createSnapshot(Y.createDeleteSet(), new Map());
     }
-    this.prosemirrorView.dispatch(
-      this._tr.setMeta(ySyncPluginKey, { snapshot, prevSnapshot }),
-    );
+    if (this.prosemirrorView) {
+      const _tr = this.prosemirrorView.state.tr.setMeta('addToHistory', false);
+      this.prosemirrorView.dispatch(
+        _tr.setMeta(ySyncPluginKey, { snapshot, prevSnapshot }),
+      );
+    }
   }
 
   unrenderSnapshot() {
     this.mapping.clear();
     this.mux(() => {
-      const fragmentContent = this.type.toArray().map((t) =>
+      if (!this.prosemirrorView) {
+        return;
+      }
+      const state = this.prosemirrorView.state;
+      const fragmentContent = this.type.toArray().map((t: Y.XmlElement) =>
         createNodeFromYElement(
-          /** @type {Y.XmlElement} */ (t),
-          this.prosemirrorView.state.schema,
+          t,
+          state.schema,
           this,
         )
       ).filter((n) => n !== null);
       // @ts-ignore
-      const tr = this._tr.replace(
+      const _tr = state.tr.setMeta('addToHistory', false);
+      const tr = _tr.replace(
         0,
-        this.prosemirrorView.state.doc.content.size,
+        state.doc.content.size,
         new PModel.Slice(PModel.Fragment.from(fragmentContent), 0, 0),
       );
       tr.setMeta(ySyncPluginKey, { snapshot: null, prevSnapshot: null });
@@ -432,23 +464,28 @@ export class ProsemirrorBinding {
   _forceRerender() {
     this.mapping.clear();
     this.mux(() => {
+      if (!this.prosemirrorView) {
+        return;
+      }
+      const state = this.prosemirrorView.state;
       // If this is a forced rerender, this might neither happen as a pm change nor within a Yjs
       // transaction. Then the "before selection" doesn't exist. In this case, we need to create a
       // relative position before replacing content. Fixes #126
       const sel = this._beforeTransactionSelection !== null
         ? null
-        : this.prosemirrorView.state.selection;
+        : state.selection;
       const fragmentContent = this.type.toArray().map((t) =>
         createNodeFromYElement(
           /** @type {Y.XmlElement} */ (t),
-          this.prosemirrorView.state.schema,
+          state.schema,
           this,
         )
       ).filter((n) => n !== null);
       // @ts-ignore
-      const tr = this._tr.replace(
+      const _tr = state.tr.setMeta('addToHistory', false);
+      const tr = _tr.replace(
         0,
-        this.prosemirrorView.state.doc.content.size,
+        state.doc.content.size,
         new PModel.Slice(PModel.Fragment.from(fragmentContent), 0, 0),
       );
       if (sel) {
@@ -479,15 +516,15 @@ export class ProsemirrorBinding {
   _renderSnapshot(
     snapshot: Y.Snapshot | Uint8Array,
     prevSnapshot: Y.Snapshot | Uint8Array,
-    pluginState: Object,
+    pluginState: PluginState,
   ) {
     /**
      * The document that contains the full history of this document.
      */
-    let historyDoc = this.doc;
+    let historyDoc = this.ydoc;
     let historyType = this.type;
     if (!snapshot) {
-      snapshot = Y.snapshot(this.doc);
+      snapshot = Y.snapshot(this.ydoc);
     }
     if (snapshot instanceof Uint8Array || prevSnapshot instanceof Uint8Array) {
       if (
@@ -507,8 +544,8 @@ export class ProsemirrorBinding {
          * If is a root type, we need to find the root key in the initial document
          * and use it to get the history type.
          */
-        const rootKey = Array.from(this.doc.share.keys()).find(
-          (key) => this.doc.share.get(key) === this.type,
+        const rootKey = Array.from(this.ydoc.share.keys()).find(
+          (key) => this.ydoc.share.get(key) === this.type,
         );
         historyType = historyDoc.getXmlFragment(rootKey);
       } else {
@@ -578,8 +615,11 @@ export class ProsemirrorBinding {
             return null;
           }
         }).filter((n) => n !== null);
-        // @ts-ignore
-        const tr = this._tr.replace(
+        const _tr = this.prosemirrorView.state.tr.setMeta(
+          'addToHistory',
+          false,
+        );
+        const tr = _tr.replace(
           0,
           this.prosemirrorView.state.doc.content.size,
           new PModel.Slice(PModel.Fragment.from(fragmentContent), 0, 0),
@@ -591,7 +631,7 @@ export class ProsemirrorBinding {
     });
   }
 
-  _typeChanged(events: Array<Y.YEvent<any>>, transaction: Y.Transaction) {
+  yXmlChanged(events: Array<Y.YEvent<any>>, transaction: Y.Transaction) {
     if (this.prosemirrorView == null) return;
     const syncState = ySyncPluginKey.getState(this.prosemirrorView.state);
     if (
@@ -619,20 +659,30 @@ export class ProsemirrorBinding {
       );
       transaction.changed.forEach(delType);
       transaction.changedParentTypes.forEach(delType);
+
+      if (!this.prosemirrorView) {
+        return;
+      }
+      const state = this.prosemirrorView.state;
+
       const fragmentContent = this.type.toArray().map((t) =>
         createNodeIfNotExists(
           /** @type {Y.XmlElement | Y.XmlHook} */ (t),
-          this.prosemirrorView.state.schema,
+          state.schema,
           this,
         )
       ).filter((n) => n !== null);
-      // @ts-ignore
-      let tr = this._tr.replace(
+      const _tr = state.tr.setMeta('addToHistory', false);
+      let tr = _tr.replace(
         0,
-        this.prosemirrorView.state.doc.content.size,
+        state.doc.content.size,
         new PModel.Slice(PModel.Fragment.from(fragmentContent), 0, 0),
       );
-      restoreRelativeSelection(tr, this._beforeTransactionSelection, this);
+      try {
+        restoreRelativeSelection(tr, this._beforeTransactionSelection, this);
+      } catch (err) {
+        console.warn(err);
+      }
       tr = tr.setMeta(ySyncPluginKey, {
         isChangeOrigin: true,
         isUndoRedoOperation: transaction.origin instanceof Y.UndoManager,
@@ -647,8 +697,8 @@ export class ProsemirrorBinding {
   }
 
   _prosemirrorChanged(doc: Node) {
-    this.doc.transact(() => {
-      updateYFragment(this.doc, this.type, doc, this);
+    this.ydoc.transact(() => {
+      updateYFragment(this.ydoc, this.type, doc, this);
       this._beforeTransactionSelection = getRelativeSelection(
         this,
         this.prosemirrorView.state,
@@ -662,8 +712,8 @@ export class ProsemirrorBinding {
   initView(prosemirrorView: any) {
     if (this.prosemirrorView != null) this.destroy();
     this.prosemirrorView = prosemirrorView;
-    this.doc.on('beforeAllTransactions', this.beforeAllTransactions);
-    this.doc.on('afterAllTransactions', this.afterAllTransactions);
+    this.ydoc.on('beforeAllTransactions', this.beforeAllTransactions);
+    this.ydoc.on('afterAllTransactions', this.afterAllTransactions);
     this.type.observeDeep(this._observeFunction);
   }
 
@@ -671,8 +721,8 @@ export class ProsemirrorBinding {
     if (this.prosemirrorView == null) return;
     this.prosemirrorView = null;
     this.type.unobserveDeep(this._observeFunction);
-    this.doc.off('beforeAllTransactions', this.beforeAllTransactions);
-    this.doc.off('afterAllTransactions', this.afterAllTransactions);
+    this.ydoc.off('beforeAllTransactions', this.beforeAllTransactions);
+    this.ydoc.off('afterAllTransactions', this.afterAllTransactions);
   }
 }
 
@@ -680,11 +730,11 @@ const createNodeIfNotExists = (
   el: Y.XmlElement | Y.XmlHook,
   schema: PModel.Schema,
   meta: BindingMetadata,
-  snapshot: Y.Snapshot,
-  prevSnapshot: Y.Snapshot,
-  computeYChange: (arg0: 'removed' | 'added', arg1: Y.ID) => any,
+  snapshot?: Y.Snapshot,
+  prevSnapshot?: Y.Snapshot,
+  computeYChange?: (arg0: 'removed' | 'added', arg1: Y.ID) => any,
 ): PModel.Node | null => {
-  const node = /** @type {PModel.Node} */ (meta.mapping.get(el));
+  const node: PModel.Node = meta.mapping.get(el);
   if (node === undefined) {
     if (el instanceof Y.XmlElement) {
       return createNodeFromYElement(
@@ -706,11 +756,11 @@ export const createNodeFromYElement = (
   el: Y.XmlElement,
   schema: any,
   meta: BindingMetadata,
-  snapshot: Y.Snapshot,
-  prevSnapshot: Y.Snapshot,
-  computeYChange: (arg0: 'removed' | 'added', arg1: Y.ID) => any,
+  snapshot?: Y.Snapshot,
+  prevSnapshot?: Y.Snapshot,
+  computeYChange?: (arg0: 'removed' | 'added', arg1: Y.ID) => any,
 ): PModel.Node | null => {
-  const children = [];
+  const children: PModel.Node[] = [];
   const createChildren = (type: Y.XmlElement | Y.XmlText) => {
     if (type instanceof Y.XmlElement) {
       const n = createNodeIfNotExists(
@@ -999,11 +1049,8 @@ const computeChildEqualityFactor = (
 
 const ytextTrans = (ytext: Y.Text) => {
   let str = '';
-  /**
-   * @type {Y.Item|null}
-   */
-  let n = ytext._start;
-  const nAttrs = {};
+  let n: Y.Item | null = ytext._start;
+  const nAttrs: Record<string, null> = {};
   while (n !== null) {
     if (!n.deleted) {
       if (n.countable && n.content instanceof Y.ContentString) {
@@ -1064,8 +1111,11 @@ export const attributesToMarks = (
   return marks;
 };
 
-const marksToAttributes = (marks: Array<Mark>, meta: BindingMetadata) => {
-  const pattrs = {};
+const marksToAttributes = (
+  marks: Array<Mark>,
+  meta: BindingMetadata,
+): Record<string, PModel.Attrs> => {
+  const pattrs: Record<string, PModel.Attrs> = {};
   marks.forEach((mark) => {
     if (mark.type.name !== 'ychange') {
       const isOverlapping = map.setIfUndefined(
@@ -1092,9 +1142,9 @@ const marksToAttributes = (marks: Array<Mark>, meta: BindingMetadata) => {
  * @unstable
  */
 export const updateYFragment = (
-  y: { transact: Function },
+  y: { transact: TransactFunc<void> },
   yDomFragment: Y.XmlFragment,
-  pNode: any,
+  pNode: Node,
   meta: BindingMetadata,
 ) => {
   if (

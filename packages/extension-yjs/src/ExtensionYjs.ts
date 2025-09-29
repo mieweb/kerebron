@@ -1,5 +1,7 @@
 import type { Schema } from 'prosemirror-model';
 import type { Plugin } from 'prosemirror-state';
+import * as Y from 'yjs';
+
 import { type CoreEditor, Extension } from '@kerebron/editor';
 
 import type {
@@ -9,7 +11,7 @@ import type {
 import { ySyncPlugin } from './ySyncPlugin.ts';
 import { yCursorPlugin } from './yCursorPlugin.ts';
 import { redo, undo, yUndoPlugin } from './yUndoPlugin.ts';
-import { initProseMirrorDoc } from './lib.ts';
+import { initProseMirrorDoc } from './convertUtils.ts';
 
 export class ExtensionYjs extends Extension {
   name = 'yjs';
@@ -31,7 +33,7 @@ export class ExtensionYjs extends Extension {
   }
 
   override getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
-    const ydoc = this.config.ydoc;
+    const ydoc: Y.Doc = this.config.ydoc;
     const fragment = ydoc.getXmlFragment('prosemirror');
 
     const { mapping } = initProseMirrorDoc(fragment, schema);

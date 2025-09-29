@@ -93,26 +93,29 @@ export const yUndoPlugin = ({
     },
     view: (view) => {
       const ystate = ySyncPluginKey.getState(view.state);
-      const undoManager = yUndoPluginKey.getState(view.state).undoManager;
-      undoManager.on('stack-item-added', ({ stackItem }) => {
-        const binding = ystate.binding;
-        if (binding) {
-          stackItem.meta.set(
-            binding,
-            yUndoPluginKey.getState(view.state).prevSel,
-          );
-        }
-      });
-      undoManager.on('stack-item-popped', ({ stackItem }) => {
-        const binding = ystate.binding;
-        if (binding) {
-          binding.beforeTransactionSelection = stackItem.meta.get(binding) ||
-            binding.beforeTransactionSelection;
-        }
-      });
+      const yUndoPlugin = yUndoPluginKey.getState(view.state);
+      const undoManager = yUndoPlugin?.undoManager;
+      if (undoManager) {
+        undoManager.on('stack-item-added', ({ stackItem }) => {
+          const binding = ystate.binding;
+          if (binding) {
+            stackItem.meta.set(
+              binding,
+              yUndoPlugin.prevSel,
+            );
+          }
+        });
+        undoManager.on('stack-item-popped', ({ stackItem }) => {
+          const binding = ystate.binding;
+          if (binding) {
+            binding.beforeTransactionSelection = stackItem.meta.get(binding) ||
+              binding.beforeTransactionSelection;
+          }
+        });
+      }
       return {
         destroy: () => {
-          undoManager.destroy();
+          undoManager?.destroy();
         },
       };
     },
