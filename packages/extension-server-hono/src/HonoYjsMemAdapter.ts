@@ -28,13 +28,13 @@ export const getYDoc = (docname: string, gc = true): Y.Doc => {
   if (docs.has(docname)) {
     return docs.get(docname);
   }
-  const doc = new Y.Doc({ gc: gcEnabled });
-  doc.gc = gc;
+  const ydoc = new Y.Doc({ gc: gcEnabled });
+  ydoc.gc = gc;
   // if (persistence !== null) {
   //   persistence.bindState(docname, doc)
   // }
-  docs.set(docname, doc);
-  return doc;
+  docs.set(docname, ydoc);
+  return ydoc;
 };
 
 export class SocketContext {
@@ -157,7 +157,7 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
         // this.#forceReady();
       },
       onError: (error, wsContext: WSContext<WebSocket>) => {
-        console.error('onError', error);
+        console.warn(new Error('HonoYjsMemAdapter.onError', { cause: error }));
       },
       onMessage: (message, wsContext: WSContext<WebSocket>) => {
         if (!wsContext.raw) {
