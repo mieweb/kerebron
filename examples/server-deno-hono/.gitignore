@@ -1,0 +1,4 @@
+# zed symlinks ignore
+public/examples/browser-vanilla-code-editor/*
+public/examples/browser-vue/*
+public/examples/browser-vue-custom-element/*

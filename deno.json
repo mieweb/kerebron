@@ -14,10 +14,11 @@
     "packages/odt-wasm",
     "packages/test-utils",
 
-    "examples/example-html-generator",
-    "examples/example-server-hono",
-    "examples/example-vue",
-    "examples/example-vue-custom-element",
+    "examples/browser-vanilla-code-editor",
+    "examples/browser-vue",
+    "examples/browser-vue-custom-element",
+    "examples/cli-html-generator",
+    "examples/server-deno-hono",
     "examples/mcptest"
   ],
   "compilerOptions": {
