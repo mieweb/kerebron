@@ -79,9 +79,10 @@ export class NodeCodeMirror extends Node {
               }
             }
           }
-          return retVal.join('');
+          return new TextEncoder().encode(retVal.join(''));
         },
         toDoc: async (buffer: Uint8Array): Promise<Node> => {
+          const code = new TextDecoder().decode(buffer);
           const content = {
             'type': 'doc_code',
             'content': [
