@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import debug from 'npm:debug';
-import { build } from 'npm:esbuild';
+import { build, type Loader } from 'npm:esbuild';
 import fg from 'npm:fast-glob';
 import ts from 'npm:typescript';
 // Copyright 2021-2025 Prosopo (UK) Ltd.
@@ -17,15 +17,13 @@ import ts from 'npm:typescript';
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Plugin } from 'vite';
-
-type TsConfigPath = string;
+import type { Plugin } from 'npm:vite';
 
 type FilePath = string;
 
 type ExternalFile<Key extends PropertyKey, Value> = [Key, Value];
 
-type ExternalFiles = Record<FilePath, TsConfigPath>;
+type ExternalFiles = Record<FilePath, TsConfig>;
 
 type VitePluginWatchExternalOptions = {
   // path
@@ -45,14 +43,35 @@ const FILE_TYPES = ['ts', 'tsx'];
 
 const RELATIVE_PATH_REGEX = /(\.+\/)*/;
 
+type TsConfig = Record<string, any>;
+
 const getTsConfigFollowExtends = (
-  filename: string,
+  packagePath: string,
   rootDir?: string,
   // biome-ignore lint/suspicious/noExplicitAny: TODO replace any
-): { [key: string]: any } => {
+): TsConfig => {
   // biome-ignore lint/suspicious/noExplicitAny: TODO replace any
-  let extendedConfig: { [key: string]: any } = {};
-  const config = ts.readConfigFile(filename, ts.sys.readFile).config;
+  let extendedConfig: TsConfig = {};
+
+  const tsConfigPath = path.resolve(packagePath, 'tsconfig.json');
+
+  let config: TsConfig = {};
+
+  if (fs.existsSync(tsConfigPath)) {
+    config = ts.readConfigFile(tsConfigPath, ts.sys.readFile).config;
+  }
+  if (rootDir) {
+    const denoJsonPath = path.resolve(rootDir, 'deno.json');
+    if (fs.existsSync(denoJsonPath)) {
+      const json = JSON.parse(
+        new TextDecoder().decode(fs.readFileSync(denoJsonPath)),
+      );
+      config = {
+        compilerOptions: json.compilerOptions,
+      };
+    }
+  }
+
   if (config.extends) {
     const importPath = path.resolve(rootDir || '', config.extends);
     const newRootDir = path.dirname(importPath);
@@ -74,14 +93,17 @@ const getFilesAndTsConfigs = async (
   packageDir: string,
   fileTypes: string[],
   ignorePaths?: string[],
-): Promise<ExternalFile<FilePath, TsConfigPath>[]> => {
+): Promise<ExternalFile<FilePath, TsConfig>[]> => {
   const packagePath = path.resolve(workspacePath, packageDir);
-  const tsConfigPath = path.resolve(packagePath, 'tsconfig.json');
+
   // check whether the user has passed a glob
   const currentPackageGlob = currentPackage.includes('*')
     ? currentPackage
     : `${currentPackage}/**/*`;
-  const tsconfig = getTsConfigFollowExtends(tsConfigPath);
+  const tsconfig: TsConfig = getTsConfigFollowExtends(
+    packagePath,
+    workspacePath,
+  );
 
   const rootDir = tsconfig.compilerOptions.rootDir || './';
   const files = await fg(
@@ -95,7 +117,7 @@ const getFilesAndTsConfigs = async (
     },
   );
   // keep the tsconfig path beside each file to avoid looking for file ids in arrays later
-  return files.map((file: string) => [file, tsConfigPath]);
+  return files.map((file: string) => [file, tsconfig]);
 };
 
 const getExternalFileLists = async (
@@ -110,7 +132,7 @@ const getExternalFileLists = async (
   ).workspace;
   log(workspaces);
   const externalFiles: ExternalFiles = {};
-  const filesConfigs: ExternalFile<FilePath, TsConfigPath>[] = (
+  const filesConfigs: ExternalFile<FilePath, TsConfig>[] = (
     await Promise.all(
       workspaces.map(async (workspace: string) => {
         // get directories in each workspace
@@ -162,6 +184,8 @@ const getLoader = (fileExtension: string) => {
       return 'css';
     case '.json':
       return 'json';
+    case '.vue':
+      return 'vue';
     default:
       return 'ts';
   }
@@ -238,22 +262,28 @@ export const VitePluginWatchWorkspace = async (
     async handleHotUpdate({ file, server }) {
       log(`File', ${file}`);
 
-      const tsconfigPath = externalFiles[file];
-      if (!tsconfigPath) {
-        log(`tsconfigPath not found for file ${file}`);
+      const tsconfigRaw: TsConfig = externalFiles[file];
+      if (!tsconfigRaw) {
+        log(`tsconfig not found for file ${file}`);
         return;
       }
-      const tsconfig = getTsConfigFollowExtends(tsconfigPath);
       const fileExtension = path.extname(file);
       const loader = getLoader(fileExtension);
-      const outdir = getOutDir(file, tsconfig);
+
+      if (!tsconfigRaw.compilerOptions.rootDir) {
+        tsconfigRaw.compilerOptions.rootDir = config.currentPackage;
+      }
+      if (!tsconfigRaw.compilerOptions.outDir) {
+        tsconfigRaw.compilerOptions.outDir = config.currentPackage + '/dist';
+      }
+
+      const outdir = getOutDir(file, tsconfigRaw);
       const outfile = getOutFile(outdir, file, fileExtension);
-      log(`Outfile ${outfile}, loader ${loader}`);
       const buildResult = await build({
-        tsconfig: tsconfigPath,
+        tsconfigRaw,
         stdin: {
           contents: fs.readFileSync(file, 'utf8'),
-          loader,
+          loader: loader as Loader,
           resolveDir: path.dirname(file),
         },
         outfile,
