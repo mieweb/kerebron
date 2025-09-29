@@ -192,7 +192,7 @@ export class NodeCodeMirror extends Node {
         key: codeMirrorBlockKey,
         props: {
           nodeViews: {
-            [this.name]: codeMirrorBlockNodeView(settings),
+            [this.name]: codeMirrorBlockNodeView(settings, editor),
           },
         },
       });

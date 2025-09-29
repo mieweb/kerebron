@@ -9,6 +9,7 @@
     "packages/extension-odt",
     "packages/extension-yjs",
     "packages/extension-codemirror",
+    "packages/extension-dev-toolkit",
     "packages/extension-server-hono",
     "packages/odt-wasm",
     "packages/test-utils",
@@ -38,6 +39,7 @@
     "prosemirror-model": "npm:prosemirror-model@1.25.3",
     "prosemirror-transform": "npm:prosemirror-transform@1.10.4",
     "prosemirror-history": "npm:prosemirror-history@1.4.1",
+    "prosemirror-dev-toolkit": "npm:prosemirror-dev-toolkit@1.1.8",
 
     "markdown-it": "npm:markdown-it@14.1.0",
 

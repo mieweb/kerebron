@@ -51,6 +51,7 @@ import {
   yRemoteSelections,
   yRemoteSelectionsTheme,
 } from './y-remote-selections.ts';
+import { CoreEditor } from '@kerebron/editor';
 
 export const themeCallbacks: Array<(theme: string) => void> = [];
 
@@ -67,6 +68,7 @@ class CodeMirrorBlockNodeView implements NodeView {
     private view: EditorView,
     private getPos: boolean | (() => number),
     private settings: CodeBlockSettings,
+    private editor: CoreEditor,
   ) {
     this.updating = false;
     const dom = document.createElement('div');
@@ -179,6 +181,13 @@ class CodeMirrorBlockNodeView implements NodeView {
           ...closeBracketsKeymap,
           ...completionKeymap,
           indentWithTab,
+          {
+            key: 'Ctrl-`',
+            run: () => {
+              editor.chain().toggleDevToolkit().run();
+              return true;
+            },
+          },
         ]),
         ...(settings.theme ? settings.theme : []),
         themeConfig.of([]),
@@ -320,16 +329,17 @@ class CodeMirrorBlockNodeView implements NodeView {
 
 export const codeMirrorBlockNodeView: (
   settings: CodeBlockSettings,
+  editor: CoreEditor,
 ) => (
   pmNode: Node,
   view: PMEditorView,
   getPos: (() => number) | boolean,
-) => NodeView = (settings) => {
+) => NodeView = (settings, editor) => {
   return (
     pmNode: Node,
     view: PMEditorView,
     getPos: (() => number) | boolean,
   ) => {
-    return new CodeMirrorBlockNodeView(pmNode, view, getPos, settings);
+    return new CodeMirrorBlockNodeView(pmNode, view, getPos, settings, editor);
   };
 };

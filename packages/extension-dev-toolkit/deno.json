@@ -1,0 +1,8 @@
+{
+  "name": "@kerebron/extension-dev-toolkit",
+  "tasks": {},
+  "imports": {},
+  "exports": {
+    ".": "./src/mod.ts"
+  }
+}
