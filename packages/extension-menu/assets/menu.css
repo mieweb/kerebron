@@ -1,32 +1,77 @@
-/* Base menu and toolbar styles */
+/* Base menu and toolbar styles - Google Docs style with overflow */
 .kb-menu {
   margin: 0;
   line-height: 1;
-  font-size: var(--kb-text-sm);
-}
-
-/* Mobile-first toolbar */
-.kb-menu {
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   position: sticky;
   top: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--kb-space-xs);
-  padding: var(--kb-space-sm);
-  background: var(--kb-color-surface);
-  border-bottom: 1px solid var(--kb-color-border);
-  z-index: var(--kb-z-dropdown);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0;
+  padding: 4px 8px;
+  background: #f9f9f9;
+  border-bottom: 1px solid #dadce0;
+  z-index: var(--kb-z-dropdown, 1000);
+  overflow: visible;
 }
 
-.kb-menu::-webkit-scrollbar {
+/* Content host - main toolbar items */
+.kb-menu__content {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* Overflow toggle button (3-dot menu) */
+.kb-overflow-toggle {
+  display: none; /* shown by JS when needed */
+  min-width: 30px;
+  min-height: 30px;
+  padding: 6px;
+  border: none;
+  background: transparent;
+  color: #3c4043;
+  cursor: pointer;
+  border-radius: 2px;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.kb-overflow-toggle:hover {
+  background: rgba(60, 64, 67, 0.08);
+}
+
+.kb-overflow-toggle svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+/* Overflow row - second row for overflowed items */
+.kb-menu__overflow-row {
   display: none;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px;
+  background: #f9f9f9;
+  border-bottom: 1px solid #dadce0;
 }
 
-/* Mobile: bottom-anchored toolbar for one-handed use */
+.kb-menu--overflow-open .kb-menu__overflow-row {
+  display: flex;
+  position: absolute;
+}
+
+/* When narrow, show overflow toggle */
+.kb-menu--narrow .kb-overflow-toggle {
+  display: inline-flex;
+}
+
+/* Mobile: bottom-anchored toolbar */
 @media (max-width: 767px) {
   .kb-menu {
     position: fixed;
@@ -35,17 +80,33 @@
     right: 0;
     top: auto;
     border-bottom: none;
-    border-top: 1px solid var(--kb-color-border);
-    box-shadow: var(--kb-shadow-lg);
+    border-top: 1px solid #dadce0;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(249, 249, 249, 0.95);
+    padding: 8px;
+  }
+
+  .kb-menu__overflow-row {
+    position: fixed;
+    bottom: 60px;
+    left: 0;
+    right: 0;
+    border-top: 1px solid #dadce0;
+    border-bottom: none;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
   }
 
   /* Add bottom padding to editor content to prevent overlap */
-  .kb-component {
-    padding-bottom: calc(
-      var(--kb-touch-target-comfortable) + var(--kb-space-md) * 2
-    );
+  .kb-component,
+  .ProseMirror {
+    padding-bottom: 60px !important;
+  }
+
+  .kb-overflow-toggle {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px;
   }
 }
 
@@ -536,4 +597,189 @@
     color: white;
     border-color: var(--kb-color-primary);
   }
+}
+
+
+
+
+
+
+/* ===========================
+   Google-Docs–style toolbar for kb-menu
+   (main look + overflow behavior)
+   =========================== */
+
+:root {
+  --kb-bg: #fff;
+  --kb-fg: #1f1f1f;
+  --kb-subtle: #5f6368;
+  --kb-border: #e0e0e0;
+  --kb-hover: #f1f3f4;
+  --kb-active: #e8f0fe;
+  --kb-focus: #1a73e8;
+  --kb-shadow: 0 1px 2px rgba(0,0,0,.06), 0 2px 8px rgba(0,0,0,.08);
+
+  --kb-height: 48px;
+  --kb-btn-h: 34px;
+  --kb-radius: 10px;
+
+  --kb-gap: 8px;
+  --kb-icon: 18px;
+  --kb-font: 13px;
+}
+
+/* Keep light toolbar even for dark pages (like Google Docs) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --kb-bg: #ffffff;
+    --kb-fg: #1f1f1f;
+    --kb-subtle: #5f6368;
+    --kb-border: #e6e7e8;
+    --kb-hover: #f3f4f5;
+    --kb-active: #e8f0fe;
+  }
+}
+
+/* Wrapper around toolbar + editor (plugin inserts this) */
+.kb-menu__wrapper {
+  /* position: relative; */
+  z-index: 50;
+  padding: 8px 12px; /* spacing around the pill */
+  background: transparent;
+}
+
+/* The toolbar element */
+.kb-menu {
+  background: var(--kb-bg);
+  border: 1px solid var(--kb-border);
+  border-radius: var(--kb-radius);
+  box-shadow: var(--kb-shadow);
+
+  min-height: var(--kb-height);
+  display: flex;
+  align-items: center;
+  gap: var(--kb-gap);
+  padding: 0 8px;
+
+  container-type: inline-size;
+}
+
+/* Spacer used when floating */
+.kb-menu__spacer {
+  height: var(--kb-height);
+}
+
+/* Items and separators from renderGrouped */
+.kb-menu__item { display: inline-flex; align-items: center; }
+.kb-menu__separator {
+  width: 1px; height: 22px;
+  background: var(--kb-border);
+  flex: 0 0 auto;
+  margin: 0 2px;
+}
+
+/* Buttons */
+.kb-menu__button {
+  height: var(--kb-btn-h);
+  min-width: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--kb-fg);
+  font: 500 var(--kb-font)/1.2 system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.kb-menu__button svg,
+.kb-menu__button .kb-icon { width: var(--kb-icon); height: var(--kb-icon); fill: currentColor; }
+.kb-menu__button:hover { background: var(--kb-hover); }
+.kb-menu__button:focus-visible { outline: 2px solid var(--kb-focus); outline-offset: 2px; background: var(--kb-hover); }
+.kb-menu__button--active,
+.kb-menu__button[aria-pressed="true"] { background: var(--kb-active); border-color: #d2e3fc; }
+.kb-menu__button--disabled,
+.kb-menu__button[aria-disabled="true"] { opacity: .5; cursor: default; pointer-events: none; }
+.kb-menu__button--icon-only > span { display: none; }
+
+/* Dropdowns */
+.kb-dropdown { position: relative; display: inline-flex; align-items: center; }
+.kb-dropdown__label {
+  height: var(--kb-btn-h);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--kb-fg);
+  font: 500 var(--kb-font)/1.2 system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  cursor: pointer;
+}
+.kb-dropdown__label:hover { background: var(--kb-hover); }
+.kb-dropdown--open .kb-dropdown__label { background: var(--kb-active); border-color: #d2e3fc; }
+.kb-dropdown__menu {
+  position: absolute; top: calc(100% + 6px); left: 0;
+  min-width: 240px; max-height: 60vh; overflow: auto;
+  background: var(--kb-bg); color: var(--kb-fg);
+  border: 1px solid var(--kb-border); border-radius: 10px; box-shadow: var(--kb-shadow);
+  padding: 6px; display: grid; gap: 2px; z-index: 100;
+}
+.kb-dropdown__item { display: contents; }
+.kb-dropdown__item .kb-menu__button { justify-content: flex-start; width: 100%; border-radius: 8px; }
+
+/* Submenus */
+.kb-submenu { position: relative; display: inline-flex; align-items: center; }
+.kb-submenu__label {
+  height: var(--kb-btn-h);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+.kb-submenu__label:hover { background: var(--kb-hover); }
+.kb-submenu__content {
+  position: absolute; top: calc(100% + 6px); left: 0;
+  min-width: 220px; max-height: 60vh; overflow: auto;
+  background: var(--kb-bg); border: 1px solid var(--kb-border);
+  border-radius: 10px; box-shadow: var(--kb-shadow);
+  padding: 6px; display: none; z-index: 100;
+}
+.kb-submenu--open .kb-submenu__content { display: block; }
+
+/* --------- Overflow behavior --------- */
+
+/* Hidden until narrow AND there is overflow (JS toggles display) */
+.kb-overflow-toggle { display: none; }
+
+/* Second row container (hidden until toggled open) */
+.kb-menu__overflow-row {
+  display: none;
+  margin: 6px 12px 0; /* align with wrapper padding */
+  padding: 6px;
+  background: var(--kb-bg);
+  border: 1px solid var(--kb-border);
+  border-radius: 10px;
+  box-shadow: var(--kb-shadow);
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* When narrow, show 3-dots (JS may still hide if empty) */
+.kb-menu--narrow .kb-overflow-toggle { display: inline-flex; }
+
+/* When toggled open, show the overflow row */
+.kb-menu--overflow-open .kb-menu__overflow-row { display: flex; }
+
+/* On very small/mobile, put overflow row ABOVE the main bar */
+@media (max-width: 600px) {
+  .kb-menu__wrapper { display: flex; flex-direction: column; }
+  .kb-menu--overflow-open .kb-menu__overflow-row { order: -1; }
 }
