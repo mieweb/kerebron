@@ -27,6 +27,8 @@ export {
   wrapItem,
 } from './menu.ts';
 
+export { ExtensionCustomMenu } from './CustomMenu.ts';
+
 function canInsert(state: EditorState, nodeType: NodeType) {
   let $from = state.selection.$from;
   for (let d = $from.depth; d >= 0; d--) {
