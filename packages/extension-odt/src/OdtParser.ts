@@ -306,23 +306,20 @@ export class OdtParser {
         // },
       },
       'frame': (ctx: OdtStashContext, odtElement: any) => {
-        // custom: (state, odtElement) => {
-        if (odtElement.object && odtElement.object['@href']) { // TODO MathML
-          // const fileName= drawFrame.object.href.replace(/\s/g, '_').replace(/^\.\//, '') + '.xml';
-          // try {
-          //   const mathMl = this.xmlMap[fileName];
-          //   if (mathMl && mathMl.indexOf('<math ') > -1) {
-          //     const node = this.chunks.createNode('MATHML');
-          //     const latex = MathMLToLaTeX.convert(mathMl);
-          //     this.chunks.appendText(node, latex);
-          //     this.chunks.append(currentTagNode, node);
-          //   }
-          // } catch (err) {
-          //   console.warn(err);
-          // }
+        if (odtElement.object && odtElement.object['@href']) {
+          const fullPath = odtElement.object['@href'].replace(/^\.\//, '') +
+            '/content.xml';
+          if (files[fullPath]) {
+            const content = new TextDecoder().decode(files[fullPath]);
+            ctx.openNode();
+            ctx.closeNode('math', {
+              type: 'mathml',
+              content,
+            });
+            return;
+          }
         }
         if (odtElement.image && odtElement.image['@href']) { // TODO links rewrite
-          // const nodeType = this.schema.nodeType('image');
           const alt = odtElement.description?.value || '';
 
           ctx.openNode();
@@ -331,7 +328,6 @@ export class OdtParser {
             alt,
           });
         }
-        // },
       },
       'rect': () => {
         // ignore: true,

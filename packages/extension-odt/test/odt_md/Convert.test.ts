@@ -1,6 +1,7 @@
 import { assertEquals } from '@std/assert';
 
-import { DOMParser } from 'jsr:@b-fuze/deno-dom';
+// import { DOMParser } from 'jsr:@b-fuze/deno-dom'; // No xml support (mathML) https://github.com/b-fuze/deno-dom/issues?q=is%3Aissue%20state%3Aopen%20xml
+import { DOMParser, parseHTML } from 'npm:linkedom';
 import { XMLSerializer } from 'npm:xmldom';
 
 import { CoreEditor } from '@kerebron/editor';
