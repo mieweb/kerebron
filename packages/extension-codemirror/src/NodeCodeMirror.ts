@@ -200,6 +200,7 @@ export class NodeCodeMirror extends Node {
 
     return [
       codeMirrorBlockPlugin({
+        lspTransport: this.config.lspTransport,
         provider: this.config.provider,
         languageWhitelist: this.config.languageWhitelist || LANGS,
         shadowRoot: this.config.shadowRoot,

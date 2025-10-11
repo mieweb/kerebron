@@ -9,6 +9,7 @@
     "packages/extension-markdown",
     "packages/extension-odt",
     "packages/extension-yjs",
+    "packages/extension-lsp",
     "packages/extension-codemirror",
     "packages/extension-autocomplete",
     "packages/extension-dev-toolkit",
@@ -51,6 +52,11 @@
     "lib0": "npm:lib0@0.2.109",
     "orderedmap": "npm:orderedmap@latest",
 
+    "tree-sitter": "npm:tree-sitter@0.25.0",
+
+    "vscode-languageserver-protocol": "npm:vscode-languageserver-protocol",
+    "vscode-languageserver-textdocument": "npm:vscode-languageserver-textdocument",
+
     "@codemirror/state": "npm:@codemirror/state@6.5.2",
     "@codemirror/view": "npm:@codemirror/view@6.38.1",
     "@codemirror/commands": "npm:@codemirror/commands@6.8.1",
@@ -58,6 +64,7 @@
     "@codemirror/language": "npm:@codemirror/language@6.11.0",
     "@codemirror/autocomplete": "npm:@codemirror/autocomplete@6.18.6",
     "@codemirror/legacy-modes": "npm:@codemirror/legacy-modes@6.5.0",
+    "@codemirror/lsp-client": "npm:@codemirror/lsp-client@6.1.2",
 
     "@codemirror/lang-cpp": "npm:@codemirror/lang-cpp@latest",
     "@codemirror/lang-css": "npm:@codemirror/lang-css@latest",

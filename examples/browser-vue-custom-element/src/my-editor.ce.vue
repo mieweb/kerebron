@@ -16,7 +16,7 @@
   </div>
 </template>
 <script lang="ts">
-import { CoreEditor } from '@kerebron/editor';
+import { CoreEditor, type TextRange } from '@kerebron/editor';
 import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionOdt } from '@kerebron/extension-odt';
@@ -37,6 +37,9 @@ import {
 import { ExtensionYjs } from '@kerebron/extension-yjs';
 import { userColors } from '@kerebron/extension-yjs/userColors';
 import { NodeCodeMirror } from '@kerebron/extension-codemirror';
+
+import { simpleLspWebSocketTransport } from '@kerebron/extension-codemirror/lsp';
+import { ExtensionLsp } from '@kerebron/extension-lsp';
 
 import * as Y from 'yjs';
 import * as random from 'lib0/random';
@@ -106,6 +109,8 @@ export default {
 
       this.$refs.editor.innerHTML = '';
 
+      const lspTransport = await simpleLspWebSocketTransport(protocol + '//' + globalThis.location.host + '/lsp');
+
       const autocomplete = new ExtensionAutocomplete({
         getItems(query: string) {
           console.log('query', query);
@@ -149,6 +154,7 @@ export default {
           new ExtensionOdt(),
           new ExtensionTables(),
           new ExtensionYjs({ ydoc, provider: wsProvider }),
+          new ExtensionLsp({ lspTransport }),
           new ExtensionDevToolkit(),
           new NodeCodeMirror({
             theme: [dracula],
