@@ -29,13 +29,18 @@ export class SmartOutput<K> {
 
   log(text: string, item: K) {
     this.chunks.push(text);
+
+    if (text.length === 0) {
+      return;
+    }
+    const lines = text.split('\n');
+
     this.metas.push({
       colPos: this._colPos,
       rowPos: this._rowPos,
       item,
     });
 
-    const lines = text.split('\n');
     if (lines.length === 1) {
       this._colPos += lines[lines.length - 1].length;
     } else {
@@ -76,6 +81,12 @@ export class SmartOutput<K> {
 
     let lastRow = -1;
     let lastCol = -1;
+
+    let prevSourceNo = 0;
+    let prevSourceRowPos = 0;
+    let prevSourceColPos = 0;
+
+    // console.log('this.metas', this.metas);
     for (const meta of this.metas) {
       while (meta.rowPos >= mappingRows.length) {
         mappingRows.push([]);
@@ -84,14 +95,19 @@ export class SmartOutput<K> {
       if (lastRow != meta.rowPos || lastCol != meta.colPos) {
         const currentRow = mappingRows[meta.rowPos];
 
+        let prevColPos = 0;
         const mapping = mapper(meta.item, meta.rowPos, meta.colPos);
         if (mapping) {
           currentRow.push([
-            meta.colPos,
-            mapping.sourceNo,
-            mapping.sourceRowPos,
-            mapping.sourceColPos,
+            meta.colPos - prevColPos,
+            mapping.sourceNo - prevSourceNo,
+            mapping.sourceRowPos - prevSourceRowPos,
+            mapping.sourceColPos - prevSourceColPos,
           ]);
+          prevColPos = meta.colPos;
+          prevSourceNo = mapping.sourceNo;
+          prevSourceRowPos = mapping.sourceRowPos;
+          prevSourceColPos = mapping.sourceColPos;
         }
       }
 
@@ -107,14 +123,6 @@ export class SmartOutput<K> {
           .join(',')
       )
       .join(';');
-
-    mappingRows.forEach((row, rowNo) => {
-      // console.log('g', rowNo, row);
-      row.forEach((group) => {
-        const enc = encode(group);
-        // console.log('g', rowNo, group, enc, decode(enc));
-      });
-    });
 
     return {
       version: 3,
@@ -171,11 +179,8 @@ function encodeVLQ(input: number | number[]): string {
   return result;
 }
 
-/** @type {Record<string, number>} */
-let char_to_integer = {};
-
-/** @type {Record<number, string>} */
-let integer_to_char = {};
+const char_to_integer: Record<string, number> = {};
+const integer_to_char: Record<number, string> = {};
 
 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
   .split('')
@@ -184,10 +189,8 @@ let integer_to_char = {};
     integer_to_char[i] = char;
   });
 
-/** @param {string} string */
-export function decode(string) {
-  /** @type {number[]} */
-  let result = [];
+export function decode(string: string) {
+  let result: number[] = [];
 
   let shift = 0;
   let value = 0;
@@ -224,8 +227,7 @@ export function decode(string) {
   return result;
 }
 
-/** @param {number | number[]} value */
-export function encode(value) {
+export function encode(value: number | number[]) {
   if (typeof value === 'number') {
     return encode_integer(value);
   }
@@ -238,7 +240,6 @@ export function encode(value) {
   return result;
 }
 
-/** @param {number} num */
 function encode_integer(num: number) {
   let result = '';
 
