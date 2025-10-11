@@ -52,6 +52,7 @@ import {
   yRemoteSelectionsTheme,
 } from './y-remote-selections.ts';
 import { CoreEditor } from '@kerebron/editor';
+import { languageServerExtensions, LSPClient } from '@codemirror/lsp-client';
 
 export const themeCallbacks: Array<(theme: string) => void> = [];
 
@@ -94,105 +95,113 @@ class CodeMirrorBlockNodeView implements NodeView {
       return plugins;
     };
 
+    const extensions = [
+      EditorState.readOnly.of(settings.readOnly),
+      CodeMirror.editable.of(!settings.readOnly),
+      lineNumbers(),
+      highlightActiveLineGutter(),
+      foldGutter(),
+      bracketMatching(),
+      closeBrackets(),
+      highlightSelectionMatches(),
+      autocompletion(),
+      rectangularSelection(),
+      drawSelection({ cursorBlinkRate: 1000 }), // broken focus
+      EditorState.allowMultipleSelections.of(true),
+      highlightActiveLine(),
+      syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+      this.languageConf.of([]),
+      indentOnInput(),
+      keymap.of([
+        { key: 'Mod-d', run: selectNextOccurrence, preventDefault: true },
+        {
+          key: 'ArrowUp',
+          run: (cmView) => maybeEscape('line', -1, cmView, view, getPos),
+        },
+        {
+          key: 'ArrowLeft',
+          run: (cmView) => maybeEscape('char', -1, cmView, view, getPos),
+        },
+        {
+          key: 'ArrowDown',
+          run: (cmView) => maybeEscape('line', 1, cmView, view, getPos),
+        },
+        {
+          key: 'ArrowRight',
+          run: (cmView) => maybeEscape('char', 1, cmView, view, getPos),
+        },
+        {
+          key: 'Ctrl-Enter',
+          run: () => {
+            if (!exitCode(view.state, view.dispatch)) return false;
+            view.focus();
+            return true;
+          },
+        },
+        {
+          key: 'Mod-z',
+          run: () => settings.undo?.(view.state, view.dispatch) || true,
+          shift: () => settings.redo?.(view.state, view.dispatch) || true,
+        },
+        {
+          key: 'Mod-y',
+          run: () => settings.redo?.(view.state, view.dispatch) || true,
+        },
+        { key: 'Backspace', run: (cmView) => backspaceHandler(view, cmView) },
+        {
+          key: 'Mod-Backspace',
+          run: (cmView) => backspaceHandler(view, cmView),
+        },
+        {
+          key: 'Mod-a',
+          run: () => {
+            const result = selectAll(view.state, view.dispatch);
+            view.focus();
+            return result;
+          },
+        },
+        {
+          key: 'Enter',
+          run: (cmView) => {
+            const sel = cmView.state.selection.main;
+            if (
+              cmView.state.doc.line(cmView.state.doc.lines).text === '' &&
+              sel.from === sel.to &&
+              sel.from === cmView.state.doc.length
+            ) {
+              exitCode(view.state, view.dispatch);
+              view.focus();
+              return true;
+            }
+            return false;
+          },
+        },
+        ...defaultKeymap,
+        ...foldKeymap,
+        ...closeBracketsKeymap,
+        ...completionKeymap,
+        indentWithTab,
+        {
+          key: 'Ctrl-`',
+          run: () => {
+            editor.chain().toggleDevToolkit().run();
+            return true;
+          },
+        },
+      ]),
+      ...(settings.theme ? settings.theme : []),
+      themeConfig.of([]),
+      yCollab(),
+    ];
+
+    if (settings.lspTransport) {
+      const client = new LSPClient({ extensions: languageServerExtensions() })
+        .connect(settings.lspTransport);
+      extensions.push(client.plugin('file:///some/file.ts'));
+    }
+
     const state = EditorState.create({
-      extensions: [
-        EditorState.readOnly.of(settings.readOnly),
-        CodeMirror.editable.of(!settings.readOnly),
-        lineNumbers(),
-        highlightActiveLineGutter(),
-        foldGutter(),
-        bracketMatching(),
-        closeBrackets(),
-        highlightSelectionMatches(),
-        autocompletion(),
-        rectangularSelection(),
-        drawSelection({ cursorBlinkRate: 1000 }), // broken focus
-        EditorState.allowMultipleSelections.of(true),
-        highlightActiveLine(),
-        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-        this.languageConf.of([]),
-        indentOnInput(),
-        keymap.of([
-          { key: 'Mod-d', run: selectNextOccurrence, preventDefault: true },
-          {
-            key: 'ArrowUp',
-            run: (cmView) => maybeEscape('line', -1, cmView, view, getPos),
-          },
-          {
-            key: 'ArrowLeft',
-            run: (cmView) => maybeEscape('char', -1, cmView, view, getPos),
-          },
-          {
-            key: 'ArrowDown',
-            run: (cmView) => maybeEscape('line', 1, cmView, view, getPos),
-          },
-          {
-            key: 'ArrowRight',
-            run: (cmView) => maybeEscape('char', 1, cmView, view, getPos),
-          },
-          {
-            key: 'Ctrl-Enter',
-            run: () => {
-              if (!exitCode(view.state, view.dispatch)) return false;
-              view.focus();
-              return true;
-            },
-          },
-          {
-            key: 'Mod-z',
-            run: () => settings.undo?.(view.state, view.dispatch) || true,
-            shift: () => settings.redo?.(view.state, view.dispatch) || true,
-          },
-          {
-            key: 'Mod-y',
-            run: () => settings.redo?.(view.state, view.dispatch) || true,
-          },
-          { key: 'Backspace', run: (cmView) => backspaceHandler(view, cmView) },
-          {
-            key: 'Mod-Backspace',
-            run: (cmView) => backspaceHandler(view, cmView),
-          },
-          {
-            key: 'Mod-a',
-            run: () => {
-              const result = selectAll(view.state, view.dispatch);
-              view.focus();
-              return result;
-            },
-          },
-          {
-            key: 'Enter',
-            run: (cmView) => {
-              const sel = cmView.state.selection.main;
-              if (
-                cmView.state.doc.line(cmView.state.doc.lines).text === '' &&
-                sel.from === sel.to &&
-                sel.from === cmView.state.doc.length
-              ) {
-                exitCode(view.state, view.dispatch);
-                view.focus();
-                return true;
-              }
-              return false;
-            },
-          },
-          ...defaultKeymap,
-          ...foldKeymap,
-          ...closeBracketsKeymap,
-          ...completionKeymap,
-          indentWithTab,
-          {
-            key: 'Ctrl-`',
-            run: () => {
-              editor.chain().toggleDevToolkit().run();
-              return true;
-            },
-          },
-        ]),
-        ...(settings.theme ? settings.theme : []),
-        themeConfig.of([]),
-        yCollab(),
-      ],
+      extensions,
       doc: node.textContent,
     });
 

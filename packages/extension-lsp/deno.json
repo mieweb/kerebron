@@ -1,0 +1,6 @@
+{
+  "name": "@kerebron/extension-lsp",
+  "tasks": {},
+  "imports": {},
+  "exports": "./src/ExtensionLsp.ts"
+}

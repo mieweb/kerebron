@@ -4,6 +4,7 @@ import { Node } from 'prosemirror-model';
 import { EditorView } from 'prosemirror-view';
 import { LanguageSupport } from '@codemirror/language';
 import { Extension } from '@codemirror/state';
+import { Transport } from '@codemirror/lsp-client';
 
 export type LanguageLoaders = Record<string, () => Promise<LanguageSupport>>;
 
@@ -52,4 +53,5 @@ export type CodeBlockSettings = {
   getCurrentTheme?: () => string;
   codeBlockName?: string;
   shadowRoot?: ShadowRoot;
+  lspTransport?: Transport;
 };

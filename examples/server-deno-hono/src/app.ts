@@ -5,12 +5,14 @@ import { cors } from 'hono/cors';
 
 import { HonoYjsMemAdapter } from '@kerebron/extension-server-hono/HonoYjsMemAdapter';
 import { proxyWs } from './proxyWs.ts';
+import { LspWsAdapter } from './lsp-server.ts';
 
 const __dirname = import.meta.dirname;
 
 const app = new Hono();
 
 const yjsAdapter = new HonoYjsMemAdapter();
+const lspWsAdapter = new LspWsAdapter();
 
 export class Server {
   public app;
@@ -33,6 +35,13 @@ export class Server {
       '/yjs/:room',
       upgradeWebSocket((c) => {
         return yjsAdapter.upgradeWebSocket(c.req.param('room'));
+      }),
+    );
+
+    this.app.get(
+      '/lsp',
+      upgradeWebSocket((c) => {
+        return lspWsAdapter.upgradeWebSocket();
       }),
     );
 

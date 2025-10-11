@@ -34,6 +34,9 @@ import { ExtensionYjs } from '@kerebron/extension-yjs';
 import { userColors } from '@kerebron/extension-yjs/userColors';
 import { NodeCodeMirror } from '@kerebron/extension-codemirror';
 
+import { simpleLspWebSocketTransport } from '@kerebron/extension-codemirror/lsp';
+import { ExtensionLsp } from '@kerebron/extension-lsp';
+
 import * as Y from 'yjs';
 import * as random from 'lib0/random';
 import { WebsocketProvider } from 'y-websocket';
@@ -102,6 +105,8 @@ export default {
 
       this.$refs.editor.innerHTML = '';
 
+      const lspTransport = await simpleLspWebSocketTransport(protocol + '//' + globalThis.location.host + '/lsp');
+
       this.editor = new CoreEditor({
         element: this.$refs.editor,
         extensions: [
@@ -128,6 +133,7 @@ export default {
           new ExtensionOdt(),
           new ExtensionTables(),
           new ExtensionYjs({ ydoc, provider: wsProvider }),
+          new ExtensionLsp({ lspTransport }),
           new ExtensionDevToolkit(),
           new NodeCodeMirror({
             theme: [dracula],
