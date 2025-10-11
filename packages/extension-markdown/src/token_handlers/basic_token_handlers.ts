@@ -69,7 +69,7 @@ function getHeaderTokensHandlers(): Record<string, Array<TokenHandler>> {
     .filter((entry) => ['heading_close'].includes(entry[0]));
 
   const entriesInline = Object.entries(getInlineTokensHandlers())
-    .filter((entry) => ['text'].includes(entry[0]));
+    .filter((entry) => ['text', 'link_open', 'link_close'].includes(entry[0]));
 
   return {
     ...Object.fromEntries(entriesInline),

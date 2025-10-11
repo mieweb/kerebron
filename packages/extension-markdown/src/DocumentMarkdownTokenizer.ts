@@ -18,9 +18,7 @@ type DocumentMarkdownTokenizerSpec = {
 const blankMark: MarkTokenizerSpec = { open: '', close: '', mixable: true };
 const blankNode: DocumentMarkdownTokenizerSpec = { open: '', close: '' };
 
-export class DocumentMarkdownTokenizer {
-  private tokens: Array<Token> = [];
-
+class InlineTokenizer {
   constructor(
     readonly nodes: {
       [node: string]: (
@@ -29,6 +27,7 @@ export class DocumentMarkdownTokenizer {
       ) => DocumentMarkdownTokenizerSpec;
     },
     readonly marks: { [mark: string]: MarkTokenizerSpec },
+    readonly options: { hardBreakNodeName: string },
   ) {
   }
 
@@ -52,14 +51,14 @@ export class DocumentMarkdownTokenizer {
 
     const retVal: Array<Token> = [];
 
-    let progress = (node: Node | null, offset: number, index: number) => {
+    const progress = (node: Node, offset: number, index: number) => {
       let marks = node ? node.marks : [];
 
       // Remove marks from `hard_break` that are the last node inside
       // that mark to prevent parser edge cases with new lines just
       // before closing marks.
       // TODO:
-      if (false && node && node.type.name === this.options.hardBreakNodeName) {
+      if (node && node.type.name === this.options.hardBreakNodeName) {
         marks = marks.filter((m) => {
           if (index + 1 == parent.childCount) return false;
           let next = parent.child(index + 1);
@@ -73,7 +72,7 @@ export class DocumentMarkdownTokenizer {
       // If whitespace has to be expelled from the node, adjust
       // leading and trailing accordingly.
       if (
-        node && node.isText && marks.some((mark) => {
+        node.isText && marks.some((mark) => {
           let info = this.getMark(mark.type.name);
           return info && info.expelEnclosingWhitespace && !mark.isInSet(active);
         })
@@ -86,7 +85,7 @@ export class DocumentMarkdownTokenizer {
         }
       }
       if (
-        node && node.isText && marks.some((mark) => {
+        node.isText && marks.some((mark) => {
           let info = this.getMark(mark.type.name);
           return info && info.expelEnclosingWhitespace &&
             (index == parent.childCount - 1 ||
@@ -143,67 +142,79 @@ export class DocumentMarkdownTokenizer {
       // Output any previously expelled trailing whitespace outside the marks
       if (leading) {
         const token = new Token('text', '', 0);
+        token.meta = 'leading';
         token.content = leading;
         retVal.push(token);
       }
 
       // Open the marks that need to be opened
-      if (node) {
-        while (active.length < len) {
-          let add = marks[active.length];
-          active.push(add);
-          this.markString(add, true, retVal);
-          atBlockStart = false;
-        }
-
-        // Render the node. Special case code marks, since their content
-        // may not be escaped.
-        if (noEsc && node.isText) {
-          this.markString(inner!, true, retVal);
-          if (node.text) {
-            const token = new Token('text', '', 0);
-            token.content = node.text;
-            retVal.push(token);
-          }
-          this.markString(inner!, false, retVal);
-        } else {
-          const nodeSpec = this.nodes[node.type.name]
-            ? this.nodes[node.type.name](node, currentPos)
-            : blankNode;
-
-          let tag = '';
-          if (node.type.spec.toDOM) {
-            const dom = node.type.spec.toDOM(node);
-            if (Array.isArray(dom) && dom.length > 0) {
-              tag = dom[0];
-            }
-          }
-
-          if (nodeSpec.selfClose) {
-            if (typeof nodeSpec.selfClose === 'string') {
-              const token = new Token(nodeSpec.selfClose, tag, 0);
-              token.level = level;
-              token.map = [currentPos, currentPos + 1];
-              retVal.push(token);
-            } else {
-              const token = nodeSpec.selfClose(node);
-              token.level = level;
-              token.map = [currentPos, currentPos + 1];
-              retVal.push(token);
-            }
-          }
-        }
+      while (active.length < len) {
+        let add = marks[active.length];
+        active.push(add);
+        this.markString(add, true, retVal);
         atBlockStart = false;
       }
 
-      if (node?.isText && node.nodeSize > 0) {
+      // Render the node. Special case code marks, since their content
+      // may not be escaped.
+      if (noEsc && node.isText) {
+        this.markString(inner!, true, retVal);
+        if (node.text) {
+          const token = new Token('text', '', 0);
+          token.meta = 'noEscText';
+          token.content = node.text;
+          retVal.push(token);
+        }
+        this.markString(inner!, false, retVal);
+      } else {
+        const nodeSpec = this.nodes[node.type.name]
+          ? this.nodes[node.type.name](node, currentPos)
+          : blankNode;
+
+        let tag = '';
+        if (node.type.spec.toDOM) {
+          const dom = node.type.spec.toDOM(node);
+          if (Array.isArray(dom) && dom.length > 0) {
+            tag = dom[0];
+          }
+        }
+
+        if (nodeSpec.selfClose) {
+          if (typeof nodeSpec.selfClose === 'string') {
+            const token = new Token(nodeSpec.selfClose, tag, 0);
+            token.level = level;
+            token.map = [currentPos, currentPos + 1];
+            retVal.push(token);
+          } else {
+            const token = nodeSpec.selfClose(node);
+            token.level = level;
+            token.map = [currentPos, currentPos + 1];
+            retVal.push(token);
+          }
+        }
+      }
+      atBlockStart = false;
+
+      if (node.isText && node.nodeSize > 0) {
         atBlockStart = false;
       }
     };
 
-    parent.forEach(progress);
-    progress(null, 0, parent.childCount);
-    atBlockStart = false;
+    parent.forEach((child, offset, index) => progress(child, offset, index));
+
+    // Close the marks that need to be closed
+    while (active.length > 0) {
+      const x = active.pop()!;
+      this.markString(x, false, retVal);
+    }
+
+    // Output any previously expelled trailing whitespace outside the marks
+    if (trailing) {
+      const token = new Token('text', '', 0);
+      token.meta = 'trailing';
+      token.content = trailing;
+      retVal.push(token);
+    }
 
     return retVal;
   }
@@ -213,7 +224,10 @@ export class DocumentMarkdownTokenizer {
     let value = open ? info.open : info.close;
 
     if (!value) {
-      throw new Error('Invalid mark type: ' + mark.type.name);
+      throw new Error(
+        'Invalid mark type: ' + mark.type.name + ', available types: ' +
+          Object.keys(this.marks),
+      );
     }
 
     const token = typeof value == 'string' ? value : value(mark);
@@ -228,13 +242,35 @@ export class DocumentMarkdownTokenizer {
 
     if (typeof value === 'string') {
       const token = new Token(value, tag, open ? 1 : -1);
+      token.meta = 'markString';
       tokens.push(token);
     } else {
       const token = value(mark);
       if (token) {
+        token.meta = token.meta || 'markString()';
         tokens.push(token);
       }
     }
+  }
+}
+
+export class DocumentMarkdownTokenizer {
+  private tokens: Array<Token> = [];
+  inlineTokenizer: InlineTokenizer;
+
+  constructor(
+    readonly nodes: {
+      [node: string]: (
+        node: Node,
+        index: number,
+      ) => DocumentMarkdownTokenizerSpec;
+    },
+    readonly marks: { [mark: string]: MarkTokenizerSpec },
+    readonly options: { hardBreakNodeName: string } = {
+      hardBreakNodeName: 'hard_break',
+    },
+  ) {
+    this.inlineTokenizer = new InlineTokenizer(nodes, marks, options);
   }
 
   iterateNode(node: Node, currentPos = 0, level = -1) {
@@ -253,6 +289,8 @@ export class DocumentMarkdownTokenizer {
     if (nodeSpec.open) {
       if (typeof nodeSpec.open === 'string') {
         const token = new Token(nodeSpec.open, tag, 1);
+        token.level = level;
+        token.map = [currentPos, currentPos + 1];
         this.tokens.push(token);
       } else {
         const token = nodeSpec.open(node);
@@ -282,7 +320,11 @@ export class DocumentMarkdownTokenizer {
       token.map = [currentPos, currentPos + 1];
       this.tokens.push(token);
 
-      token.children = this.renderInline(node, currentPos + 1, level + 1);
+      token.children = this.inlineTokenizer.renderInline(
+        node,
+        currentPos + 1,
+        level + 1,
+      );
     } else if (node.childCount > 0) {
       node.forEach((child, offset) => {
         this.iterateNode(child, currentPos + offset + 1, level + 1);
@@ -292,11 +334,15 @@ export class DocumentMarkdownTokenizer {
     if (nodeSpec.close) {
       if (typeof nodeSpec.close === 'string') {
         const token = new Token(nodeSpec.close, tag, -1);
+        token.meta = 'nodeSpec.close';
         token.level = level;
+        token.map = [currentPos, currentPos + 1];
         this.tokens.push(token);
       } else {
         const token = nodeSpec.close(node);
+        token.meta = 'nodeSpec.close()';
         token.level = level;
+        token.map = [currentPos, currentPos + 1];
         this.tokens.push(token);
       }
     }

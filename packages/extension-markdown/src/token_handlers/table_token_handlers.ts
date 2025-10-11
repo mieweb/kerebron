@@ -191,7 +191,7 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
 
     ctx.stash();
     ctx.current.meta['html_mode'] = true;
-    ctx.current.log('<table>\n');
+    ctx.current.log('<table>\n', token);
     ctx.current.handlers = getHtmlTableTokensHandlers();
   };
 
@@ -221,7 +221,7 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
     'table_close': [
       (token: Token, ctx: ContextStash) => {
         const tableBuilder: TableBuilder = ctx.current.meta['table_builder'];
-        ctx.current.log(tableBuilder.render());
+        ctx.current.log(tableBuilder.render(), token);
         ctx.unstash();
       },
     ],

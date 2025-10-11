@@ -48,7 +48,7 @@ Deno.test('md test 4', async () => {
 
   const serializer = new MarkdownSerializer();
 
-  const tokens = serializer.md.parse(sampleMarkdown, {});
+  const tokens = serializer.markdownIt.parse(sampleMarkdown, {});
   const output = await serializer.serialize(tokens);
   const serializedMarkdown = output.toString();
 

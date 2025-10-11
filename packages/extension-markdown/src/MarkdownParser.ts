@@ -79,6 +79,7 @@ class MarkdownParseState {
       let tok = toks[i];
       let handler = this.tokenHandlers[tok.type];
       if (!handler) {
+        console.log(Object.keys(this.tokenHandlers));
         throw new Error(
           'Token type `' + tok.type + '` not supported by Markdown parser',
         );
@@ -123,7 +124,7 @@ function attrs(spec: ParseSpec, token: Token, tokens: Token[], i: number) {
 // Code content is represented as a single token with a `content`
 // property in Markdown-it.
 function noCloseToken(spec: ParseSpec, type: string) {
-  return spec.noCloseToken || type == 'code_inline' || type == 'code_block' ||
+  return spec.noCloseToken || type == 'code_block' ||
     type == 'fence';
 }
 
@@ -231,7 +232,7 @@ export interface ParseSpec {
   /// Indicates that the [markdown-it
   /// token](https://markdown-it.github.io/markdown-it/#Token) has
   /// no `_open` or `_close` for the nodes. This defaults to `true`
-  /// for `code_inline`, `code_block` and `fence`.
+  /// for `code_block` and `fence`.
   noCloseToken?: boolean;
 
   /// When true, ignore content for the matched token.

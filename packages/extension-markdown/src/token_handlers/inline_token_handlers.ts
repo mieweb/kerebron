@@ -76,6 +76,13 @@ function getLinkTokensHandlers(): Record<string, Array<TokenHandler>> {
         }
       },
     ],
+
+    default: [
+      (token: Token, ctx: ContextStash) => {
+        // Ignore other stuff
+        // TODO: images?
+      },
+    ],
   };
 }
 
@@ -128,9 +135,26 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
       },
     ],
 
-    'code_inline': [
+    'code_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('`' + token.content + '`', token);
+        ctx.current.log('`', token);
+      },
+    ],
+    'code_close': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log('`', token);
+      },
+    ],
+
+    // 'code_inline': [
+    //   (token: Token, ctx: ContextStash) => {
+    //     ctx.current.log('`' + token.content + '`', token);
+    //   },
+    // ],
+    'math': [
+      (token: Token, ctx: ContextStash) => {
+        throw new Error('mmmmmmaaa');
+        ctx.current.log('$' + token.content + '$', token);
       },
     ],
     'hardbreak': [
@@ -251,14 +275,27 @@ export function getHtmlInlineTokensHandlers(): Record<
       },
     ],
 
-    'code_inline': [
+    'code_open': [
       (token: Token, ctx: ContextStash) => {
         const tag = token.tag || 'code';
         ctx.current.log(`<${tag}>`, token);
-        ctx.current.log(token.content || '', token);
-        ctx.current.log(`</${tag}>`, token);
       },
     ],
+    'code_close': [
+      (token: Token, ctx: ContextStash) => {
+        const tag = token.tag || 'code';
+        ctx.current.log(`<${tag}>`, token);
+      },
+    ],
+
+    // 'code_inline': [
+    //   (token: Token, ctx: ContextStash) => {
+    //     const tag = token.tag || 'code';
+    //     ctx.current.log(`<${tag}>`, token);
+    //     ctx.current.log(token.content || '', token);
+    //     ctx.current.log(`</${tag}>`, token);
+    //   },
+    // ],
     'hardbreak': [
       (token: Token, ctx: ContextStash) => {
         const tag = token.tag || 'br';

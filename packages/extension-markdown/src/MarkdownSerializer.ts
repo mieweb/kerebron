@@ -1,7 +1,12 @@
 import MarkdownIt from 'markdown-it';
+import type Token from 'markdown-it/lib/token';
 import markdownDefList from 'npm:markdown-it-deflist@3.0.0';
 import markdownFootnote from 'npm:markdown-it-footnote@4.0.0';
-import type Token from 'markdown-it/lib/token';
+import { markdownItTable } from 'npm:markdown-it-table@4.1.1';
+import markdownSub from './markdown-it/markdown-it-sub.ts';
+import markdownSup from './markdown-it/markdown-it-sup.ts';
+import markdownMath from 'npm:markdown-it-math@5.2.1';
+
 import { getTableTokensHandlers } from './token_handlers/table_token_handlers.ts';
 import { getBasicTokensHandlers } from './token_handlers/basic_token_handlers.ts';
 import { getInlineTokensHandlers } from './token_handlers/inline_token_handlers.ts';
@@ -154,7 +159,8 @@ export function serializeInlineTokens(
         ctx.current.handlers[token.type] || ctx.current.handlers['default'];
       if (!tokenHandlers) {
         throw new Error(
-          `Unknown inline token: ${token.type} ` + JSON.stringify(token),
+          `Unknown inline token: ${token.type} ` + JSON.stringify(token) +
+            `, available hadlers: ${Object.keys(ctx.current.handlers)}`,
         );
       }
 
@@ -182,12 +188,12 @@ export type TokenHandler = (
 ) => boolean | void;
 
 export class MarkdownSerializer {
-  public readonly md: MarkdownIt;
+  public readonly markdownIt: MarkdownIt;
 
   private ctx: ContextStash;
 
   constructor() {
-    this.md = new MarkdownIt({
+    this.markdownIt = new MarkdownIt({
       html: true,
       linkify: true,
       typographer: true,
@@ -195,8 +201,12 @@ export class MarkdownSerializer {
       // highlight: true,
       quotes: '""\'\'',
     });
-    this.md.use(markdownDefList);
-    this.md.use(markdownFootnote);
+    this.markdownIt.use(markdownDefList);
+    this.markdownIt.use(markdownFootnote);
+    this.markdownIt.use(markdownItTable);
+    this.markdownIt.use(markdownMath);
+    this.markdownIt.use(markdownSub);
+    this.markdownIt.use(markdownSup);
 
     this.ctx = new ContextStash({
       ...getInlineTokensHandlers(),
@@ -216,6 +226,8 @@ export class MarkdownSerializer {
 
     const tokenSource = new TokenSource(tokens);
     tokenSource.iterate(0, (token, i) => {
+      // console.log('tok', token);
+
       if (!this.ctx.current.meta['html_mode']) {
         if (token.level === 0 && token.nesting !== -1) {
           if (this.ctx.output.colPos !== 0) {
@@ -282,6 +294,7 @@ export class MarkdownSerializer {
             if (err.message === 'Rewinded before inline tokens') {
               return;
             }
+            throw err;
           }
         }
       } else if (!tokenHandlers) {
