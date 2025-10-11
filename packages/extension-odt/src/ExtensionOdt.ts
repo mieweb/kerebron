@@ -50,13 +50,17 @@ export class ExtensionOdt extends Extension {
       },
       odtToJson: async (buffer: Uint8Array) => {
         const files = unzip(buffer);
+        const filesMap: Record<string, Uint8Array> = {};
+        for (const k of files.keys()) {
+          filesMap[k] = Uint8Array.from(files.get(k));
+        }
 
         const stylesTree = parse_styles(files.get('styles.xml'));
         const contentTree = parse_content(files.get('content.xml'));
 
         const parser = new OdtParser(editor.schema, config);
 
-        const doc = parser.parse({ ...files, contentTree, stylesTree });
+        const doc = parser.parse({ ...filesMap, contentTree, stylesTree });
         return doc;
       },
     };
