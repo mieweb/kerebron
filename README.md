@@ -67,12 +67,15 @@ docker run -it -p 8000:8000 -v $PWD:/usr/src/app editor-test
 ```
 
 ## Prerequisites
+
 Install deno
+
 ```
 npm install -g deno
 ```
 
 Install rust
+
 ```
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```

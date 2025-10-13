@@ -3,7 +3,9 @@
   margin: 0;
   line-height: 1;
   font-size: 14px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
   position: sticky;
   top: 0;
   display: flex;
@@ -599,11 +601,6 @@
   }
 }
 
-
-
-
-
-
 /* ===========================
    Google-Docs–style toolbar for kb-menu
    (main look + overflow behavior)
@@ -617,7 +614,7 @@
   --kb-hover: #f1f3f4;
   --kb-active: #e8f0fe;
   --kb-focus: #1a73e8;
-  --kb-shadow: 0 1px 2px rgba(0,0,0,.06), 0 2px 8px rgba(0,0,0,.08);
+  --kb-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.08);
 
   --kb-height: 48px;
   --kb-btn-h: 34px;
@@ -642,7 +639,6 @@
 
 /* Wrapper around toolbar + editor (plugin inserts this) */
 .kb-menu__wrapper {
-  /* position: relative; */
   z-index: 50;
   padding: 8px 12px; /* spacing around the pill */
   background: transparent;
@@ -670,9 +666,13 @@
 }
 
 /* Items and separators from renderGrouped */
-.kb-menu__item { display: inline-flex; align-items: center; }
+.kb-menu__item {
+  display: inline-flex;
+  align-items: center;
+}
 .kb-menu__separator {
-  width: 1px; height: 22px;
+  width: 1px;
+  height: 22px;
   background: var(--kb-border);
   flex: 0 0 auto;
   margin: 0 2px;
@@ -691,23 +691,51 @@
   border: 1px solid transparent;
   background: transparent;
   color: var(--kb-fg);
-  font: 500 var(--kb-font)/1.2 system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  font:
+    500 var(--kb-font)/1.2 system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Arial;
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
 }
 .kb-menu__button svg,
-.kb-menu__button .kb-icon { width: var(--kb-icon); height: var(--kb-icon); fill: currentColor; }
-.kb-menu__button:hover { background: var(--kb-hover); }
-.kb-menu__button:focus-visible { outline: 2px solid var(--kb-focus); outline-offset: 2px; background: var(--kb-hover); }
+.kb-menu__button .kb-icon {
+  width: var(--kb-icon);
+  height: var(--kb-icon);
+  fill: currentColor;
+}
+.kb-menu__button:hover {
+  background: var(--kb-hover);
+}
+.kb-menu__button:focus-visible {
+  outline: 2px solid var(--kb-focus);
+  outline-offset: 2px;
+  background: var(--kb-hover);
+}
 .kb-menu__button--active,
-.kb-menu__button[aria-pressed="true"] { background: var(--kb-active); border-color: #d2e3fc; }
+.kb-menu__button[aria-pressed='true'] {
+  background: var(--kb-active);
+  border-color: #d2e3fc;
+}
 .kb-menu__button--disabled,
-.kb-menu__button[aria-disabled="true"] { opacity: .5; cursor: default; pointer-events: none; }
-.kb-menu__button--icon-only > span { display: none; }
+.kb-menu__button[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+.kb-menu__button--icon-only > span {
+  display: none;
+}
 
 /* Dropdowns */
-.kb-dropdown { position: relative; display: inline-flex; align-items: center; }
+.kb-dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
 .kb-dropdown__label {
   height: var(--kb-btn-h);
   display: inline-flex;
@@ -718,23 +746,53 @@
   border: 1px solid transparent;
   background: transparent;
   color: var(--kb-fg);
-  font: 500 var(--kb-font)/1.2 system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  font:
+    500 var(--kb-font)/1.2 system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Arial;
   cursor: pointer;
 }
-.kb-dropdown__label:hover { background: var(--kb-hover); }
-.kb-dropdown--open .kb-dropdown__label { background: var(--kb-active); border-color: #d2e3fc; }
-.kb-dropdown__menu {
-  position: absolute; top: calc(100% + 6px); left: 0;
-  min-width: 240px; max-height: 60vh; overflow: auto;
-  background: var(--kb-bg); color: var(--kb-fg);
-  border: 1px solid var(--kb-border); border-radius: 10px; box-shadow: var(--kb-shadow);
-  padding: 6px; display: grid; gap: 2px; z-index: 100;
+.kb-dropdown__label:hover {
+  background: var(--kb-hover);
 }
-.kb-dropdown__item { display: contents; }
-.kb-dropdown__item .kb-menu__button { justify-content: flex-start; width: 100%; border-radius: 8px; }
+.kb-dropdown--open .kb-dropdown__label {
+  background: var(--kb-active);
+  border-color: #d2e3fc;
+}
+.kb-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 240px;
+  max-height: 60vh;
+  overflow: auto;
+  background: var(--kb-bg);
+  color: var(--kb-fg);
+  border: 1px solid var(--kb-border);
+  border-radius: 10px;
+  box-shadow: var(--kb-shadow);
+  padding: 6px;
+  display: grid;
+  gap: 2px;
+  z-index: 100;
+}
+.kb-dropdown__item {
+  display: contents;
+}
+.kb-dropdown__item .kb-menu__button {
+  justify-content: flex-start;
+  width: 100%;
+  border-radius: 8px;
+}
 
 /* Submenus */
-.kb-submenu { position: relative; display: inline-flex; align-items: center; }
+.kb-submenu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
 .kb-submenu__label {
   height: var(--kb-btn-h);
   display: inline-flex;
@@ -743,20 +801,34 @@
   padding: 6px 10px;
   border-radius: 8px;
 }
-.kb-submenu__label:hover { background: var(--kb-hover); }
-.kb-submenu__content {
-  position: absolute; top: calc(100% + 6px); left: 0;
-  min-width: 220px; max-height: 60vh; overflow: auto;
-  background: var(--kb-bg); border: 1px solid var(--kb-border);
-  border-radius: 10px; box-shadow: var(--kb-shadow);
-  padding: 6px; display: none; z-index: 100;
+.kb-submenu__label:hover {
+  background: var(--kb-hover);
 }
-.kb-submenu--open .kb-submenu__content { display: block; }
+.kb-submenu__content {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 220px;
+  max-height: 60vh;
+  overflow: auto;
+  background: var(--kb-bg);
+  border: 1px solid var(--kb-border);
+  border-radius: 10px;
+  box-shadow: var(--kb-shadow);
+  padding: 6px;
+  display: none;
+  z-index: 100;
+}
+.kb-submenu--open .kb-submenu__content {
+  display: block;
+}
 
 /* --------- Overflow behavior --------- */
 
 /* Hidden until narrow AND there is overflow (JS toggles display) */
-.kb-overflow-toggle { display: none; }
+.kb-overflow-toggle {
+  display: none;
+}
 
 /* Second row container (hidden until toggled open) */
 .kb-menu__overflow-row {
@@ -773,13 +845,22 @@
 }
 
 /* When narrow, show 3-dots (JS may still hide if empty) */
-.kb-menu--narrow .kb-overflow-toggle { display: inline-flex; }
+.kb-menu--narrow .kb-overflow-toggle {
+  display: inline-flex;
+}
 
 /* When toggled open, show the overflow row */
-.kb-menu--overflow-open .kb-menu__overflow-row { display: flex; }
+.kb-menu--overflow-open .kb-menu__overflow-row {
+  display: flex;
+}
 
 /* On very small/mobile, put overflow row ABOVE the main bar */
 @media (max-width: 600px) {
-  .kb-menu__wrapper { display: flex; flex-direction: column; }
-  .kb-menu--overflow-open .kb-menu__overflow-row { order: -1; }
+  .kb-menu__wrapper {
+    display: flex;
+    flex-direction: column;
+  }
+  .kb-menu--overflow-open .kb-menu__overflow-row {
+    order: -1;
+  }
 }
