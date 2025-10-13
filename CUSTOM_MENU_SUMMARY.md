@@ -2,17 +2,23 @@
 
 ## Overview
 
-I've created a new `CustomMenu` extension that provides a Google Docs-style toolbar with customizable pinned items. This implementation allows users to select which tools (up to 8) appear in the main toolbar, with remaining tools accessible via an overflow menu.
+I've created a new `CustomMenu` extension that provides a Google Docs-style
+toolbar with customizable pinned items. This implementation allows users to
+select which tools (up to 8) appear in the main toolbar, with remaining tools
+accessible via an overflow menu.
 
 ## Files Created
 
 ### 1. `/packages/extension-menu/src/CustomMenu.ts`
+
 The main extension file containing:
+
 - **`CustomMenuView`**: View class that manages the toolbar UI
 - **`CustomMenuPlugin`**: ProseMirror plugin wrapper
 - **`ExtensionCustomMenu`**: Extension class that integrates with the editor
 
 **Key Features:**
+
 - Customizable toolbar with max 8 pinned items
 - Overflow menu with three-dot button (⋯)
 - "Manage Pinned Tools" modal for easy configuration
@@ -20,7 +26,9 @@ The main extension file containing:
 - Automatic tool labeling and identification
 
 ### 2. `/packages/extension-menu/assets/custom-menu.css`
+
 Comprehensive styling including:
+
 - Google Docs-inspired toolbar design
 - Responsive mobile and desktop layouts
 - Smooth animations and transitions
@@ -29,6 +37,7 @@ Comprehensive styling including:
 - High contrast mode support
 
 **Design Highlights:**
+
 - Clean, minimal toolbar with proper spacing
 - Icon-based buttons with hover states
 - Dropdown overlay with shadow and blur effects
@@ -36,7 +45,9 @@ Comprehensive styling including:
 - Disabled state styling for limit enforcement
 
 ### 3. `/packages/extension-menu/CUSTOM_MENU.md`
+
 Complete documentation covering:
+
 - Feature overview
 - Usage examples
 - API reference
@@ -45,31 +56,38 @@ Complete documentation covering:
 - Accessibility features
 
 ### 4. `/examples/browser-vue/custom-menu-example.html`
+
 Example HTML page demonstrating the custom menu in action
 
 ## Key Features
 
 ### 1. **Pinned Tools Management**
+
 - Maximum 8 tools can be pinned to the main toolbar
 - Visual limit enforcement in the modal (grays out additional items)
 - Persistent storage using localStorage
 - Default behavior: first 8 tools are pinned
 
 ### 2. **Toolbar Layout**
+
 Based on your first attached image:
+
 - Horizontal toolbar with icon buttons
 - Separator between pinned tools and overflow button
 - Three-dot overflow button (⋯) on the right
 - Clean, minimal Google Docs aesthetic
 
 ### 3. **Overflow Menu**
+
 Based on your second attached image:
+
 - Dropdown menu below the toolbar
 - List of unpinned tools with icons and labels
 - Separator line before management button
 - "Manage Pinned Tools" button at the bottom
 
 ### 4. **Management Modal**
+
 - **Header**: "Manage Pinned Tools" with close button (×)
 - **Message**: "Maximum pinned: 8" in info banner
 - **Tool List**: Checkboxes for all available tools
@@ -79,6 +97,7 @@ Based on your second attached image:
 ## Technical Implementation
 
 ### Architecture
+
 ```
 ExtensionCustomMenu (Extension)
   └─> CustomMenuPlugin (ProseMirror Plugin)
@@ -89,6 +108,7 @@ ExtensionCustomMenu (Extension)
 ```
 
 ### Data Flow
+
 1. Extension initializes with menu content from `buildMenu()`
 2. View extracts tool labels and creates `ToolItem` objects
 3. Pinned state loads from localStorage
@@ -97,6 +117,7 @@ ExtensionCustomMenu (Extension)
 6. Modal provides UI for bulk management of pinned tools
 
 ### Storage Format
+
 ```json
 {
   "kb-custom-menu-pinned": ["tool-0", "tool-2", "tool-5", "tool-7"]
@@ -106,6 +127,7 @@ ExtensionCustomMenu (Extension)
 ## Usage
 
 ### Basic Integration
+
 ```typescript
 import { CoreEditor } from '@kerebron/editor';
 import { ExtensionCustomMenu } from '@kerebron/extension-menu';
@@ -120,11 +142,14 @@ const editor = new CoreEditor({
 ```
 
 ### Customization
-The extension automatically uses the same menu items from `buildMenu()` that the standard `ExtensionMenu` uses, ensuring consistency across the application.
+
+The extension automatically uses the same menu items from `buildMenu()` that the
+standard `ExtensionMenu` uses, ensuring consistency across the application.
 
 ## UI/UX Details
 
 ### Toolbar
+
 - **Background**: Light gray (#f9f9f9)
 - **Border**: Bottom border (#dadce0)
 - **Button size**: 32x32px with 4-8px padding
@@ -133,6 +158,7 @@ The extension automatically uses the same menu items from `buildMenu()` that the
 - **Gap**: 4px between items
 
 ### Overflow Menu
+
 - **Position**: Absolute, below toolbar
 - **Width**: 220-280px
 - **Background**: White with border
@@ -141,6 +167,7 @@ The extension automatically uses the same menu items from `buildMenu()` that the
 - **Separator**: Thin line before manage button
 
 ### Modal
+
 - **Backdrop**: Semi-transparent black (50% opacity)
 - **Size**: Max 500px width, 80vh height
 - **Position**: Centered on screen
@@ -152,6 +179,7 @@ The extension automatically uses the same menu items from `buildMenu()` that the
 ## Mobile Responsiveness
 
 ### Narrow Screens (≤767px)
+
 - Toolbar fixed to bottom of screen
 - Larger touch targets (44x44px)
 - Overflow menu opens from bottom
@@ -159,6 +187,7 @@ The extension automatically uses the same menu items from `buildMenu()` that the
 - Backdrop blur effect for iOS
 
 ### Wide Screens (>767px)
+
 - Toolbar at top of editor
 - Overflow menu drops down from button
 - Modal centered in viewport
@@ -184,6 +213,7 @@ The extension automatically uses the same menu items from `buildMenu()` that the
 ## Future Enhancements
 
 Potential improvements:
+
 1. Drag-and-drop reordering of pinned tools
 2. Tool groups/categories in modal
 3. Search/filter in modal for large tool sets
@@ -218,7 +248,8 @@ Potential improvements:
 
 ## Notes
 
-- The extension uses the same `buildMenu()` function as `ExtensionMenu`, ensuring all tools are available
+- The extension uses the same `buildMenu()` function as `ExtensionMenu`,
+  ensuring all tools are available
 - Tool identification uses a combination of aria-labels, titles, and heuristics
 - The CSS is modular and can be customized without affecting functionality
 - Dark mode colors are automatically applied based on system preference
@@ -227,6 +258,7 @@ Potential improvements:
 ## Integration with Existing Codebase
 
 The extension:
+
 - ✅ Follows existing extension patterns (`Extension` base class)
 - ✅ Uses existing menu components (`MenuElement`, `MenuItem`, etc.)
 - ✅ Integrates with `buildMenu()` from `ExtensionMenu.ts`

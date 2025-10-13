@@ -9,12 +9,15 @@ import { buildMenu } from './ExtensionMenu.ts';
 const CSS_PREFIX = 'kb-custom-menu';
 const MAX_PINNED_ITEMS = 8;
 const STORAGE_KEY = 'kb-custom-menu-pinned';
+// Bootstrap md breakpoint: 768px (mobile is < 768px, desktop is >= 768px)
+const MOBILE_BREAKPOINT = 768;
 
 interface ToolItem {
   id: string;
   label: string;
   element: MenuElement;
   isPinned: boolean;
+  updateFn: (state: EditorState) => boolean;
 }
 
 class CustomMenuView {
@@ -26,6 +29,7 @@ class CustomMenuView {
   root: Document | ShadowRoot;
   resizeHandle: HTMLElement;
   editorContainer: HTMLElement;
+  private closeOverflowHandler: ((e: MouseEvent) => void) | null = null;
 
   constructor(
     readonly editorView: EditorView,
@@ -51,14 +55,15 @@ class CustomMenuView {
     // Create resize handle
     this.resizeHandle = document.createElement('div');
     this.resizeHandle.classList.add(CSS_PREFIX + '__resize-handle');
-    this.resizeHandle.innerHTML = '<div class="' + CSS_PREFIX + '__resize-handle-bar"></div>';
+    this.resizeHandle.innerHTML = '<div class="' + CSS_PREFIX +
+      '__resize-handle-bar"></div>';
 
     // Mount toolbar before the editor DOM
     this.wrapper.appendChild(this.toolbar);
     if (editorView.dom.parentNode) {
       editorView.dom.parentNode.replaceChild(this.wrapper, editorView.dom);
     }
-    
+
     // Wrap editor in container and add resize handle
     this.editorContainer.appendChild(editorView.dom);
     this.editorContainer.appendChild(this.resizeHandle);
@@ -81,7 +86,7 @@ class CustomMenuView {
 
     // Initial render
     this.render();
-    
+
     // Add window resize listener to re-render on mobile/desktop changes
     if (typeof window !== 'undefined') {
       window.addEventListener('resize', () => {
@@ -91,21 +96,63 @@ class CustomMenuView {
   }
 
   private initializeTools() {
-    let toolIndex = 0;
     this.content.forEach((group) => {
       group.forEach((element) => {
-        const { dom } = element.render(this.editorView);
+        const { dom, update } = element.render(this.editorView);
         const label = this.extractLabel(dom);
-        const id = `tool-${toolIndex++}`;
+        const id = this.generateStableId(label, dom);
 
         this.tools.push({
           id,
           label,
           element,
           isPinned: false,
+          updateFn: update,
         });
       });
     });
+  }
+
+  /**
+   * Generate a stable ID from a label by converting it to a kebab-case slug.
+   * Falls back to a hash if the label is empty or contains only special characters.
+   */
+  private generateStableId(label: string, dom: HTMLElement): string {
+    // Try to use aria-label or data-id if available
+    const ariaLabel = dom.getAttribute('aria-label');
+    const dataId = dom.getAttribute('data-id');
+
+    if (dataId) return `tool-${dataId}`;
+
+    const baseLabel = ariaLabel || label;
+
+    // Convert label to kebab-case slug
+    const slug = baseLabel
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
+      .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+
+    // If slug is empty, generate a simple hash from the label
+    if (!slug) {
+      const hash = this.simpleHash(baseLabel);
+      return `tool-${hash}`;
+    }
+
+    return `tool-${slug}`;
+  }
+
+  /**
+   * Simple hash function for generating stable IDs from strings.
+   */
+  private simpleHash(str: string): string {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash).toString(36);
   }
 
   private extractLabel(dom: HTMLElement): string {
@@ -116,7 +163,8 @@ class CustomMenuView {
     const title = dom.getAttribute('title');
     if (title) return title;
 
-    const buttonText = dom.querySelector('.kb-dropdown__label')?.textContent?.trim();
+    const buttonText = dom.querySelector('.kb-dropdown__label')?.textContent
+      ?.trim();
     if (buttonText) return buttonText;
 
     const spanText = dom.querySelector('span')?.textContent?.trim();
@@ -168,13 +216,16 @@ class CustomMenuView {
 
     const pinnedTools = this.tools.filter((t) => t.isPinned);
     const overflowTools = this.tools.filter((t) => !t.isPinned);
-    
-    // Check if we're in mobile view (window width <= 767px)
-    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 767;
+
+    // Check if we're in mobile view (Bootstrap md breakpoint: < 768px)
+    const isMobile = typeof window !== 'undefined' &&
+      window.innerWidth < MOBILE_BREAKPOINT;
     const mobileLimit = 4;
-    
+
     // In mobile, only show first 4 pinned tools in toolbar
-    const visibleTools = isMobile ? pinnedTools.slice(0, mobileLimit) : pinnedTools;
+    const visibleTools = isMobile
+      ? pinnedTools.slice(0, mobileLimit)
+      : pinnedTools;
     const mobileOverflowPinned = isMobile ? pinnedTools.slice(mobileLimit) : [];
 
     // Render visible pinned tools in toolbar
@@ -230,25 +281,25 @@ class CustomMenuView {
       header.classList.add(CSS_PREFIX + '__overflow-header');
       header.textContent = 'More Tools';
       overflowContent.appendChild(header);
-      
+
       // Add the overflow pinned tools
       mobileOverflowPinned.forEach((tool) => {
         const { dom, update } = tool.element.render(this.editorView);
         const wrapper = document.createElement('div');
         wrapper.classList.add(CSS_PREFIX + '__overflow-item');
-        
+
         // Add label to the item
         const label = document.createElement('span');
         label.classList.add(CSS_PREFIX + '__overflow-item-label');
         label.textContent = tool.label;
-        
+
         // Restructure the DOM to show icon + label
         wrapper.appendChild(dom);
         wrapper.appendChild(label);
-        
+
         overflowContent.appendChild(wrapper);
       });
-      
+
       // Add separator after mobile overflow pinned section
       if (overflowTools.length > 0) {
         const separator = document.createElement('div');
@@ -262,16 +313,16 @@ class CustomMenuView {
       const { dom, update } = tool.element.render(this.editorView);
       const wrapper = document.createElement('div');
       wrapper.classList.add(CSS_PREFIX + '__overflow-item');
-      
+
       // Add label to the item
       const label = document.createElement('span');
       label.classList.add(CSS_PREFIX + '__overflow-item-label');
       label.textContent = tool.label;
-      
+
       // Restructure the DOM to show icon + label
       wrapper.appendChild(dom);
       wrapper.appendChild(label);
-      
+
       overflowContent.appendChild(wrapper);
     });
 
@@ -279,10 +330,13 @@ class CustomMenuView {
     this.overflowMenu.appendChild(overflowContent);
 
     // Create sticky footer for manage button
-    if (overflowTools.length > 0 || pinnedTools.length > 0 || mobileOverflowPinned.length > 0) {
+    if (
+      overflowTools.length > 0 || pinnedTools.length > 0 ||
+      mobileOverflowPinned.length > 0
+    ) {
       const overflowFooter = document.createElement('div');
       overflowFooter.classList.add(CSS_PREFIX + '__overflow-footer');
-      
+
       const manageButton = document.createElement('button');
       manageButton.type = 'button';
       manageButton.className = CSS_PREFIX + '__manage-button';
@@ -296,26 +350,35 @@ class CustomMenuView {
         e.preventDefault();
         this.openManageModal();
       });
-      
+
       overflowFooter.appendChild(manageButton);
       this.overflowMenu.appendChild(overflowFooter);
     }
 
-    // Close overflow menu when clicking outside
-    const closeOverflow = (e: MouseEvent) => {
-      if (!this.overflowMenu.contains(e.target as Node) && 
-          !this.toolbar.contains(e.target as Node)) {
+    // Remove existing click-outside listener if any
+    const doc = this.editorView.dom.ownerDocument || document;
+    if (this.closeOverflowHandler) {
+      doc.removeEventListener('click', this.closeOverflowHandler);
+    }
+
+    // Create and store close overflow handler
+    this.closeOverflowHandler = (e: MouseEvent) => {
+      if (
+        !this.overflowMenu.contains(e.target as Node) &&
+        !this.toolbar.contains(e.target as Node)
+      ) {
         this.overflowMenu.style.display = 'none';
-        const toggle = this.toolbar.querySelector('.' + CSS_PREFIX + '__overflow-toggle');
+        const toggle = this.toolbar.querySelector(
+          '.' + CSS_PREFIX + '__overflow-toggle',
+        );
         if (toggle) {
           toggle.setAttribute('aria-expanded', 'false');
         }
       }
     };
-    
-    // Remove existing listener if any
-    (this.editorView.dom.ownerDocument || document).removeEventListener('click', closeOverflow);
-    (this.editorView.dom.ownerDocument || document).addEventListener('click', closeOverflow);
+
+    // Add new listener
+    doc.addEventListener('click', this.closeOverflowHandler);
   }
 
   private openManageModal() {
@@ -364,7 +427,7 @@ class CustomMenuView {
       checkbox.disabled = false;
 
       const pinnedCount = this.tools.filter((t) => t.isPinned).length;
-      
+
       // Disable unchecked items if we've reached the limit
       if (!tool.isPinned && pinnedCount >= MAX_PINNED_ITEMS) {
         checkbox.disabled = true;
@@ -424,8 +487,14 @@ class CustomMenuView {
       this.render(); // Re-render toolbar with new pinned state
     };
 
-    header.querySelector('.' + CSS_PREFIX + '__modal-close')?.addEventListener('click', closeModal);
-    footer.querySelector('.' + CSS_PREFIX + '__modal-button')?.addEventListener('click', closeModal);
+    header.querySelector('.' + CSS_PREFIX + '__modal-close')?.addEventListener(
+      'click',
+      closeModal,
+    );
+    footer.querySelector('.' + CSS_PREFIX + '__modal-button')?.addEventListener(
+      'click',
+      closeModal,
+    );
     backdrop.addEventListener('click', (e) => {
       if (e.target === backdrop) {
         closeModal();
@@ -438,7 +507,9 @@ class CustomMenuView {
     const items = toolList.querySelectorAll('.' + CSS_PREFIX + '__tool-item');
 
     items.forEach((item, index) => {
-      const checkbox = item.querySelector('input[type="checkbox"]') as HTMLInputElement;
+      const checkbox = item.querySelector(
+        'input[type="checkbox"]',
+      ) as HTMLInputElement;
       const tool = this.tools[index];
 
       if (!tool.isPinned && pinnedCount >= MAX_PINNED_ITEMS) {
@@ -460,27 +531,27 @@ class CustomMenuView {
       isResizing = true;
       startY = e.clientY;
       startHeight = this.editorContainer.offsetHeight;
-      
+
       // Add resizing class for visual feedback
       this.wrapper.classList.add(CSS_PREFIX + '__wrapper--resizing');
-      
+
       // Prevent text selection while dragging
       e.preventDefault();
-      
+
       document.addEventListener('mousemove', onMouseMove);
       document.addEventListener('mouseup', onMouseUp);
     };
 
     const onMouseMove = (e: MouseEvent) => {
       if (!isResizing) return;
-      
+
       const deltaY = e.clientY - startY;
       const newHeight = startHeight + deltaY;
-      
+
       // Set minimum and maximum heights
       const minHeight = 200;
       const maxHeight = window.innerHeight - 100;
-      
+
       if (newHeight >= minHeight && newHeight <= maxHeight) {
         this.editorContainer.style.height = newHeight + 'px';
       }
@@ -488,10 +559,10 @@ class CustomMenuView {
 
     const onMouseUp = () => {
       if (!isResizing) return;
-      
+
       isResizing = false;
       this.wrapper.classList.remove(CSS_PREFIX + '__wrapper--resizing');
-      
+
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     };
@@ -500,17 +571,27 @@ class CustomMenuView {
   }
 
   update(view: EditorView, prevState: EditorState) {
-    // Update tool states
+    // Efficiently update tool states using stored update functions
     this.tools.forEach((tool) => {
-      tool.element.render(this.editorView);
+      tool.updateFn(view.state);
     });
   }
 
   destroy() {
+    // Clean up event listeners
+    const doc = this.editorView.dom.ownerDocument || document;
+    if (this.closeOverflowHandler) {
+      doc.removeEventListener('click', this.closeOverflowHandler);
+      this.closeOverflowHandler = null;
+    }
+
+    // Clean up modal
     if (this.modal) {
       this.modal.remove();
       this.modal = null;
     }
+
+    // Clean up DOM
     if (this.wrapper.parentNode) {
       this.wrapper.parentNode.replaceChild(this.editorView.dom, this.wrapper);
     }
@@ -536,7 +617,7 @@ export class CustomMenuPlugin extends Plugin {
 export class ExtensionCustomMenu extends Extension {
   name = 'customMenu';
 
-  override getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
+  getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
     const content = buildMenu(editor, schema);
 
     return [
