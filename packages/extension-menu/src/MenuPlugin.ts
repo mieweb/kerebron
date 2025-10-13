@@ -8,7 +8,8 @@ const CSS_PREFIX = 'kb-menu';
 function isIOS() {
   if (typeof navigator == 'undefined') return false;
   const agent = navigator?.userAgent;
-  return !/Edge\/\d/.test(agent) && /AppleWebKit/.test(agent) && /Mobile\/\w+/.test(agent);
+  return !/Edge\/\d/.test(agent) && /AppleWebKit/.test(agent) &&
+    /Mobile\/\w+/.test(agent);
 }
 
 function isMobileView() {
@@ -92,7 +93,10 @@ class MenuBarView {
     this.menu.appendChild(this.contentHost);
 
     // Render grouped items into host
-    const { dom, update } = renderGrouped(this.editorView, this.options.content);
+    const { dom, update } = renderGrouped(
+      this.editorView,
+      this.options.content,
+    );
     this.contentUpdate = update;
     this.contentHost.appendChild(dom);
 
@@ -163,7 +167,10 @@ class MenuBarView {
 
   update() {
     if (this.editorView.root != this.root) {
-      const { dom, update } = renderGrouped(this.editorView, this.options.content);
+      const { dom, update } = renderGrouped(
+        this.editorView,
+        this.options.content,
+      );
       this.contentUpdate = update;
       // Replace ONLY the content host contents, not the overflow toggle
       this.contentHost.replaceChildren(dom);
@@ -171,7 +178,9 @@ class MenuBarView {
       // Re-tag pinned after re-render (e.g., schema changes)
       this.autotagPinned();
       // Recompute order snapshot
-      this.originalOrder = Array.from(this.contentHost.children) as HTMLElement[];
+      this.originalOrder = Array.from(
+        this.contentHost.children,
+      ) as HTMLElement[];
       this.relayout();
     }
 
@@ -193,12 +202,15 @@ class MenuBarView {
     const selection = (this.editorView.root as Document).getSelection()!;
     if (!selection?.focusNode) return;
     const rects = selection.getRangeAt(0).getClientRects();
-    const selRect = rects[selectionIsInverted(selection) ? 0 : rects.length - 1];
+    const selRect =
+      rects[selectionIsInverted(selection) ? 0 : rects.length - 1];
     if (!selRect) return;
     const menuRect = this.menu.getBoundingClientRect();
     if (selRect.top < menuRect.bottom && selRect.bottom > menuRect.top) {
       const scrollable = findWrappingScrollable(this.wrapper);
-      if (scrollable) (scrollable as HTMLElement).scrollTop -= menuRect.bottom - selRect.top;
+      if (scrollable) {
+        (scrollable as HTMLElement).scrollTop -= menuRect.bottom - selRect.top;
+      }
     }
   }
 
@@ -210,27 +222,31 @@ class MenuBarView {
       : 0;
 
     if (this.floating) {
-      if (editorRect.top >= top || editorRect.bottom < this.menu.offsetHeight + 10) {
+      if (
+        editorRect.top >= top || editorRect.bottom < this.menu.offsetHeight + 10
+      ) {
         this.floating = false;
         this.menu.style.position =
           this.menu.style.left =
           this.menu.style.top =
           this.menu.style.width =
-          '';
+            '';
         this.menu.style.display = '';
         this.spacer!.parentNode!.removeChild(this.spacer!);
         this.spacer = null;
       } else {
         const border = (parent.offsetWidth - parent.clientWidth) / 2;
         this.menu.style.left = (editorRect.left + border) + 'px';
-        this.menu.style.display =
-          editorRect.top > this.editorView.dom.ownerDocument.defaultView!.innerHeight
-            ? 'none'
-            : '';
+        this.menu.style.display = editorRect.top >
+            this.editorView.dom.ownerDocument.defaultView!.innerHeight
+          ? 'none'
+          : '';
         if (scrollAncestor) this.menu.style.top = top + 'px';
       }
     } else {
-      if (editorRect.top < top && editorRect.bottom >= this.menu.offsetHeight + 10) {
+      if (
+        editorRect.top < top && editorRect.bottom >= this.menu.offsetHeight + 10
+      ) {
         this.floating = true;
         const menuRect = this.menu.getBoundingClientRect();
         this.menu.style.left = menuRect.left + 'px';
@@ -266,7 +282,9 @@ class MenuBarView {
 
     items.forEach((item) => {
       const btn = item.querySelector('.kb-menu__button') as HTMLElement | null;
-      const dd  = item.querySelector('.kb-dropdown__label') as HTMLElement | null;
+      const dd = item.querySelector('.kb-dropdown__label') as
+        | HTMLElement
+        | null;
 
       const a11y = (
         btn?.getAttribute('aria-label') ||
@@ -275,8 +293,7 @@ class MenuBarView {
         ''
       ).trim().toLowerCase();
 
-      const isPinnedByText =
-        /\b(undo|redo|bold|strong|table)\b/.test(a11y) ||
+      const isPinnedByText = /\b(undo|redo|bold|strong|table)\b/.test(a11y) ||
         /(bullet|bulleted\s*list)/.test(a11y) ||
         a11y === 'file';
 
@@ -287,9 +304,15 @@ class MenuBarView {
 
       // Heuristics for icon-only cases
       const svg = item.querySelector('svg');
-      const svgTitle = svg?.querySelector('title')?.textContent?.toLowerCase() || '';
-      const hint = `${svg?.getAttribute('class') || ''} ${svg?.getAttribute('id') || ''}`.toLowerCase();
-      if (/(undo|redo|bold|strong|table|bullet)/.test(svgTitle) || /(undo|redo|bold|strong|table|list|bul)/.test(hint)) {
+      const svgTitle =
+        svg?.querySelector('title')?.textContent?.toLowerCase() || '';
+      const hint = `${svg?.getAttribute('class') || ''} ${
+        svg?.getAttribute('id') || ''
+      }`.toLowerCase();
+      if (
+        /(undo|redo|bold|strong|table|bullet)/.test(svgTitle) ||
+        /(undo|redo|bold|strong|table|list|bul)/.test(hint)
+      ) {
         (item as HTMLElement).classList.add('kb-pin');
       }
     });
@@ -351,7 +374,10 @@ class MenuBarView {
       this.overflowToggle.style.display = hasOverflow ? '' : 'none';
     } else {
       // Wide again: already restored above
-      this.wrapper.classList.remove('kb-menu--narrow', 'kb-menu--overflow-open');
+      this.wrapper.classList.remove(
+        'kb-menu--narrow',
+        'kb-menu--overflow-open',
+      );
       this.overflowToggle.setAttribute('aria-expanded', 'false');
       this.overflowToggle.style.display = 'none';
       cleanupSeparators(this.contentHost);
@@ -377,9 +403,10 @@ class MenuBarView {
     // Fallback to attributes
     const btn = node.querySelector('.kb-menu__button') as HTMLElement | null;
     if (btn) {
-      const key = (btn.getAttribute('aria-label') || btn.getAttribute('title') || '')
-        .trim()
-        .toLowerCase();
+      const key =
+        (btn.getAttribute('aria-label') || btn.getAttribute('title') || '')
+          .trim()
+          .toLowerCase();
       if (
         key === 'undo' ||
         key === 'redo' ||
@@ -390,7 +417,9 @@ class MenuBarView {
       ) return true;
     }
 
-    const ddLabel = node.querySelector('.kb-dropdown__label') as HTMLElement | null;
+    const ddLabel = node.querySelector('.kb-dropdown__label') as
+      | HTMLElement
+      | null;
     if (ddLabel) {
       const text = (ddLabel.textContent || '').trim().toLowerCase();
       if (text === 'file' || text === 'table') return true;

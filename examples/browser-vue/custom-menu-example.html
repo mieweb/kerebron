@@ -1,93 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Custom Menu Example - Kerebron</title>
     <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f5f5f5;
-        }
-        
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-        
-        .header {
-            padding: 20px;
-            background: #1a73e8;
-            color: white;
-        }
-        
-        .header h1 {
-            margin: 0 0 10px 0;
-            font-size: 24px;
-            font-weight: 500;
-        }
-        
-        .header p {
-            margin: 0;
-            opacity: 0.9;
-            font-size: 14px;
-        }
-        
-        .editor-wrapper {
-            min-height: 500px;
-        }
-        
-        .instructions {
-            padding: 20px;
-            border-top: 1px solid #e8eaed;
-            background: #f8f9fa;
-        }
-        
-        .instructions h2 {
-            margin: 0 0 10px 0;
-            font-size: 16px;
-            font-weight: 500;
-        }
-        
-        .instructions ul {
-            margin: 10px 0;
-            padding-left: 20px;
-        }
-        
-        .instructions li {
-            margin: 5px 0;
-            font-size: 14px;
-            color: #5f6368;
-        }
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          'Helvetica Neue', Arial, sans-serif;
+        background: #f5f5f5;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        padding: 20px;
+        background: #1a73e8;
+        color: white;
+      }
+
+      .header h1 {
+        margin: 0 0 10px 0;
+        font-size: 24px;
+        font-weight: 500;
+      }
+
+      .header p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 14px;
+      }
+
+      .editor-wrapper {
+        min-height: 500px;
+      }
+
+      .instructions {
+        padding: 20px;
+        border-top: 1px solid #e8eaed;
+        background: #f8f9fa;
+      }
+
+      .instructions h2 {
+        margin: 0 0 10px 0;
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      .instructions ul {
+        margin: 10px 0;
+        padding-left: 20px;
+      }
+
+      .instructions li {
+        margin: 5px 0;
+        font-size: 14px;
+        color: #5f6368;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <h1>Custom Menu Extension Example</h1>
-            <p>A customizable toolbar with pinned items (Google Docs style)</p>
-        </div>
-        
-        <div class="editor-wrapper" id="editor"></div>
-        
-        <div class="instructions">
-            <h2>How to Use</h2>
-            <ul>
-                <li>The toolbar shows your pinned tools (maximum 8)</li>
-                <li>Click the three-dot menu (⋯) to see overflow tools</li>
-                <li>Click "Manage Pinned Tools" to customize which tools appear in the toolbar</li>
-                <li>Check/uncheck tools to pin/unpin them (limit: 8 pinned)</li>
-                <li>Your preferences are saved automatically</li>
-            </ul>
-        </div>
+      <div class="header">
+        <h1>Custom Menu Extension Example</h1>
+        <p>A customizable toolbar with pinned items (Google Docs style)</p>
+      </div>
+
+      <div class="editor-wrapper" id="editor"></div>
+
+      <div class="instructions">
+        <h2>How to Use</h2>
+        <ul>
+          <li>The toolbar shows your pinned tools (maximum 8)</li>
+          <li>Click the three-dot menu (⋯) to see overflow tools</li>
+          <li>
+            Click "Manage Pinned Tools" to customize which tools appear in the
+            toolbar
+          </li>
+          <li>Check/uncheck tools to pin/unpin them (limit: 8 pinned)</li>
+          <li>Your preferences are saved automatically</li>
+        </ul>
+      </div>
     </div>
-    
+
     <script type="module" src="./main.ts"></script>
-</body>
+  </body>
 </html>

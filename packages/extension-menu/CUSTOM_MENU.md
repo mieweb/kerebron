@@ -1,6 +1,8 @@
 # Custom Menu Extension
 
-The Custom Menu extension provides a Google Docs-style toolbar with customizable pinned items. Users can select which tools appear in the main toolbar (maximum 8) and which overflow into a dropdown menu.
+The Custom Menu extension provides a Google Docs-style toolbar with customizable
+pinned items. Users can select which tools appear in the main toolbar
+(maximum 8) and which overflow into a dropdown menu.
 
 ## Features
 
@@ -29,15 +31,16 @@ const editor = new CoreEditor({
 
 ### With Custom Menu Items
 
-You can customize which menu items are available by creating your own menu builder:
+You can customize which menu items are available by creating your own menu
+builder:
 
 ```typescript
 import { CoreEditor } from '@kerebron/editor';
-import { 
-  ExtensionCustomMenu, 
-  MenuItem, 
+import {
   Dropdown,
-  icons 
+  ExtensionCustomMenu,
+  icons,
+  MenuItem,
 } from '@kerebron/extension-menu';
 
 const editor = new CoreEditor({
@@ -52,7 +55,8 @@ const editor = new CoreEditor({
 
 ### Pinned Tools
 
-By default, the first 8 tools are pinned to the main toolbar. Users can customize this by:
+By default, the first 8 tools are pinned to the main toolbar. Users can
+customize this by:
 
 1. Clicking the three-dot overflow menu button
 2. Selecting "Manage Pinned Tools"
@@ -68,6 +72,7 @@ The overflow menu contains two sections:
 ### Management Modal
 
 The modal displays:
+
 - A message showing the maximum pinned limit (8)
 - A list of all available tools with checkboxes
 - Visual feedback when the limit is reached (unchecked items are disabled)
@@ -76,6 +81,7 @@ The modal displays:
 ## Styling
 
 The extension includes comprehensive CSS with:
+
 - Google Docs-style toolbar appearance
 - Smooth transitions and animations
 - Responsive design for mobile and desktop
@@ -96,9 +102,9 @@ The main extension class.
 
 ```typescript
 class ExtensionCustomMenu extends Extension {
-  name: 'customMenu'
-  
-  getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[]
+  name: 'customMenu';
+
+  getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[];
 }
 ```
 
@@ -108,7 +114,7 @@ The ProseMirror plugin that manages the menu view.
 
 ```typescript
 class CustomMenuPlugin extends Plugin {
-  constructor(editor: CoreEditor, options: CustomMenuOptions)
+  constructor(editor: CoreEditor, options: CustomMenuOptions);
 }
 ```
 
@@ -119,15 +125,17 @@ Configuration options for the custom menu.
 ```typescript
 interface CustomMenuOptions {
   /// Provides the content of the menu
-  content: readonly (readonly MenuElement[])[]
+  content: readonly (readonly MenuElement[])[];
 }
 ```
 
 ## Storage
 
-Pinned tool preferences are stored in `localStorage` under the key `kb-custom-menu-pinned`. The value is a JSON array of tool IDs.
+Pinned tool preferences are stored in `localStorage` under the key
+`kb-custom-menu-pinned`. The value is a JSON array of tool IDs.
 
 Example:
+
 ```json
 ["tool-0", "tool-1", "tool-5", "tool-7"]
 ```
@@ -141,6 +149,7 @@ Example:
 ## Accessibility
 
 The extension includes proper ARIA attributes:
+
 - `aria-label` for button descriptions
 - `aria-haspopup` and `aria-expanded` for dropdown menus
 - `aria-disabled` for disabled items
