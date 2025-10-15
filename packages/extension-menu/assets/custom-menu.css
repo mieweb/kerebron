@@ -145,7 +145,6 @@
   display: flex !important;
   padding: 0 !important;
   background: transparent !important;
-  pointer-events: none !important;
 }
 
 .kb-custom-menu .kb-dropdown__item button:hover,
