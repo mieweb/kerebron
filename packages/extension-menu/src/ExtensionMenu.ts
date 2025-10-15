@@ -296,7 +296,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
 
   menu.push(
     new Dropdown(cut(typeMenu), {
-      label: 'Type...',
+      label: 'Type',
     }),
   );
 
