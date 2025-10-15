@@ -1,6 +1,4 @@
 import type { Node, Schema } from 'prosemirror-model';
-import { DOMSerializer, Fragment } from 'prosemirror-model';
-
 import { type Converter, type CoreEditor, Extension } from '@kerebron/editor';
 
 import pmToMdConverter from './pmToMdConverter.ts';
@@ -22,9 +20,6 @@ export class ExtensionMarkdown extends Extension {
     editor: CoreEditor,
     schema: Schema,
   ): Record<string, Converter> {
-    const domSerializer = DOMSerializer.fromSchema(schema);
-    const autoLinks = false; // TODO - config
-
     return {
       'text/x-markdown': {
         fromDoc: (source: Node) =>
