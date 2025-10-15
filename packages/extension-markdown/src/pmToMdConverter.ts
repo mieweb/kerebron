@@ -1,6 +1,6 @@
 import type { Mark, MarkType, Node, Schema } from 'prosemirror-model';
-import { DOMSerializer, Fragment } from 'prosemirror-model';
-import Token from 'markdown-it/lib/token.mjs';
+import { Fragment } from 'prosemirror-model';
+import { Token } from './types.ts';
 
 import {
   type Converter,

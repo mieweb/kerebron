@@ -1,4 +1,4 @@
-import type Token from 'markdown-it/lib/token';
+import type { Token } from '../types.ts';
 
 import {
   type ContextStash,
@@ -273,16 +273,16 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
           };
 
           ctx.current.itemSymbol = '';
-          const symbolTuple = token.attrs?.find((attr) => attr[0] === 'symbol');
-          if (symbolTuple) {
-            ctx.current.meta['list_symbol'] = symbolTuple[1];
+          const symbol = token.attrGet('symbol');
+          if (symbol) {
+            ctx.current.meta['list_symbol'] = symbol;
           } else {
             ctx.current.meta['list_symbol'] = '1';
           }
 
-          const startTuple = token.attrs?.find((attr) => attr[0] === 'start');
-          if (startTuple && startTuple.length > 1) {
-            ctx.current.itemNumber = (+startTuple[1] || 1) - 1;
+          const start = token.attrGet('start');
+          if (start) {
+            ctx.current.itemNumber = (+start || 1) - 1;
           } else {
             ctx.current.itemNumber = 0;
           }

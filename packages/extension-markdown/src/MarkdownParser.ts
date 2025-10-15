@@ -1,5 +1,5 @@
 import MarkdownIt from 'markdown-it';
-import Token from 'markdown-it/lib/token.mjs';
+import type { Token } from './types.ts';
 import {
   Attrs,
   Mark,

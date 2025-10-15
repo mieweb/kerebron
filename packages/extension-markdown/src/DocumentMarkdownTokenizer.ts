@@ -1,5 +1,5 @@
 import type { Mark, Node } from 'prosemirror-model';
-import Token from 'markdown-it/lib/token.mjs';
+import { Token } from './types.ts';
 
 type MarkTokenizerSpec = {
   open?: string | ((mark: Mark) => Token);

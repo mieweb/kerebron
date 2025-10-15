@@ -1,4 +1,4 @@
-import type Token from 'markdown-it/lib/token';
+import type { Token } from '../types.ts';
 
 import type {
   ContextStash,
@@ -249,8 +249,8 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
     ],
     'th_open': [
       (token: Token, ctx: ContextStash) => {
-        const styleTuple = token.attrs?.find((attr) => attr[0] === 'style');
-        const align = styleTuple && styleTuple[1] === 'text-align:right'
+        const style = token.attrGet('style');
+        const align = style === 'text-align:right'
           ? 'right'
           : 'left';
 
@@ -274,8 +274,8 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
     ],
     'td_open': [
       (token: Token, ctx: ContextStash) => {
-        const styleTuple = token.attrs?.find((attr) => attr[0] === 'style');
-        const align = styleTuple && styleTuple[1] === 'text-align:right'
+        const style = token.attrGet('style');
+        const align = style === 'text-align:right'
           ? 'right'
           : 'left';
 

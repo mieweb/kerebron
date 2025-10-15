@@ -1,11 +1,4 @@
-import MarkdownIt from 'markdown-it';
-import type Token from 'markdown-it/lib/token';
-import markdownDefList from 'npm:markdown-it-deflist@3.0.0';
-import markdownFootnote from 'npm:markdown-it-footnote@4.0.0';
-import { markdownItTable } from 'npm:markdown-it-table@4.1.1';
-import markdownSub from './markdown-it/markdown-it-sub.ts';
-import markdownSup from './markdown-it/markdown-it-sup.ts';
-import markdownMath from 'npm:markdown-it-math@5.2.1';
+import type { Token } from './types.ts';
 
 import { getTableTokensHandlers } from './token_handlers/table_token_handlers.ts';
 import { getBasicTokensHandlers } from './token_handlers/basic_token_handlers.ts';
@@ -188,26 +181,9 @@ export type TokenHandler = (
 ) => boolean | void;
 
 export class MarkdownSerializer {
-  public readonly markdownIt: MarkdownIt;
-
   private ctx: ContextStash;
 
   constructor() {
-    this.markdownIt = new MarkdownIt({
-      html: true,
-      linkify: true,
-      typographer: true,
-      breaks: true,
-      // highlight: true,
-      quotes: '""\'\'',
-    });
-    this.markdownIt.use(markdownDefList);
-    this.markdownIt.use(markdownFootnote);
-    this.markdownIt.use(markdownItTable);
-    this.markdownIt.use(markdownMath);
-    this.markdownIt.use(markdownSub);
-    this.markdownIt.use(markdownSup);
-
     this.ctx = new ContextStash({
       ...getInlineTokensHandlers(),
       ...getTableTokensHandlers(),

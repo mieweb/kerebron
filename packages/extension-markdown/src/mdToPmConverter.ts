@@ -1,17 +1,10 @@
 import type { Node, Schema } from 'prosemirror-model';
 
-import MarkdownIt from 'markdown-it';
-import type Token from 'markdown-it/lib/token';
-import markdownDefList from 'npm:markdown-it-deflist@3.0.0';
-import markdownFootnote from 'npm:markdown-it-footnote@4.0.0';
-import { markdownItTable } from 'npm:markdown-it-table@4.1.1';
-import markdownSub from './markdown-it/markdown-it-sub.ts';
-import markdownSup from './markdown-it/markdown-it-sup.ts';
-import markdownCode from './markdown-it/markdown-it-code.ts';
-import markdownMath from 'npm:markdown-it-math@5.2.1';
+import type { Token } from './types.ts';
 
 import { MarkdownParser } from './MarkdownParser.ts';
 import { MdConfig } from '@kerebron/extension-markdown';
+import { defaultTokenizer } from './defaultTokenizer.ts';
 
 function listIsTight(tokens: readonly Token[], i: number) {
   while (++i < tokens.length) {
@@ -30,18 +23,9 @@ export default async function mdToPmConverter(
   /// without inline HTML, and producing a document in the basic schema.
   //
 
-  const markdownIt = new MarkdownIt('commonmark', { html: false });
-  markdownIt.use(markdownDefList);
-  // markdownIt.use(markdownFootnote);
-  markdownIt.use(markdownMath);
-  markdownIt.use(markdownCode);
-  markdownIt.use(markdownItTable);
-  // markdownIt.use(markdownSub);
-  // markdownIt.use(markdownSup);
-
   const defaultMarkdownParser = new MarkdownParser(
     schema,
-    markdownIt,
+    defaultTokenizer(),
     {
       blockquote: { block: 'blockquote' },
       paragraph: { block: 'paragraph' },
