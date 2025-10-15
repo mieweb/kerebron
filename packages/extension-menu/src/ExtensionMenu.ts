@@ -238,7 +238,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
         label: 'Image',
         // enable: (state) => editor.can().setHorizontalRule().run(),
         enable: (state) => canInsert(state, nodeType),
-        run(state, _, view) {
+        run(state, dispatch) {
           let { from, to } = state.selection, attrs = null;
           if (
             state.selection instanceof NodeSelection &&
@@ -264,14 +264,15 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
               }),
             },
             callback(attrs) {
-              view.dispatch(
-                view.state.tr.replaceSelectionWith(
+              editor.view.dispatch(
+                editor.view.state.tr.replaceSelectionWith(
                   nodeType.createAndFill(attrs)!,
                 ),
               );
-              view.focus();
+              editor.view.focus();
             },
           });
+          return true;
         },
       }),
     );
