@@ -112,12 +112,14 @@ export interface MdConfig {
 
 export class ExtensionMarkdown extends Extension {
   name = 'markdown';
+  private config: Partial<MdConfig>;
 
   public constructor(config: Partial<MdConfig> = {}) {
     super(config);
+    this.config = config;
   }
 
-  override getConverters(
+  getConverters(
     editor: CoreEditor,
     schema: Schema,
   ): Record<string, Converter> {
@@ -357,11 +359,11 @@ export class ExtensionMarkdown extends Extension {
               close: 'link_close',
               mixable: true,
             },
-            // code: {
-            // selfClose()
-            // open: 'code_open',
-            // close: 'code_close',
-            // }
+            code: {
+              open: 'code_inline',
+              close: 'code_inline',
+              mixable: false,
+            },
             // bookmark: {
             //   open(state, mark) {
             //     const id = mark.attrs.id;

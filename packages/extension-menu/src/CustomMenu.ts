@@ -17,7 +17,6 @@ interface ToolItem {
   label: string;
   element: MenuElement;
   isPinned: boolean;
-  updateFn: (state: EditorState) => boolean;
 }
 
 class CustomMenuView {
@@ -107,7 +106,6 @@ class CustomMenuView {
           label,
           element,
           isPinned: false,
-          updateFn: update,
         });
       });
     });
@@ -262,9 +260,48 @@ class CustomMenuView {
 
       overflowToggle.addEventListener('click', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         const isOpen = this.overflowMenu.style.display !== 'none';
         this.overflowMenu.style.display = isOpen ? 'none' : 'block';
         overflowToggle.setAttribute('aria-expanded', String(!isOpen));
+
+        // Add/remove close handler based on open state
+        const doc = this.editorView.dom.ownerDocument || document;
+        if (!isOpen) {
+          // Opening - add close handler after a short delay
+          setTimeout(() => {
+            if (this.closeOverflowHandler) {
+              doc.removeEventListener('click', this.closeOverflowHandler);
+            }
+            this.closeOverflowHandler = (e: MouseEvent) => {
+              // Don't interfere with editor clicks
+              const target = e.target as Node;
+              const editorDom = this.editorView.dom;
+
+              // Check if click is inside editor
+              if (editorDom.contains(target)) {
+                return; // Let editor handle it
+              }
+
+              if (
+                !this.overflowMenu.contains(target) &&
+                !this.toolbar.contains(target)
+              ) {
+                this.overflowMenu.style.display = 'none';
+                overflowToggle.setAttribute('aria-expanded', 'false');
+                if (this.closeOverflowHandler) {
+                  doc.removeEventListener('click', this.closeOverflowHandler);
+                }
+              }
+            };
+            doc.addEventListener('click', this.closeOverflowHandler);
+          }, 0);
+        } else {
+          // Closing - remove close handler
+          if (this.closeOverflowHandler) {
+            doc.removeEventListener('click', this.closeOverflowHandler);
+          }
+        }
       });
 
       this.toolbar.appendChild(overflowToggle);
@@ -354,31 +391,6 @@ class CustomMenuView {
       overflowFooter.appendChild(manageButton);
       this.overflowMenu.appendChild(overflowFooter);
     }
-
-    // Remove existing click-outside listener if any
-    const doc = this.editorView.dom.ownerDocument || document;
-    if (this.closeOverflowHandler) {
-      doc.removeEventListener('click', this.closeOverflowHandler);
-    }
-
-    // Create and store close overflow handler
-    this.closeOverflowHandler = (e: MouseEvent) => {
-      if (
-        !this.overflowMenu.contains(e.target as Node) &&
-        !this.toolbar.contains(e.target as Node)
-      ) {
-        this.overflowMenu.style.display = 'none';
-        const toggle = this.toolbar.querySelector(
-          '.' + CSS_PREFIX + '__overflow-toggle',
-        );
-        if (toggle) {
-          toggle.setAttribute('aria-expanded', 'false');
-        }
-      }
-    };
-
-    // Add new listener
-    doc.addEventListener('click', this.closeOverflowHandler);
   }
 
   private openManageModal() {
@@ -571,9 +583,10 @@ class CustomMenuView {
   }
 
   update(view: EditorView, prevState: EditorState) {
-    // Efficiently update tool states using stored update functions
+    // Re-render tools to update their state (original approach)
+    // Note: This is less efficient but more reliable than storing update functions
     this.tools.forEach((tool) => {
-      tool.updateFn(view.state);
+      tool.element.render(this.editorView);
     });
   }
 
