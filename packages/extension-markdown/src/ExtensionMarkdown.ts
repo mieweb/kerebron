@@ -239,6 +239,13 @@ export class ExtensionMarkdown extends Extension {
               };
             },
 
+            table_header(node) {
+              return {
+                open: 'th_open',
+                close: 'th_close',
+              };
+            },
+
             br(node) {
               return {
                 selfClose: 'hardbreak',
