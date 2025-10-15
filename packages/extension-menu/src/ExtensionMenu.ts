@@ -332,16 +332,6 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
   );
 
   if (schema.nodes.table) {
-    // Add direct "Insert table" button with icon
-    menu.push(
-      new MenuItem({
-        title: 'Insert table',
-        icon: icons.table,
-        run: () => editor.chain().insertTable().run(),
-        enable: () => editor.can().insertTable().run(),
-      }),
-    );
-
     const item = (label: string, cmdName: string) => {
       return new MenuItem({
         label,
@@ -350,6 +340,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
       });
     };
     const tableMenu = [
+      item('Insert table', 'insertTable'),
       item('Insert column before', 'addColumnBefore'),
       item('Insert column after', 'addColumnAfter'),
       item('Delete column', 'deleteColumn'),
