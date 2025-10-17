@@ -376,8 +376,9 @@ export class DropdownSubmenu implements MenuElement {
     label.addEventListener('mousedown', (e) => {
       e.preventDefault();
       markMenuEvent(e);
-      setClass(wrap, CSS_PREFIX + '--open', false);
-      if (!listeningOnClose) {
+      const isOpen = wrap.classList.contains(CSS_PREFIX + '--open');
+      setClass(wrap, CSS_PREFIX + '--open', !isOpen);
+      if (!isOpen && !listeningOnClose) {
         win.addEventListener(
           'mousedown',
           listeningOnClose = () => {
