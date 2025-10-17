@@ -1,7 +1,12 @@
 {
   "name": "@kerebron/extension-markdown",
   "tasks": {},
-  "imports": {},
+  "imports": {
+    "$deno_tree_sitter/": "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/",
+    "$deno_tree_sitter/main.js": "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/main.js",
+    "$deno_tree_sitter/tree.js": "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/tree_sitter/tree.js",
+    "$deno_tree_sitter/xml_style_preview.js": "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/extras/xml_style_preview.js"
+  },
   "exports": {
     ".": "./src/ExtensionMarkdown.ts",
     "./MarkdownSerializer": "./src/MarkdownSerializer.ts"

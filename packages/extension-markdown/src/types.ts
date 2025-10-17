@@ -1,14 +1,16 @@
+// https://github.com/markdown-it/markdown-it/blob/master/lib/token.mjs
+
 type TupleArray = Array<[string, string]>;
 
-export const NESTING_OPENING = -1;
+export const NESTING_OPENING = 1;
 export const NESTING_SELF_CLOSING = 0;
-export const NESTING_CLOSING = 1;
+export const NESTING_CLOSING = -1;
 
 type Nesting = -1 | 0 | 1;
 
 export class Token {
   attrs: TupleArray | null = null;
-  map: [number, number] | null = null;
+  map: [number, number] | [number, number, number, number] | null = null;
   level: number = 0;
   children: Array<Token> | null = null;
   content: string = '';

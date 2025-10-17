@@ -1,10 +1,14 @@
 import type { Node, Schema } from 'prosemirror-model';
+import { DOMParser } from 'prosemirror-model';
 
 import type { Token } from './types.ts';
 
-import { MarkdownParser } from './MarkdownParser.ts';
+import { MarkdownParser, type MarkdownParseState } from './MarkdownParser.ts';
 import { MdConfig } from '@kerebron/extension-markdown';
-import { defaultTokenizer } from './defaultTokenizer.ts';
+// import { defaultTokenizer } from './defaultTokenizer.ts';
+import { sitterTokenizer } from './treeSitterTokenizer.ts';
+import { elementFromString } from '../../extension-basic-editor/src/ExtensionHtml.ts';
+import { nodeToTreeString } from '../../editor/src/nodeToTreeString.ts';
 
 function listIsTight(tokens: readonly Token[], i: number) {
   while (++i < tokens.length) {
@@ -25,8 +29,11 @@ export default async function mdToPmConverter(
 
   const defaultMarkdownParser = new MarkdownParser(
     schema,
-    defaultTokenizer(),
+    sitterTokenizer(),
     {
+      frontmatter: {
+        node: 'frontmatter',
+      },
       blockquote: { block: 'blockquote' },
       paragraph: { block: 'paragraph' },
       list_item: { block: 'list_item' },
@@ -63,15 +70,19 @@ export default async function mdToPmConverter(
       hr: { node: 'hr' },
       image: {
         node: 'image',
-        getAttrs: (tok) => ({
-          src: tok.attrGet('src'),
-          title: tok.attrGet('title') || null,
-          alt: tok.children![0] && tok.children![0].content || null,
-        }),
+        getAttrs: (tok) => {
+          const firstChild = tok.children ? tok.children[0] : undefined;
+          return {
+            src: tok.attrGet('src'),
+            title: tok.attrGet('title') || null,
+            alt: firstChild?.content || null,
+          };
+        },
       },
       hardbreak: { node: 'br' },
       em: { mark: 'em' },
       strong: { mark: 'strong' },
+      strike: { mark: 'strike' },
       link: {
         mark: 'link',
         getAttrs: (tok) => ({
@@ -82,7 +93,17 @@ export default async function mdToPmConverter(
       code: { mark: 'code' },
       // code_close: { mark: 'code' },
       html_block: { // TODO
-        block: 'code_block',
+        custom: (
+          state: MarkdownParseState,
+          token: Token,
+          tokens: Token[],
+          i: number,
+        ) => {
+          const parser = DOMParser.fromSchema(schema);
+          const parsed = parser.parse(elementFromString(token.content));
+
+          state.importNodes(parsed.children);
+        },
       },
       footnote_ref: {
         block: 'code_block',

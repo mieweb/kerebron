@@ -1,4 +1,4 @@
-import type { Token } from '../types.ts';
+import { Token } from '../types.ts';
 
 import type {
   ContextStash,
@@ -11,6 +11,7 @@ export function getHtmlBasicTokensHandlers(): Record<
   Array<TokenHandler>
 > {
   return {
+    'frontmatter': [],
     'heading_open': [
       (token: Token, ctx: ContextStash) => {
         ctx.current.log(`<${token.tag}>`, token);
@@ -80,11 +81,19 @@ function getHeaderTokensHandlers(): Record<string, Array<TokenHandler>> {
 
 export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
   return {
+    'frontmatter': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log(
+          '---' + '\n' + token.content + '\n---\n\n',
+          token,
+        );
+      },
+    ],
     'heading_open': [
       (token: Token, ctx: ContextStash) => {
         ctx.stash();
         ctx.current.handlers = getHeaderTokensHandlers();
-        ctx.current.log('#'.repeat(+token.tag.slice(1)) + ' ', token);
+        ctx.current.log('#'.repeat(+token.tag.substring(1)) + ' ', token);
       },
     ],
     'heading_close': [
@@ -109,10 +118,17 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
 
     'fence': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log(
-          '```' + token.info + '\n' + token.content + '```\n\n',
-          token,
-        );
+        if (token.info === 'latex') {
+          ctx.current.log(
+            '$$' + '\n' + token.content + '\n$$\n\n',
+            token,
+          );
+        } else {
+          ctx.current.log(
+            '```' + token.info + '\n' + token.content + '```\n\n',
+            token,
+          );
+        }
       },
     ],
 

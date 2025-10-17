@@ -8,6 +8,7 @@ import markdownCode from './markdown-it/markdown-it-code.ts';
 import markdownMath from 'npm:markdown-it-math@5.2.1';
 
 export function defaultTokenizer() {
+  throw new Error('deprec');
 
   // const markdownIt = new MarkdownIt('commonmark', { html: false });
   const markdownIt = new MarkdownIt({

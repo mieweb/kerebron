@@ -86,7 +86,6 @@ export class SmartOutput<K> {
     let prevSourceRowPos = 0;
     let prevSourceColPos = 0;
 
-    // console.log('this.metas', this.metas);
     for (const meta of this.metas) {
       while (meta.rowPos >= mappingRows.length) {
         mappingRows.push([]);

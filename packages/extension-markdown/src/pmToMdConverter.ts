@@ -3,9 +3,7 @@ import { Fragment } from 'prosemirror-model';
 import { Token } from './types.ts';
 
 import {
-  type Converter,
   type CoreEditor,
-  Extension,
   NodeAndPos,
   nodeToTreeStringOutput,
 } from '@kerebron/editor';
@@ -451,14 +449,13 @@ export default async function pmToMdConverter(
         debugMap[item.pos] = {
           targetRow,
           targetCol,
-          node: item.node.text || item.node.type.name,
         };
       },
     );
 
     const markdownMap: Record<
       number,
-      { targetRow: number; targetCol: number }
+      { targetRow: number; targetCol: number; sourceCol: number }
     > = {};
 
     const sourceMap = output.getSourceMap(
@@ -467,10 +464,12 @@ export default async function pmToMdConverter(
 
         if (item?.map) {
           const pos = item.map[0];
+          const sourceCol = item.map[2] || 0;
 
           markdownMap[pos] = {
             targetRow,
             targetCol,
+            sourceCol,
           };
 
           if (debugMap[pos]) {

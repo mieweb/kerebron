@@ -83,7 +83,7 @@
   },
   "fmt": {
     "singleQuote": true,
-    "exclude": ["**/*.md", "**/*.odt.xml"]
+    "exclude": ["**/*.md", "**/*.odt.xml", "**/*.xml"]
   },
   "nodeModulesDir": "auto"
 }

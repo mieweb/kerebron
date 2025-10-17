@@ -106,12 +106,12 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
         ctx.current.log(token.markup || '*', token);
       },
     ],
-    's_open': [
+    'strike_open': [
       (token: Token, ctx: ContextStash) => {
         ctx.current.log(token.markup || '~~', token);
       },
     ],
-    's_close': [
+    'strike_close': [
       (token: Token, ctx: ContextStash) => {
         ctx.current.log(token.markup || '~~', token);
       },
@@ -139,14 +139,14 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
       },
     ],
 
-    // 'code_inline': [
-    //   (token: Token, ctx: ContextStash) => {
-    //     ctx.current.log('`' + token.content + '`', token);
-    //   },
-    // ],
+    'code_inline': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log('`' + token.content + '`', token);
+      },
+    ],
+
     'math': [
       (token: Token, ctx: ContextStash) => {
-        throw new Error('mmmmmmaaa');
         ctx.current.log('$' + token.content + '$', token);
       },
     ],
@@ -164,7 +164,7 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
     'image': [
       (token: Token, ctx: ContextStash) => {
         {
-          const src = token.attrGet('src')
+          const src = token.attrGet('src');
           let alt = '';
           if (token.children) {
             for (const child of token.children) {
@@ -183,6 +183,11 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
             );
           }
         }
+      },
+    ],
+
+    'html_block': [
+      (token: Token, ctx: ContextStash) => {
       },
     ],
 
@@ -236,13 +241,13 @@ export function getHtmlInlineTokensHandlers(): Record<
         ctx.current.log(`</${tag}>`, token);
       },
     ],
-    's_open': [
+    'strike_open': [
       (token: Token, ctx: ContextStash) => {
         const tag = token.tag || 'strike';
         ctx.current.log(`<${tag}>`, token);
       },
     ],
-    's_close': [
+    'strike_close': [
       (token: Token, ctx: ContextStash) => {
         const tag = token.tag || 'strike';
         ctx.current.log(`</${tag}>`, token);
@@ -332,6 +337,10 @@ export function getHtmlInlineTokensHandlers(): Record<
           const tag = token.tag || 'img';
           ctx.current.log(`<${tag} />`, token);
         }
+      },
+    ],
+    'html_block': [
+      (token: Token, ctx: ContextStash) => {
       },
     ],
 

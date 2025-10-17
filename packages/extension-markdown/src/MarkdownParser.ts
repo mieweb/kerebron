@@ -1,4 +1,4 @@
-import MarkdownIt from 'markdown-it';
+// import MarkdownIt from 'markdown-it';
 import type { Token } from './types.ts';
 import {
   Attrs,
@@ -9,6 +9,8 @@ import {
   Schema,
 } from 'prosemirror-model';
 
+const __dirname = import.meta.dirname;
+
 function maybeMerge(a: Node, b: Node): Node | undefined {
   if (a.isText && b.isText && Mark.sameSet(a.marks, b.marks)) {
     return (a as any).withText(a.text! + b.text!);
@@ -16,7 +18,7 @@ function maybeMerge(a: Node, b: Node): Node | undefined {
 }
 
 // Object used to track the context of a running parse.
-class MarkdownParseState {
+export class MarkdownParseState {
   stack: {
     type: NodeType;
     attrs: Attrs | null;
@@ -112,6 +114,14 @@ class MarkdownParseState {
     let info = this.stack.pop()!;
     return this.addNode(info.type, info.attrs, info.content);
   }
+
+  importNodes(nodes: readonly Node[]) {
+    // console.log(nodeToTreeString(parsed));
+    for (const node of nodes) {
+      this.push(node);
+    }
+    // throw new Error('importNodes');
+  }
 }
 
 function attrs(spec: ParseSpec, token: Token, tokens: Token[], i: number) {
@@ -175,6 +185,11 @@ function tokenHandlers(schema: Schema, tokens: { [token: string]: ParseSpec }) {
           state.openMark(markType.create(attrs(spec, tok, tokens, i)));
         handlers[type + '_close'] = (state) => state.closeMark(markType);
       }
+    } else if (spec.custom) {
+      const custom = spec.custom;
+      handlers[type] = (state, tok, tokens, i) => {
+        custom(state, tok, tokens, i);
+      };
     } else if (spec.ignore) {
       if (noCloseToken(spec, type)) {
         handlers[type] = noOp;
@@ -215,6 +230,13 @@ export interface ParseSpec {
   /// in a node.
   mark?: string;
 
+  custom?: (
+    stat: MarkdownParseState,
+    token: Token,
+    tokens: Token[],
+    i: number,
+  ) => void;
+
   /// Attributes for the node or mark. When `getAttrs` is provided,
   /// it takes precedence.
   attrs?: Attrs | null;
@@ -237,6 +259,10 @@ export interface ParseSpec {
 
   /// When true, ignore content for the matched token.
   ignore?: boolean;
+}
+
+interface MarkdownTokenizer {
+  parse(markdown: string, markdownEnv?: Record<string, any>): Array<Token>;
 }
 
 /// A configuration of a Markdown parser. Such a parser uses
@@ -264,7 +290,7 @@ export class MarkdownParser {
     /// The parser's document schema.
     readonly schema: Schema,
     /// This parser's markdown-it tokenizer.
-    readonly tokenizer: MarkdownIt,
+    readonly tokenizer: MarkdownTokenizer,
     /// The value of the `tokens` object used to construct this
     /// parser. Can be useful to copy and modify to base other parsers
     /// on.
@@ -282,7 +308,15 @@ export class MarkdownParser {
   /// parser](https://markdown-it.github.io/markdown-it/#MarkdownIt.parse).
   parse(text: string, markdownEnv: Record<string, any> = {}) {
     let state = new MarkdownParseState(this.schema, this.tokenHandlers), doc;
-    state.parseTokens(this.tokenizer.parse(text, markdownEnv));
+
+    const tokens = this.tokenizer.parse(text, markdownEnv);
+
+    Deno.writeTextFileSync(
+      __dirname + '/../test/markdown-it.tokens.json',
+      JSON.stringify(tokens, null, 2),
+    );
+
+    state.parseTokens(tokens);
     do {
       doc = state.closeNode();
     } while (state.stack.length);

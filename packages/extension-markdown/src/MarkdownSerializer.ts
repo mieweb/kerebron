@@ -1,4 +1,4 @@
-import type { Token } from './types.ts';
+import { NESTING_CLOSING, type Token } from './types.ts';
 
 import { getTableTokensHandlers } from './token_handlers/table_token_handlers.ts';
 import { getBasicTokensHandlers } from './token_handlers/basic_token_handlers.ts';
@@ -12,6 +12,7 @@ export function writeIndented(
   output: SmartOutput<Token>,
   text: string,
   currentCtx: SerializerContext,
+  token: Token,
 ) {
   const lines = text.split('\n');
 
@@ -23,7 +24,7 @@ export function writeIndented(
       output.log('    '.repeat(currentCtx.footnoteCnt));
 
       if (currentCtx.listType === 'ul') {
-        output.log('  '.repeat(currentCtx.listLevel - 1));
+        output.log('    '.repeat(currentCtx.listLevel - 1));
         if (currentCtx.itemRow === 0) {
           output.log(currentCtx.itemSymbol + ' ');
         } else {
@@ -50,7 +51,7 @@ export function writeIndented(
       }
     }
 
-    output.log(line);
+    output.log(line, token);
     if (lineNo < lines.length - 1) {
       currentCtx.itemRow++;
       output.log('\n');
@@ -205,14 +206,14 @@ export class MarkdownSerializer {
       // console.log('tok', token);
 
       if (!this.ctx.current.meta['html_mode']) {
-        if (token.level === 0 && token.nesting !== -1) {
+        if (token.level === 0 && token.nesting !== NESTING_CLOSING) {
           if (this.ctx.output.colPos !== 0) {
             this.ctx.current.log('\n');
           }
         }
 
         if (!this.endsWithEmptyLine) {
-          if (token.nesting !== -1 && token.level === 0) {
+          if (token.nesting !== NESTING_CLOSING && token.level === 0) {
             const prevTopTokenType = prevLevelTokenType[token.level] || '';
             if (
               [
@@ -237,7 +238,7 @@ export class MarkdownSerializer {
               this.ctx.current.log('\n');
             }
           } else if (
-            token.nesting !== -1 && token.level === 1 &&
+            token.nesting !== NESTING_CLOSING && token.level === 1 &&
             'dt_open' === token.type
           ) {
             const prevTokenType = prevLevelTokenType[token.level] || '';
@@ -260,7 +261,7 @@ export class MarkdownSerializer {
         if (token.children) {
           this.ctx.stash();
           this.ctx.current.log = (txt: string, token: Token) => {
-            writeIndented(this.ctx.output, txt, this.ctx.current);
+            writeIndented(this.ctx.output, txt, this.ctx.current, token);
           };
 
           try {
@@ -286,7 +287,7 @@ export class MarkdownSerializer {
       }
 
       prevLevelTokenType[token.level] = token.type;
-      if (token.nesting === -1) {
+      if (token.nesting === NESTING_CLOSING) {
         prevLevelTokenType[token.level + 1] = '';
       }
     });

@@ -250,9 +250,7 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
     'th_open': [
       (token: Token, ctx: ContextStash) => {
         const style = token.attrGet('style');
-        const align = style === 'text-align:right'
-          ? 'right'
-          : 'left';
+        const align = style === 'text-align:right' ? 'right' : 'left';
 
         const tableBuilder: TableBuilder = ctx.current.meta['table_builder'];
         tableBuilder.appendCell(align);
@@ -275,9 +273,7 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
     'td_open': [
       (token: Token, ctx: ContextStash) => {
         const style = token.attrGet('style');
-        const align = style === 'text-align:right'
-          ? 'right'
-          : 'left';
+        const align = style === 'text-align:right' ? 'right' : 'left';
 
         const tableBuilder: TableBuilder = ctx.current.meta['table_builder'];
         tableBuilder.appendCell(align);
