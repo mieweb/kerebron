@@ -120,7 +120,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
         enable(state) {
           return !state.selection.empty;
         },
-        run(state, dispatch, view) {
+        run(state, dispatch) {
           if (markActive(state, markType)) {
             toggleMark(markType)(state, dispatch);
             return true;
@@ -135,10 +135,11 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
               title: new TextField({ label: 'Title' }),
             },
             callback(attrs) {
-              toggleMark(markType, attrs)(view.state, view.dispatch);
-              view.focus();
+              toggleMark(markType, attrs)(editor.view.state, editor.view.dispatch);
+              editor.view.focus();
             },
           });
+          return true;
         },
       }),
     );
