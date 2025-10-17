@@ -351,6 +351,12 @@ export class ExtensionMarkdown extends Extension {
               mixable: true,
               expelEnclosingWhitespace: true,
             },
+            underline: {
+              open: '',
+              close: '',
+              mixable: true,
+              expelEnclosingWhitespace: true,
+            },
             strike: {
               open: 'strike_open',
               close: 'strike_close',

@@ -212,7 +212,7 @@ export class DocumentMarkdownTokenizer {
     let info = this.getMark(mark.type.name);
     let value = open ? info.open : info.close;
 
-    if (!value) {
+    if (value === undefined || value === null) {
       throw new Error('Invalid mark type: ' + mark.type.name);
     }
 
