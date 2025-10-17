@@ -371,7 +371,7 @@ export class ExtensionMenu extends Extension {
     super(config);
   }
 
-  override getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
+  getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
     const plugins: Plugin[] = [];
 
     let content = buildMenu(editor, schema);
