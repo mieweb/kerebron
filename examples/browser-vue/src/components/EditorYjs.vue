@@ -20,14 +20,7 @@ import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionOdt } from '@kerebron/extension-odt';
 import { ExtensionTables } from '@kerebron/extension-tables';
 import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
-
-import {
-  Dropdown,
-  ExtensionMenu,
-  ExtensionCustomMenu,
-  type MenuElement,
-  MenuItem,
-} from '@kerebron/extension-menu';
+import { ExtensionCustomMenu } from '@kerebron/extension-menu/ExtensionCustomMenu';
 
 import { ExtensionYjs } from '@kerebron/extension-yjs';
 import { userColors } from '@kerebron/extension-yjs/userColors';
