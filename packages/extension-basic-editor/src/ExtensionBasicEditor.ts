@@ -3,6 +3,7 @@ import { ExtensionSelection } from './ExtensionSelection.ts';
 import { ExtensionBaseKeymap } from './ExtensionBaseKeymap.ts';
 import { ExtensionDropcursor } from './ExtensionDropcursor.ts';
 import { ExtensionGapcursor } from './ExtensionGapcursor.ts';
+import { ExtensionHistory } from './ExtensionHistory.ts';
 import { NodeDocument } from './NodeDocument.ts';
 import { NodeText } from './NodeText.ts';
 import { NodeParagraph } from './NodeParagraph.ts';
@@ -34,6 +35,7 @@ export class ExtensionBasicEditor extends Extension {
     new ExtensionBaseKeymap(),
     new ExtensionDropcursor(),
     new ExtensionGapcursor(),
+    new ExtensionHistory(),
     new ExtensionHtml(),
     new ExtensionSelection(),
     new NodeDocument(),
