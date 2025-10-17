@@ -1,5 +1,6 @@
 import { Command, EditorState, NodeSelection, Plugin } from 'prosemirror-state';
 import { MarkType, NodeType, Schema } from 'prosemirror-model';
+import { undo, redo, undoDepth, redoDepth } from 'prosemirror-history';
 
 import { type CoreEditor, Extension } from '@kerebron/editor';
 import { toggleMark, wrapInList } from '@kerebron/editor/commands';
@@ -306,8 +307,12 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
   menu.push(
     new MenuItem({
       title: 'Undo last change',
-      run: () => editor.chain().undo().run(),
-      enable: () => editor.can().undo().run(),
+      run: (state, dispatch) => {
+        return undo(editor.view.state, editor.view.dispatch, editor.view);
+      },
+      enable: (state) => {
+        return undo(state);
+      },
       icon: icons.undo,
     }),
   );
@@ -315,8 +320,10 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
   menu.push(
     new MenuItem({
       title: 'Redo last undone change',
-      run: () => editor.chain().redo().run(),
-      enable: () => editor.can().redo().run(),
+      run: (state, dispatch) => {
+        return redo(editor.view.state, editor.view.dispatch, editor.view);
+      },
+      enable: (state) => redo(state),
       icon: icons.redo,
     }),
   );
