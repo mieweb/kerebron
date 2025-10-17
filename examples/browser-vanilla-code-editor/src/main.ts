@@ -7,6 +7,7 @@ import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionYjs } from '@kerebron/extension-yjs';
 import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
+import { simpleLspWebSocketTransport } from '@kerebron/extension-codemirror/lsp';
 
 import {
   NodeCodeMirror,
@@ -14,7 +15,7 @@ import {
 } from '@kerebron/extension-codemirror';
 import { userColors } from '@kerebron/extension-yjs/userColors';
 
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
   const docUrl = globalThis.location.hash.slice(1);
   let roomId;
   if (docUrl.startsWith('room:')) {
@@ -43,6 +44,10 @@ window.addEventListener('load', () => {
     colorLight: userColor.light,
   });
 
+  const lspTransport = await simpleLspWebSocketTransport(
+    protocol + '//' + globalThis.location.host + '/lsp',
+  );
+
   const editor = new CoreEditor({
     topNode: 'doc_code',
     element: document.getElementById('editor') || undefined,
@@ -57,6 +62,7 @@ window.addEventListener('load', () => {
         provider: wsProvider,
         languageWhitelist: ['yaml'],
         readOnly: false,
+        lspTransport,
       }),
     ],
     // content: pmDoc

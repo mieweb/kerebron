@@ -9,6 +9,7 @@ let port = undefined;
 for (
   const exampleName of [
     'browser-vanilla-code-editor',
+    'browser-sm-vis',
     'browser-vue',
     'browser-vue-custom-element',
   ]
