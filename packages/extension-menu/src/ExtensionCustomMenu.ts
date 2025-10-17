@@ -334,6 +334,19 @@ class CustomMenuView {
         wrapper.appendChild(dom);
         wrapper.appendChild(label);
 
+        // Make the entire wrapper clickable by dispatching mousedown to the button
+        wrapper.addEventListener('mousedown', (e) => {
+          if (e.target !== dom) {
+            e.preventDefault();
+            const mousedownEvent = new MouseEvent('mousedown', {
+              bubbles: true,
+              cancelable: true,
+              view: window,
+            });
+            dom.dispatchEvent(mousedownEvent);
+          }
+        });
+
         overflowContent.appendChild(wrapper);
       });
 
@@ -359,6 +372,19 @@ class CustomMenuView {
       // Restructure the DOM to show icon + label
       wrapper.appendChild(dom);
       wrapper.appendChild(label);
+
+      // Make the entire wrapper clickable by dispatching mousedown to the button
+      wrapper.addEventListener('mousedown', (e) => {
+        if (e.target !== dom) {
+          e.preventDefault();
+          const mousedownEvent = new MouseEvent('mousedown', {
+            bubbles: true,
+            cancelable: true,
+            view: window,
+          });
+          dom.dispatchEvent(mousedownEvent);
+        }
+      });
 
       overflowContent.appendChild(wrapper);
     });
