@@ -186,12 +186,12 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     for (let i = 1; i <= 6; i++) {
       makeHeadMenu.push(blockTypeItem(schema.nodes.heading, {
         title: 'Change to heading ' + i,
-        label: 'Level ' + i,
+        label: 'Heading ' + i,
         attrs: { level: i },
       }));
     }
 
-    typeMenu.push(new DropdownSubmenu(makeHeadMenu, { label: 'Heading' }));
+    typeMenu.push(new DropdownSubmenu(makeHeadMenu, { label: 'Headings' }));
   }
 
   blockMenu.push(
