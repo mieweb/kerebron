@@ -29,6 +29,7 @@ class CustomMenuView {
   resizeHandle: HTMLElement;
   editorContainer: HTMLElement;
   private closeOverflowHandler: ((e: MouseEvent) => void) | null = null;
+  private submenuStack: Array<{ title: string; tools: ToolItem[] }> = [];
 
   constructor(
     readonly editorView: EditorView,
@@ -98,7 +99,16 @@ class CustomMenuView {
     this.content.forEach((group) => {
       group.forEach((element) => {
         const { dom, update } = element.render(this.editorView);
-        const label = this.extractLabel(dom);
+        
+        // For dropdowns, get the label from the element's options directly
+        let label: string;
+        const dropdown = element as any;
+        if (dropdown.options && dropdown.options.label) {
+          label = dropdown.options.label;
+        } else {
+          label = this.extractLabel(dom);
+        }
+        
         const id = this.generateStableId(label, dom);
 
         this.tools.push({
@@ -154,19 +164,22 @@ class CustomMenuView {
   }
 
   private extractLabel(dom: HTMLElement): string {
-    // Try to extract label from various places
+    // For menu buttons, prioritize the visible label text over title
+    const buttonText = dom.querySelector('span')?.textContent?.trim();
+    if (buttonText) return buttonText;
+
+    // For dropdowns, check the dropdown label
+    const dropdownLabel = dom.querySelector('.kb-dropdown__label')?.textContent
+      ?.trim();
+    if (dropdownLabel) return dropdownLabel;
+
+    // Try aria-label as fallback
     const ariaLabel = dom.getAttribute('aria-label');
     if (ariaLabel) return ariaLabel;
 
+    // Try title attribute
     const title = dom.getAttribute('title');
     if (title) return title;
-
-    const buttonText = dom.querySelector('.kb-dropdown__label')?.textContent
-      ?.trim();
-    if (buttonText) return buttonText;
-
-    const spanText = dom.querySelector('span')?.textContent?.trim();
-    if (spanText) return spanText;
 
     // Fallback to looking at SVG title
     const svgTitle = dom.querySelector('svg title')?.textContent?.trim();
@@ -204,6 +217,306 @@ class CustomMenuView {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(pinnedIds));
     } catch (e) {
       console.error('Failed to save pinned state:', e);
+    }
+  }
+
+  private showSubmenu(tool: ToolItem) {
+    const dropdown = tool.element as any;
+    if (!dropdown.content) return;
+    
+    // Extract sub-items from dropdown
+    const subItems: ToolItem[] = dropdown.content.map((element: MenuElement, index: number) => {
+      const { dom } = element.render(this.editorView);
+      
+      // For nested dropdowns, get the label from options directly
+      let label: string;
+      const nestedDropdown = element as any;
+      if (nestedDropdown.options && nestedDropdown.options.label) {
+        label = nestedDropdown.options.label;
+      } else {
+        label = this.extractLabel(dom);
+      }
+      
+      return {
+        id: `${tool.id}-sub-${index}`,
+        label,
+        element,
+        isPinned: false,
+      };
+    });
+    
+    // Save current state to stack
+    this.submenuStack.push({
+      title: tool.label,
+      tools: subItems,
+    });
+    
+    // Re-render to show submenu
+    this.renderOverflowMenu();
+  }
+  
+  private goBack() {
+    // Remove last submenu from stack
+    this.submenuStack.pop();
+    
+    // Re-render
+    this.renderOverflowMenu();
+  }
+
+  private renderOverflowMenu() {
+    // Clear overflow menu
+    this.overflowMenu.innerHTML = '';
+
+    // Check if we're showing a submenu
+    const isSubmenu = this.submenuStack.length > 0;
+    const currentSubmenu = isSubmenu ? this.submenuStack[this.submenuStack.length - 1] : null;
+
+    // Create scrollable content container
+    const overflowContent = document.createElement('div');
+    overflowContent.classList.add(CSS_PREFIX + '__overflow-content');
+
+    if (isSubmenu && currentSubmenu) {
+      // Render submenu header with back button
+      const header = document.createElement('div');
+      header.classList.add(CSS_PREFIX + '__overflow-submenu-header');
+      
+      const backButton = document.createElement('button');
+      backButton.type = 'button';
+      backButton.classList.add(CSS_PREFIX + '__overflow-back-button');
+      backButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>';
+      backButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.goBack();
+      });
+      
+      const title = document.createElement('span');
+      title.classList.add(CSS_PREFIX + '__overflow-submenu-title');
+      title.textContent = currentSubmenu.title;
+      
+      header.appendChild(backButton);
+      header.appendChild(title);
+      overflowContent.appendChild(header);
+
+      // Render submenu items
+      currentSubmenu.tools.forEach((tool) => {
+        // Check if this is a nested dropdown
+        const isDropdown = (tool.element as any).content !== undefined;
+        
+        const wrapper = document.createElement('div');
+        wrapper.classList.add(CSS_PREFIX + '__overflow-item');
+
+        if (isDropdown) {
+          // For nested dropdowns, just show label and chevron (no icon/button)
+          // Add label
+          const label = document.createElement('span');
+          label.classList.add(CSS_PREFIX + '__overflow-item-label');
+          label.textContent = tool.label;
+          wrapper.appendChild(label);
+          
+          // Add chevron to indicate submenu
+          const chevron = document.createElement('span');
+          chevron.classList.add(CSS_PREFIX + '__overflow-item-chevron');
+          chevron.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>';
+          wrapper.appendChild(chevron);
+          
+          // Click handler for nested dropdown - navigate deeper
+          wrapper.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.showSubmenu(tool);
+          });
+        } else {
+          // Regular menu item
+          const { dom, update } = tool.element.render(this.editorView);
+          
+          // Hide the button's internal label to avoid duplication
+          const internalLabel = dom.querySelector('span');
+          if (internalLabel) {
+            internalLabel.style.display = 'none';
+          }
+          
+          // Add our own label to the item
+          const label = document.createElement('span');
+          label.classList.add(CSS_PREFIX + '__overflow-item-label');
+          label.textContent = tool.label;
+
+          // Restructure the DOM to show icon + label
+          wrapper.appendChild(dom);
+          wrapper.appendChild(label);
+
+          // Make the entire wrapper clickable by dispatching mousedown to the button
+          wrapper.addEventListener('mousedown', (e) => {
+            if (e.target !== dom) {
+              e.preventDefault();
+              const mousedownEvent = new MouseEvent('mousedown', {
+                bubbles: true,
+                cancelable: true,
+                view: window,
+              });
+              dom.dispatchEvent(mousedownEvent);
+            }
+          });
+        }
+
+        overflowContent.appendChild(wrapper);
+      });
+    } else {
+      // Render main overflow menu
+      const pinnedTools = this.tools.filter((t) => t.isPinned);
+      const overflowTools = this.tools.filter((t) => !t.isPinned);
+
+      // Check if we're in mobile view
+      const isMobile = typeof window !== 'undefined' &&
+        window.innerWidth < MOBILE_BREAKPOINT;
+      const mobileLimit = 4;
+      const mobileOverflowPinned = isMobile ? pinnedTools.slice(mobileLimit) : [];
+
+      // In mobile view, add the pinned overflow tools at the top with a label
+      if (isMobile && mobileOverflowPinned.length > 0) {
+        // Add section header
+        const header = document.createElement('div');
+        header.classList.add(CSS_PREFIX + '__overflow-header');
+        header.textContent = 'More Tools';
+        overflowContent.appendChild(header);
+
+        // Add the overflow pinned tools
+        mobileOverflowPinned.forEach((tool) => {
+          const { dom, update } = tool.element.render(this.editorView);
+          const wrapper = document.createElement('div');
+          wrapper.classList.add(CSS_PREFIX + '__overflow-item');
+
+          // Add label to the item
+          const label = document.createElement('span');
+          label.classList.add(CSS_PREFIX + '__overflow-item-label');
+          label.textContent = tool.label;
+
+          // Restructure the DOM to show icon + label
+          wrapper.appendChild(dom);
+          wrapper.appendChild(label);
+
+          // Make the entire wrapper clickable by dispatching mousedown to the button
+          wrapper.addEventListener('mousedown', (e) => {
+            if (e.target !== dom) {
+              e.preventDefault();
+              const mousedownEvent = new MouseEvent('mousedown', {
+                bubbles: true,
+                cancelable: true,
+                view: window,
+              });
+              dom.dispatchEvent(mousedownEvent);
+            }
+          });
+
+          overflowContent.appendChild(wrapper);
+        });
+
+        // Add separator after mobile overflow pinned section
+        if (overflowTools.length > 0) {
+          const separator = document.createElement('div');
+          separator.classList.add(CSS_PREFIX + '__overflow-separator');
+          overflowContent.appendChild(separator);
+        }
+      }
+
+      // Render overflow tools with labels
+      overflowTools.forEach((tool) => {
+        // Check if this is a dropdown with sub-items
+        const isDropdown = (tool.element as any).content !== undefined;
+        
+        const wrapper = document.createElement('div');
+        wrapper.classList.add(CSS_PREFIX + '__overflow-item');
+
+        if (isDropdown) {
+          // For dropdowns, create a custom button with icon and chevron
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.classList.add('kb-menu__button');
+          
+          // Add an icon (we'll use a document icon for Type menu)
+          const icon = document.createElement('svg');
+          icon.setAttribute('viewBox', '0 0 24 24');
+          icon.setAttribute('fill', 'none');
+          icon.setAttribute('stroke', 'currentColor');
+          icon.setAttribute('stroke-width', '2');
+          icon.innerHTML = '<path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>';
+          button.appendChild(icon);
+          
+          wrapper.appendChild(button);
+          
+          // Add label
+          const label = document.createElement('span');
+          label.classList.add(CSS_PREFIX + '__overflow-item-label');
+          label.textContent = tool.label;
+          wrapper.appendChild(label);
+          
+          // Add chevron to indicate submenu
+          const chevron = document.createElement('span');
+          chevron.classList.add(CSS_PREFIX + '__overflow-item-chevron');
+          chevron.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>';
+          wrapper.appendChild(chevron);
+          
+          // Click handler for dropdown - navigate to submenu
+          wrapper.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.showSubmenu(tool);
+          });
+        } else {
+          // Regular menu item
+          const { dom, update } = tool.element.render(this.editorView);
+          
+          // Add label to the item
+          const label = document.createElement('span');
+          label.classList.add(CSS_PREFIX + '__overflow-item-label');
+          label.textContent = tool.label;
+
+          // Restructure the DOM to show icon + label
+          wrapper.appendChild(dom);
+          wrapper.appendChild(label);
+
+          // Make the entire wrapper clickable by dispatching mousedown to the button
+          wrapper.addEventListener('mousedown', (e) => {
+            if (e.target !== dom) {
+              e.preventDefault();
+              const mousedownEvent = new MouseEvent('mousedown', {
+                bubbles: true,
+                cancelable: true,
+                view: window,
+              });
+              dom.dispatchEvent(mousedownEvent);
+            }
+          });
+        }
+
+        overflowContent.appendChild(wrapper);
+      });
+    }
+
+    // Add the scrollable content to overflow menu
+    this.overflowMenu.appendChild(overflowContent);
+
+    // Create sticky footer for manage button (only in main menu, not submenu)
+    if (!isSubmenu && (this.tools.filter((t) => !t.isPinned).length > 0 || this.tools.filter((t) => t.isPinned).length > 0)) {
+      const overflowFooter = document.createElement('div');
+      overflowFooter.classList.add(CSS_PREFIX + '__overflow-footer');
+
+      const manageButton = document.createElement('button');
+      manageButton.type = 'button';
+      manageButton.className = CSS_PREFIX + '__manage-button';
+      manageButton.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 15v2m0 0v2m0-2h2m-2 0H10m11-7l-1.5-1.5M21 12l-1.5 1.5M3 12l1.5 1.5M3 12l1.5-1.5M12 3v2m0 14v2"></path>
+        </svg>
+        <span>Manage Pinned Tools</span>
+      `;
+      manageButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.openManageModal();
+      });
+
+      overflowFooter.appendChild(manageButton);
+      this.overflowMenu.appendChild(overflowFooter);
     }
   }
 
@@ -307,116 +620,8 @@ class CustomMenuView {
       this.toolbar.appendChild(overflowToggle);
     }
 
-    // Create scrollable content container
-    const overflowContent = document.createElement('div');
-    overflowContent.classList.add(CSS_PREFIX + '__overflow-content');
-
-    // In mobile view, add the pinned overflow tools at the top with a label
-    if (isMobile && mobileOverflowPinned.length > 0) {
-      // Add section header
-      const header = document.createElement('div');
-      header.classList.add(CSS_PREFIX + '__overflow-header');
-      header.textContent = 'More Tools';
-      overflowContent.appendChild(header);
-
-      // Add the overflow pinned tools
-      mobileOverflowPinned.forEach((tool) => {
-        const { dom, update } = tool.element.render(this.editorView);
-        const wrapper = document.createElement('div');
-        wrapper.classList.add(CSS_PREFIX + '__overflow-item');
-
-        // Add label to the item
-        const label = document.createElement('span');
-        label.classList.add(CSS_PREFIX + '__overflow-item-label');
-        label.textContent = tool.label;
-
-        // Restructure the DOM to show icon + label
-        wrapper.appendChild(dom);
-        wrapper.appendChild(label);
-
-        // Make the entire wrapper clickable by dispatching mousedown to the button
-        wrapper.addEventListener('mousedown', (e) => {
-          if (e.target !== dom) {
-            e.preventDefault();
-            const mousedownEvent = new MouseEvent('mousedown', {
-              bubbles: true,
-              cancelable: true,
-              view: window,
-            });
-            dom.dispatchEvent(mousedownEvent);
-          }
-        });
-
-        overflowContent.appendChild(wrapper);
-      });
-
-      // Add separator after mobile overflow pinned section
-      if (overflowTools.length > 0) {
-        const separator = document.createElement('div');
-        separator.classList.add(CSS_PREFIX + '__overflow-separator');
-        overflowContent.appendChild(separator);
-      }
-    }
-
-    // Render overflow tools with labels
-    overflowTools.forEach((tool) => {
-      const { dom, update } = tool.element.render(this.editorView);
-      const wrapper = document.createElement('div');
-      wrapper.classList.add(CSS_PREFIX + '__overflow-item');
-
-      // Add label to the item
-      const label = document.createElement('span');
-      label.classList.add(CSS_PREFIX + '__overflow-item-label');
-      label.textContent = tool.label;
-
-      // Restructure the DOM to show icon + label
-      wrapper.appendChild(dom);
-      wrapper.appendChild(label);
-
-      // Make the entire wrapper clickable by dispatching mousedown to the button
-      wrapper.addEventListener('mousedown', (e) => {
-        if (e.target !== dom) {
-          e.preventDefault();
-          const mousedownEvent = new MouseEvent('mousedown', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-          });
-          dom.dispatchEvent(mousedownEvent);
-        }
-      });
-
-      overflowContent.appendChild(wrapper);
-    });
-
-    // Add the scrollable content to overflow menu
-    this.overflowMenu.appendChild(overflowContent);
-
-    // Create sticky footer for manage button
-    if (
-      overflowTools.length > 0 || pinnedTools.length > 0 ||
-      mobileOverflowPinned.length > 0
-    ) {
-      const overflowFooter = document.createElement('div');
-      overflowFooter.classList.add(CSS_PREFIX + '__overflow-footer');
-
-      const manageButton = document.createElement('button');
-      manageButton.type = 'button';
-      manageButton.className = CSS_PREFIX + '__manage-button';
-      manageButton.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 15v2m0 0v2m0-2h2m-2 0H10m11-7l-1.5-1.5M21 12l-1.5 1.5M3 12l1.5 1.5M3 12l1.5-1.5M12 3v2m0 14v2"></path>
-        </svg>
-        <span>Manage Pinned Tools</span>
-      `;
-      manageButton.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.openManageModal();
-      });
-
-      overflowFooter.appendChild(manageButton);
-      this.overflowMenu.appendChild(overflowFooter);
-    }
+    // Render overflow menu content
+    this.renderOverflowMenu();
   }
 
   private openManageModal() {
