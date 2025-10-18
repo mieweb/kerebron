@@ -254,7 +254,7 @@
 .kb-custom-menu__overflow-item {
   display: flex;
   align-items: center;
-  padding: var(--kb-space-xs) var(--kb-space-md);
+  padding: var(--kb-space-md) var(--kb-space-md);
   gap: 12px;
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -282,6 +282,11 @@
   flex-shrink: 0;
 }
 
+/* Hide buttons without icons (empty buttons in submenu items) */
+.kb-custom-menu__overflow-item .kb-menu__button:not(:has(svg)) {
+  display: none;
+}
+
 .kb-custom-menu__overflow-item .kb-menu__button:hover,
 .kb-custom-menu__overflow-item .kb-dropdown__label:hover {
   background: transparent;
@@ -299,6 +304,69 @@
   flex: 1;
   color: var(--kb-color-text);
   font-size: var(--kb-text-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Overflow item chevron (for dropdowns) */
+.kb-custom-menu__overflow-item-chevron {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  padding-left: var(--kb-space-sm);
+  color: var(--kb-color-text-subtle);
+}
+
+.kb-custom-menu__overflow-item-chevron svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+}
+
+/* Overflow submenu header */
+.kb-custom-menu__overflow-submenu-header {
+  display: flex;
+  align-items: center;
+  gap: var(--kb-space-sm);
+  padding: var(--kb-space-md);
+  border-bottom: 1px solid var(--kb-color-border);
+  background: var(--kb-color-surface);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.kb-custom-menu__overflow-back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--kb-space-xs);
+  border: none;
+  background: transparent;
+  border-radius: var(--kb-radius-sm);
+  cursor: pointer;
+  color: var(--kb-color-text);
+  transition: background-color 0.15s ease;
+}
+
+.kb-custom-menu__overflow-back-button:hover {
+  background: var(--kb-color-surface-hover);
+}
+
+.kb-custom-menu__overflow-back-button svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+}
+
+.kb-custom-menu__overflow-submenu-title {
+  flex: 1;
+  font-size: var(--kb-text-base);
+  font-weight: 500;
+  color: var(--kb-color-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
