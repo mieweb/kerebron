@@ -61,6 +61,7 @@ export function writeIndented(
 
 export interface SerializerContext {
   meta: Record<string, any>;
+  metaObj: Record<string, any>;
   blockquoteCnt: number;
   footnoteCnt: number;
   listLevel: number;
@@ -82,6 +83,7 @@ export class ContextStash {
     this.output = new SmartOutput();
     this.currentCtx = {
       meta: {},
+      metaObj: {},
       blockquoteCnt: 0,
       footnoteCnt: 0,
       itemRow: 0,
@@ -101,12 +103,14 @@ export class ContextStash {
       log: this.currentCtx.log,
     };
     const handlers = { ...this.currentCtx.handlers };
+    const metaObj = { ...this.currentCtx.metaObj };
     this.currentCtx = {
       ...structuredClone({
         ...this.currentCtx,
         log: undefined,
         handlers: undefined,
       }),
+      metaObj,
       ...funcs,
       handlers: handlers,
     };

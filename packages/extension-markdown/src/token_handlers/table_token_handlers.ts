@@ -95,12 +95,9 @@ class TableBuilder {
   private rows: Array<TableRow>;
   public currentType: 'header' | 'body';
 
-  currentCell: TableCell;
-
   constructor() {
     this.currentType = 'body';
     this.rows = [];
-    this.currentCell = { text: '', align: 'left' };
   }
 
   appendRow() {
@@ -116,7 +113,13 @@ class TableBuilder {
       text: '',
       align,
     });
-    this.currentCell = lastRow.cells[lastRow.cells.length - 1];
+  }
+
+  appendText(content: string) {
+    const lastRow = this.rows[this.rows.length - 1];
+    if (lastRow.cells.length > 0) {
+      lastRow.cells[lastRow.cells.length - 1].text += content;
+    }
   }
 
   render() {
@@ -126,14 +129,30 @@ class TableBuilder {
 
     let lastHeader: Array<TableCell> = [];
 
+    const columnsWidth: Array<number> = [];
+    for (let rowNo = 0; rowNo < this.rows.length; rowNo++) {
+      const row = this.rows[rowNo];
+      for (let cellNo = 0; cellNo < row.cells.length; cellNo++) {
+        while (columnsWidth.length <= cellNo) {
+          columnsWidth.push(0);
+        }
+        const headCell = lastHeader[cellNo];
+        const cell = row.cells[cellNo];
+        if (columnsWidth[cellNo] < cell.text.length) {
+          columnsWidth[cellNo] = cell.text.length;
+        }
+      }
+    }
+
     for (let rowNo = 0; rowNo < this.rows.length; rowNo++) {
       const row = this.rows[rowNo];
 
       if (prevType === 'header' && prevType !== row.type) {
         result += '|';
-        for (const cell of lastHeader) {
+        for (let cellNo = 0; cellNo < lastHeader.length; cellNo++) {
+          const cell = lastHeader[cellNo];
           result += ' ';
-          result += '-'.repeat(cell.text.length);
+          result += '-'.repeat(columnsWidth[cellNo]);
 
           if (cell.align === 'right') {
             result += ':|';
@@ -147,12 +166,10 @@ class TableBuilder {
       result += '|';
 
       for (let cellNo = 0; cellNo < row.cells.length; cellNo++) {
-        const headCell = lastHeader[cellNo];
         const cell = row.cells[cellNo];
-        result += ' ';
-        result += cell.text;
-        if (headCell && cell.text.length < headCell.text.length) {
-          result += ' '.repeat(headCell.text.length - cell.text.length);
+        result += ' '+ cell.text;
+        if (cell.text.length < columnsWidth[cellNo]) {
+          result += ' '.repeat(columnsWidth[cellNo] - cell.text.length);
         }
         result += ' |';
       }
@@ -198,10 +215,18 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
   return {
     'text': [
       (token: Token, ctx: ContextStash) => {
-        const tableBuilder: TableBuilder = ctx.current.meta['table_builder'];
-        tableBuilder.currentCell.text += token.content;
+        const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
+        tableBuilder.appendText(token.content);
       },
     ],
+
+    'paragraph_open': [],
+    'paragraph_close': [(token: Token, ctx: ContextStash, tokenSource: TokenSource<Token>) => {
+      ctx.current.meta['table_cell_para_count'] = +ctx.current.meta['table_cell_para_count'] + 1;
+      if (ctx.current.meta['table_cell_para_count'] > 1) { // Only 1 line in markdown pipe table
+        rollbackTable(token, ctx, tokenSource);
+      }
+    }],
 
     'default': [
       rollbackTable,
@@ -213,33 +238,33 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
         ctx.current.meta['table_rollback'] = rollbackPos;
         ctx.current.meta['table_token_start'] = tokenSource.pos;
         ctx.current.meta['table_output_pos'] = ctx.output.chunkPos;
-        ctx.current.meta['table_builder'] = new TableBuilder();
+        ctx.current.metaObj['table_builder'] = new TableBuilder();
         ctx.current.handlers = getMdTableTokensHandler();
       },
     ],
 
     'table_close': [
       (token: Token, ctx: ContextStash) => {
-        const tableBuilder: TableBuilder = ctx.current.meta['table_builder'];
+        const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
         ctx.current.log(tableBuilder.render(), token);
         ctx.unstash();
       },
     ],
     'thead_open': [
       (token: Token, ctx: ContextStash) => {
-        const tableBuilder: TableBuilder = ctx.current.meta['table_builder'];
+        const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
         tableBuilder.currentType = 'header';
       },
     ],
     'thead_close': [
       (token: Token, ctx: ContextStash) => {
-        const tableBuilder: TableBuilder = ctx.current.meta['table_builder'];
+        const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
         tableBuilder.currentType = 'body';
       },
     ],
     'tr_open': [
       (token: Token, ctx: ContextStash) => {
-        const tableBuilder: TableBuilder = ctx.current.meta['table_builder'];
+        const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
         tableBuilder.appendRow();
       },
     ],
@@ -252,8 +277,9 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
         const style = token.attrGet('style');
         const align = style === 'text-align:right' ? 'right' : 'left';
 
-        const tableBuilder: TableBuilder = ctx.current.meta['table_builder'];
+        const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
         tableBuilder.appendCell(align);
+        ctx.current.meta['table_cell_para_count'] = 0;
       },
     ],
     'th_close': [
@@ -262,7 +288,7 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
     ],
     'tbody_open': [
       (token: Token, ctx: ContextStash) => {
-        const tableBuilder: TableBuilder = ctx.current.meta['table_builder'];
+        const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
         tableBuilder.currentType = 'body';
       },
     ],
@@ -275,8 +301,9 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
         const style = token.attrGet('style');
         const align = style === 'text-align:right' ? 'right' : 'left';
 
-        const tableBuilder: TableBuilder = ctx.current.meta['table_builder'];
+        const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
         tableBuilder.appendCell(align);
+        ctx.current.meta['table_cell_para_count'] = 0;
       },
     ],
     'td_close': [

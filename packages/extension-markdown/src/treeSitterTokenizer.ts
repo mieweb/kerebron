@@ -624,8 +624,8 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
 
       case 'pipe_table_cell':
         {
-          const tokenName = 'td';
-          const tagName = 'td';
+          const tokenName = ctx.tableRowType === 'thead' ? 'th' : 'td';
+          const tagName = ctx.tableRowType === 'thead' ? 'th' : 'td';;
           const openToken = new Token(
             tokenName + '_open',
             tagName,
@@ -741,15 +741,15 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           const headRows = node.children
             ?.filter((c) => c.type === 'pipe_table_header');
           if (headRows.length > 0) {
-            // const tokenName = 'thead';
-            // const tagName = 'thead';
-            // const openToken = new Token(
-            //   tokenName + '_open',
-            //   tagName,
-            //   NESTING_OPENING,
-            // );
-            // openToken.level = blockLevel;
-            // retVal.push(openToken);
+            const tokenName = 'thead';
+            const tagName = 'thead';
+            const openToken = new Token(
+              tokenName + '_open',
+              tagName,
+              NESTING_OPENING,
+            );
+            openToken.level = blockLevel;
+            retVal.push(openToken);
 
             blockLevel++;
             headRows.forEach((child) =>
@@ -757,13 +757,13 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             );
             blockLevel--;
 
-            // const closeToken = new Token(
-            //   tokenName + '_close',
-            //   tagName,
-            //   NESTING_CLOSING,
-            // );
-            // closeToken.level = blockLevel;
-            // retVal.push(closeToken);
+            const closeToken = new Token(
+              tokenName + '_close',
+              tagName,
+              NESTING_CLOSING,
+            );
+            closeToken.level = blockLevel;
+            retVal.push(closeToken);
           }
 
           const bodyRows = node.children
