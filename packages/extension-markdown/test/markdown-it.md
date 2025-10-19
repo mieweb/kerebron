@@ -2,9 +2,9 @@
 __Advertisement :)__
 
 - __[pica](https://nodeca.github.io/pica/demo/)__ - high quality and fast image
-  resize in browser.
+resize in browser.
 - __[babelfish](https://github.com/nodeca/babelfish/)__ - developer friendly
-  i18n with plurals support and easy syntax.
+i18n with plurals support and easy syntax.
 
 You will like those projects!
 ---
@@ -47,9 +47,9 @@ test.. test... test..... test?..... test!....
 
 **This is bold text**
 
-_This is italic text_
+*This is italic text*
 
-_This is italic text_
+_This is emphasis text used for underline_
 
 ~~Strikethrough~~
 

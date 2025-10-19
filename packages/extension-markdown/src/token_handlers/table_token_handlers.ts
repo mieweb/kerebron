@@ -1,4 +1,4 @@
-import type Token from 'markdown-it/lib/token';
+import type { Token } from '../types.ts';
 
 import type {
   ContextStash,
@@ -191,7 +191,7 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
 
     ctx.stash();
     ctx.current.meta['html_mode'] = true;
-    ctx.current.log('<table>\n');
+    ctx.current.log('<table>\n', token);
     ctx.current.handlers = getHtmlTableTokensHandlers();
   };
 
@@ -221,7 +221,7 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
     'table_close': [
       (token: Token, ctx: ContextStash) => {
         const tableBuilder: TableBuilder = ctx.current.meta['table_builder'];
-        ctx.current.log(tableBuilder.render());
+        ctx.current.log(tableBuilder.render(), token);
         ctx.unstash();
       },
     ],
@@ -249,10 +249,8 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
     ],
     'th_open': [
       (token: Token, ctx: ContextStash) => {
-        const styleTuple = token.attrs?.find((attr) => attr[0] === 'style');
-        const align = styleTuple && styleTuple[1] === 'text-align:right'
-          ? 'right'
-          : 'left';
+        const style = token.attrGet('style');
+        const align = style === 'text-align:right' ? 'right' : 'left';
 
         const tableBuilder: TableBuilder = ctx.current.meta['table_builder'];
         tableBuilder.appendCell(align);
@@ -274,10 +272,8 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
     ],
     'td_open': [
       (token: Token, ctx: ContextStash) => {
-        const styleTuple = token.attrs?.find((attr) => attr[0] === 'style');
-        const align = styleTuple && styleTuple[1] === 'text-align:right'
-          ? 'right'
-          : 'left';
+        const style = token.attrGet('style');
+        const align = style === 'text-align:right' ? 'right' : 'left';
 
         const tableBuilder: TableBuilder = ctx.current.meta['table_builder'];
         tableBuilder.appendCell(align);

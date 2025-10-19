@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x # Use the latest stable Deno version
+
+      - name: Check format
+        run: deno fmt --check
+
+#      # Optional: Add linting for style and syntax checks
+#      - name: Lint code
+#        run: deno lint
+#
+#      # Optional: Add tests
+#      - name: Run tests
+#        run: deno test

@@ -28,7 +28,6 @@ export default defineConfig({
       '@kerebron/extension-codemirror/assets': __dirname + '/../../' +
         'packages/extension-codemirror/assets',
       'punycode.js': __dirname + '/src/punycode.ts',
-      // markdown-it@14.1.0/node_modules/markdown-it/lib/index.mjs:11:21:
       // import punycode from 'punycode.js'
     },
   },

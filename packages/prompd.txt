@@ -1,0 +1,2 @@
+Small css for documentation page with left sidebar, topbar with dropdown menu, search box, icons (github link), darkmode
+Add also simple useful widgets like buttons, checkboxes, tree nav with active item in the sidebar, alert boxes, typography for headings etc
