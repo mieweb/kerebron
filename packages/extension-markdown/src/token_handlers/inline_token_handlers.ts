@@ -44,6 +44,9 @@ function getLinkTokensHandlers(): Record<string, Array<TokenHandler>> {
     'text': [
       (token: Token, ctx: ContextStash) => {
         ctx.current.meta['link_text'] += token.content;
+        if (token.content && !ctx.current.meta['link_token_token']) {
+          ctx.current.meta['link_token_token'] = token;
+        }
       },
     ],
 
@@ -59,8 +62,8 @@ function getLinkTokensHandlers(): Record<string, Array<TokenHandler>> {
           } else {
             ctx.current.log('[', token);
             ctx.current.log(
-              escapeMarkdown(ctx.current.meta['link_text']),
-              token,
+              ctx.current.meta['link_text'],
+              ctx.current.meta['link_token_token'],
             );
             ctx.current.log(`](${href}${title})`, token);
           }
@@ -125,6 +128,7 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
 
         ctx.current.meta['link_open_token'] = token;
         ctx.current.meta['link_text'] = '';
+        ctx.current.meta['link_token_token'] = null;
       },
     ],
 

@@ -18,7 +18,6 @@ const doc = new DOMParser().parseFromString(
 
 globalThis.document = doc;
 
-// import sampleMarkdown from './markdown-it.md' with { type: 'text' }; // --unstable-raw-imports
 const __dirname = import.meta.dirname;
 const sampleMarkdown = new TextDecoder().decode(
   Deno.readFileSync(__dirname + '/markdown-it.md'),
@@ -49,10 +48,10 @@ Deno.test('sourcemap test', async () => {
     ((event: CustomEvent) => {
       const { tokens } = event.detail;
       // console.log(tokens.slice(0, 5));
-      // Deno.writeTextFileSync(
-      //   __dirname + '/markdown-it.tokens.json',
-      //   JSON.stringify(tokens, null, 2),
-      // );
+      Deno.writeTextFileSync(
+        __dirname + '/sourcemap.debug.tokens.json',
+        JSON.stringify(tokens, null, 2),
+      );
     }) as EventListener,
   );
 
@@ -60,28 +59,28 @@ Deno.test('sourcemap test', async () => {
     'md:sourcemap',
     ((event: CustomEvent) => {
       const { sourceMap, debugMap, markdownMap } = event.detail;
-      sourceMap.file = 'markdown-it.result.md';
+      sourceMap.file = 'sourcemap.result.md';
       // sourceMap.sources = ['debug.txt'];
       // sourceMap.sourcesContent = [debugOutput.toString()];
 
-      console.log('pos|debug|markdown');
-      for (let lineNo = 0; lineNo < 32; lineNo++) {
-        console.log(lineNo, debugMap[lineNo], markdownMap[lineNo]);
-      }
+      // console.log('pos|debug|markdown');
+      // for (let lineNo = 0; lineNo < 32; lineNo++) {
+      //   console.log(lineNo, debugMap[lineNo], markdownMap[lineNo]);
+      // }
 
       // console.log(markdownMap);
 
       Deno.writeTextFileSync(
-        __dirname + '/markdown-it.result.json',
+        __dirname + '/sourcemap.result.json',
         JSON.stringify(sourceMap, null, 2),
       );
     }) as EventListener,
   );
-  //
+
   const markdown = new TextDecoder().decode(
     await editor.saveDocument('text/x-markdown'),
   );
 
-  Deno.writeTextFileSync(__dirname + '/markdown-it.result.md', markdown);
+  Deno.writeTextFileSync(__dirname + '/sourcemap.result.md', markdown);
   // assertEquals(markdown, sampleMarkdown);
 });

@@ -56,5 +56,7 @@ Deno.test('md test 4', async () => {
   const output = await serializer.serialize(tokens);
   const serializedMarkdown = output.toString();
 
+  Deno.writeTextFileSync(__dirname + '/markdown-it.result.md', serializedMarkdown);
+
   assertEquals(serializedMarkdown, sampleMarkdown);
 });

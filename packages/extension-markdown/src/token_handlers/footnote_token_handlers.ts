@@ -22,9 +22,9 @@ export function getFootnoteTokensHandlers(): Record<
     'footnote_open': [
       (token: Token, ctx: ContextStash) => {
         if (token.meta.label) {
-          ctx.current.log(`[^${token.meta.label}]: `);
+          ctx.current.log(`[^${token.meta.label}]: `, token);
         } else {
-          ctx.current.log(`[^footnote_${token.meta.id}]: `);
+          ctx.current.log(`[^footnote_${token.meta.id}]: `, token);
         }
         ctx.stash();
         ctx.current.footnoteCnt++;
