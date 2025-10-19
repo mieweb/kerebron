@@ -262,7 +262,16 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
             getHtmlInlineTokensHandlers(),
           )
             .filter((a) =>
-              ['strong_open', 'strong_close', 'em_open', 'em_close'].includes(
+              [
+                'strong_open',
+                'strong_close',
+                'em_open',
+                'em_close',
+                'underline_open',
+                'underline_close',
+                'strike_open',
+                'strike_close',
+              ].includes(
                 a[0],
               )
             );

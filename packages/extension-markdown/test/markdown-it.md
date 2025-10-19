@@ -47,9 +47,9 @@ test.. test... test..... test?..... test!....
 
 **This is bold text**
 
-_This is italic text_
+*This is italic text*
 
-_This is italic text_
+_This is emphasis text used for underline_
 
 ~~Strikethrough~~
 

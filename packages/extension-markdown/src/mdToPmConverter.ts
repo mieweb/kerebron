@@ -5,10 +5,8 @@ import type { Token } from './types.ts';
 
 import { MarkdownParser, type MarkdownParseState } from './MarkdownParser.ts';
 import { MdConfig } from '@kerebron/extension-markdown';
-// import { defaultTokenizer } from './defaultTokenizer.ts';
 import { sitterTokenizer } from './treeSitterTokenizer.ts';
 import { elementFromString } from '../../extension-basic-editor/src/ExtensionHtml.ts';
-import { nodeToTreeString } from '../../editor/src/nodeToTreeString.ts';
 
 function listIsTight(tokens: readonly Token[], i: number) {
   while (++i < tokens.length) {
@@ -23,13 +21,9 @@ export default async function mdToPmConverter(
   schema: Schema,
 ): Promise<Node> {
   const content = new TextDecoder().decode(buffer);
-  /// A parser parsing unextended [CommonMark](http://commonmark.org/),
-  /// without inline HTML, and producing a document in the basic schema.
-  //
-
   const defaultMarkdownParser = new MarkdownParser(
     schema,
-    sitterTokenizer(),
+    await sitterTokenizer(),
     {
       frontmatter: {
         node: 'frontmatter',
@@ -81,6 +75,7 @@ export default async function mdToPmConverter(
       },
       hardbreak: { node: 'br' },
       em: { mark: 'em' },
+      underline: { mark: 'underline' },
       strong: { mark: 'strong' },
       strike: { mark: 'strike' },
       link: {
@@ -91,7 +86,6 @@ export default async function mdToPmConverter(
         }),
       },
       code: { mark: 'code' },
-      // code_close: { mark: 'code' },
       html_block: { // TODO
         custom: (
           state: MarkdownParseState,

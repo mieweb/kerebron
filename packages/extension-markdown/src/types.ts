@@ -10,7 +10,8 @@ type Nesting = -1 | 0 | 1;
 
 export class Token {
   attrs: TupleArray | null = null;
-  map: [number] | [number, number] | [number, number, number, number] | null = null;
+  map: [number] | [number, number] | [number, number, number, number] | null =
+    null;
   level: number = 0;
   children: Array<Token> | null = null;
   content: string = '';

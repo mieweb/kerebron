@@ -332,6 +332,12 @@ export default async function pmToMdConverter(
       mixable: true,
       expelEnclosingWhitespace: true,
     },
+    underline: {
+      open: 'underline_open',
+      close: 'underline_close',
+      mixable: true,
+      expelEnclosingWhitespace: true,
+    },
     strong: {
       open: 'strong_open',
       close: 'strong_close',

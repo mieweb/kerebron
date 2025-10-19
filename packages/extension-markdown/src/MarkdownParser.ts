@@ -1,4 +1,3 @@
-// import MarkdownIt from 'markdown-it';
 import type { Token } from './types.ts';
 import {
   Attrs,
@@ -116,11 +115,9 @@ export class MarkdownParseState {
   }
 
   importNodes(nodes: readonly Node[]) {
-    // console.log(nodeToTreeString(parsed));
     for (const node of nodes) {
       this.push(node);
     }
-    // throw new Error('importNodes');
   }
 }
 

@@ -1,7 +1,6 @@
 import { assertEquals } from '@kerebron/test-utils';
 
 import { MarkdownSerializer } from '@kerebron/extension-markdown/MarkdownSerializer';
-// import { defaultTokenizer } from '../src/defaultTokenizer.ts';
 import { sitterTokenizer } from '../src/treeSitterTokenizer.ts';
 
 // import sampleMarkdown from './markdown-it.md' with { type: 'text' }; // --unstable-raw-imports
@@ -48,15 +47,17 @@ Deno.test('md test 4', async () => {
   console.log('Hello, World!');
   \`\`\``;
 
-  // const tokenizer = defaultTokenizer()
-  const tokenizer = sitterTokenizer();
+  const tokenizer = await sitterTokenizer();
   const tokens = tokenizer.parse(sampleMarkdown);
 
   const serializer = new MarkdownSerializer();
   const output = await serializer.serialize(tokens);
   const serializedMarkdown = output.toString();
 
-  Deno.writeTextFileSync(__dirname + '/markdown-it.result.md', serializedMarkdown);
+  Deno.writeTextFileSync(
+    __dirname + '/markdown-it.result.md',
+    serializedMarkdown,
+  );
 
   assertEquals(serializedMarkdown, sampleMarkdown);
 });

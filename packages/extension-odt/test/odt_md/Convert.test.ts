@@ -43,7 +43,6 @@ Deno.test('convert odt to md', async () => {
   await editor.loadDocument('application/vnd.oasis.opendocument.text', input);
 
   const json = editor.getDocument().toJSON();
-  console.log(json);
 
   const buffer = await editor.saveDocument('text/x-markdown');
   const md = new TextDecoder().decode(buffer);

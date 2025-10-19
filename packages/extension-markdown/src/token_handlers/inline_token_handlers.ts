@@ -109,6 +109,16 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
         ctx.current.log(token.markup || '*', token);
       },
     ],
+    'underline_open': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log(token.markup || '_', token);
+      },
+    ],
+    'underline_close': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log(token.markup || '_', token);
+      },
+    ],
     'strike_open': [
       (token: Token, ctx: ContextStash) => {
         ctx.current.log(token.markup || '~~', token);

@@ -47,7 +47,6 @@ Deno.test('sourcemap test', async () => {
     'md:tokens',
     ((event: CustomEvent) => {
       const { tokens } = event.detail;
-      // console.log(tokens.slice(0, 5));
       Deno.writeTextFileSync(
         __dirname + '/sourcemap.debug.tokens.json',
         JSON.stringify(tokens, null, 2),
@@ -60,16 +59,6 @@ Deno.test('sourcemap test', async () => {
     ((event: CustomEvent) => {
       const { sourceMap, debugMap, markdownMap } = event.detail;
       sourceMap.file = 'sourcemap.result.md';
-      // sourceMap.sources = ['debug.txt'];
-      // sourceMap.sourcesContent = [debugOutput.toString()];
-
-      // console.log('pos|debug|markdown');
-      // for (let lineNo = 0; lineNo < 32; lineNo++) {
-      //   console.log(lineNo, debugMap[lineNo], markdownMap[lineNo]);
-      // }
-
-      // console.log(markdownMap);
-
       Deno.writeTextFileSync(
         __dirname + '/sourcemap.result.json',
         JSON.stringify(sourceMap, null, 2),

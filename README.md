@@ -26,25 +26,26 @@ number of output npm modules.
 
 **Work in progress**
 
+
+## Build
+
+### Build static examples and `.wasm` files
+
+```sh
+deno task -r build
+```
+
 ## Development
 
 To start example server:
 
-```
+```sh
 deno task -f server-deno-hono start
 ```
 
 ## Examples
 
 TODO
-
-## Build
-
-### Build static examples
-
-```shell
-deno task -r build
-```
 
 ### NPM packages are generated using DNT
 
@@ -55,13 +56,13 @@ deno task -r build
 
 To generate npm packages
 
-```shell
+```sh
 deno -A ./build/build_npm.ts
 ```
 
 ## Run through docker
 
-```
+```sh
 docker build . -t editor-test
 docker run -it -p 8000:8000 -v $PWD:/usr/src/app editor-test
 ```

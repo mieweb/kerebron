@@ -101,7 +101,10 @@ export class DocumentMarkdownInlineTokenizer {
         });
       }
 
-      const leading: Array<[string, number]> = trailing.splice(0, trailing.length);
+      const leading: Array<[string, number]> = trailing.splice(
+        0,
+        trailing.length,
+      );
       // If whitespace has to be expelled from the node, adjust
       // leading and trailing accordingly.
       if (
@@ -112,7 +115,7 @@ export class DocumentMarkdownInlineTokenizer {
       ) {
         let [_, lead, rest] = /^(\s*)(.*)$/m.exec(node.text!)!;
         if (lead) {
-          leading.push([lead, inlinePos])
+          leading.push([lead, inlinePos]);
           node = rest ? (node as any).withText(rest) : null;
           if (!node) marks = active;
         }
@@ -173,7 +176,9 @@ export class DocumentMarkdownInlineTokenizer {
       }
 
       // Output any previously expelled trailing whitespace outside the marks
-      inlineTokens.push(...generateInlineTokens(leading.splice(0, leading.length)));
+      inlineTokens.push(
+        ...generateInlineTokens(leading.splice(0, leading.length)),
+      );
 
       // Open the marks that need to be opened
       while (active.length < len) {
@@ -189,7 +194,7 @@ export class DocumentMarkdownInlineTokenizer {
         if (node.text) {
           const token = new Token('text', '', 0);
           token.meta = 'noEscText';
-          token.map = [inlinePos]
+          token.map = [inlinePos];
           token.content = node.text;
           inlineTokens.push(token);
         }
@@ -234,7 +239,9 @@ export class DocumentMarkdownInlineTokenizer {
     }
 
     // Output any previously expelled trailing whitespace outside the marks
-    inlineTokens.push(...generateInlineTokens(trailing.splice(0, trailing.length)));
+    inlineTokens.push(
+      ...generateInlineTokens(trailing.splice(0, trailing.length)),
+    );
 
     return inlineTokens;
   }

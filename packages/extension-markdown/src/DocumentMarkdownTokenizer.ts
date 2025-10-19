@@ -1,6 +1,10 @@
-import type { Mark, Node } from 'prosemirror-model';
+import type { Node } from 'prosemirror-model';
 import { Token } from './types.ts';
-import { DocumentMarkdownInlineTokenizer, DocumentMarkdownTokenizerSpec, MarkTokenizerSpec } from './DocumentMarkdownInlineTokenizer.ts';
+import {
+  DocumentMarkdownInlineTokenizer,
+  DocumentMarkdownTokenizerSpec,
+  MarkTokenizerSpec,
+} from './DocumentMarkdownInlineTokenizer.ts';
 
 const blankNode: DocumentMarkdownTokenizerSpec = { open: '', close: '' };
 
@@ -20,7 +24,11 @@ export class DocumentMarkdownTokenizer {
       hardBreakNodeName: 'hard_break',
     },
   ) {
-    this.inlineTokenizer = new DocumentMarkdownInlineTokenizer(nodes, marks, options);
+    this.inlineTokenizer = new DocumentMarkdownInlineTokenizer(
+      nodes,
+      marks,
+      options,
+    );
   }
 
   iterateNode(node: Node, currentPos = 0, level = -1) {

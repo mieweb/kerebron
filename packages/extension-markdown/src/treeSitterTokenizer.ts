@@ -1,7 +1,6 @@
-// md-to-html.ts
 import { createParser } from 'https://deno.land/x/deno_tree_sitter@1.0.1.2/main/main.js';
-import { Tree } from 'https://deno.land/x/deno_tree_sitter@1.0.1.2/main/tree_sitter/tree.js';
-import { xmlStylePreview } from 'https://deno.land/x/deno_tree_sitter@1.0.1.2/main/extras/xml_style_preview.js';
+import type { Parser } from 'https://deno.land/x/deno_tree_sitter@1.0.1.2/main/tree_sitter/parser.js';
+import type { Tree } from 'https://deno.land/x/deno_tree_sitter@1.0.1.2/main/tree_sitter/tree.js';
 import {
   NESTING_CLOSING,
   NESTING_OPENING,
@@ -9,61 +8,7 @@ import {
   Token,
 } from './types.ts';
 
-async function loadWasm(url: string): Promise<Uint8Array> {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`Failed to fetch WASM: ${url}`);
-  return new Uint8Array(await response.arrayBuffer());
-}
-
-// Load Markdown grammars (block and inline)
-const markdownWasmUrl =
-  'https://github.com/tree-sitter-grammars/tree-sitter-markdown/releases/download/v0.5.1/tree-sitter-markdown.wasm';
-const inlineWasmUrl =
-  'https://github.com/tree-sitter-grammars/tree-sitter-markdown/releases/download/v0.5.1/tree-sitter-markdown_inline.wasm';
-
-const markdownWasm = await loadWasm(markdownWasmUrl);
-const inlineWasm = await loadWasm(inlineWasmUrl);
-
-const BlockParser = await createParser(markdownWasm);
-const InlineParser = await createParser(inlineWasm);
-
-// Custom node structure to hold combined block and inline parsing results
-interface CustomNode {
-  type: string;
-  startIndex: number;
-  endIndex: number;
-  children: CustomNode[];
-  inlineNodes?: CustomNode[]; // Parsed inline nodes
-  text?: string; // Raw text for inline nodes
-}
-
-// Two-pass parse: blocks first, then inline within blocks
-function parseMarkdown(source: string) {
-  const tree: Tree = BlockParser.parse(source);
-  const root = tree.rootNode;
-
-  // // Traverse and parse inline nodes (they contain raw text initially)
-  // function parseInlines(node: any): void {
-  //   if (node.type === 'inline') {
-  //     const inlineText = source.slice(node.startIndex, node.endIndex);
-  //     const inlineTree = InlineParser.parse(inlineText);
-  //     // Replace the inline node's content with the parsed inline tree
-  //     // console.log('IIII1', node.children);
-  //     node.children.splice(0, node.children.length, ...inlineTree.rootNode.children); //  = [...inlineTree.rootNode.children];
-  //     // node.children = [...inlineTree.rootNode.children];
-  //     // console.log('IIII2', node.children);
-  //     // console.log('IIITT', inlineText);
-  //   } else {
-  //     for (const child of node.children) {
-  //       parseInlines(child);
-  //     }
-  //   }
-  // }
-  // parseInlines(root);
-  return tree;
-}
-
-function treeToTokens(tree: Tree): Array<Token> {
+function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
   const retVal: Array<Token> = [];
   let blockLevel = 0;
 
@@ -321,8 +266,14 @@ function treeToTokens(tree: Tree): Array<Token> {
           break;
         case 'emphasis':
           {
-            const tokenName = 'em';
-            const tagName = 'em';
+            const delimiter = node.children
+              .find((c) => c.type === 'emphasis_delimiter');
+
+            const children = node.children
+              .filter((c) => c.type !== 'emphasis_delimiter');
+
+            const tokenName = delimiter?.text === '_' ? 'underline' : 'em';
+            const tagName = delimiter?.text === '_' ? 'u' : 'em';
             const openToken = new Token(
               tokenName + '_open',
               tagName,
@@ -330,7 +281,7 @@ function treeToTokens(tree: Tree): Array<Token> {
             );
             pushInlineNode(openToken);
 
-            walkInline(node.children);
+            walkInline(children);
 
             const closeToken = new Token(
               tokenName + '_close',
@@ -395,49 +346,16 @@ function treeToTokens(tree: Tree): Array<Token> {
     }
 
     if (node.type === 'inline') {
-      // const inlineText = source.slice(node.startIndex, node.endIndex);
-      //
       const inlineText = node.text;
       if (!inlineText) {
         throw new Error('!inlineText');
       }
-      const inlineTree = InlineParser.parse(inlineText);
+      const inlineTree = inlineParser.parse(inlineText);
       if (!inlineTree) {
         throw new Error('!inlineTree');
       }
 
-      // if (node.type === 'inline') { // empty inline
-      //   const token = new Token('text', '', NESTING_SELF_CLOSING);
-      //   token.map = [
-      //     +node.startPosition?.row,
-      //     +node.endPosition?.row,
-      //     +node.startPosition?.column,
-      //     +node.endPosition?.column,
-      //   ];
-      //   token.meta = 'noEscText';
-      //   token.content = node.text ?? '';
-      //   pushInlineNode(token);
-      //   return;
-      // }
-
-      // case 'inline': // TODO?
-      {
-        // const token = new Token('inline', '', NESTING_SELF_CLOSING);
-        // token.level = blockLevel;
-        // token.map = [ +node.startPosition?.row, +node.endPosition?.row, +node.startPosition?.column, +node.endPosition?.column ];
-        walkInline(inlineTree?.rootNode.children, node.startPosition);
-        // retVal.push(token);
-        //
-        //
-        const lastBlockToken: Token | undefined = retVal[retVal.length - 1];
-
-        if (lastBlockToken?.type === 'inline') {
-          if (!lastBlockToken.children?.length) {
-            throw new Error('!lastBlockToken.children');
-          }
-        }
-      }
-      // break;
+      walkInline(inlineTree?.rootNode.children, node.startPosition);
 
       return;
     }
@@ -490,17 +408,7 @@ function treeToTokens(tree: Tree): Array<Token> {
           pushInlineNode(token);
           return;
         }
-        // const token = new Token('text', '', 0);
-        // token.meta = 'noEscText';
-        // token.content = node.text ?? '';
-        // retVal.push(token);
-        // return;
       }
-
-      // }
-      // console.warn(`Unhandled leaf node type: ${node.type}`, node);
-      // node.children?.forEach((child) => walkRecursive(child));
-      // return;
     }
 
     switch (node.type) {
@@ -739,7 +647,7 @@ function treeToTokens(tree: Tree): Array<Token> {
             openToken.level = blockLevel;
             retVal.push(openToken);
 
-            const children = [ ...node.children ];
+            const children = [...node.children];
             while (children.length > 0) {
               if (children[children.length - 1].type === 'whitespace') {
                 children.splice(children.length - 1, 1);
@@ -766,7 +674,6 @@ function treeToTokens(tree: Tree): Array<Token> {
               pushInlineNode(token);
             }
 
-
             const closeToken = new Token(
               tokenName + '_close',
               tagName,
@@ -776,23 +683,7 @@ function treeToTokens(tree: Tree): Array<Token> {
             retVal.push(closeToken);
           }
 
-
-
-
           blockLevel--;
-
-          // console.warn(
-          //   `PPPPPPPPPP node type: ${node.type}, children: ${
-          //     node.children.map((c: any) => c.text).join('')
-          //   }`,
-          //   // {
-          //   //   ...node,
-          //   //   children: undefined,
-          //   //   _children: undefined,
-          //   //   tree: undefined,
-          //   // },
-          // );
-          // throw new Error('aaa');
 
           const closeToken = new Token(
             tokenName + '_close',
@@ -936,7 +827,6 @@ function treeToTokens(tree: Tree): Array<Token> {
             }
           }
 
-          // const [, tagName] = node.type.split('_');
           const openToken = new Token(
             tokenName + '_open',
             tagName,
@@ -975,7 +865,6 @@ function treeToTokens(tree: Tree): Array<Token> {
 
           const tokenName = 'list_item';
           const tagName = 'li';
-          // const [, tagName] = node.type.split('_');
           const openToken = new Token(
             tokenName + '_open',
             tagName,
@@ -1033,7 +922,6 @@ function treeToTokens(tree: Tree): Array<Token> {
           retVal.push(token);
         }
         break;
-      // return { type: 'text', text: node.text ?? '' };
 
       default:
         // Log unhandled node types for debugging
@@ -1059,17 +947,21 @@ function treeToTokens(tree: Tree): Array<Token> {
   return retVal;
 }
 
-export function sitterTokenizer() {
+import markdownWasm from '../wasm/tree-sitter-markdown.wasm?raw' with {
+  type: 'bytes',
+};
+import inlineWasm from '../wasm/tree-sitter-markdown_inline.wasm?raw' with {
+  type: 'bytes',
+};
+
+export async function sitterTokenizer() {
+  const blockParser: Parser = await createParser(markdownWasm);
+  const inlineParser: Parser = await createParser(inlineWasm);
+
   return {
     parse: (source: string): Array<Token> => {
-      const tree = parseMarkdown(source);
-
-      Deno.writeTextFileSync(
-        'tree-sitter.xml',
-        xmlStylePreview(tree.rootNode, { alwaysShowTextAttr: false }),
-      );
-
-      return treeToTokens(parseMarkdown(source));
+      const tree: Tree = blockParser.parse(source);
+      return treeToTokens(tree, inlineParser);
     },
   };
 }

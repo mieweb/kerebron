@@ -1,6 +1,8 @@
 {
   "name": "@kerebron/extension-markdown",
-  "tasks": {},
+  "tasks": {
+    "build": "deno --allow-net --allow-read=./wasm --allow-write=./wasm ../../build/fetch_wasm.ts ./wasm"
+  },
   "imports": {
     "$deno_tree_sitter/": "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/",
     "$deno_tree_sitter/main.js": "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/main.js",

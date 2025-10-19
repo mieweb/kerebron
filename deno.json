@@ -22,11 +22,12 @@
     "examples/mcptest"
   ],
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"],
-    "types": ["npm:@types/markdown-it@14.1.2"]
+    "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
   },
   "tasks": {
-    "build": "cd packages/odt-wasm && deno task build && cd ../../examples/example-vue && deno task build && cd ../example-vue-custom-element && deno task build && cd ../.."
+    "build": "deno task build:ext-md; deno task build:ext-odt",
+    "build:ext-odt": "cd packages/odt-wasm && deno task build && cd ../../examples/example-vue && deno task build && cd ../example-vue-custom-element && deno task build && cd ../..",
+    "build:ext-md": "cd packages/extension-markdown && deno task build"
   },
   "imports": {
     "@deno/dnt": "jsr:@deno/dnt@^0.42.1",
@@ -41,8 +42,6 @@
     "prosemirror-transform": "npm:prosemirror-transform@1.10.4",
     "prosemirror-history": "npm:prosemirror-history@1.4.1",
     "prosemirror-dev-toolkit": "npm:prosemirror-dev-toolkit@1.1.8",
-
-    "markdown-it": "npm:markdown-it@14.1.0",
 
     "yjs": "npm:yjs@13.6.24",
     "y-protocols": "npm:y-protocols@1.0.6",
@@ -85,5 +84,6 @@
     "singleQuote": true,
     "exclude": ["**/*.md", "**/*.odt.xml", "**/*.xml"]
   },
+  "unstable": ["raw-imports"],
   "nodeModulesDir": "auto"
 }

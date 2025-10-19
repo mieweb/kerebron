@@ -203,8 +203,6 @@ export class MarkdownSerializer {
 
     const tokenSource = new TokenSource(tokens);
     tokenSource.iterate(0, (token, i) => {
-      // console.log('tok', token);
-
       if (!this.ctx.current.meta['html_mode']) {
         if (token.level === 0 && token.nesting !== NESTING_CLOSING) {
           if (this.ctx.output.colPos !== 0) {
