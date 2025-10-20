@@ -21,6 +21,8 @@ export abstract class Extension {
   readonly type = 'extension';
   abstract name: string;
 
+  readonly conflicts?: Array<string>;
+
   public constructor(protected config: Partial<ExtensionConfig> = {}) {
   }
 

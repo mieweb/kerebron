@@ -13,14 +13,13 @@ import {
 } from './plugins/input-rules/InputRulesPlugin.ts';
 import { KeymapPlugin } from './plugins/keymap/keymap.ts';
 import {
-  chainCommands,
   CommandFactories,
   CommandFactory,
   CommandShortcuts,
+  firstCommand,
 } from './commands/mod.ts';
 import { type Command } from 'prosemirror-state';
 import { addAttributesToSchema } from './utilities/getHtmlAttributes.ts';
-import { base } from './plugins/keymap/w3c-keyname.ts';
 
 export function findDuplicates(items: any[]): any[] {
   const filtered = items.filter((el, index) => items.indexOf(el) !== index);
@@ -142,7 +141,7 @@ export class ExtensionManager {
 
         const keyBinding = keyBindings.get(key);
         if (keyBinding) {
-          keyBindings.set(key, chainCommands(keyBinding, command));
+          keyBindings.set(key, firstCommand(command, keyBinding));
         } else {
           keyBindings.set(key, command);
         }
@@ -170,7 +169,7 @@ export class ExtensionManager {
           ...converters,
           ...extension.getConverters(this.editor, this.schema),
         };
-        const nodeView = extension.getNodeView();
+        const nodeView = extension.getNodeView(this.editor);
         if (nodeView) {
           this.nodeViews[extension.name] = nodeView;
         }
@@ -219,7 +218,7 @@ export class ExtensionManager {
         };
         keyBindings.set(
           key,
-          chainCommands(wrapperCommand, keyBinding),
+          firstCommand(wrapperCommand, keyBinding),
         );
       }
     }
@@ -304,6 +303,16 @@ export class ExtensionManager {
     const { nodeExtensions, markExtensions, baseExtensions } = splitExtensions(
       this.extensions,
     );
+
+    for (const extension of baseExtensions) {
+      if (Array.isArray(extension.conflicts)) {
+        for (const name of extension.conflicts) {
+          if (this.getExtension(name)) {
+            throw new Error(`Extension conflict: ${extension.name} vs ${name}`);
+          }
+        }
+      }
+    }
 
     const nodes: { [name: string]: NodeSpec } = {};
     for (const extension of nodeExtensions) {

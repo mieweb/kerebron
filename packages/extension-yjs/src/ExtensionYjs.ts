@@ -17,6 +17,8 @@ export class ExtensionYjs extends Extension {
   name = 'yjs';
   doc: any;
 
+  override conflicts = ['history'];
+
   // declare type Command = (state: EditorState, dispatch?: (tr: Transaction) => void, view?: EditorView) => boolean;
   override getCommandFactories(): Partial<CommandFactories> {
     return {

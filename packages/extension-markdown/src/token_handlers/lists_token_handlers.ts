@@ -1,4 +1,4 @@
-import type Token from 'markdown-it/lib/token';
+import type { Token } from '../types.ts';
 
 import {
   type ContextStash,
@@ -234,6 +234,43 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
       },
     ],
 
+    'task_list_open': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.stash();
+        ctx.current.listLevel++;
+        ctx.current.listType = 'tl';
+        ctx.current.itemSymbol = '';
+        ctx.current.itemNumber = 0;
+      },
+    ],
+    'task_list_close': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.unstash();
+        if (ctx.output.colPos !== 0) {
+          ctx.current.log('\n');
+        }
+      },
+    ],
+    'task_item_open': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.itemRow = 0;
+        ctx.current.itemNumber++;
+
+        ctx.current.itemSymbol = token.attrGet('checked') ? 'x' : '';
+
+        if (ctx.output.colPos !== 0) {
+          ctx.current.log('\n');
+        }
+      },
+    ],
+    'task_item_close': [
+      (token: Token, ctx: ContextStash) => {
+        if (ctx.output.colPos !== 0) {
+          ctx.current.log('\n');
+        }
+      },
+    ],
+
     'bullet_list_open': [
       (token: Token, ctx: ContextStash) => {
         ctx.stash();
@@ -262,7 +299,16 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
             getHtmlInlineTokensHandlers(),
           )
             .filter((a) =>
-              ['strong_open', 'strong_close', 'em_open', 'em_close'].includes(
+              [
+                'strong_open',
+                'strong_close',
+                'em_open',
+                'em_close',
+                'underline_open',
+                'underline_close',
+                'strike_open',
+                'strike_close',
+              ].includes(
                 a[0],
               )
             );
@@ -273,16 +319,16 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
           };
 
           ctx.current.itemSymbol = '';
-          const symbolTuple = token.attrs?.find((attr) => attr[0] === 'symbol');
-          if (symbolTuple) {
-            ctx.current.meta['list_symbol'] = symbolTuple[1];
+          const symbol = token.attrGet('symbol');
+          if (symbol) {
+            ctx.current.meta['list_symbol'] = symbol;
           } else {
             ctx.current.meta['list_symbol'] = '1';
           }
 
-          const startTuple = token.attrs?.find((attr) => attr[0] === 'start');
-          if (startTuple && startTuple.length > 1) {
-            ctx.current.itemNumber = (+startTuple[1] || 1) - 1;
+          const start = token.attrGet('start');
+          if (start) {
+            ctx.current.itemNumber = (+start || 1) - 1;
           } else {
             ctx.current.itemNumber = 0;
           }
