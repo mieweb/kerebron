@@ -23,6 +23,19 @@ export function writeIndented(
       output.log('> '.repeat(currentCtx.blockquoteCnt));
       output.log('    '.repeat(currentCtx.footnoteCnt));
 
+      if (currentCtx.listType === 'tl') {
+        output.log('    '.repeat(currentCtx.listLevel - 1));
+        if (currentCtx.itemRow === 0) {
+          output.log('- ');
+          if (currentCtx.itemSymbol) {
+            output.log('[x] ');
+          } else {
+            output.log('[ ] ');
+          }
+        } else {
+          output.log('  ');
+        }
+      }
       if (currentCtx.listType === 'ul') {
         output.log('    '.repeat(currentCtx.listLevel - 1));
         if (currentCtx.itemRow === 0) {
@@ -65,7 +78,7 @@ export interface SerializerContext {
   blockquoteCnt: number;
   footnoteCnt: number;
   listLevel: number;
-  listType?: 'ul' | 'ol' | 'dl';
+  listType?: 'ul' | 'ol' | 'dl' | 'tl';
   itemRow: number;
   itemNumber: number;
   itemSymbol: string;
@@ -223,6 +236,7 @@ export class MarkdownSerializer {
                 'paragraph_close',
                 'ordered_list_close',
                 'bullet_list_close',
+                'task_list_close',
                 'dl_close',
                 'table_close',
                 'blockquote_close',

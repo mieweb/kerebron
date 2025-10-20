@@ -28,7 +28,7 @@ import {
 
 /// Build a command that splits a non-empty textblock at the top level
 /// of a list item by also splitting that list item.
-function splitListItem(itemType: NodeType, itemAttrs?: Attrs): Command {
+export function splitListItem(itemType: NodeType, itemAttrs?: Attrs): Command {
   return function (state: EditorState, dispatch?: (tr: Transaction) => void) {
     const { $from, $to, node } = state.selection as NodeSelection;
     if ((node && node.isBlock) || $from.depth < 2 || !$from.sameParent($to)) {
@@ -115,7 +115,7 @@ function splitListItemKeepMarks(
 
 /// Create a command to lift the list item around the selection up into
 /// a wrapping list.
-function liftListItem(itemType: NodeType): Command {
+export function liftListItem(itemType: NodeType): Command {
   return function (state: EditorState, dispatch?: (tr: Transaction) => void) {
     let { $from, $to } = state.selection;
     let range = $from.blockRange(
@@ -234,7 +234,7 @@ function liftOutOfList(
 
 /// Create a command to sink the list item around the selection down
 /// into an inner list.
-function sinkListItem(itemType: NodeType): Command {
+export function sinkListItem(itemType: NodeType): Command {
   return function (state, dispatch) {
     const { $from, $to } = state.selection;
     const range = $from.blockRange(

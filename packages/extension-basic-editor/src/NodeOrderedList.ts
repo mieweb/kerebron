@@ -74,7 +74,7 @@ export class NodeOrderedList extends Node {
 
   override getKeyboardShortcuts(): Partial<CommandShortcuts> {
     return {
-      'Shift-Ctrl-9': 'toggleOrderedList',
+      'Shift-Ctrl-7': 'toggleOrderedList',
     };
   }
 }

@@ -29,6 +29,8 @@ import { NodeDefinitionList } from './NodeDefinitionList.ts';
 import { NodeDefinitionTerm } from './NodeDefinitionTerm.ts';
 import { NodeDefinitionDesc } from './NodeDefinitionDesc.ts';
 import { NodeFrontmatter } from './NodeFrontmatter.ts';
+import { NodeTaskList } from './NodeTaskList.ts';
+import { NodeTaskItem } from './NodeTaskItem.ts';
 
 export class ExtensionBasicEditor extends Extension {
   name = 'basic-editor';
@@ -46,6 +48,8 @@ export class ExtensionBasicEditor extends Extension {
     new NodeOrderedList(),
     new NodeBulletList(),
     new NodeListItem(),
+    new NodeTaskList(),
+    new NodeTaskItem(),
     new NodeDefinitionList(),
     new NodeDefinitionTerm(),
     new NodeDefinitionDesc(),

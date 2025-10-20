@@ -5,7 +5,7 @@ import {
   type CommandShortcuts,
   exitCode,
 } from '@kerebron/editor/commands';
-import {firstCommand} from '@kerebron/editor/commands';
+import { firstCommand } from '@kerebron/editor/commands';
 
 export class NodeHardBreak extends Node {
   override name = 'br';
@@ -70,7 +70,7 @@ export class NodeHardBreak extends Node {
     );
 
     return {
-      'setHardBreak': () => setHardBreak
+      'setHardBreak': () => setHardBreak,
     };
   }
 

@@ -625,7 +625,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
       case 'pipe_table_cell':
         {
           const tokenName = ctx.tableRowType === 'thead' ? 'th' : 'td';
-          const tagName = ctx.tableRowType === 'thead' ? 'th' : 'td';;
+          const tagName = ctx.tableRowType === 'thead' ? 'th' : 'td';
           const openToken = new Token(
             tokenName + '_open',
             tagName,
@@ -817,10 +817,16 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             item.type === 'list_item'
           );
           if (firstItem) {
+            const taskListMarker = firstItem.children.find((item) =>
+              item.type.startsWith('task_list_marker')
+            );
             const listMarker = firstItem.children.find((item) =>
               item.type.startsWith('list_marker_dot')
             );
-            if (listMarker) {
+            if (taskListMarker) {
+              tokenName = 'task_list';
+              tagName = 'ul';
+            } else if (listMarker) {
               tokenName = 'ordered_list';
               tagName = 'ol';
               start = listMarker.text.trim().replace('.', '');
@@ -856,6 +862,9 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
 
       case 'list_item':
         {
+          const taskListMarker = node.children.find((item) =>
+            item.type.startsWith('task_list_marker_')
+          );
           const listMarker = node.children.find((item) =>
             item.type.startsWith('list_marker_')
           );
@@ -863,7 +872,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             break;
           }
 
-          const tokenName = 'list_item';
+          let tokenName = taskListMarker ? 'task_item' : 'list_item';
           const tagName = 'li';
           const openToken = new Token(
             tokenName + '_open',
@@ -878,6 +887,18 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             // openToken.markup = '.';
             openToken.info = '';
             openToken.markup = '';
+          }
+
+          if (taskListMarker) {
+            if (taskListMarker.type === 'task_list_marker_checked') {
+              // throw new Error('aaaa')
+            }
+            openToken.attrSet(
+              'checked',
+              taskListMarker.type === 'task_list_marker_checked'
+                ? 'checked'
+                : '',
+            );
           }
 
           retVal.push(openToken);

@@ -159,6 +159,22 @@ export default async function pmToMdConverter(
       };
     },
 
+    task_list(node) {
+      return {
+        open: (node) => {
+          ctx.stash();
+          ctx.current.meta['list_type'] = 'tl';
+          ctx.current.meta['list_type_symbol'] = '';
+          const token = new Token('task_list_open', 'ul', 1);
+          token.attrSet('symbol', '*');
+          return token;
+        },
+        close: (node) => {
+          ctx.unstash();
+          return new Token('task_list_close', 'ul', -1);
+        },
+      };
+    },
     bullet_list(node) {
       return {
         open: (node) => {
@@ -202,6 +218,16 @@ export default async function pmToMdConverter(
           return token;
         },
         close: 'list_item_close',
+      };
+    },
+    task_item(node) {
+      return {
+        open: (node) => {
+          const token = new Token('task_item_open', 'li', 1);
+          token.attrSet('checked', node.attrs.checked ? 'checked' : '');
+          return token;
+        },
+        close: 'task_item_close',
       };
     },
 

@@ -48,7 +48,7 @@ export abstract class Node {
     return {};
   }
 
-  getNodeView(): NodeViewConstructor | undefined {
+  getNodeView(editor: CoreEditor): NodeViewConstructor | undefined {
     return undefined;
   }
 

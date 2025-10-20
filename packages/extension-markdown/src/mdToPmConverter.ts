@@ -30,6 +30,10 @@ export default async function mdToPmConverter(
       },
       blockquote: { block: 'blockquote' },
       paragraph: { block: 'paragraph' },
+      task_item: { block: 'task_item' },
+      task_list: {
+        block: 'task_list',
+      },
       list_item: { block: 'list_item' },
       bullet_list: {
         block: 'bullet_list',

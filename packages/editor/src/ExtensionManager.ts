@@ -13,10 +13,10 @@ import {
 } from './plugins/input-rules/InputRulesPlugin.ts';
 import { KeymapPlugin } from './plugins/keymap/keymap.ts';
 import {
-  firstCommand,
   CommandFactories,
   CommandFactory,
   CommandShortcuts,
+  firstCommand,
 } from './commands/mod.ts';
 import { type Command } from 'prosemirror-state';
 import { addAttributesToSchema } from './utilities/getHtmlAttributes.ts';
@@ -169,7 +169,7 @@ export class ExtensionManager {
           ...converters,
           ...extension.getConverters(this.editor, this.schema),
         };
-        const nodeView = extension.getNodeView();
+        const nodeView = extension.getNodeView(this.editor);
         if (nodeView) {
           this.nodeViews[extension.name] = nodeView;
         }

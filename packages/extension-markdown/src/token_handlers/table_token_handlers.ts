@@ -167,7 +167,7 @@ class TableBuilder {
 
       for (let cellNo = 0; cellNo < row.cells.length; cellNo++) {
         const cell = row.cells[cellNo];
-        result += ' '+ cell.text;
+        result += ' ' + cell.text;
         if (cell.text.length < columnsWidth[cellNo]) {
           result += ' '.repeat(columnsWidth[cellNo] - cell.text.length);
         }
@@ -221,12 +221,15 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
     ],
 
     'paragraph_open': [],
-    'paragraph_close': [(token: Token, ctx: ContextStash, tokenSource: TokenSource<Token>) => {
-      ctx.current.meta['table_cell_para_count'] = +ctx.current.meta['table_cell_para_count'] + 1;
-      if (ctx.current.meta['table_cell_para_count'] > 1) { // Only 1 line in markdown pipe table
-        rollbackTable(token, ctx, tokenSource);
-      }
-    }],
+    'paragraph_close': [
+      (token: Token, ctx: ContextStash, tokenSource: TokenSource<Token>) => {
+        ctx.current.meta['table_cell_para_count'] =
+          +ctx.current.meta['table_cell_para_count'] + 1;
+        if (ctx.current.meta['table_cell_para_count'] > 1) { // Only 1 line in markdown pipe table
+          rollbackTable(token, ctx, tokenSource);
+        }
+      },
+    ],
 
     'default': [
       rollbackTable,

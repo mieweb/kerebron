@@ -234,6 +234,43 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
       },
     ],
 
+    'task_list_open': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.stash();
+        ctx.current.listLevel++;
+        ctx.current.listType = 'tl';
+        ctx.current.itemSymbol = '';
+        ctx.current.itemNumber = 0;
+      },
+    ],
+    'task_list_close': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.unstash();
+        if (ctx.output.colPos !== 0) {
+          ctx.current.log('\n');
+        }
+      },
+    ],
+    'task_item_open': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.itemRow = 0;
+        ctx.current.itemNumber++;
+
+        ctx.current.itemSymbol = token.attrGet('checked') ? 'x' : '';
+
+        if (ctx.output.colPos !== 0) {
+          ctx.current.log('\n');
+        }
+      },
+    ],
+    'task_item_close': [
+      (token: Token, ctx: ContextStash) => {
+        if (ctx.output.colPos !== 0) {
+          ctx.current.log('\n');
+        }
+      },
+    ],
+
     'bullet_list_open': [
       (token: Token, ctx: ContextStash) => {
         ctx.stash();

@@ -1,10 +1,10 @@
 import { Extension } from '@kerebron/editor';
 import {
-  firstCommand,
   Command,
   createParagraphNear,
   deleteSelection,
   exitCode,
+  firstCommand,
   joinBackward,
   joinDown,
   joinForward,
@@ -20,9 +20,7 @@ import {
   selectTextblockStart,
   splitBlock,
 } from '@kerebron/editor/commands';
-import {
-  type CommandShortcuts,
-} from '@kerebron/editor/commands';
+import { type CommandShortcuts } from '@kerebron/editor/commands';
 import { CommandFactories } from '../../editor/src/Node.ts';
 
 const backspace = firstCommand(
