@@ -305,6 +305,16 @@ export class ExtensionManager {
       this.extensions,
     );
 
+    for (const extension of baseExtensions) {
+      if (Array.isArray(extension.conflicts)) {
+        for (const name of extension.conflicts) {
+          if (this.getExtension(name)) {
+            throw new Error(`Extension conflict: ${extension.name} vs ${name}`);
+          }
+        }
+      }
+    }
+
     const nodes: { [name: string]: NodeSpec } = {};
     for (const extension of nodeExtensions) {
       nodes[extension.name] = extension.getNodeSpec();
