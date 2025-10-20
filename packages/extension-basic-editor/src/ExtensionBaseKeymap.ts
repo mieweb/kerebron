@@ -1,6 +1,6 @@
 import { Extension } from '@kerebron/editor';
 import {
-  chainCommands,
+  firstCommand,
   Command,
   createParagraphNear,
   deleteSelection,
@@ -21,17 +21,22 @@ import {
   splitBlock,
 } from '@kerebron/editor/commands';
 import {
-  type Commands,
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
 import { CommandFactories } from '../../editor/src/Node.ts';
 
-const backspace = chainCommands(
+const backspace = firstCommand(
   deleteSelection,
   joinBackward,
   selectNodeBackward,
 );
-const del = chainCommands(deleteSelection, joinForward, selectNodeForward);
+const del = firstCommand(deleteSelection, joinForward, selectNodeForward);
+const enter = firstCommand(
+  newlineInCode,
+  createParagraphNear,
+  liftEmptyBlock,
+  splitBlock,
+);
 
 /// A basic keymap containing bindings not specific to any schema.
 /// Binds the following keys (when multiple commands are listed, they
@@ -44,12 +49,6 @@ const del = chainCommands(deleteSelection, joinForward, selectNodeForward);
 /// * **Mod-Delete** to `deleteSelection`, `joinForward`, `selectNodeForward`
 /// * **Mod-a** to `selectAll`
 const pcBaseKeymap: { [key: string]: Command } = {
-  'Enter': chainCommands(
-    newlineInCode,
-    createParagraphNear,
-    liftEmptyBlock,
-    splitBlock,
-  ),
   'Mod-Enter': exitCode,
   'Backspace': backspace,
   'Mod-Backspace': backspace,
@@ -64,6 +63,7 @@ const pcBaseKeymap: { [key: string]: Command } = {
 /// **Ctrl-Alt-Backspace**, **Alt-Delete**, and **Alt-d** like
 /// Ctrl-Delete.
 const macBaseKeymap: { [key: string]: Command } = {
+  ...pcBaseKeymap,
   'Ctrl-h': pcBaseKeymap['Backspace'],
   'Alt-Backspace': pcBaseKeymap['Mod-Backspace'],
   'Ctrl-d': pcBaseKeymap['Delete'],
@@ -73,14 +73,13 @@ const macBaseKeymap: { [key: string]: Command } = {
   'Ctrl-a': selectTextblockStart,
   'Ctrl-e': selectTextblockEnd,
 };
-for (let key in pcBaseKeymap) (macBaseKeymap as any)[key] = pcBaseKeymap[key];
 
 const mac = /(Mac|iPhone|iPod|iPad)/i.test(navigator?.platform);
 
 /// Depending on the detected platform, this will hold
 /// [`pcBasekeymap`](#commands.pcBaseKeymap) or
 /// [`macBaseKeymap`](#commands.macBaseKeymap).
-export const baseKeymap: { [key: string]: Command } = mac
+const baseKeymap: { [key: string]: Command } = mac
   ? macBaseKeymap
   : pcBaseKeymap;
 
@@ -89,6 +88,7 @@ export class ExtensionBaseKeymap extends Extension {
 
   override getCommandFactories(): Partial<CommandFactories> {
     const commands: CommandFactories = {
+      enter: () => enter,
       joinUp: () => (state, dispatch) => joinUp(state, dispatch),
       joinDown: () => (state, dispatch) => joinDown(state, dispatch),
       lift: () => (state, dispatch) => lift(state, dispatch),
@@ -109,6 +109,7 @@ export class ExtensionBaseKeymap extends Extension {
 
   override getKeyboardShortcuts(): Partial<CommandShortcuts> {
     const shortcuts: CommandShortcuts = {
+      'Enter': 'enter',
       'Alt-ArrowUp': 'joinUp',
       'Alt-ArrowDown': 'joinDown',
       'Mod-BracketLeft': 'lift',

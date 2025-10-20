@@ -5,10 +5,15 @@ import {
   type CommandShortcuts,
   exitCode,
 } from '@kerebron/editor/commands';
+import {firstCommand} from '@kerebron/editor/commands';
 
 export class NodeHardBreak extends Node {
   override name = 'br';
   requires = ['doc'];
+
+  options = {
+    keepMarks: true,
+  };
 
   override getNodeSpec(): NodeSpec {
     return {
@@ -23,63 +28,49 @@ export class NodeHardBreak extends Node {
     };
   }
 
-  /*if (!exitCode(view.state, view.dispatch)) return false
-  view.focus()
-  return true
-}},*/
-
   override getCommandFactories(
     editor: CoreEditor,
     type: NodeType,
   ): Partial<CommandFactories> {
+    // TODO: refactor commands
+    // const comm2: Command = (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+    //   const { selection, storedMarks } = state
+
+    //   if (selection.$from.parent.type.spec.isolating) {
+    //       return false
+    //   }
+
+    //   const { keepMarks } = this.options
+    //   // const { splittableMarks } = editor.extensionManager
+    //   const splittableMarks = [];
+    //   const marks = storedMarks
+    //       || (selection.$to.parentOffset && selection.$from.marks())
+
+    //   return editor.chain()
+    //     .insertContent({ type: this.name })
+    //     .command(({ tr, dispatch }) => {
+    //         if (dispatch && marks && keepMarks) {
+    //           for (const mark of marks) {
+    //             console.log('mteset', mark.type);
+    //           }
+    //             const filteredMarks = marks
+    //                 .filter(mark => splittableMarks.includes(mark.type.name))
+
+    //             tr.ensureMarks(filteredMarks)
+    //         }
+
+    //         return true
+    //     })
+    //     .run();
+    // }
+
+    const setHardBreak = firstCommand(
+      exitCode,
+      // comm2
+    );
+
     return {
-      // 'first': commands => first(commands),
-      'setHardBreak': () => (state, dispatch) => {
-        if (!exitCode(state, dispatch)) {
-          return false;
-        }
-        editor.view.focus();
-        if (dispatch) {
-          dispatch(
-            state.tr.replaceSelectionWith(type.create()).scrollIntoView(),
-          );
-        }
-        return true;
-      },
-      // const commands = editor.commands;
-      // return commands.first([
-      //     () => commands.exitCode(),
-      //     () => commands.command(() => {
-      //         const { selection, storedMarks } = state
-      //
-      //         if (selection.$from.parent.type.spec.isolating) {
-      //             return false
-      //         }
-      //
-      //         const { keepMarks } = this.options
-      //         const { splittableMarks } = editor.extensionManager
-      //         const marks = storedMarks
-      //             || (selection.$to.parentOffset && selection.$from.marks())
-      //
-      //         return chain()
-      //             .insertContent({ type: this.name })
-      //             .command(({ tr, dispatch }) => {
-      //                 if (dispatch && marks && keepMarks) {
-      //                     const filteredMarks = marks
-      //                         .filter(mark => splittableMarks.includes(mark.type.name))
-      //
-      //                     tr.ensureMarks(filteredMarks)
-      //                 }
-      //
-      //                 return true
-      //             })
-      //             .run()
-      //     }),
-      // ])
-      // chainCommands(exitCode, (state, dispatch) => {
-      //     if (dispatch) dispatch(state.tr.replaceSelectionWith(br.create()).scrollIntoView())
-      //     return true
-      // })
+      'setHardBreak': () => setHardBreak
     };
   }
 

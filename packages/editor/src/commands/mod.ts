@@ -1113,10 +1113,13 @@ export function autoJoin(
 
 /// Combine a number of command functions into a single function (which
 /// calls them one by one until one returns true).
-export function chainCommands(...commands: readonly Command[]): Command {
+export function firstCommand(...commands: readonly Command[]): Command {
   return function (state, dispatch, view) {
     for (let i = 0; i < commands.length; i++) {
-      if (commands[i](state, dispatch, view)) return true;
+      if (commands[i](state, dispatch, view)) {
+        console.debug('firstCommand: ', commands[i]);
+        return true;
+      }
     }
     return false;
   };

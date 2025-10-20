@@ -13,14 +13,13 @@ import {
 } from './plugins/input-rules/InputRulesPlugin.ts';
 import { KeymapPlugin } from './plugins/keymap/keymap.ts';
 import {
-  chainCommands,
+  firstCommand,
   CommandFactories,
   CommandFactory,
   CommandShortcuts,
 } from './commands/mod.ts';
 import { type Command } from 'prosemirror-state';
 import { addAttributesToSchema } from './utilities/getHtmlAttributes.ts';
-import { base } from './plugins/keymap/w3c-keyname.ts';
 
 export function findDuplicates(items: any[]): any[] {
   const filtered = items.filter((el, index) => items.indexOf(el) !== index);
@@ -142,7 +141,7 @@ export class ExtensionManager {
 
         const keyBinding = keyBindings.get(key);
         if (keyBinding) {
-          keyBindings.set(key, chainCommands(keyBinding, command));
+          keyBindings.set(key, firstCommand(command, keyBinding));
         } else {
           keyBindings.set(key, command);
         }
@@ -219,7 +218,7 @@ export class ExtensionManager {
         };
         keyBindings.set(
           key,
-          chainCommands(wrapperCommand, keyBinding),
+          firstCommand(wrapperCommand, keyBinding),
         );
       }
     }

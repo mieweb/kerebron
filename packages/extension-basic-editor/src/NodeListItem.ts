@@ -306,9 +306,9 @@ export class NodeListItem extends Node {
 
   override getKeyboardShortcuts(): Partial<CommandShortcuts> {
     return {
-      // 'Enter': 'splitListItem',
-      'Mod-[': 'liftListItem',
-      'Mod-]': 'sinkListItem',
+      'Enter': 'splitListItem',
+      'Tab': 'sinkListItem',
+      'Shift-Tab': 'liftListItem',
     };
   }
 }
