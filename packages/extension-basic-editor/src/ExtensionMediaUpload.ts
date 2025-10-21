@@ -256,8 +256,3 @@ export class ExtensionMediaUpload extends Extension {
     return [createMediaUploadPlugin(this.config)];
   }
 }
-
-/** @deprecated Use ExtensionMediaUpload instead */
-export class ExtensionImageUpload extends ExtensionMediaUpload {
-  name = 'imageUpload';
-}
