@@ -34,7 +34,7 @@ export class NodeVideo extends Node {
         const { src, title, controls, width, height } = node.attrs;
         const attrs: any = { src };
         if (title) attrs.title = title;
-        if (controls) attrs.controls = '';  // Boolean attribute - just needs to be present
+        if (controls) attrs.controls = ''; // Boolean attribute - just needs to be present
         if (width) attrs.width = width;
         if (height) attrs.height = height;
         return ['video', attrs];
