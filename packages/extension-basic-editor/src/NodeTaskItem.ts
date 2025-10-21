@@ -1,8 +1,4 @@
-import {
-  Node as PmNode,
-  NodeSpec,
-  type NodeType,
-} from 'prosemirror-model';
+import { Node as PmNode, NodeSpec, type NodeType } from 'prosemirror-model';
 import { type CoreEditor, Node } from '@kerebron/editor';
 import {
   type CommandFactories,

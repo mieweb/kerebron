@@ -1,6 +1,5 @@
 import { Plugin, PluginKey } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import { Slice } from 'prosemirror-model';
 
 import { Extension } from '@kerebron/editor';
 
@@ -43,12 +42,12 @@ function fileToObjectURL(file: File): string {
 
 /** Check if a file is an image */
 function isImage(file: File, allowedTypes: string[]): boolean {
-  return allowedTypes.some(type => file.type.match(type));
+  return allowedTypes.some((type) => file.type.match(type));
 }
 
 /** Check if a file is a video */
 function isVideo(file: File, allowedTypes: string[]): boolean {
-  return allowedTypes.some(type => file.type.match(type));
+  return allowedTypes.some((type) => file.type.match(type));
 }
 
 /** Insert an image into the editor at the given position */
@@ -122,15 +121,21 @@ async function handleMediaFiles(
     const sizeLimit = isVideoFile ? maxVideoFileSize : maxFileSize;
     if (file.size > sizeLimit) {
       console.warn(
-        `${isVideoFile ? 'Video' : 'Image'} file "${file.name}" is too large (${(file.size / 1024 / 1024).toFixed(2)}MB). Maximum size is ${(sizeLimit / 1024 / 1024).toFixed(2)}MB.`,
+        `${isVideoFile ? 'Video' : 'Image'} file "${file.name}" is too large (${
+          (file.size / 1024 / 1024).toFixed(2)
+        }MB). Maximum size is ${(sizeLimit / 1024 / 1024).toFixed(2)}MB.`,
       );
       continue;
     }
 
     try {
       // Upload or convert to data URL
-      console.log(`Processing ${isVideoFile ? 'video' : 'image'}: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB, ${file.type})`);
-      
+      console.log(
+        `Processing ${isVideoFile ? 'video' : 'image'}: ${file.name} (${
+          (file.size / 1024 / 1024).toFixed(2)
+        }MB, ${file.type})`,
+      );
+
       let src: string;
       if (uploadHandler) {
         src = await uploadHandler(file);
@@ -141,7 +146,11 @@ async function handleMediaFiles(
       } else {
         // Use base64 data URL
         src = await fileToDataURL(file);
-        console.log(`${isVideoFile ? 'Video' : 'Image'} converted to data URL, length: ${src.length} characters`);
+        console.log(
+          `${
+            isVideoFile ? 'Video' : 'Image'
+          } converted to data URL, length: ${src.length} characters`,
+        );
       }
 
       // Insert the media
@@ -156,7 +165,10 @@ async function handleMediaFiles(
       // Increment position for next media
       pos += 1;
     } catch (error) {
-      console.error(`Failed to process ${isVideoFile ? 'video' : 'image'} "${file.name}":`, error);
+      console.error(
+        `Failed to process ${isVideoFile ? 'video' : 'image'} "${file.name}":`,
+        error,
+      );
     }
   }
 }
@@ -176,11 +188,11 @@ function createMediaUploadPlugin(options: MediaUploadOptions = {}): Plugin {
         if (files.length === 0) return false;
 
         // Check if any files are images or videos
-        const { 
+        const {
           allowedImageTypes = ['^image/'],
-          allowedVideoTypes = ['^video/']
+          allowedVideoTypes = ['^video/'],
         } = options;
-        const hasMedia = files.some(file => 
+        const hasMedia = files.some((file) =>
           isImage(file, allowedImageTypes) || isVideo(file, allowedVideoTypes)
         );
         if (!hasMedia) return false;
@@ -202,7 +214,9 @@ function createMediaUploadPlugin(options: MediaUploadOptions = {}): Plugin {
       /** Handle paste events with images (videos typically don't paste) */
       handlePaste(view, event, slice) {
         const items = Array.from(event.clipboardData?.items || []);
-        const imageItems = items.filter(item => item.type.startsWith('image/'));
+        const imageItems = items.filter((item) =>
+          item.type.startsWith('image/')
+        );
 
         if (imageItems.length === 0) return false;
 
