@@ -50,7 +50,7 @@ export class ExtensionBasicEditor extends Extension {
     new ExtensionBaseKeymap(),
     new ExtensionDropcursor(),
     new ExtensionGapcursor(),
-    new ExtensionHistory(),
+    // new ExtensionHistory(), // Removed: conflicts with ExtensionYjs
     new ExtensionHtml(),
     new ExtensionSelection(),
     new NodeDocument(),

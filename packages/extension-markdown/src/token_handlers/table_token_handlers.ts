@@ -237,18 +237,6 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
       },
     ],
 
-    'paragraph_open': [
-      (token: Token, ctx: ContextStash) => {
-        // paragraph tokens wrap cell content, we can ignore them in markdown tables
-      },
-    ],
-
-    'paragraph_close': [
-      (token: Token, ctx: ContextStash) => {
-        // paragraph tokens wrap cell content, we can ignore them in markdown tables
-      },
-    ],
-
     'default': [
       rollbackTable,
     ],
