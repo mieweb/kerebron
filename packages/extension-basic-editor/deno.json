@@ -28,6 +28,8 @@
     "./MarkLink": "./src/MarkLink.ts",
     "./MarkItalic": "./src/MarkItalic.ts",
     "./MarkStrong": "./src/MarkStrong.ts",
-    "./MarkUnderline": "./src/MarkUnderline.ts"
+    "./MarkUnderline": "./src/MarkUnderline.ts",
+    "./MarkTextColor": "./src/MarkTextColor.ts",
+    "./MarkHighlight": "./src/MarkHighlight.ts"
   }
 }
