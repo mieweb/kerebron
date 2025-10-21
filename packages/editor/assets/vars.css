@@ -44,6 +44,7 @@
   --kb-color-text-muted: #6b7280;
   --kb-color-surface: #ffffff;
   --kb-color-surface-elevated: #f9fafb;
+  --kb-color-surface-hover: rgba(60, 64, 67, 0.08);
   --kb-color-border: #e5e7eb;
   --kb-color-border-strong: #d1d5db;
 
