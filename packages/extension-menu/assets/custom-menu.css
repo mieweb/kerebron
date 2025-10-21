@@ -316,7 +316,7 @@
   align-items: center;
   margin-left: auto;
   padding-left: var(--kb-space-sm);
-  color: var(--kb-color-text-subtle);
+  color: var(--kb-color-text-muted);
 }
 
 .kb-custom-menu__overflow-item-chevron svg {
@@ -353,7 +353,7 @@
 }
 
 .kb-custom-menu__overflow-back-button:hover {
-  background: var(--kb-color-surface-hover);
+  background: rgba(60, 64, 67, 0.08);
 }
 
 .kb-custom-menu__overflow-back-button svg {
