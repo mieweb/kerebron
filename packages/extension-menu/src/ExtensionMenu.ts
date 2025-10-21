@@ -1,6 +1,6 @@
 import { Command, EditorState, NodeSelection, Plugin } from 'prosemirror-state';
 import { MarkType, NodeType, Schema } from 'prosemirror-model';
-import { undo, redo, undoDepth, redoDepth } from 'prosemirror-history';
+import { redo, redoDepth, undo, undoDepth } from 'prosemirror-history';
 
 import { type CoreEditor, Extension } from '@kerebron/editor';
 import { toggleMark, wrapInList } from '@kerebron/editor/commands';
@@ -136,7 +136,10 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
               title: new TextField({ label: 'Title' }),
             },
             callback(attrs) {
-              toggleMark(markType, attrs)(editor.view.state, editor.view.dispatch);
+              toggleMark(markType, attrs)(
+                editor.view.state,
+                editor.view.dispatch,
+              );
               editor.view.focus();
             },
           });

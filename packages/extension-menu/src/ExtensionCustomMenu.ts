@@ -99,7 +99,7 @@ class CustomMenuView {
     this.content.forEach((group) => {
       group.forEach((element) => {
         const { dom, update } = element.render(this.editorView);
-        
+
         // For dropdowns, get the label from the element's options directly
         let label: string;
         const dropdown = element as any;
@@ -108,7 +108,7 @@ class CustomMenuView {
         } else {
           label = this.extractLabel(dom);
         }
-        
+
         const id = this.generateStableId(label, dom);
 
         this.tools.push({
@@ -223,42 +223,44 @@ class CustomMenuView {
   private showSubmenu(tool: ToolItem) {
     const dropdown = tool.element as any;
     if (!dropdown.content) return;
-    
+
     // Extract sub-items from dropdown
-    const subItems: ToolItem[] = dropdown.content.map((element: MenuElement, index: number) => {
-      const { dom } = element.render(this.editorView);
-      
-      // For nested dropdowns, get the label from options directly
-      let label: string;
-      const nestedDropdown = element as any;
-      if (nestedDropdown.options && nestedDropdown.options.label) {
-        label = nestedDropdown.options.label;
-      } else {
-        label = this.extractLabel(dom);
-      }
-      
-      return {
-        id: `${tool.id}-sub-${index}`,
-        label,
-        element,
-        isPinned: false,
-      };
-    });
-    
+    const subItems: ToolItem[] = dropdown.content.map(
+      (element: MenuElement, index: number) => {
+        const { dom } = element.render(this.editorView);
+
+        // For nested dropdowns, get the label from options directly
+        let label: string;
+        const nestedDropdown = element as any;
+        if (nestedDropdown.options && nestedDropdown.options.label) {
+          label = nestedDropdown.options.label;
+        } else {
+          label = this.extractLabel(dom);
+        }
+
+        return {
+          id: `${tool.id}-sub-${index}`,
+          label,
+          element,
+          isPinned: false,
+        };
+      },
+    );
+
     // Save current state to stack
     this.submenuStack.push({
       title: tool.label,
       tools: subItems,
     });
-    
+
     // Re-render to show submenu
     this.renderOverflowMenu();
   }
-  
+
   private goBack() {
     // Remove last submenu from stack
     this.submenuStack.pop();
-    
+
     // Re-render
     this.renderOverflowMenu();
   }
@@ -269,7 +271,9 @@ class CustomMenuView {
 
     // Check if we're showing a submenu
     const isSubmenu = this.submenuStack.length > 0;
-    const currentSubmenu = isSubmenu ? this.submenuStack[this.submenuStack.length - 1] : null;
+    const currentSubmenu = isSubmenu
+      ? this.submenuStack[this.submenuStack.length - 1]
+      : null;
 
     // Create scrollable content container
     const overflowContent = document.createElement('div');
@@ -279,21 +283,22 @@ class CustomMenuView {
       // Render submenu header with back button
       const header = document.createElement('div');
       header.classList.add(CSS_PREFIX + '__overflow-submenu-header');
-      
+
       const backButton = document.createElement('button');
       backButton.type = 'button';
       backButton.classList.add(CSS_PREFIX + '__overflow-back-button');
-      backButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>';
+      backButton.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>';
       backButton.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         this.goBack();
       });
-      
+
       const title = document.createElement('span');
       title.classList.add(CSS_PREFIX + '__overflow-submenu-title');
       title.textContent = currentSubmenu.title;
-      
+
       header.appendChild(backButton);
       header.appendChild(title);
       overflowContent.appendChild(header);
@@ -302,7 +307,7 @@ class CustomMenuView {
       currentSubmenu.tools.forEach((tool) => {
         // Check if this is a nested dropdown
         const isDropdown = (tool.element as any).content !== undefined;
-        
+
         const wrapper = document.createElement('div');
         wrapper.classList.add(CSS_PREFIX + '__overflow-item');
 
@@ -313,13 +318,14 @@ class CustomMenuView {
           label.classList.add(CSS_PREFIX + '__overflow-item-label');
           label.textContent = tool.label;
           wrapper.appendChild(label);
-          
+
           // Add chevron to indicate submenu
           const chevron = document.createElement('span');
           chevron.classList.add(CSS_PREFIX + '__overflow-item-chevron');
-          chevron.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>';
+          chevron.innerHTML =
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>';
           wrapper.appendChild(chevron);
-          
+
           // Click handler for nested dropdown - navigate deeper
           wrapper.addEventListener('click', (e) => {
             e.preventDefault();
@@ -329,13 +335,13 @@ class CustomMenuView {
         } else {
           // Regular menu item
           const { dom, update } = tool.element.render(this.editorView);
-          
+
           // Hide the button's internal label to avoid duplication
           const internalLabel = dom.querySelector('span');
           if (internalLabel) {
             internalLabel.style.display = 'none';
           }
-          
+
           // Add our own label to the item
           const label = document.createElement('span');
           label.classList.add(CSS_PREFIX + '__overflow-item-label');
@@ -370,7 +376,9 @@ class CustomMenuView {
       const isMobile = typeof window !== 'undefined' &&
         window.innerWidth < MOBILE_BREAKPOINT;
       const mobileLimit = 4;
-      const mobileOverflowPinned = isMobile ? pinnedTools.slice(mobileLimit) : [];
+      const mobileOverflowPinned = isMobile
+        ? pinnedTools.slice(mobileLimit)
+        : [];
 
       // In mobile view, add the pinned overflow tools at the top with a label
       if (isMobile && mobileOverflowPinned.length > 0) {
@@ -423,7 +431,7 @@ class CustomMenuView {
       overflowTools.forEach((tool) => {
         // Check if this is a dropdown with sub-items
         const isDropdown = (tool.element as any).content !== undefined;
-        
+
         const wrapper = document.createElement('div');
         wrapper.classList.add(CSS_PREFIX + '__overflow-item');
 
@@ -432,30 +440,32 @@ class CustomMenuView {
           const button = document.createElement('button');
           button.type = 'button';
           button.classList.add('kb-menu__button');
-          
+
           // Add an icon (we'll use a document icon for Type menu)
           const icon = document.createElement('svg');
           icon.setAttribute('viewBox', '0 0 24 24');
           icon.setAttribute('fill', 'none');
           icon.setAttribute('stroke', 'currentColor');
           icon.setAttribute('stroke-width', '2');
-          icon.innerHTML = '<path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>';
+          icon.innerHTML =
+            '<path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>';
           button.appendChild(icon);
-          
+
           wrapper.appendChild(button);
-          
+
           // Add label
           const label = document.createElement('span');
           label.classList.add(CSS_PREFIX + '__overflow-item-label');
           label.textContent = tool.label;
           wrapper.appendChild(label);
-          
+
           // Add chevron to indicate submenu
           const chevron = document.createElement('span');
           chevron.classList.add(CSS_PREFIX + '__overflow-item-chevron');
-          chevron.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>';
+          chevron.innerHTML =
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>';
           wrapper.appendChild(chevron);
-          
+
           // Click handler for dropdown - navigate to submenu
           wrapper.addEventListener('click', (e) => {
             e.preventDefault();
@@ -465,7 +475,7 @@ class CustomMenuView {
         } else {
           // Regular menu item
           const { dom, update } = tool.element.render(this.editorView);
-          
+
           // Add label to the item
           const label = document.createElement('span');
           label.classList.add(CSS_PREFIX + '__overflow-item-label');
@@ -497,7 +507,11 @@ class CustomMenuView {
     this.overflowMenu.appendChild(overflowContent);
 
     // Create sticky footer for manage button (only in main menu, not submenu)
-    if (!isSubmenu && (this.tools.filter((t) => !t.isPinned).length > 0 || this.tools.filter((t) => t.isPinned).length > 0)) {
+    if (
+      !isSubmenu &&
+      (this.tools.filter((t) => !t.isPinned).length > 0 ||
+        this.tools.filter((t) => t.isPinned).length > 0)
+    ) {
       const overflowFooter = document.createElement('div');
       overflowFooter.classList.add(CSS_PREFIX + '__overflow-footer');
 
@@ -584,7 +598,7 @@ class CustomMenuView {
           // Opening - reset submenu stack to show main menu
           this.submenuStack = [];
           this.renderOverflowMenu();
-          
+
           // Opening - add close handler after a short delay
           setTimeout(() => {
             if (this.closeOverflowHandler) {
