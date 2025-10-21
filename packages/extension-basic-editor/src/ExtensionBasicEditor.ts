@@ -5,6 +5,7 @@ import { ExtensionDropcursor } from './ExtensionDropcursor.ts';
 import { ExtensionGapcursor } from './ExtensionGapcursor.ts';
 import { ExtensionHistory } from './ExtensionHistory.ts';
 import { ExtensionHtml } from './ExtensionHtml.ts';
+import { ExtensionImageUpload } from './ExtensionImageUpload.ts';
 import { MarkLink } from './MarkLink.ts';
 import { MarkStrong } from './MarkStrong.ts';
 import { MarkItalic } from './MarkItalic.ts';
@@ -26,17 +27,6 @@ import { NodeBlockquote } from './NodeBlockquote.ts';
 import { NodeAside } from './NodeAside.ts';
 import { NodeHeading } from './NodeHeading.ts';
 import { NodeMath } from './NodeMath.ts';
-import { MarkLink } from './MarkLink.ts';
-import { MarkStrong } from './MarkStrong.ts';
-import { MarkItalic } from './MarkItalic.ts';
-import { MarkUnderline } from './MarkUnderline.ts';
-import { MarkCode } from './MarkCode.ts';
-import { MarkChange } from './MarkChange.ts';
-import { MarkBookmark } from './MarkBookmark.ts';
-import { ExtensionHtml } from './ExtensionHtml.ts';
-import { NodeDefinitionList } from './NodeDefinitionList.ts';
-import { NodeDefinitionTerm } from './NodeDefinitionTerm.ts';
-import { NodeDefinitionDesc } from './NodeDefinitionDesc.ts';
 import { NodeDefinitionList } from './NodeDefinitionList.ts';
 import { NodeDefinitionTerm } from './NodeDefinitionTerm.ts';
 import { NodeDefinitionDesc } from './NodeDefinitionDesc.ts';
@@ -52,6 +42,7 @@ export class ExtensionBasicEditor extends Extension {
     new ExtensionGapcursor(),
     // new ExtensionHistory(), // Removed: conflicts with ExtensionYjs
     new ExtensionHtml(),
+    new ExtensionImageUpload(),
     new ExtensionSelection(),
     new NodeDocument(),
     new NodeText(),
@@ -66,9 +57,6 @@ export class ExtensionBasicEditor extends Extension {
     new NodeDefinitionDesc(),
     new NodeTaskList(),
     new NodeTaskItem(),
-    new NodeDefinitionList(),
-    new NodeDefinitionTerm(),
-    new NodeDefinitionDesc(),
     new NodeFrontmatter(),
     new NodeImage(),
     new NodeBlockquote(),
