@@ -581,6 +581,10 @@ class CustomMenuView {
         // Add/remove close handler based on open state
         const doc = this.editorView.dom.ownerDocument || document;
         if (!isOpen) {
+          // Opening - reset submenu stack to show main menu
+          this.submenuStack = [];
+          this.renderOverflowMenu();
+          
           // Opening - add close handler after a short delay
           setTimeout(() => {
             if (this.closeOverflowHandler) {
@@ -602,6 +606,8 @@ class CustomMenuView {
               ) {
                 this.overflowMenu.style.display = 'none';
                 overflowToggle.setAttribute('aria-expanded', 'false');
+                // Clear submenu stack when closing
+                this.submenuStack = [];
                 if (this.closeOverflowHandler) {
                   doc.removeEventListener('click', this.closeOverflowHandler);
                 }
@@ -610,10 +616,11 @@ class CustomMenuView {
             doc.addEventListener('click', this.closeOverflowHandler);
           }, 0);
         } else {
-          // Closing - remove close handler
+          // Closing - remove close handler and clear submenu stack
           if (this.closeOverflowHandler) {
             doc.removeEventListener('click', this.closeOverflowHandler);
           }
+          this.submenuStack = [];
         }
       });
 
