@@ -9,7 +9,6 @@
     "./ExtensionHistory": "./src/ExtensionHistory.ts",
     "./ExtensionDropcursor": "./src/ExtensionDropcursor.ts",
     "./ExtensionGapcursor": "./src/ExtensionGapcursor.ts",
-    "./ExtensionImageUpload": "./src/ExtensionImageUpload.ts",
     "./ExtensionMediaUpload": "./src/ExtensionImageUpload.ts",
     "./NodeDocument": "./src/NodeDocument.ts",
     "./NodeText": "./src/NodeText.ts",
