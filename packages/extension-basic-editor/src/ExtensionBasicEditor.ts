@@ -4,7 +4,7 @@ import { ExtensionBaseKeymap } from './ExtensionBaseKeymap.ts';
 import { ExtensionDropcursor } from './ExtensionDropcursor.ts';
 import { ExtensionGapcursor } from './ExtensionGapcursor.ts';
 import { ExtensionHtml } from './ExtensionHtml.ts';
-import { ExtensionMediaUpload } from './ExtensionMediaUpload.ts';
+import { ExtensionImageUpload } from './ExtensionImageUpload.ts';
 import { MarkLink } from './MarkLink.ts';
 import { MarkStrong } from './MarkStrong.ts';
 import { MarkItalic } from './MarkItalic.ts';
@@ -22,7 +22,6 @@ import { NodeOrderedList } from './NodeOrderedList.ts';
 import { NodeBulletList } from './NodeBulletList.ts';
 import { NodeListItem } from './NodeListItem.ts';
 import { NodeImage } from './NodeImage.ts';
-import { NodeVideo } from './NodeVideo.ts';
 import { NodeBlockquote } from './NodeBlockquote.ts';
 import { NodeAside } from './NodeAside.ts';
 import { NodeHeading } from './NodeHeading.ts';
@@ -41,7 +40,7 @@ export class ExtensionBasicEditor extends Extension {
     new ExtensionDropcursor(),
     new ExtensionGapcursor(),
     new ExtensionHtml(),
-    new ExtensionMediaUpload(),
+    new ExtensionImageUpload(),
     new ExtensionSelection(),
     new NodeDocument(),
     new NodeText(),
@@ -56,11 +55,8 @@ export class ExtensionBasicEditor extends Extension {
     new NodeDefinitionList(),
     new NodeDefinitionTerm(),
     new NodeDefinitionDesc(),
-    new NodeTaskList(),
-    new NodeTaskItem(),
     new NodeFrontmatter(),
     new NodeImage(),
-    new NodeVideo(),
     new NodeBlockquote(),
     new NodeAside(),
     new NodeHeading(),
