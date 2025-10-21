@@ -4,6 +4,7 @@ import { ExtensionBaseKeymap } from './ExtensionBaseKeymap.ts';
 import { ExtensionDropcursor } from './ExtensionDropcursor.ts';
 import { ExtensionGapcursor } from './ExtensionGapcursor.ts';
 import { ExtensionHtml } from './ExtensionHtml.ts';
+import { ExtensionImageUpload } from './ExtensionImageUpload.ts';
 import { MarkLink } from './MarkLink.ts';
 import { MarkStrong } from './MarkStrong.ts';
 import { MarkItalic } from './MarkItalic.ts';
@@ -39,6 +40,7 @@ export class ExtensionBasicEditor extends Extension {
     new ExtensionDropcursor(),
     new ExtensionGapcursor(),
     new ExtensionHtml(),
+    new ExtensionImageUpload(),
     new ExtensionSelection(),
     new NodeDocument(),
     new NodeText(),
@@ -50,9 +52,6 @@ export class ExtensionBasicEditor extends Extension {
     new NodeListItem(),
     new NodeTaskList(),
     new NodeTaskItem(),
-    new NodeDefinitionList(),
-    new NodeDefinitionTerm(),
-    new NodeDefinitionDesc(),
     new NodeFrontmatter(),
     new NodeImage(),
     new NodeBlockquote(),
