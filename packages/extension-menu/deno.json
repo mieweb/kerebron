@@ -2,5 +2,9 @@
   "name": "@kerebron/extension-menu",
   "tasks": {},
   "imports": {},
-  "exports": "./src/ExtensionMenu.ts"
+  "exports": {
+    ".": "./src/mod.ts",
+    "./ExtensionCustomMenu": "./src/ExtensionCustomMenu.ts",
+    "./ExtensionMenu": "./src/ExtensionMenu.ts"
+  }
 }

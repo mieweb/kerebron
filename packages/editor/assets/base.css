@@ -57,17 +57,11 @@
 
 /* Horizontal rule styling */
 .kb-editor hr {
-  padding: var(--kb-space-sm) var(--kb-space-md);
+  padding: 0;
   border: none;
   margin: 1em 0;
-}
-
-.kb-editor hr:after {
-  content: '';
-  display: block;
-  height: 1px;
-  background-color: var(--kb-color-border);
-  line-height: 2px;
+  height: 2px;
+  background-color: var(--kb-color-text);
 }
 
 /* Image styles */

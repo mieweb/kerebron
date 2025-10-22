@@ -25,10 +25,13 @@ import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
 
 import {
   Dropdown,
-  ExtensionMenu,
   type MenuElement,
   MenuItem,
 } from '@kerebron/extension-menu';
+
+import {
+  ExtensionMenu,
+} from '@kerebron/extension-menu/ExtensionMenu';
 
 import { ExtensionYjs } from '@kerebron/extension-yjs';
 import { userColors } from '@kerebron/extension-yjs/userColors';

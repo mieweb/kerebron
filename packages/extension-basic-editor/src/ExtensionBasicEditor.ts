@@ -13,6 +13,8 @@ import { MarkStrike } from './MarkStrike.ts';
 import { MarkCode } from './MarkCode.ts';
 import { MarkChange } from './MarkChange.ts';
 import { MarkBookmark } from './MarkBookmark.ts';
+import { MarkTextColor } from './MarkTextColor.ts';
+import { MarkHighlight } from './MarkHighlight.ts';
 import { NodeDocument } from './NodeDocument.ts';
 import { NodeText } from './NodeText.ts';
 import { NodeParagraph } from './NodeParagraph.ts';
@@ -53,6 +55,9 @@ export class ExtensionBasicEditor extends Extension {
     new NodeListItem(),
     new NodeTaskList(),
     new NodeTaskItem(),
+    new NodeDefinitionList(),
+    new NodeDefinitionTerm(),
+    new NodeDefinitionDesc(),
     new NodeFrontmatter(),
     new NodeImage(),
     new NodeVideo(),
@@ -68,5 +73,7 @@ export class ExtensionBasicEditor extends Extension {
     new MarkCode(),
     new MarkChange(),
     new MarkBookmark(),
+    new MarkTextColor(),
+    new MarkHighlight(),
   ];
 }

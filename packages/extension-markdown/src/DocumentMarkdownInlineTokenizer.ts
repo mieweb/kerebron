@@ -251,10 +251,12 @@ export class DocumentMarkdownInlineTokenizer {
     let value = open ? info.open : info.close;
 
     if (!value) {
-      throw new Error(
-        'Invalid mark type: ' + mark.type.name + ', available types: ' +
-          Object.keys(this.marks),
+      /** Skip unknown marks (like textColor, highlight) - they'll be lost in markdown but won't crash */
+      console.warn(
+        'Unsupported mark type for markdown: ' + mark.type.name + ', available types: ' +
+          Object.keys(this.marks).join(', ') + '. Mark will be ignored.',
       );
+      return;
     }
 
     const token = typeof value == 'string' ? value : value(mark);

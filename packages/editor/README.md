@@ -8,7 +8,7 @@ Core editor is basic agnostic. All you need is an HTML element.
 import { CoreEditor } from '@kerebron/editor';
 import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
 import { ExtensionHistory } from '@kerebron/extension-basic-editor/ExtensionHistory';
-import { ExtensionMenu } from '@kerebron/extension-menu';
+import { ExtensionMenu } from '@kerebron/extension-menu/ExtensionMenu';
 
 this.editor = new CoreEditor({
   element: document.querySelector('div#editor'),
