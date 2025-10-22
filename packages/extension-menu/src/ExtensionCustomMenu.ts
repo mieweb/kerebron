@@ -111,6 +111,11 @@ class CustomMenuView {
 
         const id = this.generateStableId(label, dom);
 
+        // Skip "Select parent node" tool
+        if (id === 'tool-select-parent-node') {
+          return;
+        }
+
         this.tools.push({
           id,
           label,
@@ -164,9 +169,21 @@ class CustomMenuView {
   }
 
   private extractLabel(dom: HTMLElement): string {
-    // For menu buttons, prioritize the visible label text over title
-    const buttonText = dom.querySelector('span')?.textContent?.trim();
-    if (buttonText) return buttonText;
+    // For menu buttons with both icon and label, find the label span
+    // The label span is the one that doesn't contain an SVG and isn't the icon span
+    const spans = dom.querySelectorAll('span');
+    if (spans.length > 1) {
+      // If there are multiple spans, the last one is usually the label
+      const lastSpan = spans[spans.length - 1];
+      const text = lastSpan.textContent?.trim();
+      if (text) return text;
+    } else if (spans.length === 1) {
+      // Single span - could be icon or label, check if it's just text
+      const span = spans[0];
+      const text = span.textContent?.trim();
+      // If the span contains SVG, skip it (it's an icon container)
+      if (text && !span.querySelector('svg')) return text;
+    }
 
     // For dropdowns, check the dropdown label
     const dropdownLabel = dom.querySelector('.kb-dropdown__label')?.textContent
@@ -310,6 +327,7 @@ class CustomMenuView {
 
         const wrapper = document.createElement('div');
         wrapper.classList.add(CSS_PREFIX + '__overflow-item');
+        wrapper.setAttribute('data-tool-id', tool.id);
 
         if (isDropdown) {
           // For nested dropdowns, just show label and chevron (no icon/button)
@@ -336,11 +354,30 @@ class CustomMenuView {
           // Regular menu item
           const { dom, update } = tool.element.render(this.editorView);
 
-          // Hide the button's internal label to avoid duplication
-          const internalLabel = dom.querySelector('span');
-          if (internalLabel) {
-            internalLabel.style.display = 'none';
-          }
+          // Hide the button's internal label span to avoid duplication
+          // Be more specific - only hide spans that contain text and are direct label spans
+          // Don't hide spans that are part of the icon (inside .kb-icon or custom icon DOM)
+          const spans = dom.querySelectorAll('span');
+          spans.forEach((span) => {
+            // Check if this span is inside a .kb-icon container (part of the icon)
+            const isInsideIcon = span.closest('.kb-icon') !== null;
+            
+            // Only hide spans that are likely labels:
+            // - Have text content
+            // - Are not inside a .kb-icon container
+            // - Don't contain SVG children  
+            // - Don't have kb-icon class themselves
+            // - Are direct children of the button (not nested deeper)
+            const isDirectChild = span.parentElement === dom;
+            
+            if (span.textContent && span.textContent.trim() && 
+                !isInsideIcon &&
+                isDirectChild &&
+                !span.querySelector('svg') && 
+                !span.classList.contains('kb-icon')) {
+              span.style.display = 'none';
+            }
+          });
 
           // Add our own label to the item
           const label = document.createElement('span');
@@ -365,12 +402,24 @@ class CustomMenuView {
           });
         }
 
+        wrapper.setAttribute('data-tool-id', tool.id);
         overflowContent.appendChild(wrapper);
       });
     } else {
       // Render main overflow menu
       const pinnedTools = this.tools.filter((t) => t.isPinned);
-      const overflowTools = this.tools.filter((t) => !t.isPinned);
+      let overflowTools = this.tools.filter((t) => !t.isPinned);
+
+      // Sort overflow tools to put Insert and Type first
+      overflowTools = overflowTools.sort((a, b) => {
+        const aIsInsertOrType = a.label === 'Insert' || a.label === 'Type';
+        const bIsInsertOrType = b.label === 'Insert' || b.label === 'Type';
+        if (aIsInsertOrType && !bIsInsertOrType) return -1;
+        if (!aIsInsertOrType && bIsInsertOrType) return 1;
+        if (a.label === 'Insert' && b.label === 'Type') return -1;
+        if (a.label === 'Type' && b.label === 'Insert') return 1;
+        return 0;
+      });
 
       // Check if we're in mobile view
       const isMobile = typeof window !== 'undefined' &&
@@ -393,6 +442,21 @@ class CustomMenuView {
           const { dom, update } = tool.element.render(this.editorView);
           const wrapper = document.createElement('div');
           wrapper.classList.add(CSS_PREFIX + '__overflow-item');
+          wrapper.setAttribute('data-tool-id', tool.id);
+
+          // Hide the button's internal label span to avoid duplication
+          const spans = dom.querySelectorAll('span');
+          spans.forEach((span) => {
+            const isInsideIcon = span.closest('.kb-icon') !== null;
+            const isDirectChild = span.parentElement === dom;
+            if (span.textContent && span.textContent.trim() && 
+                !isInsideIcon &&
+                isDirectChild &&
+                !span.querySelector('svg') && 
+                !span.classList.contains('kb-icon')) {
+              span.style.display = 'none';
+            }
+          });
 
           // Add label to the item
           const label = document.createElement('span');
@@ -434,6 +498,7 @@ class CustomMenuView {
 
         const wrapper = document.createElement('div');
         wrapper.classList.add(CSS_PREFIX + '__overflow-item');
+        wrapper.setAttribute('data-tool-id', tool.id);
 
         if (isDropdown) {
           // For dropdowns, create a custom button with icon and chevron
@@ -475,6 +540,20 @@ class CustomMenuView {
         } else {
           // Regular menu item
           const { dom, update } = tool.element.render(this.editorView);
+
+          // Hide the button's internal label span to avoid duplication
+          const spans = dom.querySelectorAll('span');
+          spans.forEach((span) => {
+            const isInsideIcon = span.closest('.kb-icon') !== null;
+            const isDirectChild = span.parentElement === dom;
+            if (span.textContent && span.textContent.trim() && 
+                !isInsideIcon &&
+                isDirectChild &&
+                !span.querySelector('svg') && 
+                !span.classList.contains('kb-icon')) {
+              span.style.display = 'none';
+            }
+          });
 
           // Add label to the item
           const label = document.createElement('span');
@@ -540,7 +619,18 @@ class CustomMenuView {
     this.overflowMenu.innerHTML = '';
 
     const pinnedTools = this.tools.filter((t) => t.isPinned);
-    const overflowTools = this.tools.filter((t) => !t.isPinned);
+    let overflowTools = this.tools.filter((t) => !t.isPinned);
+
+    // Sort overflow tools to put Insert and Type first
+    overflowTools = overflowTools.sort((a, b) => {
+      const aIsInsertOrType = a.label === 'Insert' || a.label === 'Type';
+      const bIsInsertOrType = b.label === 'Insert' || b.label === 'Type';
+      if (aIsInsertOrType && !bIsInsertOrType) return -1;
+      if (!aIsInsertOrType && bIsInsertOrType) return 1;
+      if (a.label === 'Insert' && b.label === 'Type') return -1;
+      if (a.label === 'Type' && b.label === 'Insert') return 1;
+      return 0;
+    });
 
     // Check if we're in mobile view (Bootstrap md breakpoint: < 768px)
     const isMobile = typeof window !== 'undefined' &&
@@ -558,6 +648,7 @@ class CustomMenuView {
       const { dom, update } = tool.element.render(this.editorView);
       const wrapper = document.createElement('span');
       wrapper.classList.add(CSS_PREFIX + '__item');
+      wrapper.setAttribute('data-tool-id', tool.id);
       wrapper.appendChild(dom);
       this.toolbar.appendChild(wrapper);
     });

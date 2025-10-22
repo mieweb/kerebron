@@ -29,7 +29,7 @@ export class MarkHighlight extends Mark {
       toDOM(mark) {
         const { color } = mark.attrs;
         const bgColor = color || 'yellow';
-        return ['mark', { style: `background-color: ${bgColor}` }, 0];
+        return ['mark', { style: `background-color: ${bgColor}; color: inherit;` }, 0];
       },
     };
   }

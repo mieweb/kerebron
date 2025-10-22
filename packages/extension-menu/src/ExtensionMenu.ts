@@ -69,6 +69,20 @@ const cut = <T>(arr: T[]) => arr.filter((x) => x) as NonNullable<T>[];
 export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
   const menu = [];
 
+  // Create custom icon for underline - just shows underlined underscore
+  const createUnderlineIcon = () => {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;';
+    
+    const text = document.createElement('span');
+    text.textContent = '_';
+    text.style.cssText = 'font-weight: bold; font-size: 18px; text-decoration: underline;';
+    
+    wrapper.appendChild(text);
+    
+    return wrapper;
+  };
+
   if (schema.marks.strong) {
     menu.push(
       new MenuItem({
@@ -93,10 +107,10 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     menu.push(
       new MenuItem({
         title: 'Toggle underline',
-        label: '_',
+        label: 'Toggle underline',
+        icon: { dom: createUnderlineIcon() },
         run: () => editor.chain().toggleUnderline().run(),
         enable: (state) => editor.can().toggleUnderline().run(),
-        // icon: icons.underline
       }),
     );
   }
@@ -143,6 +157,212 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
               editor.view.focus();
             },
           });
+          return true;
+        },
+      }),
+    );
+  }
+
+  /** Color picker for text color */
+  if (schema.marks.textColor) {
+    const markType = schema.marks.textColor;
+    const defaultColors = [
+      '#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#d9d9d9', '#efefef', '#f3f3f3', '#ffffff',
+      '#980000', '#ff0000', '#ff9900', '#ffff00', '#00ff00', '#00ffff', '#4a86e8', '#0000ff', '#9900ff', '#ff00ff',
+      '#e6b8af', '#f4cccc', '#fce5cd', '#fff2cc', '#d9ead3', '#d0e0e3', '#c9daf8', '#cfe2f3', '#d9d2e9', '#ead1dc',
+      '#dd7e6b', '#ea9999', '#f9cb9c', '#ffe599', '#b6d7a8', '#a2c4c9', '#a4c2f4', '#9fc5e8', '#b4a7d6', '#d5a6bd',
+      '#cc4125', '#e06666', '#f6b26b', '#ffd966', '#93c47d', '#76a5af', '#6d9eeb', '#6fa8dc', '#8e7cc3', '#c27ba0',
+      '#a61c00', '#cc0000', '#e69138', '#f1c232', '#6aa84f', '#45818e', '#3c78d8', '#3d85c6', '#674ea7', '#a64d79',
+      '#85200c', '#990000', '#b45f06', '#bf9000', '#38761d', '#134f5c', '#1155cc', '#0b5394', '#351c75', '#741b47',
+      '#5b0f00', '#660000', '#783f04', '#7f6000', '#274e13', '#0c343d', '#1c4587', '#073763', '#20124d', '#4c1130',
+    ];
+
+    // Create custom icon with "A" and colored line below
+    const createTextColorIcon = () => {
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'position: relative; display: inline-flex; flex-direction: column; align-items: center; padding-bottom: 2px; border-bottom: 3px solid #000; width: 20px;';
+      
+      const text = document.createElement('span');
+      text.textContent = 'A';
+      text.style.cssText = 'font-weight: bold; font-size: 16px; line-height: 20px;';
+      
+      wrapper.appendChild(text);
+      
+      return wrapper;
+    };
+
+    menu.push(
+      new MenuItem({
+        title: 'Text color',
+        icon: { dom: createTextColorIcon() },
+        label: 'Text Color',
+        active(state) {
+          return markActive(state, markType);
+        },
+        enable(state) {
+          return !state.selection.empty;
+        },
+        run(state, dispatch) {
+          /** Create color picker popup */
+          const wrapper = document.createElement('div');
+          wrapper.className = 'kb-color-picker';
+          wrapper.style.cssText = 'position: fixed; z-index: 1000; background: white; border: 1px solid #ccc; border-radius: 4px; padding: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);';
+          
+          /** Position near the editor */
+          const editorRect = editor.view.dom.getBoundingClientRect();
+          wrapper.style.top = (editorRect.top + 40) + 'px';
+          wrapper.style.left = editorRect.left + 'px';
+
+          const colorGrid = document.createElement('div');
+          colorGrid.style.cssText = 'display: grid; grid-template-columns: repeat(10, 24px); gap: 4px; margin-bottom: 8px;';
+
+          defaultColors.forEach(color => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.style.cssText = `width: 24px; height: 24px; border: 1px solid #ddd; border-radius: 2px; cursor: pointer; background: ${color}; padding: 0;`;
+            btn.title = color;
+            btn.onclick = () => {
+              toggleMark(markType, { color })(editor.view.state, editor.view.dispatch);
+              if (wrapper.parentNode) {
+                document.body.removeChild(wrapper);
+              }
+              editor.view.focus();
+            };
+            colorGrid.appendChild(btn);
+          });
+
+          wrapper.appendChild(colorGrid);
+
+          /** Remove color button */
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.textContent = 'Remove color';
+          removeBtn.style.cssText = 'width: 100%; padding: 4px; cursor: pointer;';
+          removeBtn.onclick = () => {
+            toggleMark(markType)(editor.view.state, editor.view.dispatch);
+            if (wrapper.parentNode) {
+              document.body.removeChild(wrapper);
+            }
+            editor.view.focus();
+          };
+          wrapper.appendChild(removeBtn);
+
+          /** Close on click outside */
+          const closeHandler = (e: MouseEvent) => {
+            if (!wrapper.contains(e.target as Node)) {
+              if (wrapper.parentNode) {
+                document.body.removeChild(wrapper);
+              }
+              document.removeEventListener('click', closeHandler);
+            }
+          };
+          setTimeout(() => document.addEventListener('click', closeHandler), 100);
+
+          document.body.appendChild(wrapper);
+          return true;
+        },
+      }),
+    );
+  }
+
+  /** Color picker for highlight/background color */
+  if (schema.marks.highlight) {
+    const markType = schema.marks.highlight;
+    const highlightColors = [
+      '#ffffff', '#ffff00', '#00ff00', '#00ffff', '#ff00ff', '#ffa500', '#ff69b4',
+      '#fff2cc', '#fce5cd', '#f4cccc', '#d9ead3', '#d0e0e3', '#c9daf8', '#cfe2f3',
+      '#ffe599', '#f9cb9c', '#ea9999', '#b6d7a8', '#a2c4c9', '#a4c2f4', '#9fc5e8',
+    ];
+
+    // Create custom icon with pencil and colored line below
+    const createHighlightIcon = () => {
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'position: relative; display: inline-flex; flex-direction: column; align-items: center; padding-bottom: 4px; border-bottom: 3px solid #ffff00;';
+      
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('width', '20');
+      svg.setAttribute('height', '20');
+      svg.style.cssText = 'display: block;';
+      
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z');
+      path.setAttribute('fill', 'currentColor');
+      
+      svg.appendChild(path);
+      wrapper.appendChild(svg);
+      
+      return wrapper;
+    };
+
+    menu.push(
+      new MenuItem({
+        title: 'Text highlight',
+        icon: { dom: createHighlightIcon() },
+        label: 'Text Highlight',
+        active(state) {
+          return markActive(state, markType);
+        },
+        enable(state) {
+          return !state.selection.empty;
+        },
+        run(state, dispatch) {
+          /** Create color picker popup */
+          const wrapper = document.createElement('div');
+          wrapper.className = 'kb-color-picker';
+          wrapper.style.cssText = 'position: fixed; z-index: 1000; background: white; border: 1px solid #ccc; border-radius: 4px; padding: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);';
+          
+          /** Position near the editor */
+          const editorRect = editor.view.dom.getBoundingClientRect();
+          wrapper.style.top = (editorRect.top + 40) + 'px';
+          wrapper.style.left = (editorRect.left + 50) + 'px';
+
+          const colorGrid = document.createElement('div');
+          colorGrid.style.cssText = 'display: grid; grid-template-columns: repeat(7, 24px); gap: 4px; margin-bottom: 8px;';
+
+          highlightColors.forEach(color => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.style.cssText = `width: 24px; height: 24px; border: 1px solid #ddd; border-radius: 2px; cursor: pointer; background: ${color}; padding: 0;`;
+            btn.title = color;
+            btn.onclick = () => {
+              toggleMark(markType, { color })(editor.view.state, editor.view.dispatch);
+              if (wrapper.parentNode) {
+                document.body.removeChild(wrapper);
+              }
+              editor.view.focus();
+            };
+            colorGrid.appendChild(btn);
+          });
+
+          wrapper.appendChild(colorGrid);
+
+          /** Remove highlight button */
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.textContent = 'Remove highlight';
+          removeBtn.style.cssText = 'width: 100%; padding: 4px; cursor: pointer;';
+          removeBtn.onclick = () => {
+            toggleMark(markType)(editor.view.state, editor.view.dispatch);
+            if (wrapper.parentNode) {
+              document.body.removeChild(wrapper);
+            }
+            editor.view.focus();
+          };
+          wrapper.appendChild(removeBtn);
+
+          /** Close on click outside */
+          const closeHandler = (e: MouseEvent) => {
+            if (!wrapper.contains(e.target as Node)) {
+              if (wrapper.parentNode) {
+                document.body.removeChild(wrapper);
+              }
+              document.removeEventListener('click', closeHandler);
+            }
+          };
+          setTimeout(() => document.addEventListener('click', closeHandler), 100);
+
+          document.body.appendChild(wrapper);
           return true;
         },
       }),
