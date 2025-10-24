@@ -142,6 +142,6 @@ export default {
 <style>
 @import '@kerebron/editor/assets/index.css';
 @import '@kerebron/extension-tables/assets/tables.css';
-@import '@kerebron/extension-menu/assets/menu.css';
+@import '@kerebron/extension-menu/assets/custom-menu.css';
 @import '@kerebron/extension-codemirror/assets/codemirror.css';
 </style>

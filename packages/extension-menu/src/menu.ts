@@ -1,5 +1,5 @@
 import { EditorView } from 'prosemirror-view';
-import { EditorState, NodeSelection, Transaction } from 'prosemirror-state';
+import { EditorState, Transaction } from 'prosemirror-state';
 
 import { getIcon } from './icons.ts';
 
@@ -80,7 +80,7 @@ export class MenuItem implements MenuElement {
       }
     });
 
-    function update(state: EditorState) {
+    const update = (state: EditorState) => {
       if (spec.select) {
         let selected = spec.select(state);
         dom!.style.display = selected ? '' : 'none';
@@ -98,7 +98,7 @@ export class MenuItem implements MenuElement {
         dom!.setAttribute('aria-pressed', active.toString());
       }
       return true;
-    }
+    };
 
     return { dom, update };
   }
