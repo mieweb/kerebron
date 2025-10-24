@@ -36,3 +36,8 @@ export type Attribute<T> = {
   default: T;
   toDom?: (node: ProseMirrorNode) => T;
 };
+
+export interface TextRange {
+  from: number;
+  to: number;
+}

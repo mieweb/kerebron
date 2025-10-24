@@ -4,7 +4,6 @@ import { type CoreEditor, Node } from '@kerebron/editor';
 import {
   type CommandFactories,
   type CommandShortcuts,
-  setBlockType,
 } from '@kerebron/editor/commands';
 import {
   type InputRule,
@@ -58,7 +57,8 @@ export class NodeHeading extends Node {
     const commands: Partial<CommandFactories> = {};
 
     for (let i = 1; i <= maxLevel; i++) {
-      commands['setHeading' + i] = () => setBlockType(type, { level: i });
+      commands['setHeading' + i] = () =>
+        editor.commandFactories.setBlockType(type, { level: i });
     }
 
     return commands;
