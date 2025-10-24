@@ -91,7 +91,7 @@ The extension includes comprehensive CSS with:
 To use the styles, import the CSS file:
 
 ```typescript
-import '@kerebron/extension-menu/assets/custom-menu.css';
+import '@kerebron/extension-menu/assets/custom-menu.new.css';
 ```
 
 ## API
