@@ -27,6 +27,8 @@ export default defineConfig({
         'packages/extension-menu/assets',
       '@kerebron/extension-codemirror/assets': __dirname + '/../../' +
         'packages/extension-codemirror/assets',
+      '@kerebron/extension-autocomplete/assets': __dirname + '/../../' +
+        'packages/extension-autocomplete/assets',
       'punycode.js': __dirname + '/src/punycode.ts',
       // import punycode from 'punycode.js'
     },
