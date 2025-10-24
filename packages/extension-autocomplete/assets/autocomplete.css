@@ -1,0 +1,12 @@
+.kb-autocomplete__wrapper {
+  position: fixed;
+  z-index: 99999;
+  padding: 6px var(--kb-space-sm);
+  background: var(--kb-color-surface-elevated);
+  list-style: none;
+}
+
+.kb-autocomplete__wrapper li.active {
+  background: rgba(232, 234, 237, 0.08);
+  color: #fff;
+}
