@@ -2,7 +2,6 @@ import { type CoreEditor, Mark } from '@kerebron/editor';
 import {
   type CommandFactories,
   type CommandShortcuts,
-  toggleMark,
 } from '@kerebron/editor/commands';
 import { MarkSpec, type MarkType } from 'prosemirror-model';
 
@@ -40,7 +39,7 @@ export class MarkStrong extends Mark {
     type: MarkType,
   ): Partial<CommandFactories> {
     return {
-      'toggleStrong': () => toggleMark(type),
+      'toggleStrong': () => editor.commandFactories.toggleMark(type),
     };
   }
 

@@ -1,13 +1,79 @@
-import { type Command, EditorState, Transaction } from 'prosemirror-state';
-import { CoreEditor } from '../CoreEditor.ts';
+import type { EditorView } from 'prosemirror-view';
+import type { EditorState, Transaction } from 'prosemirror-state';
+
+import type { CoreEditor } from '../CoreEditor.ts';
 import { createChainableState } from './createChainableState.ts';
-import { ChainedCommands, CommandFactory } from './mod.ts';
+import type {
+  ChainedCommands,
+  Command,
+  CommandFactories,
+  CommandFactory,
+} from './types.ts';
+
+import { baseCommandFactories } from './baseCommandFactories.ts';
+import { keyCommandFactories } from './keyCommandFactories.ts';
+import { replaceCommandFactories } from './replaceCommandFactories.ts';
+
+type CommandRunner = () => void;
 
 export class CommandManager {
+  public readonly commandFactories: { [key: string]: CommandFactory } = {};
+  public readonly run: { [key: string]: CommandRunner } = {};
+
+  private debug = true;
+
   constructor(
     private editor: CoreEditor,
-    private commandFactories: { [key: string]: CommandFactory } = {},
   ) {
+    this.mergeCommandFactories(baseCommandFactories, 'baseCommand');
+    this.mergeCommandFactories(keyCommandFactories, 'key');
+    this.mergeCommandFactories(replaceCommandFactories, 'replace');
+  }
+
+  public mergeCommandFactories(
+    toInsert: Partial<CommandFactories>,
+    extName: string,
+  ) {
+    for (const key in toInsert) {
+      const commandFactory = toInsert[key];
+      if (!commandFactory) {
+        continue;
+      }
+
+      if (this.debug) {
+        const wrappedFactory = (...args: unknown[]) => {
+          const realCommand = commandFactory(...args);
+
+          const command: Command = (state, dispatch, view) => {
+            if (dispatch) {
+              console.debug(`Command: ${extName}.${key}`);
+            }
+            return realCommand(state, dispatch, view);
+          };
+
+          return command;
+        };
+
+        this.commandFactories[key] = wrappedFactory;
+      } else {
+        this.commandFactories[key] = commandFactory;
+      }
+    }
+
+    for (const key in this.commandFactories) {
+      const factory = this.commandFactories[key];
+
+      this.run[key] = (...args) => {
+        const command: Command = factory(...args);
+        const state = this.editor.state;
+        const view = this.editor.view;
+        if (view instanceof EditorView) {
+          command(state, view.dispatch, view);
+        } else {
+          command(state, view.dispatch);
+        }
+      };
+    }
   }
 
   get state(): EditorState {

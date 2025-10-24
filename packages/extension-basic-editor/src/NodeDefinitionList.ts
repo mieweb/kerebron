@@ -4,7 +4,6 @@ import { type CoreEditor, Node } from '@kerebron/editor';
 import {
   type CommandFactories,
   type CommandShortcuts,
-  wrapInList,
 } from '@kerebron/editor/commands';
 import {
   type InputRule,
@@ -37,7 +36,7 @@ export class NodeDefinitionList extends Node {
     type: NodeType,
   ): Partial<CommandFactories> {
     return {
-      // 'toggleDefinitionList': () => wrapInList(type),
+      'toggleDefinitionList': () => editor.commandFactories.wrapInList(type),
     };
   }
 

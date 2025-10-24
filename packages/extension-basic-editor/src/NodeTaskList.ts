@@ -4,7 +4,6 @@ import { type CoreEditor, Node } from '@kerebron/editor';
 import {
   type CommandFactories,
   type CommandShortcuts,
-  wrapInList,
 } from '@kerebron/editor/commands';
 
 export class NodeTaskList extends Node {
@@ -27,7 +26,7 @@ export class NodeTaskList extends Node {
     type: NodeType,
   ): Partial<CommandFactories> {
     return {
-      'toggleTaskList': () => wrapInList(type),
+      'toggleTaskList': () => editor.commandFactories.wrapInList(type),
     };
   }
 

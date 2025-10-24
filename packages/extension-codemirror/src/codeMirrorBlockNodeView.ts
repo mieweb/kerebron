@@ -4,7 +4,6 @@ import {
   EditorView as PMEditorView,
   NodeView,
 } from 'prosemirror-view';
-import { exitCode, selectAll } from '@kerebron/editor/commands';
 
 import {
   drawSelection,
@@ -133,7 +132,9 @@ class CodeMirrorBlockNodeView implements NodeView {
           {
             key: 'Ctrl-Enter',
             run: () => {
-              if (!exitCode(view.state, view.dispatch)) return false;
+              if (!editor.run.exitCode(view.state, view.dispatch)) {
+                return false;
+              }
               view.focus();
               return true;
             },
@@ -147,15 +148,21 @@ class CodeMirrorBlockNodeView implements NodeView {
             key: 'Mod-y',
             run: () => settings.redo?.(view.state, view.dispatch) || true,
           },
-          { key: 'Backspace', run: (cmView) => backspaceHandler(view, cmView) },
+          {
+            key: 'Backspace',
+            run: (cmView) => backspaceHandler(view, cmView, editor),
+          },
           {
             key: 'Mod-Backspace',
-            run: (cmView) => backspaceHandler(view, cmView),
+            run: (cmView) => backspaceHandler(view, cmView, editor),
           },
           {
             key: 'Mod-a',
             run: () => {
-              const result = selectAll(view.state, view.dispatch);
+              const result = editor.run.selectAll(
+                view.state,
+                view.dispatch,
+              );
               view.focus();
               return result;
             },
@@ -169,7 +176,7 @@ class CodeMirrorBlockNodeView implements NodeView {
                 sel.from === sel.to &&
                 sel.from === cmView.state.doc.length
               ) {
-                exitCode(view.state, view.dispatch);
+                editor.run.exitCode(view.state, view.dispatch);
                 view.focus();
                 return true;
               }

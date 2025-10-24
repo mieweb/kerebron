@@ -4,7 +4,6 @@ import { type CoreEditor, Node } from '@kerebron/editor';
 import {
   type CommandFactories,
   type CommandShortcuts,
-  wrapInList,
 } from '@kerebron/editor/commands';
 import {
   InputRule,
@@ -40,7 +39,7 @@ export class NodeBlockquote extends Node {
     type: NodeType,
   ): Partial<CommandFactories> {
     return {
-      'toggleBlockquote': () => wrapInList(type),
+      'toggleBlockquote': () => editor.commandFactories.wrapInList(type),
     };
   }
 

@@ -3,7 +3,7 @@ import { EditorState, Plugin } from 'prosemirror-state';
 import { Schema } from 'prosemirror-model';
 
 import { type CoreEditor, Extension } from '@kerebron/editor';
-import { MenuElement } from './menu.ts';
+import { type MenuElement } from './menu.ts';
 import { buildMenu } from './ExtensionMenu.ts';
 
 const CSS_PREFIX = 'kb-custom-menu';
@@ -882,7 +882,7 @@ export class CustomMenuPlugin extends Plugin {
 export class ExtensionCustomMenu extends Extension {
   name = 'customMenu';
 
-  getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
+  override getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
     const content = buildMenu(editor, schema);
 
     return [

@@ -3,7 +3,6 @@ import { type CoreEditor, Node } from '@kerebron/editor';
 import {
   type CommandFactories,
   type CommandShortcuts,
-  exitCode,
 } from '@kerebron/editor/commands';
 import { firstCommand } from '@kerebron/editor/commands';
 
@@ -65,7 +64,7 @@ export class NodeHardBreak extends Node {
     // }
 
     const setHardBreak = firstCommand(
-      exitCode,
+      editor.run.exitCode,
       // comm2
     );
 

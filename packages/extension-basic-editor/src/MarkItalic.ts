@@ -2,7 +2,6 @@ import { type CoreEditor, Mark } from '@kerebron/editor';
 import {
   type CommandFactories,
   type CommandShortcuts,
-  toggleMark,
 } from '@kerebron/editor/commands';
 import type { MarkSpec, MarkType } from 'prosemirror-model';
 
@@ -29,7 +28,7 @@ export class MarkItalic extends Mark {
     type: MarkType,
   ): Partial<CommandFactories> {
     return {
-      'toggleItalic': () => toggleMark(type),
+      'toggleItalic': () => editor.commandFactories.toggleMark(type),
     };
   }
 

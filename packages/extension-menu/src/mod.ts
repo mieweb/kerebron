@@ -1,9 +1,7 @@
 export {
-  blockTypeItem,
   Dropdown,
   DropdownSubmenu,
-  // MenuElement,
+  type MenuElement,
   MenuItem,
-  // MenuItemSpec,
-  wrapItem,
+  type MenuItemSpec,
 } from './menu.ts';

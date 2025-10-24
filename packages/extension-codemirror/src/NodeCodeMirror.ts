@@ -5,7 +5,6 @@ import { Converter, type CoreEditor, Node } from '@kerebron/editor';
 import {
   type CommandFactories,
   type CommandShortcuts,
-  setBlockType,
 } from '@kerebron/editor/commands';
 import {
   type InputRule,
@@ -169,7 +168,8 @@ export class NodeCodeMirror extends Node {
     type: NodeType,
   ): Partial<CommandFactories> {
     return {
-      'setCodeBlock': (lang?: string) => setBlockType(type, { lang }),
+      'setCodeBlock': (lang?: string) =>
+        editor.commandFactories.setBlockType(type, { lang }),
       ArrowLeft: () => arrowHandler('left'),
       ArrowRight: () => arrowHandler('right'),
       ArrowUp: () => arrowHandler('up'),

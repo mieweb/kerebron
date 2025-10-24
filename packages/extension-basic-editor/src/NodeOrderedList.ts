@@ -13,7 +13,6 @@ import {
 import {
   type CommandFactories,
   type CommandShortcuts,
-  wrapInList,
 } from '@kerebron/editor/commands';
 
 export class NodeOrderedList extends Node {
@@ -68,7 +67,7 @@ export class NodeOrderedList extends Node {
     type: NodeType,
   ): Partial<CommandFactories> {
     return {
-      'toggleOrderedList': () => wrapInList(type),
+      'toggleOrderedList': () => editor.commandFactories.wrapInList(type),
     };
   }
 
