@@ -203,7 +203,7 @@ class CodeMirrorBlockNodeView implements NodeView {
       doc: node.textContent,
     });
 
-    const root = settings.shadowRoot || document;
+    const root = settings.shadowRoot || editor.view?.root || document;
 
     this.codeMirrorView = new CodeMirror({
       state,
