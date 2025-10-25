@@ -20,6 +20,7 @@
     "examples/browser-vanilla-code-editor",
     "examples/browser-vue",
     "examples/browser-vue-custom-element",
+    "examples/browser-vue-lsp",
     "examples/cli-html-generator",
     "examples/server-deno-hono",
     "examples/mcptest"
