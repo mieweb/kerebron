@@ -1,11 +1,11 @@
-import { xmlStylePreview } from "https://deno.land/x/deno_tree_sitter@0.2.8.6/main.js";
+import { xmlStylePreview } from 'https://deno.land/x/deno_tree_sitter@0.2.8.6/main.js';
 
-    // import { parseMarkdown } from '../../../tree-sitter/md-to-html-incremental.ts';
+// import { parseMarkdown } from '../../../tree-sitter/md-to-html-incremental.ts';
 import { type Point as TsPoint, type SyntaxNode, type Tree } from 'tree-sitter';
 import { WSContext, WSEvents, WSMessageReceive } from 'hono/ws';
 
 // md-to-html-incremental.ts
-import { createParser } from "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/main.js";
+import { createParser } from 'https://deno.land/x/deno_tree_sitter@1.0.1.2/main/main.js';
 
 async function loadWasm(url: string): Promise<Uint8Array> {
   const response = await fetch(url);
@@ -14,8 +14,10 @@ async function loadWasm(url: string): Promise<Uint8Array> {
 }
 
 // Load Markdown grammars (block and inline)
-const markdownWasmUrl = "https://github.com/tree-sitter-grammars/tree-sitter-markdown/releases/download/v0.5.0/tree-sitter-markdown.wasm";
-const inlineWasmUrl = "https://github.com/tree-sitter-grammars/tree-sitter-markdown/releases/download/v0.5.0/tree-sitter-markdown_inline.wasm";
+const markdownWasmUrl =
+  'https://github.com/tree-sitter-grammars/tree-sitter-markdown/releases/download/v0.5.0/tree-sitter-markdown.wasm';
+const inlineWasmUrl =
+  'https://github.com/tree-sitter-grammars/tree-sitter-markdown/releases/download/v0.5.0/tree-sitter-markdown_inline.wasm';
 
 const markdownWasm = await loadWasm(markdownWasmUrl);
 const inlineWasm = await loadWasm(inlineWasmUrl);
@@ -35,7 +37,7 @@ function parseMarkdown(source: string, oldTree?: any) {
   // Traverse and parse inline nodes (they contain raw text initially)
   // For simplicity, we re-parse inlines fully; optimize if needed by tracking changes
   function parseInlines(node: any): void {
-    if (node.type === "inline") {
+    if (node.type === 'inline') {
       const inlineText = source.slice(node.startIndex, node.endIndex);
       const inlineTree = InlineParser.parse(inlineText);
       // Replace the inline node's content with the parsed inline tree
@@ -48,7 +50,10 @@ function parseMarkdown(source: string, oldTree?: any) {
   }
   parseInlines(root);
 
-  console.log("XML-Style Tree Preview:\n", xmlStylePreview(root, { alwaysShowTextAttr: true }));
+  console.log(
+    'XML-Style Tree Preview:\n',
+    xmlStylePreview(root, { alwaysShowTextAttr: true }),
+  );
 
   // const jsonPreview = typeof root.toJSON === "function" ? root.toJSON() : root;
   // console.log("JSON Tree Preview:\n", JSON.stringify(jsonPreview, null, 2));
@@ -85,7 +90,10 @@ interface InitializeParams {
 interface InitializeResult {
   capabilities: {
     textDocumentSync: number;
-    completionProvider: { triggerCharacters: string[]; resolveProvider: boolean };
+    completionProvider: {
+      triggerCharacters: string[];
+      resolveProvider: boolean;
+    };
     hoverProvider: boolean;
   };
 }
@@ -172,7 +180,11 @@ const COMPLETION_SNIPPETS: Array<{
   { label: '- List item', insertText: '- ', detail: 'Bullet list item' },
   { label: '* List item', insertText: '* ', detail: 'Bullet list item' },
   { label: '1. Ordered list', insertText: '1. ', detail: 'Ordered list item' },
-  { label: '``` code block', insertText: '```language\n$0\n```', detail: 'Fenced code block' },
+  {
+    label: '``` code block',
+    insertText: '```language\n$0\n```',
+    detail: 'Fenced code block',
+  },
   { label: '**bold**', insertText: '**bold**', detail: 'Bold emphasis' },
   { label: '*italic*', insertText: '*italic*', detail: 'Italic emphasis' },
   { label: '`inline code`', insertText: '`code`', detail: 'Inline code' },
@@ -286,7 +298,9 @@ export class LspWsAdapter {
           break;
       }
     } catch (e) {
-      console.error(`Notification error: ${e instanceof Error ? e.message : e}`);
+      console.error(
+        `Notification error: ${e instanceof Error ? e.message : e}`,
+      );
     }
   }
 
@@ -354,7 +368,9 @@ export class LspWsAdapter {
     };
   }
 
-  private async handleCompletion(params: CompletionParams): Promise<CompletionList> {
+  private async handleCompletion(
+    params: CompletionParams,
+  ): Promise<CompletionList> {
     const doc = this.documents.get(params.textDocument.uri);
     if (!doc) {
       throw new Error('Document not open');
@@ -407,7 +423,11 @@ export class LspWsAdapter {
     this.publishDiagnostics(ws, textDocument.uri, diagnostics);
   }
 
-  private publishDiagnostics(ws: WebSocket, uri: string, diagnostics: Diagnostic[]) {
+  private publishDiagnostics(
+    ws: WebSocket,
+    uri: string,
+    diagnostics: Diagnostic[],
+  ) {
     const notification: JsonRpcNotification<PublishDiagnosticsParams> = {
       jsonrpc: '2.0',
       method: 'textDocument/publishDiagnostics',
@@ -456,14 +476,17 @@ export class LspWsAdapter {
 
   // Removed ensureParser: using md-to-html-incremental.parseMarkdown for parsing
 
-  private computeCompletions(doc: DocumentState, position: LspPosition): CompletionItem[] {
+  private computeCompletions(
+    doc: DocumentState,
+    position: LspPosition,
+  ): CompletionItem[] {
     const lineText = this.getLineText(doc, position.line);
     const beforeCursor = lineText.slice(0, position.character);
     const isAtLineStart = /^\s*$/.test(beforeCursor);
     const node = this.getNodeAtPosition(doc, position);
     const insideCodeBlock = this.nodeIsWithin(node, 'fenced_code_block');
-    const insideInfoString =
-      node?.type === 'info_string' || node?.parent?.type === 'info_string';
+    const insideInfoString = node?.type === 'info_string' ||
+      node?.parent?.type === 'info_string';
 
     const items: CompletionItem[] = [];
     const push = (item: CompletionItem) => {
@@ -534,7 +557,10 @@ export class LspWsAdapter {
     return items;
   }
 
-  private computeHover(doc: DocumentState, position: LspPosition): HoverResult | null {
+  private computeHover(
+    doc: DocumentState,
+    position: LspPosition,
+  ): HoverResult | null {
     const node = this.getNodeAtPosition(doc, position);
     if (!node) {
       return null;
@@ -603,7 +629,8 @@ export class LspWsAdapter {
                   range: this.rangeFromNode(node),
                   severity: 2,
                   source: 'markdown-lsp',
-                  message: 'Code fence closing delimiter should match the opening fence.',
+                  message:
+                    'Code fence closing delimiter should match the opening fence.',
                 });
               }
             }
@@ -644,7 +671,10 @@ export class LspWsAdapter {
     return diagnostics;
   }
 
-  private getNodeAtPosition(doc: DocumentState, position: LspPosition): SyntaxNode | null {
+  private getNodeAtPosition(
+    doc: DocumentState,
+    position: LspPosition,
+  ): SyntaxNode | null {
     const tree = doc.tree;
     if (!tree) {
       return null;
@@ -709,7 +739,9 @@ export class LspWsAdapter {
           return null;
         }
         const [, text, destination] = match;
-        return `**Link**\n\n- Text: ${text || '_<empty>_'}\n- Destination: ${destination || '_<empty>_'}`;
+        return `**Link**\n\n- Text: ${text || '_<empty>_'}\n- Destination: ${
+          destination || '_<empty>_'
+        }`;
       }
 
       case 'image': {
@@ -719,7 +751,9 @@ export class LspWsAdapter {
           return null;
         }
         const [, alt, destination] = match;
-        return `**Image**\n\n- Alt text: ${alt || '_<empty>_'}\n- Source: ${destination || '_<empty>_'}`;
+        return `**Image**\n\n- Alt text: ${alt || '_<empty>_'}\n- Source: ${
+          destination || '_<empty>_'
+        }`;
       }
 
       case 'inline_code':
@@ -773,10 +807,9 @@ export class LspWsAdapter {
       return '';
     }
     const start = doc.lineOffsets[line];
-    const end =
-      line + 1 < doc.lineOffsets.length
-        ? doc.lineOffsets[line + 1]
-        : doc.text.length;
+    const end = line + 1 < doc.lineOffsets.length
+      ? doc.lineOffsets[line + 1]
+      : doc.text.length;
     return doc.text.slice(start, end).replace(/\r?\n$/, '');
   }
 

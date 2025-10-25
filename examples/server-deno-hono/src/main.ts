@@ -9,9 +9,9 @@ let port = undefined;
 for (
   const exampleName of [
     'browser-vanilla-code-editor',
-    'browser-sm-vis',
     'browser-vue',
     'browser-vue-custom-element',
+    'browser-vue-lsp',
   ]
 ) {
   const viteDevServer = await createViteServer({
