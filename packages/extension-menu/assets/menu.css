@@ -44,7 +44,7 @@
 }
 
 .kb-overflow-toggle:hover {
-  background: var(--kb-color-surface-hover);
+  background: rgba(60, 64, 67, 0.08);
 }
 
 .kb-overflow-toggle svg {

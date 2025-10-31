@@ -239,6 +239,7 @@
   overflow-y: auto;
   padding: var(--kb-space-sm) 0;
   min-height: 0;
+  max-height: 800px;
 }
 
 /* Overflow menu section header */
@@ -286,7 +287,62 @@
 }
 
 /* Hide buttons without icons (empty buttons in submenu items) */
-.kb-custom-menu__overflow-item .kb-menu__button:not(:has(svg)) {
+.kb-custom-menu__overflow-item
+  .kb-menu__button:not(:has(svg)):not(:has(.kb-icon)) {
+  display: none;
+}
+
+/* Hide empty overflow items with no label text */
+.kb-custom-menu__overflow-item:not(:has(.kb-custom-menu__overflow-item-label)),
+.kb-custom-menu__overflow-item:has(.kb-custom-menu__overflow-item-label:empty) {
+  display: none;
+}
+
+.kb-custom-menu__overflow-item[data-tool-id='tool-toggle-underline']
+  .kb-menu__button {
+  display: flex;
+}
+
+.kb-custom-menu__overflow-item[data-tool-id='tool-insert'],
+.kb-custom-menu__overflow-item[data-tool-id='tool-type'] {
+  height: 68px;
+}
+.kb-custom-menu__overflow-item[data-tool-id='tool-insert'] button,
+.kb-custom-menu__overflow-item[data-tool-id='tool-type'] button,
+.kb-custom-menu__overflow-item[data-tool-id='tool-select-parent-node'] {
+  display: none;
+}
+
+.kb-custom-menu__overflow-item[data-tool-id='tool-text-color'] button {
+  display: flex;
+}
+
+.kb-custom-menu__item[data-tool-id='tool-insert'],
+.kb-custom-menu__item[data-tool-id='tool-type'],
+.kb-custom-menu__item[data-tool-id='tool-table'] {
+  position: relative;
+}
+
+.kb-custom-menu__item[data-tool-id='tool-insert'] > div > button,
+.kb-custom-menu__item[data-tool-id='tool-type'] > div > button,
+.kb-custom-menu__item[data-tool-id='tool-table'] > div > button {
+  padding-right: 20px;
+}
+
+.kb-custom-menu__item[data-tool-id='tool-insert'] > div > button:after,
+.kb-custom-menu__item[data-tool-id='tool-type'] > div > button:after,
+.kb-custom-menu__item[data-tool-id='tool-table'] > div > button:after {
+  content: '▼';
+  font-size: 4px;
+  color: var(--kb-color-text-muted);
+  position: absolute;
+  right: 4px;
+}
+
+.kb-custom-menu__item[data-tool-id='tool-toggle-code-font'] button > span,
+.kb-custom-menu__item[data-tool-id='tool-text-color'] button > span,
+.kb-custom-menu__item[data-tool-id='tool-text-highlight'] button > span,
+.kb-custom-menu__item[data-tool-id='tool-toggle-underline'] button > span {
   display: none;
 }
 
@@ -355,7 +411,7 @@
 }
 
 .kb-custom-menu__overflow-back-button:hover {
-  background: var(var(--kb-color-surface-hover));
+  background: var(--kb-color-surface-hover);
 }
 
 .kb-custom-menu__overflow-back-button svg {
@@ -767,4 +823,16 @@
   .kb-custom-menu__tool-item span {
     color: var(--kb-menu-dropdown-dark-text);
   }
+}
+
+/* Pinned dropdown menu (independent from overflow) */
+.kb-custom-menu__pinned-dropdown {
+  min-width: 200px;
+  max-width: 300px;
+  background: var(--kb-menu-dropdown-dark-bg) !important;
+  border: 1px solid var(--kb-color-border-strong);
+  border-radius: var(--kb-radius-lg);
+  box-shadow: var(--kb-shadow-lg);
+  max-height: 400px;
+  overflow-y: auto;
 }

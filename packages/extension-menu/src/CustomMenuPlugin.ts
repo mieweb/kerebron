@@ -24,13 +24,18 @@ export class CustomMenuView {
   wrapper: HTMLElement;
   toolbar: HTMLElement;
   overflowMenu: HTMLElement;
+  pinnedDropdownMenu: HTMLElement | null = null;
   modal: HTMLElement | null = null;
   tools: ToolItem[] = [];
   root: Document | ShadowRoot;
   resizeHandle: HTMLElement;
   editorContainer: HTMLElement;
   private closeOverflowHandler: ((e: MouseEvent) => void) | null = null;
+  private closePinnedDropdownHandler: ((e: MouseEvent) => void) | null = null;
   private submenuStack: Array<{ title: string; tools: ToolItem[] }> = [];
+  private pinnedDropdownStack: Array<
+    { title: string; tools: ToolItem[]; rootTool: ToolItem }
+  > = [];
 
   constructor(
     readonly editorView: EditorView,
@@ -266,6 +271,267 @@ export class CustomMenuView {
     this.renderOverflowMenu();
   }
 
+  private showPinnedDropdown(tool: ToolItem, triggerElement: HTMLElement) {
+    // Close any existing pinned dropdown
+    if (this.pinnedDropdownMenu) {
+      this.pinnedDropdownMenu.remove();
+      this.pinnedDropdownMenu = null;
+    }
+
+    const dropdown = tool.element as any;
+    if (!dropdown.content) return;
+
+    // Extract sub-items from dropdown
+    const subItems: ToolItem[] = dropdown.content.map(
+      (element: MenuElement, index: number) => {
+        const { dom } = element.render(this.editorView);
+        let label: string;
+        const nestedDropdown = element as any;
+        if (nestedDropdown.options && nestedDropdown.options.label) {
+          label = nestedDropdown.options.label;
+        } else {
+          label = this.extractLabel(dom);
+        }
+
+        return {
+          id: `${tool.id}-sub-${index}`,
+          label,
+          element,
+          isPinned: false,
+        };
+      },
+    );
+
+    // Initialize stack with root menu
+    this.pinnedDropdownStack = [{
+      title: tool.label,
+      tools: subItems,
+      rootTool: tool,
+    }];
+
+    // Render the dropdown
+    this.renderPinnedDropdown(triggerElement);
+  }
+
+  private pinnedDropdownGoBack() {
+    // Remove last item from stack
+    this.pinnedDropdownStack.pop();
+
+    // If stack is empty, close the dropdown
+    if (this.pinnedDropdownStack.length === 0) {
+      if (this.pinnedDropdownMenu) {
+        this.pinnedDropdownMenu.remove();
+        this.pinnedDropdownMenu = null;
+      }
+      return;
+    }
+
+    // Re-render with previous menu
+    const triggerElement = this.toolbar.querySelector(
+      `[data-tool-id="${this.pinnedDropdownStack[0].rootTool.id}"]`,
+    ) as HTMLElement;
+    if (triggerElement) {
+      this.renderPinnedDropdown(triggerElement);
+    }
+  }
+
+  private pinnedDropdownShowSubmenu(
+    tool: ToolItem,
+    triggerElement: HTMLElement,
+  ) {
+    const dropdown = tool.element as any;
+    if (!dropdown.content) return;
+
+    // Extract sub-items
+    const subItems: ToolItem[] = dropdown.content.map(
+      (element: MenuElement, index: number) => {
+        const { dom } = element.render(this.editorView);
+        let label: string;
+        const nestedDropdown = element as any;
+        if (nestedDropdown.options && nestedDropdown.options.label) {
+          label = nestedDropdown.options.label;
+        } else {
+          label = this.extractLabel(dom);
+        }
+
+        return {
+          id: `${tool.id}-sub-${index}`,
+          label,
+          element,
+          isPinned: false,
+        };
+      },
+    );
+
+    // Add to stack
+    this.pinnedDropdownStack.push({
+      title: tool.label,
+      tools: subItems,
+      rootTool: this.pinnedDropdownStack[0].rootTool,
+    });
+
+    // Re-render
+    this.renderPinnedDropdown(triggerElement);
+  }
+
+  private renderPinnedDropdown(triggerElement: HTMLElement) {
+    // Remove existing dropdown
+    if (this.pinnedDropdownMenu) {
+      this.pinnedDropdownMenu.remove();
+    }
+
+    const currentLevel =
+      this.pinnedDropdownStack[this.pinnedDropdownStack.length - 1];
+    const isSubmenu = this.pinnedDropdownStack.length > 1;
+
+    // Create dropdown menu
+    this.pinnedDropdownMenu = document.createElement('div');
+    this.pinnedDropdownMenu.classList.add(CSS_PREFIX + '__pinned-dropdown');
+
+    // Position it below the trigger element
+    const rect = triggerElement.getBoundingClientRect();
+    this.pinnedDropdownMenu.style.position = 'absolute';
+    this.pinnedDropdownMenu.style.top = `${rect.bottom + 4}px`;
+    this.pinnedDropdownMenu.style.left = `${rect.left}px`;
+    this.pinnedDropdownMenu.style.zIndex = '1000';
+
+    // Create scrollable content container
+    const overflowContent = document.createElement('div');
+    overflowContent.classList.add(CSS_PREFIX + '__overflow-content');
+
+    // Add back button if in submenu
+    if (isSubmenu) {
+      const header = document.createElement('div');
+      header.classList.add(CSS_PREFIX + '__overflow-submenu-header');
+
+      const backButton = document.createElement('button');
+      backButton.type = 'button';
+      backButton.classList.add(CSS_PREFIX + '__overflow-back-button');
+      backButton.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>';
+      backButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.pinnedDropdownGoBack();
+      });
+
+      const title = document.createElement('span');
+      title.classList.add(CSS_PREFIX + '__overflow-submenu-title');
+      title.textContent = currentLevel.title;
+
+      header.appendChild(backButton);
+      header.appendChild(title);
+      overflowContent.appendChild(header);
+    }
+
+    // Render menu items
+    currentLevel.tools.forEach((subTool) => {
+      const isNestedDropdown = (subTool.element as any).content !== undefined;
+      const wrapper = document.createElement('div');
+      wrapper.classList.add(CSS_PREFIX + '__overflow-item');
+      wrapper.setAttribute('data-tool-id', subTool.id);
+
+      if (isNestedDropdown) {
+        // For nested dropdowns, show label and chevron
+        const label = document.createElement('span');
+        label.classList.add(CSS_PREFIX + '__overflow-item-label');
+        label.textContent = subTool.label;
+        wrapper.appendChild(label);
+
+        const chevron = document.createElement('span');
+        chevron.classList.add(CSS_PREFIX + '__overflow-item-chevron');
+        chevron.innerHTML =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>';
+        wrapper.appendChild(chevron);
+
+        wrapper.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.pinnedDropdownShowSubmenu(subTool, triggerElement);
+        });
+      } else {
+        // Regular menu item
+        const { dom } = subTool.element.render(this.editorView);
+
+        // Hide button's internal label
+        const spans = dom.querySelectorAll('span');
+        spans.forEach((span) => {
+          const isInsideIcon = span.closest('.kb-icon') !== null;
+          const isDirectChild = span.parentElement === dom;
+          if (
+            span.textContent && span.textContent.trim() &&
+            !isInsideIcon &&
+            isDirectChild &&
+            !span.querySelector('svg') &&
+            !span.classList.contains('kb-icon')
+          ) {
+            span.style.display = 'none';
+          }
+        });
+
+        // Add label
+        const label = document.createElement('span');
+        label.classList.add(CSS_PREFIX + '__overflow-item-label');
+        label.textContent = subTool.label;
+
+        wrapper.appendChild(dom);
+        wrapper.appendChild(label);
+
+        // Make wrapper clickable
+        wrapper.addEventListener('mousedown', (e) => {
+          if (e.target !== dom) {
+            e.preventDefault();
+            const mousedownEvent = new MouseEvent('mousedown', {
+              bubbles: true,
+              cancelable: true,
+              view: window,
+            });
+            dom.dispatchEvent(mousedownEvent);
+          }
+
+          // Close dropdown after click
+          if (this.pinnedDropdownMenu) {
+            this.pinnedDropdownMenu.remove();
+            this.pinnedDropdownMenu = null;
+            this.pinnedDropdownStack = [];
+          }
+        });
+      }
+
+      overflowContent.appendChild(wrapper);
+    });
+
+    // Add content to dropdown
+    this.pinnedDropdownMenu.appendChild(overflowContent);
+
+    // Add to document
+    document.body.appendChild(this.pinnedDropdownMenu);
+
+    // Close on click outside
+    const doc = this.editorView.dom.ownerDocument || document;
+    setTimeout(() => {
+      if (this.closePinnedDropdownHandler) {
+        doc.removeEventListener('click', this.closePinnedDropdownHandler);
+      }
+      this.closePinnedDropdownHandler = (e: MouseEvent) => {
+        const target = e.target as Node;
+        if (
+          this.pinnedDropdownMenu &&
+          !this.pinnedDropdownMenu.contains(target) &&
+          !triggerElement.contains(target)
+        ) {
+          this.pinnedDropdownMenu.remove();
+          this.pinnedDropdownMenu = null;
+          this.pinnedDropdownStack = [];
+          if (this.closePinnedDropdownHandler) {
+            doc.removeEventListener('click', this.closePinnedDropdownHandler);
+          }
+        }
+      };
+      doc.addEventListener('click', this.closePinnedDropdownHandler);
+    }, 0);
+  }
+
   private renderOverflowMenu() {
     // Clear overflow menu
     this.overflowMenu.innerHTML = '';
@@ -391,6 +657,14 @@ export class CustomMenuView {
 
         // Add the overflow pinned tools
         mobileOverflowPinned.forEach((tool) => {
+          // Skip tools with empty or invalid labels
+          if (
+            !tool.label || tool.label.trim() === '' ||
+            tool.label === 'Unknown Tool'
+          ) {
+            return;
+          }
+
           const { dom, update } = tool.element.render(this.editorView);
           const wrapper = document.createElement('div');
           wrapper.classList.add(CSS_PREFIX + '__overflow-item');
@@ -430,6 +704,14 @@ export class CustomMenuView {
 
       // Render overflow tools with labels
       overflowTools.forEach((tool) => {
+        // Skip tools with empty or invalid labels
+        if (
+          !tool.label || tool.label.trim() === '' ||
+          tool.label === 'Unknown Tool'
+        ) {
+          return;
+        }
+
         // Check if this is a dropdown with sub-items
         const isDropdown = (tool.element as any).content !== undefined;
 
@@ -556,10 +838,56 @@ export class CustomMenuView {
 
     // Render visible pinned tools in toolbar
     visibleTools.forEach((tool) => {
-      const { dom, update } = tool.element.render(this.editorView);
       const wrapper = document.createElement('span');
       wrapper.classList.add(CSS_PREFIX + '__item');
-      wrapper.appendChild(dom);
+      wrapper.setAttribute('data-tool-id', tool.id);
+
+      // Check if this is a dropdown with sub-items
+      const isDropdown = (tool.element as any).content !== undefined;
+
+      if (isDropdown) {
+        // For dropdowns, we'll render it but hide the default dropdown menu
+        const { dom, update } = tool.element.render(this.editorView);
+
+        // Find and hide the default dropdown menu if it exists
+        const dropdownMenu = dom.querySelector('.kb-dropdown__content');
+        if (dropdownMenu) {
+          (dropdownMenu as HTMLElement).style.display = 'none';
+        }
+
+        // Intercept all clicks on the button/label
+        const button = dom.querySelector('button');
+        const label = dom.querySelector('.kb-dropdown__label');
+
+        const clickHandler = (e: Event) => {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          this.showPinnedDropdown(tool, wrapper);
+        };
+
+        if (button) {
+          button.addEventListener('click', clickHandler, { capture: true });
+          button.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }, { capture: true });
+        }
+        if (label) {
+          label.addEventListener('click', clickHandler, { capture: true });
+          label.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }, { capture: true });
+        }
+
+        wrapper.appendChild(dom);
+      } else {
+        // Regular items render normally
+        const { dom, update } = tool.element.render(this.editorView);
+        wrapper.appendChild(dom);
+      }
+
       this.toolbar.appendChild(wrapper);
     });
 
@@ -849,6 +1177,17 @@ export class CustomMenuView {
     if (this.closeOverflowHandler) {
       doc.removeEventListener('click', this.closeOverflowHandler);
       this.closeOverflowHandler = null;
+    }
+
+    if (this.closePinnedDropdownHandler) {
+      doc.removeEventListener('click', this.closePinnedDropdownHandler);
+      this.closePinnedDropdownHandler = null;
+    }
+
+    // Clean up pinned dropdown
+    if (this.pinnedDropdownMenu) {
+      this.pinnedDropdownMenu.remove();
+      this.pinnedDropdownMenu = null;
     }
 
     // Clean up modal
