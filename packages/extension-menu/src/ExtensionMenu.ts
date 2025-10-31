@@ -270,7 +270,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
             btn.style.cssText = `width: 24px; height: 24px; border: 1px solid #ddd; border-radius: 2px; cursor: pointer; background: ${color}; padding: 0;`;
             btn.title = color;
             btn.onclick = () => {
-              toggleMark(markType, { color })(editor.view.state, editor.view.dispatch);
+              editor.commandFactories.toggleMark(markType, { color })(editor.view.state, editor.view.dispatch);
               if (wrapper.parentNode) {
                 document.body.removeChild(wrapper);
               }
@@ -287,7 +287,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
           removeBtn.textContent = 'Remove color';
           removeBtn.style.cssText = 'width: 100%; padding: 4px; cursor: pointer;';
           removeBtn.onclick = () => {
-            toggleMark(markType)(editor.view.state, editor.view.dispatch);
+            editor.commandFactories.toggleMark(markType)(editor.view.state, editor.view.dispatch);
             if (wrapper.parentNode) {
               document.body.removeChild(wrapper);
             }
@@ -374,7 +374,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
             btn.style.cssText = `width: 24px; height: 24px; border: 1px solid #ddd; border-radius: 2px; cursor: pointer; background: ${color}; padding: 0;`;
             btn.title = color;
             btn.onclick = () => {
-              toggleMark(markType, { color })(editor.view.state, editor.view.dispatch);
+              editor.commandFactories.toggleMark(markType, { color })(editor.view.state, editor.view.dispatch);
               if (wrapper.parentNode) {
                 document.body.removeChild(wrapper);
               }
@@ -391,7 +391,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
           removeBtn.textContent = 'Remove highlight';
           removeBtn.style.cssText = 'width: 100%; padding: 4px; cursor: pointer;';
           removeBtn.onclick = () => {
-            toggleMark(markType)(editor.view.state, editor.view.dispatch);
+            editor.commandFactories.toggleMark(markType)(editor.view.state, editor.view.dispatch);
             if (wrapper.parentNode) {
               document.body.removeChild(wrapper);
             }
