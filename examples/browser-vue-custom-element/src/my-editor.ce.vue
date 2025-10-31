@@ -28,11 +28,11 @@ import {
   Dropdown,
   type MenuElement,
   MenuItem,
-} from '@kerebron/extension-menu';
+} from '@kerebron/extension-menu-legacy';
 
 import {
-  ExtensionMenu,
-} from '@kerebron/extension-menu/ExtensionMenu';
+  ExtensionMenuLegacy,
+} from '@kerebron/extension-menu-legacy';
 
 import { ExtensionYjs } from '@kerebron/extension-yjs';
 import { userColors } from '@kerebron/extension-yjs/userColors';
@@ -126,7 +126,7 @@ export default {
         element: this.$refs.editor,
         extensions: [
           new ExtensionBasicEditor(),
-          new ExtensionMenu({
+          new ExtensionMenuLegacy({
             modifyMenu: (menus: MenuElement[][]) => {
               const fileMenu = [
                 new MenuItem({
@@ -188,7 +188,7 @@ export default {
 <style>
 @import '@kerebron/editor/assets/index.css';
 @import '@kerebron/extension-tables/assets/tables.css';
-@import '@kerebron/extension-menu/assets/menu.css';
+@import '@kerebron/extension-menu-legacy/assets/menu.css';
 @import '@kerebron/extension-codemirror/assets/codemirror.css';
 @import '@kerebron/extension-autocomplete/assets/autocomplete.css';
 

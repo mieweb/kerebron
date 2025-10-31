@@ -3,7 +3,7 @@ import { Schema } from 'prosemirror-model';
 
 import { type CoreEditor, Extension } from '@kerebron/editor';
 import { type MenuElement } from './menu.ts';
-import { buildMenu } from './ExtensionMenu.ts';
+import { buildMenu } from './buildMenu.ts';
 import { CustomMenuPlugin } from './CustomMenuPlugin.ts';
 
 export interface CustomMenuOptions {

@@ -34,6 +34,8 @@ export default defineConfig({
         'packages/extension-tables/assets',
       '@kerebron/extension-menu/assets': __dirname + '/../../' +
         'packages/extension-menu/assets',
+      '@kerebron/extension-menu-legacy/assets': __dirname + '/../../' +
+        'packages/extension-menu-legacy/assets',
       '@kerebron/extension-codemirror/assets': __dirname + '/../../' +
         'packages/extension-codemirror/assets',
       '@kerebron/extension-autocomplete/assets': __dirname + '/../../' +

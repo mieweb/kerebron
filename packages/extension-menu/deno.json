@@ -4,7 +4,6 @@
   "imports": {},
   "exports": {
     ".": "./src/mod.ts",
-    "./ExtensionCustomMenu": "./src/ExtensionCustomMenu.ts",
-    "./ExtensionMenu": "./src/ExtensionMenu.ts"
+    "./ExtensionCustomMenu": "./src/ExtensionCustomMenu.ts"
   }
 }

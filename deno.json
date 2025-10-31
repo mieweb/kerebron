@@ -5,6 +5,7 @@
     "packages/extension-basic-editor",
     "packages/extension-tables",
     "packages/extension-menu",
+    "packages/extension-menu-legacy",
     "packages/extension-markdown",
     "packages/extension-odt",
     "packages/extension-yjs",

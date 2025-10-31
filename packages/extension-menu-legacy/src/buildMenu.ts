@@ -1,7 +1,8 @@
-import { Command, EditorState, NodeSelection, Plugin } from 'prosemirror-state';
+import { Command, EditorState, NodeSelection } from 'prosemirror-state';
 import { Attrs, MarkType, NodeType, Schema } from 'prosemirror-model';
+import { EditorView } from 'prosemirror-view';
 
-import { type CoreEditor, Extension } from '@kerebron/editor';
+import { type CoreEditor } from '@kerebron/editor';
 
 import {
   Dropdown,
@@ -10,10 +11,8 @@ import {
   MenuItem,
   type MenuItemSpec,
 } from './menu.ts';
-import { MenuPlugin } from './MenuPlugin.ts';
 import { icons } from './icons.ts';
 import { openPrompt, TextField } from './prompt.ts';
-import { EditorView } from 'prosemirror-view';
 
 function canInsert(state: EditorState, nodeType: NodeType) {
   let $from = state.selection.$from;
@@ -415,34 +414,4 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
   }
 
   return [menu, blockMenu];
-}
-
-export interface MenuConfig {
-  modifyMenu?(menus: MenuElement[][]): MenuElement[][];
-  floating: boolean;
-}
-
-export class ExtensionMenu extends Extension {
-  name = 'menu';
-
-  constructor(protected override config: MenuConfig = { floating: true }) {
-    super(config);
-  }
-
-  override getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
-    const plugins: Plugin[] = [];
-
-    let content = buildMenu(editor, schema);
-    if (this.config.modifyMenu) {
-      content = this.config.modifyMenu(content);
-    }
-    plugins.push(
-      new MenuPlugin({
-        content,
-        floating: this.config.floating,
-      }),
-    );
-
-    return plugins;
-  }
 }

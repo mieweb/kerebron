@@ -131,7 +131,7 @@ ExtensionCustomMenu (Extension)
 ```typescript
 import { CoreEditor } from '@kerebron/editor';
 import { ExtensionCustomMenu } from '@kerebron/extension-menu';
-import '@kerebron/extension-menu/assets/custom-menu.new.css';
+import '@kerebron/extension-menu/assets/custom-menu.css';
 
 const editor = new CoreEditor({
   extensions: [
