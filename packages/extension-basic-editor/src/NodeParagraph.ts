@@ -3,7 +3,6 @@ import { type CoreEditor, Node } from '@kerebron/editor';
 import {
   type CommandFactories,
   type CommandShortcuts,
-  setBlockType,
 } from '@kerebron/editor/commands';
 
 export class NodeParagraph extends Node {
@@ -26,7 +25,7 @@ export class NodeParagraph extends Node {
     type: NodeType,
   ): Partial<CommandFactories> {
     return {
-      'setParagraph': () => setBlockType(type),
+      'setParagraph': () => editor.commandFactories.setBlockType(type),
     };
   }
 

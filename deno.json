@@ -9,6 +9,7 @@
     "packages/extension-odt",
     "packages/extension-yjs",
     "packages/extension-codemirror",
+    "packages/extension-autocomplete",
     "packages/extension-dev-toolkit",
     "packages/extension-server-hono",
     "packages/odt-wasm",

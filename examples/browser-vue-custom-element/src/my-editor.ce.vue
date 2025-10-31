@@ -22,6 +22,7 @@ import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionOdt } from '@kerebron/extension-odt';
 import { ExtensionTables } from '@kerebron/extension-tables';
 import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
+import { ExtensionAutocomplete } from '@kerebron/extension-autocomplete';
 
 import {
   Dropdown,
@@ -105,6 +106,22 @@ export default {
 
       this.$refs.editor.innerHTML = '';
 
+      const autocomplete = new ExtensionAutocomplete({
+        getItems(query: string) {
+          console.log('query', query);
+          return [
+            '@alice',
+            '@bob',
+            '@doug',
+            '@greg',
+            '@monika'
+            ].filter(str => str.startsWith(query));
+        },
+        onSelect: (selected: string, range: TextRange) => {
+          this.editor.chain().replaceRangeText(range, selected).run();
+        }
+      });
+
       this.editor = new CoreEditor({
         element: this.$refs.editor,
         extensions: [
@@ -127,6 +144,7 @@ export default {
               return menus;
             },
           }),
+          autocomplete,
           new ExtensionMarkdown(),
           new ExtensionOdt(),
           new ExtensionTables(),
@@ -172,4 +190,10 @@ export default {
 @import '@kerebron/extension-tables/assets/tables.css';
 @import '@kerebron/extension-menu/assets/menu.css';
 @import '@kerebron/extension-codemirror/assets/codemirror.css';
+@import '@kerebron/extension-autocomplete/assets/autocomplete.css';
+
+:host {
+  position: relative;
+}
+
 </style>

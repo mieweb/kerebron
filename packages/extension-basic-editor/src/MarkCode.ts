@@ -3,7 +3,6 @@ import { type CoreEditor, Mark } from '@kerebron/editor';
 import {
   type CommandFactories,
   type CommandShortcuts,
-  toggleMark,
 } from '@kerebron/editor/commands';
 
 export class MarkCode extends Mark {
@@ -24,7 +23,7 @@ export class MarkCode extends Mark {
     type: MarkType,
   ): Partial<CommandFactories> {
     return {
-      'toggleCode': () => toggleMark(type),
+      'toggleCode': () => editor.commandFactories.toggleMark(type),
     };
   }
 

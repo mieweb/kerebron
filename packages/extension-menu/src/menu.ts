@@ -1,14 +1,6 @@
 import { EditorView } from 'prosemirror-view';
-import { EditorState, NodeSelection, Transaction } from 'prosemirror-state';
-import { Attrs, NodeType } from 'prosemirror-model';
+import { EditorState, Transaction } from 'prosemirror-state';
 
-import {
-  joinUp,
-  lift,
-  selectParentNode,
-  setBlockType,
-  wrapIn,
-} from '@kerebron/editor/commands';
 import { getIcon } from './icons.ts';
 
 /// The types defined in this module aren't the only thing you can
@@ -88,7 +80,7 @@ export class MenuItem implements MenuElement {
       }
     });
 
-    function update(state: EditorState) {
+    const update = (state: EditorState) => {
       if (spec.select) {
         let selected = spec.select(state);
         dom!.style.display = selected ? '' : 'none';
@@ -106,7 +98,7 @@ export class MenuItem implements MenuElement {
         dom!.setAttribute('aria-pressed', active.toString());
       }
       return true;
-    }
+    };
 
     return { dom, update };
   }
@@ -450,55 +442,6 @@ function separator() {
   const elem = document.createElement('div');
   elem.classList.add('kb-menu__separator');
   return elem;
-}
-
-/// Build a menu item for wrapping the selection in a given node type.
-/// Adds `run` and `select` properties to the ones present in
-/// `options`. `options.attrs` may be an object that provides
-/// attributes for the wrapping node.
-export function wrapItem(
-  nodeType: NodeType,
-  options: Partial<MenuItemSpec> & { attrs?: Attrs | null },
-) {
-  let passedOptions: MenuItemSpec = {
-    run(state, dispatch) {
-      return wrapIn(nodeType, options.attrs)(state, dispatch);
-    },
-    select(state) {
-      return wrapIn(nodeType, options.attrs)(state);
-    },
-  };
-  for (let prop in options) {
-    (passedOptions as any)[prop] = (options as any)[prop];
-  }
-  return new MenuItem(passedOptions);
-}
-
-/// Build a menu item for changing the type of the textblock around the
-/// selection to the given type. Provides `run`, `active`, and `select`
-/// properties. Others must be given in `options`. `options.attrs` may
-/// be an object to provide the attributes for the textblock node.
-export function blockTypeItem(
-  nodeType: NodeType,
-  options: Partial<MenuItemSpec> & { attrs?: Attrs | null },
-) {
-  let command = setBlockType(nodeType, options.attrs);
-  let passedOptions: MenuItemSpec = {
-    run: command,
-    enable(state) {
-      return command(state);
-    },
-    active(state) {
-      let { $from, to, node } = state.selection as NodeSelection;
-      if (node) return node.hasMarkup(nodeType, options.attrs);
-      return to <= $from.end() &&
-        $from.parent.hasMarkup(nodeType, options.attrs);
-    },
-  };
-  for (let prop in options) {
-    (passedOptions as any)[prop] = (options as any)[prop];
-  }
-  return new MenuItem(passedOptions);
 }
 
 // Work around classList.toggle being broken in IE11

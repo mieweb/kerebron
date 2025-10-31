@@ -10,11 +10,10 @@ import { EditorView as PMEditorView } from 'prosemirror-view';
 import { Node } from 'prosemirror-model';
 
 import { EditorView } from '@codemirror/view';
-import { Compartment, Extension } from '@codemirror/state';
+import { Compartment } from '@codemirror/state';
 
-import { setBlockType } from '@kerebron/editor/commands';
-
-import { CodeBlockSettings, ThemeItem } from './types.ts';
+import type { CodeBlockSettings, ThemeItem } from './types.ts';
+import type { CoreEditor } from '@kerebron/editor';
 
 export const CodeBlockNodeName = 'code_block';
 
@@ -116,10 +115,14 @@ export const maybeEscape = (
   return true;
 };
 
-export const backspaceHandler = (pmView: PMEditorView, view: EditorView) => {
+export const backspaceHandler = (
+  pmView: PMEditorView,
+  view: EditorView,
+  editor: CoreEditor,
+) => {
   const { selection } = view.state;
   if (selection.main.empty && selection.main.from === 0) {
-    setBlockType(pmView.state.schema.nodes.paragraph)(
+    editor.run.setBlockType(pmView.state.schema.nodes.paragraph)(
       pmView.state,
       pmView.dispatch,
     );

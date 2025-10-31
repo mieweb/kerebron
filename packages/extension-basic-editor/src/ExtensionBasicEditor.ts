@@ -4,7 +4,7 @@ import { ExtensionBaseKeymap } from './ExtensionBaseKeymap.ts';
 import { ExtensionDropcursor } from './ExtensionDropcursor.ts';
 import { ExtensionGapcursor } from './ExtensionGapcursor.ts';
 import { ExtensionHtml } from './ExtensionHtml.ts';
-import { ExtensionMediaUpload } from './ExtensionImageUpload.ts';
+import { ExtensionMediaUpload } from './ExtensionMediaUpload.ts';
 import { MarkLink } from './MarkLink.ts';
 import { MarkStrong } from './MarkStrong.ts';
 import { MarkItalic } from './MarkItalic.ts';

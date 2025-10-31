@@ -1,18 +1,15 @@
 import { Command, EditorState, NodeSelection, Plugin } from 'prosemirror-state';
-import { MarkType, NodeType, Schema } from 'prosemirror-model';
-import { redo, redoDepth, undo, undoDepth } from 'prosemirror-history';
+import { Attrs, MarkType, NodeType, Schema } from 'prosemirror-model';
+import { EditorView } from 'prosemirror-view';
 
 import { type CoreEditor, Extension } from '@kerebron/editor';
-import { toggleMark, wrapInList } from '@kerebron/editor/commands';
 
 import {
-  blockTypeItem,
   Dropdown,
   DropdownSubmenu,
-  MenuElement,
+  type MenuElement,
   MenuItem,
-  MenuItemSpec,
-  wrapItem,
+  type MenuItemSpec,
 } from './menu.ts';
 import { MenuPlugin } from './MenuPlugin.ts';
 import { icons } from './icons.ts';
@@ -48,25 +45,76 @@ function markActive(state: EditorState, type: MarkType) {
   else return state.doc.rangeHasMark(from, to, type);
 }
 
-function markItem(markType: MarkType, options: Partial<MenuItemSpec>) {
-  let passedOptions: Partial<MenuItemSpec> = {
-    active(state) {
-      return markActive(state, markType);
-    },
-  };
-  for (let prop in options) {
-    (passedOptions as any)[prop] = (options as any)[prop];
-  }
-  return cmdItem(toggleMark(markType), passedOptions);
-}
-
-function wrapListItem(nodeType: NodeType, options: Partial<MenuItemSpec>) {
-  return cmdItem(wrapInList(nodeType, (options as any).attrs), options);
-}
-
 const cut = <T>(arr: T[]) => arr.filter((x) => x) as NonNullable<T>[];
 
 export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
+  function markItem(markType: MarkType, options: Partial<MenuItemSpec>) {
+    let passedOptions: Partial<MenuItemSpec> = {
+      active(state) {
+        return markActive(state, markType);
+      },
+    };
+    for (let prop in options) {
+      (passedOptions as any)[prop] = (options as any)[prop];
+    }
+    return cmdItem(editor.commandFactories.toggleMark(markType), passedOptions);
+  }
+
+  function wrapItem(
+    nodeType: NodeType,
+    options: Partial<MenuItemSpec> & { attrs?: Attrs | null },
+  ) {
+    let passedOptions: MenuItemSpec = {
+      run(state, dispatch) {
+        return editor.commandFactories.wrapIn(nodeType, options.attrs)(
+          state,
+          dispatch,
+        );
+      },
+      select(state) {
+        return editor.commandFactories.wrapIn(nodeType, options.attrs)(state);
+      },
+    };
+    for (let prop in options) {
+      (passedOptions as any)[prop] = (options as any)[prop];
+    }
+    return new MenuItem(passedOptions);
+  }
+
+  function wrapListItem(nodeType: NodeType, options: Partial<MenuItemSpec>) {
+    return cmdItem(
+      editor.commandFactories.wrapInList(nodeType, (options as any).attrs),
+      options,
+    );
+  }
+
+  /// Build a menu item for changing the type of the textblock around the
+  /// selection to the given type. Provides `run`, `active`, and `select`
+  /// properties. Others must be given in `options`. `options.attrs` may
+  /// be an object to provide the attributes for the textblock node.
+  function blockTypeItem(
+    nodeType: NodeType,
+    options: Partial<MenuItemSpec> & { attrs?: Attrs | null },
+  ) {
+    let command = editor.commandFactories.setBlockType(nodeType, options.attrs);
+    let passedOptions: MenuItemSpec = {
+      run: command,
+      enable(state) {
+        return command(state);
+      },
+      active(state) {
+        let { $from, to, node } = state.selection as NodeSelection;
+        if (node) return node.hasMarkup(nodeType, options.attrs);
+        return to <= $from.end() &&
+          $from.parent.hasMarkup(nodeType, options.attrs);
+      },
+    };
+    for (let prop in options) {
+      (passedOptions as any)[prop] = (options as any)[prop];
+    }
+    return new MenuItem(passedOptions);
+  }
+
   const menu = [];
 
   // Create custom icon for underline - just shows underlined underscore
@@ -137,7 +185,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
         },
         run(state, dispatch) {
           if (markActive(state, markType)) {
-            toggleMark(markType)(state, dispatch);
+            editor.commandFactories.toggleMark(markType)(state, dispatch);
             return true;
           }
           openPrompt({
@@ -150,7 +198,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
               title: new TextField({ label: 'Title' }),
             },
             callback(attrs) {
-              toggleMark(markType, attrs)(
+              editor.commandFactories.toggleMark(markType, attrs)(
                 editor.view.state,
                 editor.view.dispatch,
               );
@@ -527,29 +575,36 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
   ];
   */
 
-  menu.push(
-    new MenuItem({
-      title: 'Undo last change',
-      run: (state, dispatch) => {
-        return undo(editor.view.state, editor.view.dispatch, editor.view);
-      },
-      enable: (state) => {
-        return undo(state);
-      },
-      icon: icons.undo,
-    }),
-  );
+  const editorView = editor.view;
+  if (editorView instanceof EditorView) {
+    menu.push(
+      new MenuItem({
+        title: 'Undo last change',
+        run: (state, dispatch) => {
+          return editor.commandFactories.undo()(
+            editor.view.state,
+            editor.view.dispatch,
+            editorView,
+          );
+        },
+        enable: (state) => {
+          return editor.commandFactories.undo()(state);
+        },
+        icon: icons.undo,
+      }),
+    );
 
-  menu.push(
-    new MenuItem({
-      title: 'Redo last undone change',
-      run: (state, dispatch) => {
-        return redo(editor.view.state, editor.view.dispatch, editor.view);
-      },
-      enable: (state) => redo(state),
-      icon: icons.redo,
-    }),
-  );
+    menu.push(
+      new MenuItem({
+        title: 'Redo last undone change',
+        run: (state, dispatch) => {
+          return editor.commandFactories.redo()(state, dispatch);
+        },
+        enable: (state) => editor.commandFactories.redo()(state),
+        icon: icons.redo,
+      }),
+    );
+  }
 
   if (schema.nodes.table) {
     const item = (label: string, cmdName: string) => {
@@ -590,7 +645,7 @@ export interface MenuConfig {
 export class ExtensionMenu extends Extension {
   name = 'menu';
 
-  constructor(protected config: MenuConfig = { floating: true }) {
+  constructor(protected override config: MenuConfig = { floating: true }) {
     super(config);
   }
 

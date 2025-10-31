@@ -1,3 +1,6 @@
+
+@import './menu.new.css';
+
 /* Custom Menu - Google Docs style with customizable pinned items */
 
 /* Wrapper */
@@ -101,7 +104,7 @@
 
 .kb-custom-menu__item .kb-menu__button:hover,
 .kb-custom-menu__item .kb-dropdown__label:hover {
-  background: rgba(60, 64, 67, 0.08);
+  background: var(--kb-color-surface-hover);
 }
 
 .kb-custom-menu__item .kb-menu__button--active {
@@ -204,7 +207,7 @@
 }
 
 .kb-custom-menu__overflow-toggle:hover {
-  background: rgba(60, 64, 67, 0.08);
+  background: var(--kb-color-surface-hover);
 }
 
 .kb-custom-menu__overflow-toggle svg {
@@ -237,7 +240,7 @@
   overflow-y: auto;
   padding: var(--kb-space-sm) 0;
   min-height: 0;
-  max-height: 800px
+  max-height: 800px;
 }
 
 /* Overflow menu section header */
@@ -265,7 +268,7 @@
 }
 
 .kb-custom-menu__overflow-item:hover {
-  background: rgba(60, 64, 67, 0.08);
+  background: var(--kb-color-surface-hover);
 }
 
 .kb-custom-menu__overflow-item .kb-menu__button,
@@ -321,6 +324,7 @@
 }
 
 .kb-custom-menu__item[data-tool-id="tool-toggle-code-font"] button > span, .kb-custom-menu__item[data-tool-id="tool-text-color"] button > span, .kb-custom-menu__item[data-tool-id="tool-text-highlight"] button > span, .kb-custom-menu__item[data-tool-id="tool-toggle-underline"] button > span {
+
   display: none;
 }
 
@@ -535,7 +539,7 @@
 }
 
 .kb-custom-menu__modal-close:hover {
-  background: rgba(60, 64, 67, 0.08);
+  background: var(--kb-color-surface-hover);
 }
 
 .kb-custom-menu__modal-close svg {

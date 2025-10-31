@@ -40,9 +40,14 @@ export class CoreEditor extends EventTarget {
       ...options,
     };
 
+    this.commandManager = new CommandManager(
+      this,
+    );
+
     this.extensionManager = new ExtensionManager(
       this.options.extensions || [],
       this,
+      this.commandManager,
     );
 
     // const content = this.options.content ? this.options.content : {
@@ -54,10 +59,6 @@ export class CoreEditor extends EventTarget {
       : this.extensionManager.schema.topNodeType.spec.EMPTY_DOC;
 
     this.createView(content);
-    this.commandManager = new CommandManager(
-      this,
-      this.extensionManager.commandFactories,
-    );
     this.setupPlugins();
   }
 
@@ -67,6 +68,14 @@ export class CoreEditor extends EventTarget {
 
   public get schema() {
     return this.extensionManager.schema;
+  }
+
+  public get run() {
+    return this.commandManager.run;
+  }
+
+  public get commandFactories() {
+    return this.commandManager.commandFactories;
   }
 
   public chain(): ChainedCommands {

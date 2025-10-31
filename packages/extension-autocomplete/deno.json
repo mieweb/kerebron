@@ -1,0 +1,8 @@
+{
+  "name": "@kerebron/extension-autocomplete",
+  "tasks": {},
+  "imports": {},
+  "exports": {
+    ".": "./src/ExtensionAutocomplete.ts"
+  }
+}

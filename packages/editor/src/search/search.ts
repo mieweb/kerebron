@@ -8,8 +8,7 @@ import {
 } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 
-import { SearchQuery, SearchResult } from './query';
-export { SearchQuery, SearchResult };
+import { SearchQuery, SearchResult } from './query.ts';
 
 class SearchState {
   constructor(
