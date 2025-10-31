@@ -292,6 +292,12 @@
   display: none;
 }
 
+/* Hide empty overflow items with no label text */
+.kb-custom-menu__overflow-item:not(:has(.kb-custom-menu__overflow-item-label)),
+.kb-custom-menu__overflow-item:has(.kb-custom-menu__overflow-item-label:empty) {
+  display: none;
+}
+
 .kb-custom-menu__overflow-item[data-tool-id="tool-toggle-underline"] .kb-menu__button {
   display: flex;
 }
@@ -788,6 +794,7 @@
     color: var(--kb-menu-dropdown-dark-text);
   }
 
+
   .kb-custom-menu__modal-close {
     color: var(--kb-color-text-muted);
   }
@@ -806,3 +813,16 @@
     color: var(--kb-menu-dropdown-dark-text);
   }
 }
+
+/* Pinned dropdown menu (independent from overflow) */
+.kb-custom-menu__pinned-dropdown {
+  min-width: 200px;
+  max-width: 300px;
+  background: var(--kb-menu-dropdown-dark-bg) !important;
+  border: 1px solid var(--kb-color-border-strong);
+  border-radius: var(--kb-radius-lg);
+  box-shadow: var(--kb-shadow-lg);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
