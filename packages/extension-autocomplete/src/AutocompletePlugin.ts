@@ -146,7 +146,12 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
 
           next.composing = composing;
 
-          if (isEditable && (empty || editor.view.composing)) {
+          const parentNode = selection.$anchor.parent;
+
+          if (
+            !['code_block'].includes(parentNode?.type.name) && isEditable &&
+            (empty || editor.view.composing)
+          ) {
             // Reset active state if we just left the previous suggestion range
             if (
               (from < prev.range.from || from > prev.range.to) && !composing &&
@@ -158,6 +163,7 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
             const matchers: AutocompleteMatcher[] = config.matchers ||
               [createDefaultMatcher()];
             let match = undefined;
+
             for (const matcher of matchers) {
               match = matcher(selection.$from);
               if (match) {
