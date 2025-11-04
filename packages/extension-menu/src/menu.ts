@@ -126,7 +126,10 @@ export type IconSpec = { path: string; width: number; height: number } | {
 /// The configuration object passed to the `MenuItem` constructor.
 export interface MenuItemSpec {
   /// The function to execute when the menu item is activated.
-  run: (state: EditorState, dispatch: (tr: Transaction) => void) => boolean | Promise<boolean>;
+  run: (
+    state: EditorState,
+    dispatch: (tr: Transaction) => void,
+  ) => boolean | Promise<boolean>;
 
   /// Optional function that is used to determine whether the item is
   /// appropriate at the moment. Deselected items will be hidden.
@@ -376,7 +379,7 @@ export class DropdownSubmenu implements MenuElement {
           listeningOnClose = () => {
             if (!isMenuEvent(wrap)) {
               wrap.classList.remove(CSS_PREFIX + '--open');
-              win?.removeEventListener('mousedown', listeningOnClose!);win
+              win?.removeEventListener('mousedown', listeningOnClose!);
               listeningOnClose = null;
             }
           },
