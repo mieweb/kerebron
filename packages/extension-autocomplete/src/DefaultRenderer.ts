@@ -49,6 +49,13 @@ export class DefaultRenderer<Item> implements AutocompleteRenderer {
   }
 
   onKeyDown(props: SuggestionKeyDownProps) {
+    if (!this.wrapper) {
+      return false;
+    }
+    if (this.items.length === 0) {
+      return false;
+    }
+
     if (props.event.key === 'Escape') {
       if (this.wrapper) {
         this.wrapper.parentNode?.removeChild(this.wrapper);
@@ -75,9 +82,10 @@ export class DefaultRenderer<Item> implements AutocompleteRenderer {
     if (props.event.key === 'Enter') {
       if (this.pos > -1 && this.pos < this.items.length) {
         this.command(this.items[this.pos]);
+        this.items.splice(0, this.items.length);
         this.onExit();
+        return true;
       }
-      return true;
     }
     return false;
   }

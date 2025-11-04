@@ -1,13 +1,7 @@
 import type { EditorState, Plugin, Transaction } from 'prosemirror-state';
 import { Schema } from 'prosemirror-model';
-import { EditorView } from 'prosemirror-view';
 
-import {
-  CommandFactories,
-  type CoreEditor,
-  Extension,
-  type TextRange,
-} from '@kerebron/editor';
+import { type CoreEditor, Extension, type TextRange } from '@kerebron/editor';
 
 import { AutocompletePlugin } from './AutocompletePlugin.ts';
 import { AutocompleteMatcher, AutocompleteRenderer } from './types.ts';
