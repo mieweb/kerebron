@@ -35,6 +35,7 @@ import { NodeDefinitionDesc } from './NodeDefinitionDesc.ts';
 import { NodeFrontmatter } from './NodeFrontmatter.ts';
 import { NodeTaskList } from './NodeTaskList.ts';
 import { NodeTaskItem } from './NodeTaskItem.ts';
+import { ExtensionRemoteSelection } from './remote-selection/ExtensionRemoteSelection.ts';
 
 export class ExtensionBasicEditor extends Extension {
   name = 'basic-editor';
@@ -44,6 +45,7 @@ export class ExtensionBasicEditor extends Extension {
     new ExtensionGapcursor(),
     new ExtensionHtml(),
     new ExtensionMediaUpload(),
+    new ExtensionRemoteSelection(),
     new ExtensionSelection(),
     new NodeDocument(),
     new NodeText(),

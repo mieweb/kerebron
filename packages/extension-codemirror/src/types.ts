@@ -3,28 +3,27 @@ import { EditorView as CodemirrorView } from '@codemirror/view';
 import { Node } from 'prosemirror-model';
 import { EditorView } from 'prosemirror-view';
 import { LanguageSupport } from '@codemirror/language';
-import { Extension } from '@codemirror/state';
+import { Extension as CmExtension } from '@codemirror/state';
 import { Transport } from '@codemirror/lsp-client';
 
 export type LanguageLoaders = Record<string, () => Promise<LanguageSupport>>;
 
-export type ThemeItem = { extension: Extension; name: string };
+export type ThemeItem = { extension: CmExtension; name: string };
 
 export type CodeBlockSettings = {
-  provider?: any;
   createSelect: (
     settings: CodeBlockSettings,
     dom: HTMLElement,
     node: Node,
     view: EditorView,
-    getPos: (() => number) | boolean,
+    getPos: () => number | undefined,
   ) => () => void;
   updateSelect: (
     settings: CodeBlockSettings,
     dom: HTMLElement,
     node: Node,
     view: EditorView,
-    getPos: (() => number) | boolean,
+    getPos: () => number | undefined,
     oldNode: Node,
   ) => void;
   createCopyButton: (
@@ -33,12 +32,12 @@ export type CodeBlockSettings = {
     node: Node,
     view: EditorView,
     codeMirrorView: CodemirrorView,
-    getPos: (() => number) | boolean,
+    getPos: () => number | undefined,
   ) => () => void;
   stopEvent: (
     e: Event,
     node: Node,
-    getPos: (() => number) | boolean,
+    getPos: () => number | undefined,
     view: EditorView,
     dom: HTMLElement,
   ) => boolean;
@@ -47,11 +46,10 @@ export type CodeBlockSettings = {
   languageWhitelist?: string[];
   undo?: (state: EditorState, dispatch: (tr: Transaction) => void) => void;
   redo?: (state: EditorState, dispatch: (tr: Transaction) => void) => void;
-  theme?: Extension[];
-  readOnly: boolean;
+  theme?: CmExtension[];
   themes: ThemeItem[];
+  readOnly: boolean;
   getCurrentTheme?: () => string;
   codeBlockName?: string;
-  shadowRoot?: ShadowRoot;
   lspTransport?: Transport;
 };
