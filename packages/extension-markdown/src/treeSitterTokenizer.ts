@@ -968,14 +968,18 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
   return retVal;
 }
 
-import markdownWasm from '../wasm/tree-sitter-markdown.wasm?raw' with {
-  type: 'bytes',
-};
-import inlineWasm from '../wasm/tree-sitter-markdown_inline.wasm?raw' with {
-  type: 'bytes',
-};
+import markdownWasmUrl from '../wasm/tree-sitter-markdown.wasm?url';
+import inlineWasmUrl from '../wasm/tree-sitter-markdown_inline.wasm?url';
 
 export async function sitterTokenizer() {
+  const response = await fetch(markdownWasmUrl);
+  const markdownWasm = new Uint8Array(await response.arrayBuffer());
+
+  const response2 = await fetch(inlineWasmUrl);
+  const inlineWasm = new Uint8Array(await response2.arrayBuffer());
+
+  console.log('markdownWasm', typeof markdownWasm, markdownWasm);
+
   const blockParser: Parser = await createParser(markdownWasm);
   const inlineParser: Parser = await createParser(inlineWasm);
 

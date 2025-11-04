@@ -308,11 +308,6 @@ export class MarkdownParser {
 
     const tokens = this.tokenizer.parse(text, markdownEnv);
 
-    Deno.writeTextFileSync(
-      __dirname + '/../test/markdown-it.tokens.json',
-      JSON.stringify(tokens, null, 2),
-    );
-
     state.parseTokens(tokens);
     do {
       doc = state.closeNode();

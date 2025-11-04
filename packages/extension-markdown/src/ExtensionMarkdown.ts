@@ -3,11 +3,14 @@ import { type Converter, type CoreEditor, Extension } from '@kerebron/editor';
 
 import pmToMdConverter from './pmToMdConverter.ts';
 import mdToPmConverter from './mdToPmConverter.ts';
+import type { Token } from './types.ts';
 
 export interface MdConfig {
   sourceMap?: boolean;
   debugTokens?: boolean;
 }
+
+export type { Token };
 
 export class ExtensionMarkdown extends Extension {
   name = 'markdown';

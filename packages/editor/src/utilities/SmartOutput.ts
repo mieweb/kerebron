@@ -1,4 +1,5 @@
 export interface OutputMeta<K> {
+  pos: number;
   rowPos: number;
   colPos: number;
   item: K;
@@ -23,6 +24,7 @@ export interface SourceMap {
 export class SmartOutput<K> {
   private _rowPos = 0;
   private _colPos = 0;
+  private _pos = 0;
 
   private chunks: Array<string> = [];
   private metas: Array<OutputMeta<K>> = [];
@@ -36,6 +38,7 @@ export class SmartOutput<K> {
     const lines = text.split('\n');
 
     this.metas.push({
+      pos: this._pos,
       colPos: this._colPos,
       rowPos: this._rowPos,
       item,
@@ -47,6 +50,11 @@ export class SmartOutput<K> {
       this._rowPos += lines.length - 1;
       this._colPos = lines[lines.length - 1].length;
     }
+    this._pos += text.length;
+  }
+
+  getMetas() {
+    return this.metas;
   }
 
   get chunkPos() {
@@ -64,6 +72,10 @@ export class SmartOutput<K> {
 
   get colPos() {
     return this._colPos;
+  }
+
+  get pos() {
+    return this._pos;
   }
 
   endsWith(text: string) {
