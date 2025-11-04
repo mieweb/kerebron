@@ -1,5 +1,7 @@
 import { Node } from 'prosemirror-model';
 import {
+  Decoration,
+  DecorationSource,
   EditorView,
   EditorView as PMEditorView,
   NodeView,
@@ -30,6 +32,7 @@ import {
   autocompletion,
   closeBrackets,
   closeBracketsKeymap,
+  CompletionContext,
   completionKeymap,
 } from '@codemirror/autocomplete';
 import { defaultKeymap, indentWithTab } from '@codemirror/commands';
@@ -45,11 +48,11 @@ import {
   valueChanged,
 } from './utils.ts';
 import { CodeBlockSettings } from './types.ts';
-import { YSyncConfig, ySyncFacet } from './y-sync.ts';
+import { RemoteSyncConfig, remoteSyncFacet } from './remote-sync.ts';
 import {
   yRemoteSelections,
   yRemoteSelectionsTheme,
-} from './y-remote-selections.ts';
+} from './remote-selections.ts';
 import { CoreEditor } from '@kerebron/editor';
 import { languageServerExtensions, LSPClient } from '@codemirror/lsp-client';
 
@@ -60,13 +63,13 @@ class CodeMirrorBlockNodeView implements NodeView {
   codeMirrorView: CodeMirror;
   updating: boolean;
   createCopyButtonCB: () => void;
-  selectDeleteCB: () => void;
+  selectDeleteCB: undefined | (() => void);
   languageConf: Compartment;
 
   constructor(
     private node: Node,
     private view: EditorView,
-    private getPos: boolean | (() => number),
+    private getPos: () => number | undefined,
     private settings: CodeBlockSettings,
     private editor: CoreEditor,
   ) {
@@ -77,20 +80,41 @@ class CodeMirrorBlockNodeView implements NodeView {
     this.languageConf = new Compartment();
     const themeConfig = new Compartment();
 
+    // Define custom completions
+    const myCompletions = [
+      { label: 'console.log', type: 'function' },
+      { label: 'const', type: 'keyword' },
+      { label: 'let', type: 'keyword' },
+      { label: 'var', type: 'keyword' },
+      { label: 'function', type: 'keyword' },
+    ];
+
+    // Custom autocomplete function
+    function complete(context: CompletionContext) {
+      let word = context.matchBefore(/\w*/);
+      console.log('complere', context, word);
+      if (!word) {
+        return null;
+      }
+      if (word.from == word.to && !context.explicit) return null;
+      return {
+        from: word.from,
+        options: myCompletions,
+      };
+    }
+
     const yCollab = () => {
       const plugins = [];
-      if (settings.provider?.awareness) {
-        const ySyncConfig = new YSyncConfig(
-          () => this.node,
-          getPos,
-          settings.provider.awareness,
-        );
-        plugins.push(ySyncFacet.of(ySyncConfig));
-        plugins.push(
-          yRemoteSelectionsTheme,
-          yRemoteSelections,
-        );
-      }
+      const remoteSyncConfig = new RemoteSyncConfig(
+        () => this.node,
+        getPos,
+        editor,
+      );
+      plugins.push(remoteSyncFacet.of(remoteSyncConfig));
+      plugins.push(
+        yRemoteSelectionsTheme,
+        yRemoteSelections,
+      );
       return plugins;
     };
 
@@ -102,12 +126,14 @@ class CodeMirrorBlockNodeView implements NodeView {
       foldGutter(),
       bracketMatching(),
       closeBrackets(),
-      highlightSelectionMatches(),
-      autocompletion(),
+      autocompletion({
+        override: [
+          complete,
+        ],
+      }),
       rectangularSelection(),
       drawSelection({ cursorBlinkRate: 1000 }), // broken focus
       EditorState.allowMultipleSelections.of(true),
-      highlightActiveLine(),
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       this.languageConf.of([]),
       indentOnInput(),
@@ -132,7 +158,7 @@ class CodeMirrorBlockNodeView implements NodeView {
         {
           key: 'Ctrl-Enter',
           run: () => {
-            if (!editor.run.exitCode(view.state, view.dispatch)) {
+            if (!editor.run.exitCode()) {
               return false;
             }
             view.focus();
@@ -159,10 +185,7 @@ class CodeMirrorBlockNodeView implements NodeView {
         {
           key: 'Mod-a',
           run: () => {
-            const result = editor.run.selectAll(
-              view.state,
-              view.dispatch,
-            );
+            const result = editor.run.selectAll();
             view.focus();
             return result;
           },
@@ -176,7 +199,7 @@ class CodeMirrorBlockNodeView implements NodeView {
               sel.from === sel.to &&
               sel.from === cmView.state.doc.length
             ) {
-              editor.run.exitCode(view.state, view.dispatch);
+              editor.run.exitCode();
               view.focus();
               return true;
             }
@@ -212,7 +235,7 @@ class CodeMirrorBlockNodeView implements NodeView {
       doc: node.textContent,
     });
 
-    const root = settings.shadowRoot || editor.view?.root || document;
+    const root = editor.view?.root || document;
 
     this.codeMirrorView = new CodeMirror({
       state,
@@ -347,14 +370,16 @@ export const codeMirrorBlockNodeView: (
   settings: CodeBlockSettings,
   editor: CoreEditor,
 ) => (
-  pmNode: Node,
-  view: PMEditorView,
-  getPos: (() => number) | boolean,
+  node: Node,
+  view: EditorView,
+  getPos: () => number | undefined,
+  decorations: readonly Decoration[],
+  innerDecorations: DecorationSource,
 ) => NodeView = (settings, editor) => {
   return (
     pmNode: Node,
     view: PMEditorView,
-    getPos: (() => number) | boolean,
+    getPos: () => number | undefined,
   ) => {
     return new CodeMirrorBlockNodeView(pmNode, view, getPos, settings, editor);
   };

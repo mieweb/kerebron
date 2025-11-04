@@ -16,6 +16,7 @@ import { CommandShortcuts, firstCommand } from './commands/mod.ts';
 import { type Command } from 'prosemirror-state';
 import { addAttributesToSchema } from './utilities/getHtmlAttributes.ts';
 import { type CommandManager } from './commands/CommandManager.ts';
+import { TrackSelecionPlugin } from './plugins/TrackSelecionPlugin.ts';
 
 export function findDuplicates(items: any[]): any[] {
   const filtered = items.filter((el, index) => items.indexOf(el) !== index);
@@ -117,6 +118,8 @@ export class ExtensionManager {
     let converters = {};
 
     for (const extension of this.extensions) {
+      extension.setEditor(this.editor);
+
       if (extension.type === 'node') {
         const nodeType = this.schema.nodes[extension.name];
         inputRules.push(...extension.getInputRules(nodeType));
@@ -193,6 +196,7 @@ export class ExtensionManager {
 
     plugins.push(new InputRulesPlugin(inputRules));
     plugins.push(new KeymapPlugin(Object.fromEntries(keyBindings)));
+    plugins.push(new TrackSelecionPlugin(this.editor));
 
     return plugins;
   }

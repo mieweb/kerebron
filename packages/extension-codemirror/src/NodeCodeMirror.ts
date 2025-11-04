@@ -1,7 +1,7 @@
 import { EditorState, Plugin, PluginKey, Selection } from 'prosemirror-state';
 import type { NodeSpec, NodeType, Schema } from 'prosemirror-model';
 
-import { Converter, type CoreEditor, Node } from '@kerebron/editor';
+import { type CoreEditor, Node } from '@kerebron/editor';
 import {
   type CommandFactories,
   type CommandShortcuts,
@@ -14,7 +14,7 @@ import { CodeBlockSettings } from './types.ts';
 import { codeMirrorBlockNodeView } from './codeMirrorBlockNodeView.ts';
 import { defaultSettings } from './defaults.ts';
 import languageLoaders, { legacyLanguageLoaders } from './languageLoaders.ts';
-import { createNodeFromObject } from '@kerebron/editor/utilities';
+import { getShadowRoot } from '@kerebron/editor/utilities';
 
 export const codeMirrorBlockKey = new PluginKey('codemirror-block');
 
@@ -57,60 +57,17 @@ const LANGS = [
   'html',
 ];
 
+export interface NodeCodeMirrorConfig {
+  languageWhitelist?: CodeBlockSettings['languageWhitelist'];
+  theme?: CodeBlockSettings['theme'];
+}
+
 export class NodeCodeMirror extends Node {
   override name = 'code_block';
   // requires = ['doc'];
 
-  override getConverters(
-    editor: CoreEditor,
-    schema: Schema,
-  ): Record<string, Converter> {
-    return {
-      'text/code-only': {
-        fromDoc: async (document: Node): Promise<Uint8Array> => {
-          const retVal = [];
-          if (document.content) {
-            for (const node of document.content.toJSON()) {
-              if ('code_block' === node.type && Array.isArray(node.content)) {
-                for (const content of node.content) {
-                  retVal.push(content.text);
-                }
-              }
-            }
-          }
-          return new TextEncoder().encode(retVal.join(''));
-        },
-        toDoc: async (buffer: Uint8Array): Promise<Node> => {
-          const code = new TextDecoder().decode(buffer);
-          const content = {
-            'type': 'doc_code',
-            'content': [
-              {
-                'type': 'code_block',
-                'attrs': {
-                  'lang': schema.topNodeType.spec.defaultAttrs?.lang,
-                },
-                'content': [
-                  {
-                    'type': 'text',
-                    'text': code,
-                  },
-                ],
-              },
-            ],
-          };
-
-          return createNodeFromObject(
-            content,
-            schema,
-            {
-              slice: false,
-              errorOnInvalidContent: false,
-            },
-          );
-        },
-      },
-    };
+  constructor(override config: NodeCodeMirrorConfig) {
+    super(config);
   }
 
   override getNodeSpec(): NodeSpec {
@@ -188,7 +145,25 @@ export class NodeCodeMirror extends Node {
   }
 
   override getProseMirrorPlugins(editor: CoreEditor): Plugin[] {
-    const codeMirrorBlockPlugin = (settings: CodeBlockSettings) =>
+    const shadowRoot = getShadowRoot(editor.options.element);
+
+    const settings = {
+      lspTransport: this.config.lspTransport,
+      languageWhitelist: this.config.languageWhitelist || LANGS,
+      shadowRoot,
+      ...defaultSettings,
+      readOnly: this.config.readOnly,
+      languageLoaders: { ...languageLoaders, ...legacyLanguageLoaders },
+      undo: () => {
+        editor.chain().undo().run();
+      },
+      redo: () => {
+        editor.chain().redo().run();
+      },
+      theme: [...(this.config.theme || [])],
+    };
+
+    return [
       new Plugin({
         key: codeMirrorBlockKey,
         props: {
@@ -196,26 +171,7 @@ export class NodeCodeMirror extends Node {
             [this.name]: codeMirrorBlockNodeView(settings, editor),
           },
         },
-      });
-
-    return [
-      codeMirrorBlockPlugin({
-        lspTransport: this.config.lspTransport,
-        provider: this.config.provider,
-        languageWhitelist: this.config.languageWhitelist || LANGS,
-        shadowRoot: this.config.shadowRoot,
-        ...defaultSettings,
-        readOnly: this.config.readOnly,
-        languageLoaders: { ...languageLoaders, ...legacyLanguageLoaders },
-        undo: () => {
-          editor.chain().undo().run();
-        },
-        redo: () => {
-          editor.chain().redo().run();
-        },
-        theme: [...(this.config.theme || [])],
       }),
-      // keymap(codeBlockKeymap),
     ];
   }
 }

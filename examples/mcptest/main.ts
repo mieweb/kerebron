@@ -42,7 +42,7 @@ const editor = new CoreEditor({
 
 let cursorPlugin;
 cursorPlugin = editor.state.plugins.find((plugin) =>
-  plugin.key === 'yjs-cursor$'
+  plugin.key === 'yjs-position$'
 );
 
 wsProvider.on('status', (event) => {
