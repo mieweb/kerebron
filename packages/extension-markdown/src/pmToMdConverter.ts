@@ -463,6 +463,13 @@ export default async function pmToMdConverter(
   const serializer = new MarkdownSerializer();
   const output = await serializer.serialize(tokens);
 
+  const event = new CustomEvent('md:output', {
+    detail: {
+      output,
+    },
+  });
+  editor.dispatchEvent(event);
+
   if (config.sourceMap) {
     // https://sourcemaps.info/spec.html
     // https://evanw.github.io/source-map-visualization/
@@ -492,8 +499,6 @@ export default async function pmToMdConverter(
 
     const sourceMap = output.getSourceMap(
       (item: Token, targetRow: number, targetCol: number) => {
-        // console.log('ossss', item, targetRow, targetCol);
-
         if (item?.map) {
           const pos = item.map[0];
           const sourceCol = item.map[2] || 0;
