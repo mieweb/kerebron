@@ -13,7 +13,7 @@ import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionTables } from '@kerebron/extension-tables';
 import { ExtensionMenu } from '@kerebron/extension-menu';
 import { ExtensionYjs } from '@kerebron/extension-yjs';
-import { NodeCodeMirror } from '@kerebron/extension-codemirror';
+import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
 
 import { MeteorProvider } from './y-meteor.ts';
 
@@ -58,8 +58,7 @@ onMounted(async () => {
       new ExtensionMarkdown(),
       new ExtensionTables(),
       new ExtensionYjs({ ydoc, provider: meteorProvider }),
-      new NodeCodeMirror({ theme: [dracula], ydoc, provider: meteorProvider }),
-      // new NodeCodeMirror(),
+      new ExtensionCodeMirror({ theme: [dracula] }),
     ],
   });
 

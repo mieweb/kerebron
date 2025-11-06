@@ -18,6 +18,8 @@
 <script lang="ts">
 import * as Y from 'yjs';
 import { CoreEditor } from '@kerebron/editor';
+import { ExtensionMarkdown } from '@kerebron/extension-markdown';
+import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
 import { AdvancedEditorKit } from './AdvancedEditorKit.ts';
 import { LspEditorKit } from './LspEditorKit.ts';
 import { YjsEditorKit } from './YjsEditorKit.ts';
@@ -36,6 +38,8 @@ export default {
       marks: [],
       md: '',
       editor: null,
+      from: -1,
+      to: -1
     };
   },
   async mounted() {
@@ -61,8 +65,10 @@ export default {
       }
       const ydoc = new Y.Doc();
       this.ydoc = ydoc;
+console.info('starting');
 
       this.editor = new CoreEditor({
+        uri: 'test.md',
         shadowRoot: this.$.shadowRoot,
         element: this.$refs.editor,
         extensions: [
@@ -72,18 +78,41 @@ export default {
         ]
       });
 
+      this.editor.addEventListener('selection', (event: CustomEvent) => {
+        const selection = event.detail.selection;
+        console.log('sel', selection.anchor, selection.head)
+        const extensionMarkdown: ExtensionMarkdown | undefined = this.editor.getExtension('markdown');
+        if (extensionMarkdown) {
+          const result = extensionMarkdown.toMarkdown(this.editor.state.doc);
+          this.md = result.content;
+          console.log(result);
+
+          console.log('selection', selection);
+
+          const mapper = new PositionMapper(this.editor, result.markdownMap);
+          const range = mapper.getSelectionCharRange(selection);
+          console.log('getSelectionCharRange', range);
+          this.from = mapper.toMarkDownPos(selection.from);
+          this.to = mapper.toMarkDownPos(selection.to);
+          console.log('ftftftftftt1', this.from, selection.from)
+          console.log('ftftftftftt2', this.to, selection.to)
+        }
+      });
+
     },
     mdToHtml(md: string) {
-      const from = 5;
-      const to = 10;
-      const parts = [
-        md.substring(0, from),
-        md.substring(from, to),
-        md.substring(to),
-      ]
-      return '<span>' + parts[0] + '</span>' +
-      '<strong>' + parts[1] + '</strong>' +
-      '<span>' + parts[2] + '</span>';
+      if (this.from > -1 && this.to > -1) {
+        const parts = [
+          md.substring(0, this.from),
+          md.substring(this.from, this.to),
+          md.substring(this.to),
+        ]
+        return '<span>' + parts[0] + '</span>' +
+        '<span class="md-selected">' + parts[1] + '</span>' +
+        '<span>' + parts[2] + '</span>';
+      } else {
+        return md;
+      }
     }
   },
 };
@@ -94,6 +123,11 @@ export default {
 @import '@kerebron/extension-menu-legacy/assets/menu.css';
 @import '@kerebron/extension-codemirror/assets/codemirror.css';
 @import '@kerebron/extension-autocomplete/assets/autocomplete.css';
+
+.md-selected {
+  background: #FF000066;
+  outline: #FF000066 1px solid;
+}
 
 :host {
   position: relative;

@@ -1,4 +1,4 @@
-import type { EditorView } from 'prosemirror-view';
+import { EditorView } from 'prosemirror-view';
 import type { EditorState, Transaction } from 'prosemirror-state';
 
 import type { CoreEditor } from '../CoreEditor.ts';

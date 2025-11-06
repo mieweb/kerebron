@@ -8,10 +8,7 @@ import { ExtensionTables } from '@kerebron/extension-tables';
 import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
 import { ExtensionMenuLegacy } from '@kerebron/extension-menu-legacy';
 import { Dropdown, MenuElement, MenuItem } from '@kerebron/extension-menu';
-import {
-  ExtensionCodeMirror,
-  NodeCodeMirror,
-} from '@kerebron/extension-codemirror';
+import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
 
 export class AdvancedEditorKit extends Extension {
   override name = 'advanced-editor';

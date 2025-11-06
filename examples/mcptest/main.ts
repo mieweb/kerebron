@@ -3,7 +3,7 @@ import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionTables } from '@kerebron/extension-tables';
 import { ExtensionYjs } from '@kerebron/extension-yjs';
-import { NodeCodeMirror } from '@kerebron/extension-codemirror';
+import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
 import { dracula } from 'thememirror';
 import { WebsocketProvider } from 'y-websocket';
 
@@ -34,9 +34,7 @@ const editor = new CoreEditor({
     new ExtensionMarkdown(),
     new ExtensionTables(),
     new ExtensionYjs({ ydoc, provider: wsProvider }),
-    new NodeCodeMirror({ theme: [dracula], ydoc, provider: wsProvider }),
-    // new NodeCodeMirror({ theme: [dracula] }),
-    // new NodeCodeMirror(),
+    new ExtensionCodeMirror({ theme: [dracula] }),
   ],
 });
 
@@ -73,7 +71,7 @@ ydoc.on('update', async () => {
       new ExtensionBasicEditor(),
       new ExtensionMarkdown(),
       new ExtensionTables(),
-      new NodeCodeMirror(),
+      new ExtensionCodeMirror(),
     ],
   });
 

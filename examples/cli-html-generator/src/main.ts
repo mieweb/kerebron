@@ -7,7 +7,7 @@ import { CoreEditor } from '@kerebron/editor';
 import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionTables } from '@kerebron/extension-tables';
-import { NodeCodeMirror } from '@kerebron/extension-codemirror';
+import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
 
 globalThis.DOMParser = DOMParser;
 globalThis.XMLSerializer = XMLSerializer;
@@ -25,7 +25,7 @@ const editor = new CoreEditor({
     new ExtensionBasicEditor(),
     new ExtensionMarkdown(),
     new ExtensionTables(),
-    new NodeCodeMirror(),
+    new ExtensionCodeMirror(),
   ],
 });
 

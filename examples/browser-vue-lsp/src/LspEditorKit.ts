@@ -5,12 +5,12 @@ import {
   ExtensionAutocomplete,
 } from '@kerebron/extension-autocomplete';
 
-import { simpleLspWebSocketTransport } from '@kerebron/extension-codemirror/lsp';
+import { simpleLspWebSocketTransport } from '@kerebron/extension-lsp/simpleLspWebSocketTransport';
 import { ExtensionLsp } from '@kerebron/extension-lsp';
 
 import type { Token } from '@kerebron/extension-markdown';
 import { SmartOutput } from '@kerebron/editor/utilities';
-import { Transport } from '../../../packages/extension-lsp/src/lspClient.ts';
+import { Transport } from '@kerebron/extension-lsp';
 
 export class LspEditorKit extends Extension {
   override name = 'lsp-kit';
@@ -56,9 +56,7 @@ export class LspEditorKit extends Extension {
     ];
   }
 
-  override setEditor(editor: CoreEditor) {
-    super.setEditor(editor);
-
+  override created() {
     this.editor.addEventListener('selection', async (ev: CustomEvent) => {
       const selection = ev.detail.selection;
       if (selection) {

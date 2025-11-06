@@ -7,10 +7,10 @@ import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionYjs } from '@kerebron/extension-yjs';
 import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
-import { simpleLspWebSocketTransport } from '@kerebron/extension-codemirror/lsp';
+import { simpleLspWebSocketTransport } from '@kerebron/extension-lsp/simpleLspWebSocketTransport';
 
 import {
-  NodeCodeMirror,
+  ExtensionCodeMirror,
   NodeDocumentCode,
 } from '@kerebron/extension-codemirror';
 import { userColors } from '@kerebron/extension-yjs/userColors';
@@ -57,9 +57,7 @@ window.addEventListener('load', async () => {
       new NodeDocumentCode({ lang: 'yaml' }),
       new ExtensionYjs({ ydoc, provider: wsProvider }),
       new ExtensionDevToolkit(),
-      new NodeCodeMirror({
-        ydoc,
-        provider: wsProvider,
+      new ExtensionCodeMirror({
         languageWhitelist: ['yaml'],
         readOnly: false,
         lspTransport,

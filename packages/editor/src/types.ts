@@ -10,11 +10,12 @@ export type AnyExtensionOrReq = AnyExtension | {
 
 export type Content = JSONContent | JSONContent[] | null;
 
-export interface EditorOptions {
+export interface EditorConfig {
   element: HTMLElement;
   content: Content;
   parseOptions: ParseOptions;
   extensions: AnyExtensionOrReq[];
+  uri?: string;
   topNode?: string;
 }
 

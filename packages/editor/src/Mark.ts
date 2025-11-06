@@ -23,6 +23,9 @@ export abstract class Mark {
     this.editor = editor;
   }
 
+  created() {
+  }
+
   getMarkSpec(): MarkSpec {
     throw new Error('MarkSpec not defined: ' + this.name);
   }
