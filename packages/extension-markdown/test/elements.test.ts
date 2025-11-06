@@ -2,7 +2,7 @@ import { CoreEditor, JSONContent } from '@kerebron/editor';
 import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionTables } from '@kerebron/extension-tables';
-import { NodeCodeMirror } from '@kerebron/extension-codemirror';
+import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
 import { assertEquals, trimLines } from '@kerebron/test-utils';
 
 Deno.test('Two paragraphs', async () => {
@@ -43,7 +43,7 @@ dolor sit amet
     extensions: [
       new ExtensionBasicEditor(),
       new ExtensionTables(),
-      new NodeCodeMirror(),
+      new ExtensionCodeMirror(),
       markdownExtension,
     ],
   });

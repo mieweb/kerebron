@@ -11,6 +11,7 @@
   },
   "exports": {
     ".": "./src/ExtensionMarkdown.ts",
-    "./MarkdownSerializer": "./src/MarkdownSerializer.ts"
+    "./MarkdownSerializer": "./src/MarkdownSerializer.ts",
+    "./PositionMapper": "./src/PositionMapper.ts"
   }
 }
