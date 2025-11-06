@@ -24,7 +24,7 @@ import { ExtensionCustomMenu } from '@kerebron/extension-menu/ExtensionCustomMen
 
 import { ExtensionYjs } from '@kerebron/extension-yjs';
 import { userColors } from '@kerebron/extension-yjs/userColors';
-import { NodeCodeMirror } from '@kerebron/extension-codemirror';
+import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
 
 import * as Y from 'yjs';
 import * as random from 'lib0/random';
@@ -92,13 +92,9 @@ export default {
           new ExtensionTables(),
           new ExtensionYjs({ ydoc, provider: wsProvider }),
           new ExtensionDevToolkit(),
-          new NodeCodeMirror({
+          new ExtensionCodeMirror({
             theme: [dracula],
-            ydoc,
-            provider: wsProvider,
-            shadowRoot: this.$.shadowRoot,
           }),
-          // new NodeCodeMirror({ theme: [dracula] }),
         ],
         // content: pmDoc
       });

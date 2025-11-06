@@ -1,23 +1,25 @@
 import { Plugin, PluginKey } from 'prosemirror-state';
+import { EditorView } from 'prosemirror-view';
+
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
   CompletionList,
   MessageConnection,
 } from 'vscode-languageserver-protocol';
 
-import { type Transport } from '@codemirror/lsp-client';
-import { LSPClient } from './lspClient.ts';
+import { ExtensionLsp } from '@kerebron/extension-lsp';
+import { CoreEditor } from '@kerebron/editor';
 
 const autocompleteKey = new PluginKey('autocomplete');
 
 export function createAutocompletePlugin(
-  lspTransport: Transport,
+  editor: CoreEditor,
   docId: string,
 ) {
   let suggestionWidget: HTMLElement | null = null;
 
   // Helper to create suggestion UI
-  function showSuggestions(view, items, pos) {
+  function showSuggestions(view: EditorView, items: any[], pos: number) {
     if (suggestionWidget) suggestionWidget.remove();
     suggestionWidget = document.createElement('div');
     suggestionWidget.className = 'autocomplete-suggestions';
@@ -52,18 +54,6 @@ export function createAutocompletePlugin(
     }
   }
 
-  const lspClient = new LSPClient();
-  lspClient.connect(lspTransport);
-  lspClient.didOpen({
-    uri: docId,
-    languageId: '',
-    version: 0,
-    doc: 'undefined',
-    getView: function () {
-      throw new Error('Function not implemented.');
-    },
-  });
-
   return new Plugin({
     key: autocompleteKey,
     state: {
@@ -83,6 +73,14 @@ export function createAutocompletePlugin(
         return false;
       },
       handleTextInput(view, from, to, text) {
+        const extensionLsp: ExtensionLsp | undefined = editor.getExtension(
+          'lsp',
+        );
+        if (!extensionLsp) {
+          return false;
+        }
+        const client = extensionLsp.getClient();
+
         // Trigger autocomplete on specific characters (e.g., '.')
         if (text === '.' || text === ':') {
           const docText = view.state.doc.textBetween(
@@ -97,12 +95,12 @@ export function createAutocompletePlugin(
           const lspPos = doc.positionAt(pos - 1);
 
           // Request completions from LSP
-          lspClient.request('textDocument/completion', {
+          client.request('textDocument/completion', {
             textDocument: { uri: docId },
             position: lspPos,
             context: { triggerKind: 2, triggerCharacter: text },
-          }).then((completions) => {
-            // console.log('result', result);
+          }).then((completions: any) => {
+            // const completions = result.items;
             // const completions = result ? (CompletionList.is(result) ? result.items : result) : [];
             if (completions.length > 0) {
               showSuggestions(view, completions, pos);

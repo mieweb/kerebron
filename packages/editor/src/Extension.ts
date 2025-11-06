@@ -31,6 +31,9 @@ export abstract class Extension {
     this.editor = editor;
   }
 
+  created() {
+  }
+
   getInputRules(): InputRule[] {
     return [];
   }

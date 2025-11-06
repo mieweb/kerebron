@@ -4,7 +4,6 @@
   "imports": {},
   "exports": {
     ".": "./src/ExtensionCodeMirror.ts",
-    "./NodeDocumentCode": "./src/NodeDocumentCode.ts",
-    "./lsp": "./src/lsp.ts"
+    "./NodeDocumentCode": "./src/NodeDocumentCode.ts"
   }
 }

@@ -4,7 +4,7 @@ import { Node } from 'prosemirror-model';
 import { EditorView } from 'prosemirror-view';
 import { LanguageSupport } from '@codemirror/language';
 import { Extension as CmExtension } from '@codemirror/state';
-import { Transport } from '@codemirror/lsp-client';
+import { Transport } from './lsp/client.ts';
 
 export type LanguageLoaders = Record<string, () => Promise<LanguageSupport>>;
 

@@ -33,7 +33,7 @@
     "npm:@codemirror/lang-xml@latest": "6.1.0",
     "npm:@codemirror/language@6.11.0": "6.11.0",
     "npm:@codemirror/legacy-modes@6.5.0": "6.5.0",
-    "npm:@codemirror/lsp-client@6.1.2": "6.1.2",
+    "npm:@codemirror/lint@6.9.2": "6.9.2",
     "npm:@codemirror/search@6.5.10": "6.5.10",
     "npm:@codemirror/state@6.5.2": "6.5.2",
     "npm:@codemirror/view@6.38.1": "6.38.1",
@@ -63,8 +63,8 @@
     "npm:vite-plugin-wasm@3.5.0": "3.5.0_vite@7.1.4__picomatch@4.0.3_@types+node@24.2.0",
     "npm:vite@*": "7.1.4_picomatch@4.0.3_@types+node@24.2.0",
     "npm:vite@7.1.4": "7.1.4_picomatch@4.0.3_@types+node@24.2.0",
-    "npm:vscode-languageserver-protocol@*": "3.17.5",
-    "npm:vscode-languageserver-textdocument@*": "1.0.12",
+    "npm:vscode-languageserver-protocol@3.17.5": "3.17.5",
+    "npm:vscode-languageserver-textdocument@1.0.12": "1.0.12",
     "npm:vue-router@4.5.1": "4.5.1_vue@3.5.21",
     "npm:vue@3.5.21": "3.5.21",
     "npm:xmldom@*": "0.6.0",
@@ -210,7 +210,7 @@
       "dependencies": [
         "@codemirror/autocomplete",
         "@codemirror/language",
-        "@codemirror/lint",
+        "@codemirror/lint@6.8.5",
         "@codemirror/state",
         "@codemirror/view",
         "@lezer/common",
@@ -328,17 +328,12 @@
         "crelt"
       ]
     },
-    "@codemirror/lsp-client@6.1.2": {
-      "integrity": "sha512-ZmrIGhXJq7QXKy9er2enVZ9aSjDx9N9x/AByTsLYpoM01VBeo4MN9JvwjyiG7m36TFUHkHO/qY/hN8AvDjU7UQ==",
+    "@codemirror/lint@6.9.2": {
+      "integrity": "sha512-sv3DylBiIyi+xKwRCJAAsBZZZWo82shJ/RTMymLabAdtbkV5cSKwWDeCgtUq3v8flTaXS2y1kKkICuRYtUswyQ==",
       "dependencies": [
-        "@codemirror/autocomplete",
-        "@codemirror/language",
-        "@codemirror/lint",
         "@codemirror/state",
         "@codemirror/view",
-        "@lezer/highlight",
-        "marked",
-        "vscode-languageserver-protocol"
+        "crelt"
       ]
     },
     "@codemirror/search@6.5.10": {
@@ -1314,10 +1309,6 @@
     "markdown-it-table@4.1.1": {
       "integrity": "sha512-dzFHRwCe97sXD071Gw/LSIwgAcO2vNsT0BcPCmnrKhNW/W57Bnknl8EaC+j4hM3bAqus1CiVPcTQAvLkUfHLhw=="
     },
-    "marked@15.0.12": {
-      "integrity": "sha512-8dD6FusOQSrpv9Z1rdNMdlSgQOIP880DHqnohobOmYLElGEqAL/JvxvuxZO16r4HtjTlfPRDC1hbvxC9dPN2nA==",
-      "bin": true
-    },
     "merge2@1.4.1": {
       "integrity": "sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg=="
     },
@@ -1792,7 +1783,7 @@
       "npm:@codemirror/lang-xml@latest",
       "npm:@codemirror/language@6.11.0",
       "npm:@codemirror/legacy-modes@6.5.0",
-      "npm:@codemirror/lsp-client@6.1.2",
+      "npm:@codemirror/lint@6.9.2",
       "npm:@codemirror/search@6.5.10",
       "npm:@codemirror/state@6.5.2",
       "npm:@codemirror/view@6.38.1",
@@ -1806,8 +1797,8 @@
       "npm:prosemirror-view@1.40.0",
       "npm:thememirror@2.0.1",
       "npm:tree-sitter@0.25.0",
-      "npm:vscode-languageserver-protocol@*",
-      "npm:vscode-languageserver-textdocument@*",
+      "npm:vscode-languageserver-protocol@3.17.5",
+      "npm:vscode-languageserver-textdocument@1.0.12",
       "npm:y-protocols@1.0.6",
       "npm:y-websocket@2.1.0",
       "npm:yjs@13.6.24"

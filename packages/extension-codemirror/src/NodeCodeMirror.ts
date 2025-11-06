@@ -1,5 +1,12 @@
-import { EditorState, Plugin, PluginKey, Selection } from 'prosemirror-state';
-import type { NodeSpec, NodeType, Schema } from 'prosemirror-model';
+import { EditorView } from 'prosemirror-view';
+import {
+  EditorState,
+  Plugin,
+  PluginKey,
+  Selection,
+  Transaction,
+} from 'prosemirror-state';
+import type { NodeSpec, NodeType } from 'prosemirror-model';
 
 import { type CoreEditor, Node } from '@kerebron/editor';
 import {
@@ -19,7 +26,11 @@ import { getShadowRoot } from '@kerebron/editor/utilities';
 export const codeMirrorBlockKey = new PluginKey('codemirror-block');
 
 function arrowHandler(dir: 'left' | 'right' | 'up' | 'down') {
-  return (state: EditorState, dispatch, view) => {
+  return (
+    state: EditorState,
+    dispatch: (tr: Transaction) => void,
+    view: EditorView,
+  ) => {
     if (state.selection.empty && view.endOfTextblock(dir)) {
       let side = dir == 'left' || dir == 'up' ? -1 : 1;
       let $head = state.selection.$head;
@@ -145,10 +156,9 @@ export class NodeCodeMirror extends Node {
   }
 
   override getProseMirrorPlugins(editor: CoreEditor): Plugin[] {
-    const shadowRoot = getShadowRoot(editor.options.element);
+    const shadowRoot = getShadowRoot(editor.config.element);
 
     const settings = {
-      lspTransport: this.config.lspTransport,
       languageWhitelist: this.config.languageWhitelist || LANGS,
       shadowRoot,
       ...defaultSettings,

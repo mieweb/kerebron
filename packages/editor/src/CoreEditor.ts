@@ -2,7 +2,7 @@ import { EditorView } from 'prosemirror-view';
 import { Node as ProseMirrorNode, Schema } from 'prosemirror-model';
 
 import { ExtensionManager } from './ExtensionManager.ts';
-import type { EditorOptions, JSONContent } from './types.ts';
+import type { EditorConfig, JSONContent } from './types.ts';
 import { EditorState, Transaction } from 'prosemirror-state';
 import { CommandManager } from './commands/CommandManager.ts';
 import { nodeToTreeString } from './nodeToTreeString.ts';
@@ -10,6 +10,7 @@ import { DummyEditorView } from './DummyEditorView.ts';
 import { ChainedCommands } from '@kerebron/editor/commands';
 import { createNodeFromObject } from './utilities/createNodeFromContent.ts';
 import { Extension } from './Extension.ts';
+import { defaultUi, EditorUi } from './ui.ts';
 
 function ensureDocSchema(
   doc: ProseMirrorNode,
@@ -24,7 +25,7 @@ function ensureDocSchema(
 }
 
 export class CoreEditor extends EventTarget {
-  public readonly options: Partial<EditorOptions> = {
+  public readonly config: Partial<EditorConfig> = {
     element: undefined,
     extensions: [],
   };
@@ -32,12 +33,13 @@ export class CoreEditor extends EventTarget {
   private commandManager: CommandManager;
   public view!: EditorView | DummyEditorView;
   public state!: EditorState;
+  public ui: EditorUi = defaultUi(this);
 
-  constructor(options: Partial<EditorOptions> = {}) {
+  constructor(config: Partial<EditorConfig> = {}) {
     super();
-    this.options = {
-      ...this.options,
-      ...options,
+    this.config = {
+      ...this.config,
+      ...config,
     };
 
     this.commandManager = new CommandManager(
@@ -45,7 +47,7 @@ export class CoreEditor extends EventTarget {
     );
 
     this.extensionManager = new ExtensionManager(
-      this.options.extensions || [],
+      this.config.extensions || [],
       this,
       this.commandManager,
     );
@@ -54,8 +56,8 @@ export class CoreEditor extends EventTarget {
     //   type: this.extensionManager.schema.topNodeType.name,
     //   content: this.extensionManager.schema.topNodeType.spec.EMPTY_DOC,
     // };
-    const content = this.options.content
-      ? this.options.content
+    const content = this.config.content
+      ? this.config.content
       : this.extensionManager.schema.topNodeType.spec.EMPTY_DOC;
 
     this.createView(content);
@@ -91,14 +93,31 @@ export class CoreEditor extends EventTarget {
 
     this.state = EditorState.create({ doc });
 
-    if (this.options.element) {
-      this.view = new EditorView(this.options.element, {
+    if (this.config.element) {
+      const view = new EditorView(this.config.element, {
         state: this.state,
         attributes: {
           class: 'kb-editor',
         },
         dispatchTransaction: (tx: Transaction) => this.dispatchTransaction(tx),
       });
+      this.view = view;
+
+      const parent = this.config.element.parentNode;
+      if (parent) {
+        const observer = new MutationObserver((mutations) => {
+          for (const mutation of mutations) {
+            for (const removedNode of mutation.removedNodes) {
+              if (removedNode.contains(view.dom)) {
+                // Editor DOM was removed
+                observer.disconnect(); // Prevent multiple calls
+                view.destroy();
+                return;
+              }
+            }
+          }
+        });
+      }
     } else {
       this.view = new DummyEditorView({
         state: this.state,
@@ -215,10 +234,10 @@ export class CoreEditor extends EventTarget {
     return this.state.doc.toJSON();
   }
 
-  public clone(options: Partial<EditorOptions> = {}): CoreEditor {
+  public clone(options: Partial<EditorConfig> = {}): CoreEditor {
     return new CoreEditor({
       ...options,
-      extensions: [...(this.options.extensions || [])],
+      extensions: [...(this.config.extensions || [])],
     });
   }
 
@@ -227,5 +246,13 @@ export class CoreEditor extends EventTarget {
       doc = this.state.doc;
     }
     console.debug(nodeToTreeString(doc));
+  }
+
+  public destroy() {
+    const event = new CustomEvent('beforeDestroy', {
+      detail: {},
+    });
+    this.dispatchEvent(event);
+    this.view.destroy();
   }
 }

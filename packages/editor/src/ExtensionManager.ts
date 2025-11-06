@@ -174,6 +174,10 @@ export class ExtensionManager {
       }
     }
 
+    for (const extension of this.extensions) {
+      extension.created();
+    }
+
     if (this.debug) {
       for (const key in keyBindings) {
         const keyBinding = keyBindings.get(key);
@@ -297,7 +301,7 @@ export class ExtensionManager {
     }
 
     const spec = {
-      topNode: this.editor.options.topNode || 'doc',
+      topNode: this.editor.config.topNode || 'doc',
       nodes,
       marks,
     };

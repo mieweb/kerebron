@@ -51,7 +51,7 @@ function parseMarkdown(source: string, oldTree?: any) {
   parseInlines(root);
 
   console.log(
-    'XML-Style Tree Preview:\n',
+    'parseMarkdown.xmlStylePreview:\n',
     xmlStylePreview(root, { alwaysShowTextAttr: true }),
   );
 

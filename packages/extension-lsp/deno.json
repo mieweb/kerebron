@@ -2,5 +2,8 @@
   "name": "@kerebron/extension-lsp",
   "tasks": {},
   "imports": {},
-  "exports": "./src/ExtensionLsp.ts"
+  "exports": {
+    ".": "./src/mod.ts",
+    "./simpleLspWebSocketTransport": "./src/simpleLspWebSocketTransport.ts"
+  }
 }

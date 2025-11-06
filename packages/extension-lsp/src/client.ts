@@ -1,5 +1,76 @@
 import type * as lsp from 'vscode-languageserver-protocol';
-import { WorkspaceFile } from '@codemirror/lsp-client';
+import { DefaultWorkspace, Workspace, WorkspaceFile } from './workspace.ts';
+import {
+  MessageType,
+  TextDocumentSyncKind,
+} from 'vscode-languageserver-protocol';
+import { WorkspaceMapping } from './WorkspaceMapping.ts';
+
+function toSeverity(sev: lsp.DiagnosticSeverity) {
+  return sev == 1 ? 'error' : sev == 2 ? 'warning' : sev == 3 ? 'info' : 'hint';
+}
+
+const defaultNotificationHandlers: {
+  [method: string]: (client: LSPClient, params: any) => void;
+} = {
+  'window/logMessage': (client, params: lsp.LogMessageParams) => {
+    if (params.type == MessageType.Error) {
+      console.error('[lsp] ' + params.message);
+    } else if (params.type == MessageType.Warning) {
+      console.warn('[lsp] ' + params.message);
+    }
+  },
+  'window/showMessage': (client, params: lsp.ShowMessageParams) => {
+    if (params.type > MessageType.Info) return;
+    for (const f of client.workspace.files) {
+      const ui = f.getUi();
+      if (!ui) continue;
+      ui.showMessage(params.message);
+    }
+  },
+  'textDocument/publishDiagnostics': (
+    client: LSPClient,
+    params: lsp.PublishDiagnosticsParams,
+  ) => {
+    let file = client.workspace.getFile(params.uri);
+    if (!file || params.version != null && params.version != file.version) {
+      return false;
+    }
+    // TODO
+    // import { setDiagnostics } from '@codemirror/lint';
+    // const view = file.getView(), plugin = view && LSPPlugin.get(view);
+    // if (!view || !plugin) return false;
+    // view.dispatch(
+    //   setDiagnostics(
+    //     view.state,
+    //     params.diagnostics.map((item) => ({
+    //       from: plugin.unsyncedChanges.mapPos(
+    //         plugin.fromPosition(item.range.start, plugin.syncedDoc),
+    //       ),
+    //       to: plugin.unsyncedChanges.mapPos(
+    //         plugin.fromPosition(item.range.end, plugin.syncedDoc),
+    //       ),
+    //       severity: toSeverity(item.severity ?? 1),
+    //       message: item.message,
+    //     })),
+    //   ),
+    // );
+    return true;
+  },
+};
+
+/// An object of this type should be used to wrap whatever transport
+/// layer you use to talk to your language server. Messages should
+/// contain only the JSON messages, no LSP headers.
+export type Transport = {
+  /// Send a message to the server. Should throw if the connection is
+  /// broken somehow.
+  send(message: string): void;
+  /// Register a handler for messages coming from the server.
+  subscribe(handler: (value: string) => void): void;
+  /// Unregister a handler registered with `subscribe`.
+  unsubscribe(handler: (value: string) => void): void;
+};
 
 class Request<Result> {
   declare resolve: (result: Result) => void;
@@ -25,6 +96,7 @@ const clientCapabilities: lsp.ClientCapabilities = {
     },
   },
   textDocument: {
+    publishDiagnostics: { versionSupport: true },
     completion: {
       completionItem: {
         snippetSupport: true,
@@ -40,8 +112,8 @@ const clientCapabilities: lsp.ClientCapabilities = {
     hover: {
       contentFormat: ['markdown', 'plaintext'],
     },
-    formatting: {},
-    rename: {},
+    // formatting: {},
+    // rename: {},
     signatureHelp: {
       contextSupport: true,
       signatureInformation: {
@@ -60,38 +132,6 @@ const clientCapabilities: lsp.ClientCapabilities = {
   window: {
     showMessage: {},
   },
-};
-
-/// An object of this type should be used to wrap whatever transport
-/// layer you use to talk to your language server. Messages should
-/// contain only the JSON messages, no LSP headers.
-export type Transport = {
-  /// Send a message to the server. Should throw if the connection is
-  /// broken somehow.
-  send(message: string): void;
-  /// Register a handler for messages coming from the server.
-  subscribe(handler: (value: string) => void): void;
-  /// Unregister a handler registered with `subscribe`.
-  unsubscribe(handler: (value: string) => void): void;
-};
-
-const defaultNotificationHandlers: {
-  [method: string]: (client: LSPClient, params: any) => void;
-} = {
-  // "window/logMessage": (client, params: lsp.LogMessageParams) => {
-  //   if (params.type == 1) console.error("[lsp] " + params.message)
-  //   else if (params.type == 2) console.warn("[lsp] " + params.message)
-  // },
-  // "window/showMessage": (client, params: lsp.ShowMessageParams) => {
-  //   if (params.type > 3 /* Info */) return
-  //   let view
-  //   for (let f of client.workspace.files) if (view = f.getView()) break
-  //   if (view) showDialog(view, {
-  //     label: params.message,
-  //     class: "cm-lsp-message cm-lsp-message-" + (params.type == 1 ? "error" : params.type == 2 ? "warning" : "info"),
-  //     top: true
-  //   })
-  // }
 };
 
 /// Configuration options that can be passed to the LSP client.
@@ -114,12 +154,6 @@ export type LSPClientConfig = {
   /// to it. You can pass an HTML sanitizer here to strip out
   /// suspicious HTML structure.
   sanitizeHTML?: (html: string) => string;
-  /// By default, the Markdown renderer will only be able to highlght
-  /// code embedded in the Markdown text when its language tag matches
-  /// the name of the language used by the editor. You can provide a
-  /// function here that returns a CodeMirror language object for a
-  /// given language tag to support more languages.
-  highlightLanguage?: (name: string) => Language | null;
   /// By default, the client will only handle the server notifications
   /// `window/logMessage` (logging warnings and errors to the console)
   /// and `window/showMessage`. You can pass additional handlers here.
@@ -135,33 +169,6 @@ export type LSPClientConfig = {
     method: string,
     params: any,
   ) => void;
-  /// Provide a set of extensions, which may be plain CodeMirror
-  /// extensions, or objects containing additional client capabilities
-  /// or notification handlers. Any CodeMirror extensions provided
-  /// here will be included in the extension returned by
-  /// [`LSPPlugin.create`](#lsp-client.LSPPlugin^create).
-  extensions?: readonly (Extension | LSPClientExtension)[];
-};
-
-/// Objects of this type can be included in the
-/// [`extensions`](#lsp-client.LSPClientConfig.extensions) option to
-/// `LSPClient` to modularly configure client capabilities or
-/// notification handlers.
-export type LSPClientExtension = {
-  /// Extra [client
-  /// capabilities](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#clientCapabilities)
-  /// to send to the server when initializing. The object provided
-  /// here will be merged with the capabilities the client provides by
-  /// default.
-  clientCapabilities?: Record<string, any>;
-  /// Additional [notification
-  /// handlers](#lsp-client.LSPClientConfig.notificationHandlers).
-  /// These will be tried after notification handlers defined directly
-  /// in the config object, and then in order of appearance in the
-  /// [`extensions`](#lsp-client.LSPClientConfig.extensions) array.
-  notificationHandlers?: {
-    [method: string]: (client: LSPClient, params: any) => boolean;
-  };
 };
 
 /// An LSP client manages a connection to a language server. It should
@@ -171,12 +178,15 @@ export class LSPClient {
   /// @internal
   transport: Transport | null = null;
   /// The client's [workspace](#lsp-client.Workspace).
+  workspace: Workspace;
   private nextReqID = 0;
   private requests: Request<any>[] = [];
+  /// @internal
+  activeMappings: WorkspaceMapping[] = [];
   /// The capabilities advertised by the server. Will be null when not
   /// connected or initialized.
   serverCapabilities: lsp.ServerCapabilities | null = null;
-  private supportSync = -1;
+  private supportSync: TextDocumentSyncKind = TextDocumentSyncKind.None;
   /// A promise that resolves once the client connection is initialized. Will be
   /// replaced by a new promise object when you call `disconnect`.
   initializing: Promise<null>;
@@ -196,12 +206,9 @@ export class LSPClient {
       this.init = { resolve, reject }
     );
     this.timeout = config.timeout ?? 3000;
-    // this.workspace = config.workspace ? config.workspace(this) : new DefaultWorkspace(this)
-
-    // if (config.extensions) for (let ext of config.extensions) {
-    //   if (Array.isArray(ext) || (ext as any).extension) this.extensions.push(ext as Extension)
-    //   else if ((ext as LSPClientExtension).editorExtension) this.extensions.push((ext as LSPClientExtension).editorExtension!)
-    // }
+    this.workspace = config.workspace
+      ? config.workspace(this)
+      : new DefaultWorkspace(this);
   }
 
   /// Whether this client is connected (has a transport).
@@ -217,15 +224,7 @@ export class LSPClient {
     if (this.transport) this.transport.unsubscribe(this.receiveMessage);
     this.transport = transport;
     transport.subscribe(this.receiveMessage);
-    let capabilities = clientCapabilities;
-    if (this.config.extensions) {
-      for (let ext of this.config.extensions) {
-        let { clientCapabilities } = ext as LSPClientExtension;
-        if (clientCapabilities) {
-          capabilities = mergeCapabilities(capabilities, clientCapabilities);
-        }
-      }
-    }
+    const capabilities = clientCapabilities;
     this.requestInner<lsp.InitializeParams, lsp.InitializeResult>(
       'initialize',
       {
@@ -237,17 +236,18 @@ export class LSPClient {
     ).promise.then((resp) => {
       this.serverCapabilities = resp.capabilities;
       let sync = resp.capabilities.textDocumentSync;
-      this.supportSync = sync == null
-        ? 0
-        : typeof sync == 'number'
-        ? sync
-        : sync.change ?? 0;
+      this.supportSync = TextDocumentSyncKind.None;
+      if (sync) {
+        this.supportSync = typeof sync == 'number'
+          ? sync
+          : sync.change ?? TextDocumentSyncKind.None;
+      }
       transport.send(
         JSON.stringify({ jsonrpc: '2.0', method: 'initialized', params: {} }),
       );
       this.init.resolve(null);
     }, this.init.reject);
-    // this.workspace.connected()
+    this.workspace.connected();
     return this;
   }
 
@@ -258,7 +258,7 @@ export class LSPClient {
     this.initializing = new Promise((resolve, reject) =>
       this.init = { resolve, reject }
     );
-    // this.workspace.disconnected()
+    this.workspace.disconnected();
   }
 
   /// Send a `textDocument/didOpen` notification to the server.
@@ -267,7 +267,7 @@ export class LSPClient {
       textDocument: {
         uri: file.uri,
         languageId: file.languageId,
-        text: file.doc.toString(),
+        text: file.content,
         version: file.version,
       },
     });
@@ -286,35 +286,28 @@ export class LSPClient {
       | lsp.NotificationMessage
       | lsp.RequestMessage;
     if ('id' in value && !('method' in value)) {
-      let index = this.requests.findIndex((r) => r.id == value.id);
+      const index = this.requests.findIndex((r) => r.id == value.id);
       if (index < 0) {
         console.warn(
           `[lsp] Received a response for non-existent request ${value.id}`,
         );
       } else {
-        let req = this.requests[index];
+        const req = this.requests[index];
         clearTimeout(req.timeout);
         this.requests.splice(index, 1);
         if (value.error) req.reject(value.error);
         else req.resolve(value.result);
       }
     } else if (!('id' in value)) {
-      let handler = this.config.notificationHandlers?.[value.method];
+      const handler = this.config.notificationHandlers?.[value.method];
       if (handler && handler(this, value.params)) return;
-      if (this.config.extensions) {
-        for (let ext of this.config.extensions) {
-          let { notificationHandlers } = ext as LSPClientExtension;
-          let handler = notificationHandlers?.[value.method];
-          if (handler && handler(this, value.params)) return;
-        }
-      }
-      let deflt = defaultNotificationHandlers[value.method];
+      const deflt = defaultNotificationHandlers[value.method];
       if (deflt) deflt(this, value.params);
       else if (this.config.unhandledNotification) {
         this.config.unhandledNotification(this, value.method, value.params);
       }
     } else {
-      let resp: lsp.ResponseMessage = {
+      const resp: lsp.ResponseMessage = {
         jsonrpc: '2.0',
         id: value.id,
         error: {
@@ -349,14 +342,14 @@ export class LSPClient {
     params: Params,
     mapped = false,
   ): Request<Result> {
-    let id = ++this.nextReqID,
+    const id = ++this.nextReqID,
       data: lsp.RequestMessage = {
         jsonrpc: '2.0',
         id,
         method,
         params: params as any,
       };
-    let req = new Request<Result>(
+    const req = new Request<Result>(
       id,
       params,
       setTimeout(() => this.timeoutRequest(req), this.timeout),
@@ -400,36 +393,47 @@ export class LSPClient {
   /// the moment where it was created. Make sure you call
   /// [`destroy`](#lsp-client.WorkspaceMapping.destroy) on the mapping
   /// when you're done with it.
-  // workspaceMapping() {
-  //   let mapping = new WorkspaceMapping(this)
-  //   this.activeMappings.push(mapping)
-  //   return mapping
-  // }
+  workspaceMapping() {
+    let mapping = new WorkspaceMapping(this);
+    this.activeMappings.push(mapping);
+    return mapping;
+  }
 
   /// Run the given promise with a [workspace
   /// mapping](#lsp-client.WorkspaceMapping) active. Automatically
   /// release the mapping when the promise resolves or rejects.
-  // withMapping<T>(f: (mapping: WorkspaceMapping) => Promise<T>): Promise<T> {
-  //   let mapping = this.workspaceMapping()
-  //   return f(mapping).finally(() => mapping.destroy())
-  // }
+  withMapping<T>(f: (mapping: WorkspaceMapping) => Promise<T>): Promise<T> {
+    let mapping = this.workspaceMapping();
+    return f(mapping).finally(() => mapping.destroy());
+  }
 
   /// Push any [pending changes](#lsp-client.Workspace.syncFiles) in
   /// the open files to the server. You'll want to call this before
   /// most types of requests, to make sure the server isn't working
   /// with outdated information.
   sync() {
-    // for (let {file, changes, prevDoc} of this.workspace.syncFiles()) {
-    //   for (let mapping of this.activeMappings)
-    //     mapping.addChanges(file.uri, changes)
-    //   if (this.supportSync) this.notification<lsp.DidChangeTextDocumentParams>("textDocument/didChange", {
-    //     textDocument: {uri: file.uri, version: file.version},
-    //     contentChanges: contentChangesFor(file, prevDoc, changes, this.supportSync == 2 /* Incremental */)
-    //   })
-    // }
+    for (const { file, changes, prevDoc } of this.workspace.syncFiles()) {
+      for (let mapping of this.activeMappings) {
+        mapping.addChanges(file.uri, changes);
+      }
+      if (this.supportSync) {
+        this.notification<lsp.DidChangeTextDocumentParams>(
+          'textDocument/didChange',
+          {
+            textDocument: { uri: file.uri, version: file.version },
+            contentChanges: contentChangesFor(
+              file,
+              prevDoc,
+              changes,
+              this.supportSync == TextDocumentSyncKind.Incremental,
+            ),
+          },
+        );
+      }
+    }
   }
 
-  private timeoutRequest(req: Request<any>) {
+  private timeoutRequest<T>(req: Request<T>) {
     let index = this.requests.indexOf(req);
     if (index > -1) {
       req.reject(new Error('Request timed out'));
@@ -442,36 +446,24 @@ const enum Sync {
   AlwaysIfSmaller = 1024,
 }
 
-// function contentChangesFor(
-//   file: WorkspaceFile,
-//   startDoc: Text,
-//   changes: ChangeSet,
-//   supportInc: boolean
-// ): lsp.TextDocumentContentChangeEvent[] {
-//   if (!supportInc || file.doc.length < Sync.AlwaysIfSmaller)
-//     return [{text: file.doc.toString()}]
-//   let events: lsp.TextDocumentContentChangeEvent[] = []
-//   changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
-//     events.push({
-//       range: {start: toPosition(startDoc, fromA), end: toPosition(startDoc, toA)},
-//       text: inserted.toString()
-//     })
-//   })
-//   return events.reverse()
-// }
-
-function mergeCapabilities(base: any, add?: any) {
-  if (add == null) return base;
-  if (typeof base != 'object' || typeof add != 'object') return add;
-  let result: Record<string, any> = {};
-  let baseProps = Object.keys(base), addProps = Object.keys(add);
-  for (let prop of baseProps) {
-    result[prop] = addProps.indexOf(prop) > -1
-      ? mergeCapabilities(base[prop], add[prop])
-      : base[prop];
+function contentChangesFor(
+  file: WorkspaceFile,
+  startDoc: string,
+  changes: ChangeSet,
+  supportInc: boolean,
+): lsp.TextDocumentContentChangeEvent[] {
+  if (!supportInc || file.doc.length < Sync.AlwaysIfSmaller) {
+    return [{ text: file.doc.toString() }];
   }
-  for (let prop of addProps) {
-    if (baseProps.indexOf(prop) < 0) result[prop] = add[prop];
-  }
-  return result;
+  let events: lsp.TextDocumentContentChangeEvent[] = [];
+  changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
+    events.push({
+      range: {
+        start: toPosition(startDoc, fromA),
+        end: toPosition(startDoc, toA),
+      },
+      text: inserted.toString(),
+    });
+  });
+  return events.reverse();
 }

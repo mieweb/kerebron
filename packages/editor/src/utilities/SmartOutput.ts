@@ -87,7 +87,12 @@ export class SmartOutput<K> {
   }
 
   getSourceMap(
-    mapper: (item: K, rowPos: number, colPos: number) => Mapping | void,
+    mapper: (
+      item: K,
+      rowPos: number,
+      colPos: number,
+      pos: number,
+    ) => Mapping | void,
   ): SourceMap {
     const mappingRows: Array<Array<Array<number>>> = [];
 
@@ -110,7 +115,7 @@ export class SmartOutput<K> {
         if (lastRow != meta.rowPos) {
           prevColPos = 0;
         }
-        const mapping = mapper(meta.item, meta.rowPos, meta.colPos);
+        const mapping = mapper(meta.item, meta.rowPos, meta.colPos, meta.pos);
         if (mapping) {
           currentRow.push([
             meta.colPos - prevColPos,

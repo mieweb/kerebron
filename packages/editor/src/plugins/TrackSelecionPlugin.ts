@@ -14,7 +14,6 @@ export class TrackSelecionPlugin extends Plugin {
             if (!prevSelection.eq(selection)) {
               const event = new CustomEvent('selection', {
                 detail: {
-                  editor: this,
                   selection,
                 },
               });

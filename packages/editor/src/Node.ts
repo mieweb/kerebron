@@ -30,6 +30,9 @@ export abstract class Node {
     this.editor = editor;
   }
 
+  created() {
+  }
+
   getNodeSpec(): NodeSpec {
     throw new Error('NodeSpec not defined: ' + this.name);
   }

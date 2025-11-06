@@ -1,14 +1,12 @@
-import {
-  languageServerExtensions,
-  LSPClient,
-  type Transport,
-} from '@codemirror/lsp-client';
+import { type Transport } from './client.ts';
 
 export function simpleLspWebSocketTransport(uri: string): Promise<Transport> {
-  let handlers: ((value: string) => void)[] = [];
-  let sock = new WebSocket(uri);
+  const handlers: ((value: string) => void)[] = [];
+  const sock = new WebSocket(uri);
   sock.onmessage = (e) => {
-    for (let h of handlers) h(e.data.toString());
+    for (const h of handlers) {
+      h(e.data.toString());
+    }
   };
   return new Promise((resolve) => {
     sock.onopen = () =>
@@ -20,7 +18,11 @@ export function simpleLspWebSocketTransport(uri: string): Promise<Transport> {
           handlers.push(handler);
         },
         unsubscribe(handler: (value: string) => void) {
-          handlers = handlers.filter((h) => h != handler);
+          handlers.splice(
+            0,
+            handlers.length,
+            ...handlers.filter((h) => h != handler),
+          );
         },
       });
   });

@@ -16,10 +16,7 @@ import {
   lineNumbers,
   rectangularSelection,
 } from '@codemirror/view';
-import {
-  highlightSelectionMatches,
-  selectNextOccurrence,
-} from '@codemirror/search';
+import { selectNextOccurrence } from '@codemirror/search';
 import {
   bracketMatching,
   defaultHighlightStyle,
@@ -38,6 +35,9 @@ import {
 import { defaultKeymap, indentWithTab } from '@codemirror/commands';
 import { Compartment, EditorState } from '@codemirror/state';
 
+import { CoreEditor } from '@kerebron/editor';
+import type { ExtensionLsp } from '@kerebron/extension-lsp';
+
 import {
   backspaceHandler,
   computeChange,
@@ -53,8 +53,8 @@ import {
   yRemoteSelections,
   yRemoteSelectionsTheme,
 } from './remote-selections.ts';
-import { CoreEditor } from '@kerebron/editor';
-import { languageServerExtensions, LSPClient } from '@codemirror/lsp-client';
+import { languageServerExtensions } from './lsp/index.ts';
+import { LSPExtension } from './lsp/LSPExtension.ts';
 
 export const themeCallbacks: Array<(theme: string) => void> = [];
 
@@ -80,29 +80,6 @@ class CodeMirrorBlockNodeView implements NodeView {
     this.languageConf = new Compartment();
     const themeConfig = new Compartment();
 
-    // Define custom completions
-    const myCompletions = [
-      { label: 'console.log', type: 'function' },
-      { label: 'const', type: 'keyword' },
-      { label: 'let', type: 'keyword' },
-      { label: 'var', type: 'keyword' },
-      { label: 'function', type: 'keyword' },
-    ];
-
-    // Custom autocomplete function
-    function complete(context: CompletionContext) {
-      let word = context.matchBefore(/\w*/);
-      console.log('complere', context, word);
-      if (!word) {
-        return null;
-      }
-      if (word.from == word.to && !context.explicit) return null;
-      return {
-        from: word.from,
-        options: myCompletions,
-      };
-    }
-
     const yCollab = () => {
       const plugins = [];
       const remoteSyncConfig = new RemoteSyncConfig(
@@ -126,14 +103,8 @@ class CodeMirrorBlockNodeView implements NodeView {
       foldGutter(),
       bracketMatching(),
       closeBrackets(),
-      autocompletion({
-        override: [
-          complete,
-        ],
-      }),
       rectangularSelection(),
       drawSelection({ cursorBlinkRate: 1000 }), // broken focus
-      EditorState.allowMultipleSelections.of(true),
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       this.languageConf.of([]),
       indentOnInput(),
@@ -190,22 +161,6 @@ class CodeMirrorBlockNodeView implements NodeView {
             return result;
           },
         },
-        {
-          key: 'Enter',
-          run: (cmView) => {
-            const sel = cmView.state.selection.main;
-            if (
-              cmView.state.doc.line(cmView.state.doc.lines).text === '' &&
-              sel.from === sel.to &&
-              sel.from === cmView.state.doc.length
-            ) {
-              editor.run.exitCode();
-              view.focus();
-              return true;
-            }
-            return false;
-          },
-        },
         ...defaultKeymap,
         ...foldKeymap,
         ...closeBracketsKeymap,
@@ -224,10 +179,43 @@ class CodeMirrorBlockNodeView implements NodeView {
       yCollab(),
     ];
 
-    if (settings.lspTransport) {
-      const client = new LSPClient({ extensions: languageServerExtensions() })
-        .connect(settings.lspTransport);
-      extensions.push(client.plugin('file:///some/file.ts'));
+    const extensionLsp: ExtensionLsp | undefined = editor.getExtension('lsp');
+    if (extensionLsp) {
+      const client = extensionLsp.getClient();
+      const extension = new LSPExtension({
+        extensions: languageServerExtensions(),
+      });
+      extensions.push(extension.plugin(client, editor));
+    } else {
+      // Define custom completions
+      const myCompletions = [
+        { label: 'console.log', type: 'function' },
+        { label: 'const', type: 'keyword' },
+        { label: 'let', type: 'keyword' },
+        { label: 'var', type: 'keyword' },
+        { label: 'function', type: 'keyword' },
+      ];
+
+      // Custom autocomplete function
+      const complete = (context: CompletionContext) => {
+        let word = context.matchBefore(/\w*/);
+        if (!word) {
+          return null;
+        }
+        if (word.from == word.to && !context.explicit) return null;
+        return {
+          from: word.from,
+          options: myCompletions,
+        };
+      };
+
+      extensions.push(
+        autocompletion({
+          override: [
+            complete,
+          ],
+        }),
+      );
     }
 
     const state = EditorState.create({
@@ -235,7 +223,9 @@ class CodeMirrorBlockNodeView implements NodeView {
       doc: node.textContent,
     });
 
-    const root = editor.view?.root || document;
+    const root = (editor.view && 'root' in editor.view)
+      ? editor.view.root
+      : document || document;
 
     this.codeMirrorView = new CodeMirror({
       state,
