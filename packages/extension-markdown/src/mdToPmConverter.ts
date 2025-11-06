@@ -15,7 +15,7 @@ function listIsTight(tokens: readonly Token[], i: number) {
   return false;
 }
 
-export default async function mdToPmConverter(
+export async function mdToPmConverter(
   buffer: Uint8Array,
   config: MdConfig,
   schema: Schema,

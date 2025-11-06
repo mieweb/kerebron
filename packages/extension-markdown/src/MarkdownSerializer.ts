@@ -215,7 +215,7 @@ export class MarkdownSerializer {
     return this.ctx.output.endsWith('\n\n');
   }
 
-  async serialize(tokens: Token[]): Promise<SmartOutput<Token>> {
+  serialize(tokens: Token[]): SmartOutput<Token> {
     const prevLevelTokenType: Record<number, string> = {};
 
     const tokenSource = new TokenSource(tokens);

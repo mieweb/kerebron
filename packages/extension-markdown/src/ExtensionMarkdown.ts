@@ -1,12 +1,17 @@
 import type { Node, Schema } from 'prosemirror-model';
 import { type Converter, type CoreEditor, Extension } from '@kerebron/editor';
 
-import pmToMdConverter from './pmToMdConverter.ts';
-import mdToPmConverter from './mdToPmConverter.ts';
+import {
+  MarkdownResult,
+  pmToMdConverter,
+  syncPmToMdConverter,
+} from './pmToMdConverter.ts';
+import { mdToPmConverter } from './mdToPmConverter.ts';
 import type { Token } from './types.ts';
 
 export interface MdConfig {
   sourceMap?: boolean;
+  dispatchSourceMap?: boolean;
   debugTokens?: boolean;
 }
 
@@ -31,5 +36,16 @@ export class ExtensionMarkdown extends Extension {
           mdToPmConverter(source, this.config, schema),
       },
     };
+  }
+
+  toMarkdown(source: Node): MarkdownResult {
+    return syncPmToMdConverter(
+      source,
+      {
+        sourceMap: true,
+      },
+      this.editor.schema,
+      this.editor,
+    );
   }
 }

@@ -19,70 +19,70 @@ function getHtmlTableTokensHandlers(): Record<string, Array<TokenHandler>> {
       (token: Token, ctx: ContextStash) => {
         ctx.stash();
         ctx.current.meta['html_mode'] = true;
-        ctx.current.log('<table>\n');
+        ctx.current.log('<table>\n', token);
       },
     ],
     'table_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('</table>\n');
+        ctx.current.log('</table>\n', token);
         ctx.unstash();
       },
     ],
     'thead_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('<thead>\n');
+        ctx.current.log('<thead>\n', token);
       },
     ],
     'thead_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('</thead>\n');
+        ctx.current.log('</thead>\n', token);
       },
     ],
     'tr_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('<tr>\n');
+        ctx.current.log('<tr>\n', token);
       },
     ],
     'tr_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('</tr>\n');
+        ctx.current.log('</tr>\n', token);
       },
     ],
     'th_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('<th>');
+        ctx.current.log('<th>', token);
       },
     ],
     'th_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('</th>\n');
+        ctx.current.log('</th>\n', token);
       },
     ],
     'tbody_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('<tbody>\n');
+        ctx.current.log('<tbody>\n', token);
       },
     ],
     'tbody_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('</tbody>\n');
+        ctx.current.log('</tbody>\n', token);
       },
     ],
     'td_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('<td>');
+        ctx.current.log('<td>', token);
       },
     ],
     'td_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('</td>\n');
+        ctx.current.log('</td>\n', token);
       },
     ],
   };
 }
 
 interface TableCell {
-  text: string;
+  value: [string, Token][];
   align: 'left' | 'right';
 }
 
@@ -110,21 +110,19 @@ class TableBuilder {
   appendCell(align: 'left' | 'right') {
     const lastRow = this.rows[this.rows.length - 1];
     lastRow.cells.push({
-      text: '',
+      value: [],
       align,
     });
   }
 
-  appendText(content: string) {
+  appendText(content: string, token: Token) {
     const lastRow = this.rows[this.rows.length - 1];
     if (lastRow.cells.length > 0) {
-      lastRow.cells[lastRow.cells.length - 1].text += content;
+      lastRow.cells[lastRow.cells.length - 1].value.push([content, token]);
     }
   }
 
-  render() {
-    let result = '';
-
+  render(log: (txt: string, token?: Token) => void) {
     let prevType = '';
 
     let lastHeader: Array<TableCell> = [];
@@ -138,8 +136,12 @@ class TableBuilder {
         }
         const headCell = lastHeader[cellNo];
         const cell = row.cells[cellNo];
-        if (columnsWidth[cellNo] < cell.text.length) {
-          columnsWidth[cellNo] = cell.text.length;
+        const textLen: number = cell.value.reduce(
+          (prev, current) => prev + current[0].length,
+          0,
+        );
+        if (columnsWidth[cellNo] < textLen) {
+          columnsWidth[cellNo] = textLen;
         }
       }
     }
@@ -148,41 +150,45 @@ class TableBuilder {
       const row = this.rows[rowNo];
 
       if (prevType === 'header' && prevType !== row.type) {
-        result += '|';
+        log('|');
         for (let cellNo = 0; cellNo < lastHeader.length; cellNo++) {
           const cell = lastHeader[cellNo];
-          result += ' ';
-          result += '-'.repeat(columnsWidth[cellNo]);
+          log(' ');
+          log('-'.repeat(columnsWidth[cellNo]));
 
           if (cell.align === 'right') {
-            result += ':|';
+            log(':|');
           } else {
-            result += ' |';
+            log(' |');
           }
         }
-        result += '\n';
+        log('\n');
       }
 
-      result += '|';
+      log('|');
 
       for (let cellNo = 0; cellNo < row.cells.length; cellNo++) {
         const cell = row.cells[cellNo];
-        result += ' ' + cell.text;
-        if (cell.text.length < columnsWidth[cellNo]) {
-          result += ' '.repeat(columnsWidth[cellNo] - cell.text.length);
+        for (const pair of cell.value) {
+          log(pair[0], pair[1]);
         }
-        result += ' |';
+        const textLen: number = cell.value.reduce(
+          (prev, current) => prev + current[0].length,
+          0,
+        );
+        if (textLen < columnsWidth[cellNo]) {
+          log(' '.repeat(columnsWidth[cellNo] - textLen));
+        }
+        log(' |');
       }
 
-      result += '\n';
+      log('\n');
 
       if (row.type === 'header') {
         lastHeader = row.cells;
       }
       prevType = row.type;
     }
-
-    return result;
   }
 }
 
@@ -216,7 +222,7 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
     'text': [
       (token: Token, ctx: ContextStash) => {
         const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
-        tableBuilder.appendText(token.content);
+        tableBuilder.appendText(token.content, token);
       },
     ],
 
@@ -249,7 +255,7 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
     'table_close': [
       (token: Token, ctx: ContextStash) => {
         const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
-        ctx.current.log(tableBuilder.render(), token);
+        tableBuilder.render(ctx.current.log);
         ctx.unstash();
       },
     ],
