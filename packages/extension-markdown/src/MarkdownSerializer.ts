@@ -16,6 +16,8 @@ export function writeIndented(
 ) {
   const lines = text.split('\n');
 
+  let offset = 0;
+  const startPos = token.map && token.map.length > 0 ? token.map[0] : 0;
   for (let lineNo = 0; lineNo < lines.length; lineNo++) {
     const line = lines[lineNo];
 
@@ -64,10 +66,20 @@ export function writeIndented(
       }
     }
 
-    output.log(line, token);
+    const tok = structuredClone(token);
+    if (startPos) {
+      tok.map = [startPos + offset];
+    }
+    output.log(line, tok);
+    offset += line.length;
     if (lineNo < lines.length - 1) {
       currentCtx.itemRow++;
-      output.log('\n');
+      const tok = structuredClone(token);
+      if (startPos) {
+        tok.map = [startPos + offset];
+      }
+      output.log('\n', tok);
+      offset++;
     }
   }
 }

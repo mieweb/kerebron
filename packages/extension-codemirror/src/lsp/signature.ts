@@ -255,18 +255,18 @@ function drawSignatureTooltip(
 /// Explicitly prompt the server to provide signature help at the
 /// cursor.
 export const showSignatureHelp: Command = (view) => {
-  let plugin = view.plugin(signaturePlugin);
-  if (!plugin) {
+  let sigPlugin = view.plugin(signaturePlugin);
+  if (!sigPlugin) {
     view.dispatch({
       effects: StateEffect.appendConfig.of([signatureState, signaturePlugin]),
     });
-    plugin = view.plugin(signaturePlugin);
+    sigPlugin = view.plugin(signaturePlugin);
   }
   let field = view.state.field(signatureState);
-  if (!plugin || field === undefined) return false;
+  if (!sigPlugin || field === undefined) return false;
   let lspPlugin = LSPPlugin.get(view);
   if (!lspPlugin) return false;
-  plugin.startRequest(lspPlugin, {
+  sigPlugin.startRequest(lspPlugin, {
     triggerKind: 1, /* Invoked */
     activeSignatureHelp: field ? field.data : undefined,
     isRetrigger: !!field,

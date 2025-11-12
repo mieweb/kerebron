@@ -52,6 +52,8 @@ export class CoreEditor extends EventTarget {
       this.commandManager,
     );
 
+    this.extensionManager.created();
+
     // const content = this.options.content ? this.options.content : {
     //   type: this.extensionManager.schema.topNodeType.name,
     //   content: this.extensionManager.schema.topNodeType.spec.EMPTY_DOC,
@@ -124,6 +126,14 @@ export class CoreEditor extends EventTarget {
         dispatchTransaction: (tx: Transaction) => this.dispatchTransaction(tx),
       });
     }
+
+    const event = new CustomEvent('doc:loaded', {
+      detail: {
+        editor: this,
+        doc,
+      },
+    });
+    this.dispatchEvent(event);
   }
 
   public dispatchTransaction(transaction: Transaction) {

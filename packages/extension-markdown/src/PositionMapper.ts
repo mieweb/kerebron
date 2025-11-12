@@ -1,5 +1,5 @@
 import type { Node } from 'prosemirror-model';
-import type { CoreEditor } from '@kerebron/editor';
+import type { CoreEditor, TextRange } from '@kerebron/editor';
 
 interface MarkdownPosItem {
   pos: number;
@@ -36,9 +36,9 @@ export class PositionMapper {
 
   constructor(
     editor: CoreEditor,
-    public readonly markdownMap: Record<
-      number,
+    public readonly markdownMap: Array<
       {
+        nodeIdx: number;
         targetRow: number;
         targetCol: number;
         sourceCol?: number;
@@ -48,12 +48,12 @@ export class PositionMapper {
   ) {
     this.doc = editor.state.doc;
     this.markdownArr = [];
-    for (const pos in markdownMap) {
-      if (+pos > 0) {
+    for (const item of markdownMap) {
+      if (item.nodeIdx > 0) {
         this.markdownArr.push({
-          pos: +pos,
-          targetPos: markdownMap[pos].targetPos,
-          maxPos: +pos,
+          pos: item.nodeIdx,
+          targetPos: item.targetPos,
+          maxPos: item.nodeIdx,
         });
       }
     }
@@ -71,7 +71,7 @@ export class PositionMapper {
   toMarkDownPos(pos: number) {
     for (let i = 0; i < this.markdownArr.length; i++) {
       const row = this.markdownArr[i];
-      if (pos >= row.pos && pos < row.maxPos) {
+      if (pos >= row.pos && pos <= row.maxPos) {
         return row.targetPos + pos - row.pos;
       }
     }

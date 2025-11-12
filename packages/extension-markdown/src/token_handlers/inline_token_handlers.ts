@@ -5,7 +5,7 @@ import type {
   TokenHandler,
 } from '@kerebron/extension-markdown/MarkdownSerializer';
 
-export function escapeMarkdown(text: string): string {
+export function escapeMarkdown(token: Token): Array<[string, Token]> {
   const markdownChars = [
     { char: '\\', escape: '\\\\' },
     // { char: '*', escape: '\\*' },
@@ -31,12 +31,56 @@ export function escapeMarkdown(text: string): string {
     { char: '—', escape: '---' },
   ];
 
-  let escapedText = text;
-  for (const { char, escape } of markdownChars) {
-    escapedText = escapedText.replaceAll(char, escape);
+  const startPos = token.map && token.map.length > 0 ? token.map[0] : 0;
+  if (!startPos) {
+    let escapedText = token.content;
+    for (const { char, escape } of markdownChars) {
+      escapedText = escapedText.replaceAll(char, escape);
+    }
+
+    return [[escapedText, token]];
   }
 
-  return escapedText;
+  const charArr = token.content.split('');
+  const retVal: Array<[string, Token]> = [];
+
+  const markdownCharsMap: Record<string, string> = Object.fromEntries(
+    markdownChars.map((c) => [c.char, c.escape]),
+  );
+
+  let offset = 0;
+  let inStr = '';
+  let currentOutStr = '';
+
+  const flush = () => {
+    if (currentOutStr.length > 0) {
+      const tok = structuredClone(token);
+      tok.map = [startPos + offset];
+      retVal.push([
+        currentOutStr,
+        tok,
+      ]);
+      offset = inStr.length;
+    }
+    currentOutStr = '';
+  };
+
+  for (let idx = 0; idx < charArr.length; idx++) {
+    const char = charArr[idx];
+
+    inStr += char;
+    if (markdownCharsMap[char]) {
+      flush();
+    }
+    currentOutStr += markdownCharsMap[char] || char;
+    if (markdownCharsMap[char]) {
+      flush();
+    }
+  }
+
+  flush();
+
+  return retVal;
 }
 
 function getLinkTokensHandlers(): Record<string, Array<TokenHandler>> {
@@ -86,7 +130,9 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
   return {
     'text': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log(escapeMarkdown(token.content), token);
+        for (const pair of escapeMarkdown(token)) {
+          ctx.current.log(pair[0], pair[1]);
+        }
       },
     ],
     'strong_open': [

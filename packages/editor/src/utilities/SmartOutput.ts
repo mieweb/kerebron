@@ -30,12 +30,11 @@ export class SmartOutput<K> {
   private metas: Array<OutputMeta<K>> = [];
 
   log(text: string, item: K) {
-    this.chunks.push(text);
-
     if (text.length === 0) {
       return;
     }
-    const lines = text.split('\n');
+
+    this.chunks.push(text);
 
     this.metas.push({
       pos: this._pos,
@@ -43,6 +42,8 @@ export class SmartOutput<K> {
       rowPos: this._rowPos,
       item,
     });
+
+    const lines = text.split('\n');
 
     if (lines.length === 1) {
       this._colPos += lines[lines.length - 1].length;

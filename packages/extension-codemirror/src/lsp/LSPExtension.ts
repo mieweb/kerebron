@@ -6,17 +6,16 @@ import type { LSPClient } from '@kerebron/extension-lsp';
 import { lspPlugin } from './plugin.ts';
 import { lspTheme } from './theme.ts';
 
-export type LSPClientExtension = {};
-
 export interface LSPExtensionConfig {
   extensions?: readonly Extension[];
+  getPos: () => number | undefined;
 }
 
 export class LSPExtension {
   extensions: Extension[] = [];
 
   constructor(
-    readonly config: LSPExtensionConfig = {},
+    readonly config: LSPExtensionConfig,
   ) {
     if (config.extensions) {
       for (const ext of config.extensions) {

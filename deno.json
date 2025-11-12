@@ -2,6 +2,7 @@
   "license": "MIT",
   "workspace": [
     "packages/editor",
+    "packages/editor-kits",
     "packages/extension-basic-editor",
     "packages/extension-tables",
     "packages/extension-menu",

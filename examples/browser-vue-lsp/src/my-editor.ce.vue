@@ -20,9 +20,11 @@ import * as Y from 'yjs';
 import { CoreEditor } from '@kerebron/editor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
-import { AdvancedEditorKit } from './AdvancedEditorKit.ts';
-import { LspEditorKit } from './LspEditorKit.ts';
-import { YjsEditorKit } from './YjsEditorKit.ts';
+import { DevAdvancedEditorKit } from '@kerebron/editor-kits/DevAdvancedEditorKit';
+import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
+import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
+
+import { Dropdown, MenuElement, MenuItem } from '@kerebron/extension-menu';
 
 export default {
   name: 'my-editor',
@@ -65,14 +67,31 @@ export default {
       }
       const ydoc = new Y.Doc();
       this.ydoc = ydoc;
-console.info('starting');
+
+      const myMenu = {
+        modifyMenu: (menus: MenuElement[][]) => {
+          const fileMenu = [
+            new MenuItem({
+              label: 'Simulate loadDoc',
+              enable: () => true,
+              run: () => this.loadDoc(),
+            }),
+            new MenuItem({
+              label: 'Load',
+              enable: () => true,
+              run: () => this.loadDoc2(),
+            }),
+          ];
+          menus[0].unshift(new Dropdown(fileMenu, { label: 'File' }));
+          return menus;
+        },
+      }
 
       this.editor = new CoreEditor({
         uri: 'test.md',
-        shadowRoot: this.$.shadowRoot,
         element: this.$refs.editor,
         extensions: [
-          new AdvancedEditorKit(),
+          new DevAdvancedEditorKit(myMenu),
           YjsEditorKit.createFrom(ydoc, this.roomId),
           await LspEditorKit.createFrom()
         ]
@@ -80,22 +99,14 @@ console.info('starting');
 
       this.editor.addEventListener('selection', (event: CustomEvent) => {
         const selection = event.detail.selection;
-        console.log('sel', selection.anchor, selection.head)
         const extensionMarkdown: ExtensionMarkdown | undefined = this.editor.getExtension('markdown');
         if (extensionMarkdown) {
           const result = extensionMarkdown.toMarkdown(this.editor.state.doc);
           this.md = result.content;
-          console.log(result);
-
-          console.log('selection', selection);
 
           const mapper = new PositionMapper(this.editor, result.markdownMap);
-          const range = mapper.getSelectionCharRange(selection);
-          console.log('getSelectionCharRange', range);
           this.from = mapper.toMarkDownPos(selection.from);
           this.to = mapper.toMarkDownPos(selection.to);
-          console.log('ftftftftftt1', this.from, selection.from)
-          console.log('ftftftftftt2', this.to, selection.to)
         }
       });
 
@@ -113,6 +124,26 @@ console.info('starting');
       } else {
         return md;
       }
+    },
+
+    async loadDoc() {
+      const buffer = new TextEncoder().encode(
+        '# TEST \n\n1.  aaa **bold**\n2.  bbb\n\n```js\nconsole.log("TEST")\n```\n',
+      );
+      await this.editor.loadDocument('text/x-markdown', buffer);
+      return true;
+    },
+
+    loadDoc2() {
+      const input: HTMLInputElement = document.createElement('input');
+      input.type = 'file';
+      input.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        console.log('Selected file:', file);
+        await this.editor.loadDocument(file.type, await file.bytes());
+      });
+      input.click();
+      return true;
     }
   },
 };
@@ -120,6 +151,7 @@ console.info('starting');
 <style>
 @import '@kerebron/editor/assets/index.css';
 @import '@kerebron/extension-tables/assets/tables.css';
+/*@import '@kerebron/extension-menu/assets/custom-menu.css';*/
 @import '@kerebron/extension-menu-legacy/assets/menu.css';
 @import '@kerebron/extension-codemirror/assets/codemirror.css';
 @import '@kerebron/extension-autocomplete/assets/autocomplete.css';

@@ -5,3 +5,5 @@ export {
   MenuItem,
   type MenuItemSpec,
 } from './menu.ts';
+
+export * from './ExtensionCustomMenu.ts';

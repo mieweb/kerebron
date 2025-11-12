@@ -14,6 +14,7 @@ export * from './NodeCodeMirror.ts';
 export interface ExtensionCodeMirrorConfig {
   languageWhitelist?: NodeCodeMirrorConfig['languageWhitelist'];
   theme?: NodeCodeMirrorConfig['theme'];
+  readOnly?: boolean;
 }
 
 export class ExtensionCodeMirror extends Extension {

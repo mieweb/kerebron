@@ -8,10 +8,8 @@ import {
 } from '@codemirror/view';
 import { StateEffect, StateField } from '@codemirror/state';
 import { WorkspaceFile } from '@kerebron/extension-lsp';
-// import { WorkspaceMapping } from '@kerebron/extension-lsp';
 
 import { LSPPlugin } from './plugin.ts';
-import { WorkspaceMapping } from './LSPExtension.ts';
 
 function getReferences(plugin: LSPPlugin, pos: number) {
   return plugin.client.request<lsp.ReferenceParams, lsp.Location[] | null>(
