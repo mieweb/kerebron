@@ -36,6 +36,11 @@ class CustomRenderer extends DefaultRenderer<CompletionItem> {
   }
 }
 
+export function cleanPlaceholders(input: string): string {
+  const regex = /\$\{\d+:([^}]+)\}/g;
+  return input.replace(regex, '$1');
+}
+
 export class ExtensionLsp extends Extension {
   name = 'lsp';
   client: LSPClient;
@@ -77,7 +82,18 @@ export class ExtensionLsp extends Extension {
         return completions.items;
       },
       onSelect: (selected: CompletionItem, range: TextRange) => {
-        this.editor.chain().replaceRangeText(range, selected.insertText).run();
+        const rawText = cleanPlaceholders(selected.insertText);
+        const slice = this.extensionMarkdown.fromMarkdown(rawText);
+
+        if (slice.content.content.length === 1) {
+          const first = slice.content.content[0];
+          if (first.isBlock) {
+            this.editor.chain().insertBlockSmart(range.from, first).run();
+            return;
+          }
+        }
+
+        this.editor.chain().replaceRangeSlice(range, slice).run();
       },
     };
 
