@@ -183,6 +183,7 @@ class CodeMirrorBlockNodeView implements NodeView {
     if (extensionLsp) {
       const client = extensionLsp.getClient();
       const extension = new LSPExtension({
+        getPos: this.getPos,
         extensions: languageServerExtensions(),
       });
       extensions.push(extension.plugin(client, editor));

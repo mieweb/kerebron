@@ -6,6 +6,8 @@ import { cors } from 'hono/cors';
 import { HonoYjsMemAdapter } from '@kerebron/extension-server-hono/HonoYjsMemAdapter';
 import { proxyWs } from './proxyWs.ts';
 import { LspWsAdapter } from './lsp-server.ts';
+import { proxyTcp } from './proxyTcp.ts';
+import { proxyProcess } from './proxyProcess.ts';
 
 const __dirname = import.meta.dirname;
 
@@ -39,9 +41,17 @@ export class Server {
     );
 
     this.app.get(
-      '/lsp',
+      '/lsp-old',
       upgradeWebSocket((c) => {
         return lspWsAdapter.upgradeWebSocket();
+      }),
+    );
+
+    this.app.get(
+      '/lsp',
+      upgradeWebSocket((c) => {
+        // return proxyProcess('node', ['../../../lsp-toy/server/out/server.js'], c);
+        return proxyTcp('127.0.0.1:2087', c);
       }),
     );
 

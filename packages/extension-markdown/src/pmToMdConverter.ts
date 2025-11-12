@@ -108,9 +108,9 @@ export async function pmToMdConverter(
 export interface MarkdownResult {
   content: string;
   debugMap: Record<number, { targetRow: number; targetCol: number }>;
-  markdownMap: Record<
-    number,
+  markdownMap: Array<
     {
+      nodeIdx: number;
       targetRow: number;
       targetCol: number;
       sourceCol?: number;
@@ -500,15 +500,15 @@ export function syncPmToMdConverter(
     { targetRow: number; targetCol: number }
   > = {};
 
-  const markdownMap: Record<
-    number,
+  const markdownMap: Array<
     {
+      nodeIdx: number;
       targetRow: number;
       targetCol: number;
       sourceCol?: number;
       targetPos: number;
     }
-  > = {};
+  > = [];
 
   let sourceMap: SourceMap | undefined;
 
@@ -540,12 +540,13 @@ export function syncPmToMdConverter(
           const pos = item.map[0];
           const sourceCol = item.map[2];
 
-          markdownMap[pos] = {
+          markdownMap.push({
+            nodeIdx: pos,
             targetPos,
             targetRow,
             targetCol,
             sourceCol,
-          };
+          });
 
           if (debugMap[pos]) {
             return {

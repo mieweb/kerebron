@@ -3,6 +3,8 @@
   "tasks": {},
   "imports": {},
   "exports": {
-    ".": "./src/mod.ts"
+    ".": "./src/mod.ts",
+    "./AutocompletePlugin": "./src/AutocompletePlugin.ts",
+    "./DefaultRenderer": "./srcDefaultRenderer.ts"
   }
 }

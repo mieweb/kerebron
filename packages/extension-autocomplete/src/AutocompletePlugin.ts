@@ -43,6 +43,8 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
             }
 
             const state = handleExit && !handleStart ? prev : next;
+
+            // await new Promise(r => setTimeout(r, 100));
             const decorationNode = view.dom.querySelector(
               `[data-decoration-id="${state.decorationId}"]`,
             );
@@ -115,6 +117,7 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
         // Initialize the plugin's internal state.
         init() {
           const state: {
+            manual: boolean;
             active: boolean;
             range: TextRange;
             query: null | string;
@@ -122,6 +125,7 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
             composing: boolean;
             decorationId?: string | null;
           } = {
+            manual: false,
             active: false,
             range: {
               from: 0,
@@ -195,8 +199,19 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
             next.active = false;
           }
 
+          next.manual = false;
+
           // Make sure to empty the range if suggestion is inactive
           if (!next.active) {
+            const meta = transaction.getMeta(AutocompletePluginKey);
+            if (meta?.type === 'activate') {
+              next.range = { from: selection.from, to: selection.to };
+              next.active = true;
+              next.manual = true;
+              next.query = null;
+              return next;
+            }
+
             next.decorationId = null;
             next.range = { from: 0, to: 0 };
             next.query = null;
@@ -213,6 +228,14 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
           const { active, range } = this.getState(view.state);
 
           if (!active) {
+            if (event.key === ' ' && event.ctrlKey) {
+              const tr = view.state.tr.setMeta(AutocompletePluginKey, {
+                type: 'activate',
+              });
+              view.dispatch(tr);
+              return true;
+            }
+
             return false;
           }
 
@@ -227,12 +250,12 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
             return null;
           }
 
+          let node = document.createElement('span');
+          node.className = config.decorationClass || 'kb-autocomplete--decor';
+          node.setAttribute('data-decoration-id', decorationId);
+
           return DecorationSet.create(state.doc, [
-            Decoration.inline(range.from, range.to, {
-              nodeName: config.decorationTag || 'span',
-              class: config.decorationClass || 'kb-autocomplete--decor',
-              'data-decoration-id': decorationId,
-            }),
+            Decoration.widget(range.from, node),
           ]);
         },
       },

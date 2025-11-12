@@ -23,6 +23,7 @@ export interface AutocompleteConfig<I = any, TSelected = any> {
 
 export class ExtensionAutocomplete extends Extension {
   name = 'autocomplete';
+  plugin!: AutocompletePlugin<unknown, unknown>;
 
   public constructor(
     protected override config: AutocompleteConfig,

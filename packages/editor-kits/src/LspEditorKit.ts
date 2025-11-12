@@ -33,25 +33,7 @@ export class LspEditorKit extends Extension {
   ) {
     super(config);
 
-    const autocomplete = new ExtensionAutocomplete({
-      matchers: [createRegexMatcher([/\w*/, /(^|\s)@\w*/])],
-      getItems(query: string) {
-        console.log('query', query);
-        return [
-          '@alice',
-          '@bob',
-          '@doug',
-          '@greg',
-          '@monika',
-        ].filter((str) => str.startsWith(query));
-      },
-      onSelect: (selected: string, range: TextRange) => {
-        this.editor.run.replaceRangeText(range, selected);
-      },
-    });
-
     this.requires = [
-      autocomplete,
       new ExtensionLsp({ lspTransport }),
     ];
   }

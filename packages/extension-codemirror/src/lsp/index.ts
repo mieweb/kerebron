@@ -1,11 +1,7 @@
 import { Extension } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 
-export {
-  type LSPClientExtension,
-  LSPExtension,
-  type LSPExtensionConfig,
-} from './LSPExtension.ts';
+export { LSPExtension, type LSPExtensionConfig } from './LSPExtension.ts';
 export { LSPPlugin } from './plugin.ts';
 export { serverCompletion, serverCompletionSource } from './completion.ts';
 export { hoverTooltips } from './hover.ts';

@@ -174,10 +174,6 @@ export class ExtensionManager {
       }
     }
 
-    for (const extension of this.extensions) {
-      extension.created();
-    }
-
     if (this.debug) {
       for (const key in keyBindings) {
         const keyBinding = keyBindings.get(key);
@@ -246,7 +242,11 @@ export class ExtensionManager {
           if (!initialized.has(require)) {
             const requiredExtension = allExtensions.get(require);
             if (!requiredExtension) {
-              throw new Error('Required extension not found: ' + require);
+              throw new Error(
+                `Required extension for (${
+                  'name' in extension ? extension.name : extension
+                }) not found: ${require}`,
+              );
             }
             recursiveInitializeExtension(requiredExtension);
           }
@@ -321,5 +321,11 @@ export class ExtensionManager {
     editor.dispatchEvent(event);
 
     return new Schema(spec);
+  }
+
+  created() {
+    for (const extension of this.extensions) {
+      extension.created();
+    }
   }
 }

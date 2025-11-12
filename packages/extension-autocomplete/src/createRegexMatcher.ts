@@ -21,12 +21,11 @@ function matchBefore($position: ResolvedPos, expr: RegExp) {
 
   const textFrom = $position.pos - text.length;
 
-  let start = Math.max(textFrom, $position.pos - 250);
-  let str = text.slice();
+  const start = Math.max(textFrom, $position.pos - 250);
+  const str = text.slice();
 
-  text.slice(start - textFrom, $position.pos - textFrom);
+  const found = str.search(ensureAnchor(expr, false));
 
-  let found = str.search(ensureAnchor(expr, false));
   return found < 0
     ? null
     : { from: start + found, to: $position.pos, text: str.slice(found) };
@@ -45,6 +44,7 @@ export function createRegexMatcher(
 
     const matches = regexes.map((regex) => matchBefore($position, regex))
       .filter((m) => !!m);
+
     if (matches.length === 0) {
       return null;
     }

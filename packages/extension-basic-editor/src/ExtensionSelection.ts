@@ -13,7 +13,7 @@ import {
   Transaction,
 } from 'npm:prosemirror-state@latest';
 
-import { CoreEditor, Extension } from '@kerebron/editor';
+import { type CoreEditor, Extension } from '@kerebron/editor';
 import type {
   CommandFactories,
   CommandFactory,

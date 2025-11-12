@@ -1,20 +1,17 @@
 import type * as lsp from 'vscode-languageserver-protocol';
-import { EditorView, ViewPlugin, ViewUpdate } from '@codemirror/view';
-import { ChangeSet, Extension, Text } from '@codemirror/state';
-import { language } from '@codemirror/language';
+import { EditorView, ViewPlugin } from '@codemirror/view';
+import { Text } from '@codemirror/state';
 
 import { type LSPClient } from '@kerebron/extension-lsp';
 
-// import {docToHTML, withContext} from "./text"
 import { fromPosition, toPosition } from './pos.ts';
 import { escHTML } from './text.ts';
 import { type CoreEditor } from '@kerebron/editor';
 import { LSPExtension } from './index.ts';
 
-/// A plugin that connects a given editor to a language server client.
 export class LSPPlugin {
   readonly client: LSPClient;
-  uri: string;
+  readonly uri: string;
   readonly editor: CoreEditor;
   readonly extension: LSPExtension;
 
@@ -33,9 +30,6 @@ export class LSPPlugin {
     this.client = client;
     this.uri = uri;
     this.editor = editor;
-
-    this.syncedDoc = view.state.doc;
-    this.unsyncedChanges = ChangeSet.empty(view.state.doc.length);
   }
 
   // /// Render a doc string from the server to HTML.
@@ -51,7 +45,6 @@ export class LSPPlugin {
     if ('string' === typeof value) {
       return escHTML(value);
     }
-
     return `docToHTML ${value.kind} ${JSON.stringify(value.value, null, 2)}`;
   }
 
@@ -71,28 +64,6 @@ export class LSPPlugin {
   /// Display an error in this plugin's editor.
   reportError(message: string, err: any) {
     this.editor.ui.showError(err);
-  }
-
-  /// The version of the document that was synchronized to the server.
-  syncedDoc: Text;
-
-  /// The changes accumulated in this editor that have not been sent
-  /// to the server yet.
-  unsyncedChanges: ChangeSet;
-
-  /// Reset the [unsynced
-  /// changes](#lsp-client.LSPPlugin.unsyncedChanges). Should probably
-  /// only be called by a [workspace](#lsp-client.Workspace).
-  clear() {
-    this.syncedDoc = this.view.state.doc;
-    this.unsyncedChanges = ChangeSet.empty(this.view.state.doc.length);
-  }
-
-  /// @internal
-  update(update: ViewUpdate) {
-    if (update.docChanged) {
-      this.unsyncedChanges = this.unsyncedChanges.compose(update.changes);
-    }
   }
 
   /// Get the LSP plugin associated with an editor, if any.

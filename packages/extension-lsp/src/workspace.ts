@@ -1,6 +1,12 @@
+import type * as lsp from 'vscode-languageserver-protocol';
+import { TextDocumentSyncKind } from 'vscode-languageserver-protocol';
+
 import type { CoreEditor, EditorUi } from '@kerebron/editor';
 
 import { LSPClient } from './client.ts';
+import { ExtensionLsp } from './ExtensionLsp.ts';
+import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
+import { computeIncrementalChanges } from './computeIncrementalChanges.ts';
 
 export interface WorkspaceFile {
   uri: string;
@@ -14,7 +20,7 @@ export interface WorkspaceFile {
 interface WorkspaceFileUpdate {
   file: WorkspaceFile;
   prevDoc: string;
-  // changes: ChangeSet;
+  changes: lsp.TextDocumentContentChangeEvent[];
 }
 
 export abstract class Workspace {
@@ -58,20 +64,23 @@ export abstract class Workspace {
 }
 
 class DefaultWorkspaceFile implements WorkspaceFile {
+  public syncedContent: string = '';
   constructor(
     readonly uri: string,
     readonly languageId: string,
     public version: number,
     public content: string,
-    readonly editor: CoreEditor,
-  ) {}
+    readonly extensionLsp: ExtensionLsp,
+    readonly mapper: PositionMapper,
+  ) {
+  }
 
   getEditor() {
-    return this.editor;
+    return this.extensionLsp.getEditor();
   }
 
   getUi() {
-    return this.editor.ui;
+    return this.getEditor().ui;
   }
 }
 
@@ -84,18 +93,33 @@ export class DefaultWorkspace extends Workspace {
   }
 
   syncFiles() {
+    if (!this.client.supportSync) {
+      return [];
+    }
+
     const result: WorkspaceFileUpdate[] = [];
     for (const file of this.files) {
-      //   let plugin = LSPPlugin.get(file.view);
-      //   if (!plugin) continue;
-      //   let changes = plugin.unsyncedChanges;
-      //   if (!changes.empty) {
-      //     result.push({ changes, file, prevDoc: file.doc });
-      //     file.doc = file.view.state.doc;
-      //     file.version = this.nextFileVersion(file.uri);
-      //     plugin.clear();
-      //   }
+      const mappedContent = file.extensionLsp.getMappedContent();
+      const { content, mapper } = mappedContent;
+
+      this.client.notification<lsp.DidChangeTextDocumentParams>(
+        'textDocument/didChange',
+        {
+          textDocument: { uri: file.uri, version: file.version },
+          contentChanges: contentChangesFor(
+            file,
+            content,
+            mapper,
+            this.client.supportSync == TextDocumentSyncKind.Incremental,
+          ),
+        },
+      );
+
+      file.syncedContent = file.content;
+      file.content = content;
+      file.version = this.nextFileVersion(file.uri);
     }
+
     return result;
   }
 
@@ -105,13 +129,23 @@ export class DefaultWorkspace extends Workspace {
         "Default workspace implementation doesn't support multiple views on the same file",
       );
     }
-    const content = 'TODO';
+
+    const extensionLsp: ExtensionLsp | undefined = editor.getExtension('lsp');
+    if (!extensionLsp) {
+      throw new Error(
+        'No LSP extension',
+      );
+    }
+
+    const mappedContent = extensionLsp.getMappedContent();
+    const { content, mapper } = mappedContent;
     const file = new DefaultWorkspaceFile(
       uri,
       languageId,
       this.nextFileVersion(uri),
       content,
-      editor,
+      extensionLsp,
+      mapper,
     );
     this.files.push(file);
     this.client.didOpen(file);
@@ -124,4 +158,36 @@ export class DefaultWorkspace extends Workspace {
       this.client.didClose(uri);
     }
   }
+}
+
+const enum Sync {
+  AlwaysIfSmaller = 1024,
+}
+
+function contentChangesFor(
+  file: WorkspaceFile,
+  newContent: string,
+  mapper: PositionMapper,
+  supportInc: boolean,
+): lsp.TextDocumentContentChangeEvent[] {
+  if (!supportInc || newContent.length < Sync.AlwaysIfSmaller) {
+    return [{ text: newContent }];
+  }
+
+  const changes = computeIncrementalChanges(file.content, newContent);
+  // if (changes.length > 0) {
+  //   result.push({ changes, file, prevDoc: file.content });
+  // }
+
+  // let events: lsp.TextDocumentContentChangeEvent[] = [];
+  // changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
+  //   events.push({
+  //     range: {
+  //       start: toPosition(startDoc, fromA),
+  //       end: toPosition(startDoc, toA),
+  //     },
+  //     text: inserted.toString(),
+  //   });
+  // });
+  return changes.reverse();
 }

@@ -44,7 +44,7 @@ function getLongDefinitionTokensHandlers(): Record<
 
         ctx.stash();
         ctx.current.log = (txt: string) => {
-          writeIndented(ctx.output, txt, ctx.current);
+          writeIndented(ctx.output, txt, ctx.current, token);
         };
 
         ctx.current.log(

@@ -84,6 +84,7 @@ function getHtmlTableTokensHandlers(): Record<string, Array<TokenHandler>> {
 interface TableCell {
   value: [string, Token][];
   align: 'left' | 'right';
+  startPos?: number;
 }
 
 interface TableRow {
@@ -107,10 +108,12 @@ class TableBuilder {
     });
   }
 
-  appendCell(align: 'left' | 'right') {
+  appendCell(align: 'left' | 'right', token: Token) {
     const lastRow = this.rows[this.rows.length - 1];
+    const startPos = token.map && token.map.length > 0 ? token.map[0] : 0;
     lastRow.cells.push({
       value: [],
+      startPos,
       align,
     });
   }
@@ -132,7 +135,7 @@ class TableBuilder {
       const row = this.rows[rowNo];
       for (let cellNo = 0; cellNo < row.cells.length; cellNo++) {
         while (columnsWidth.length <= cellNo) {
-          columnsWidth.push(0);
+          columnsWidth.push(1);
         }
         const headCell = lastHeader[cellNo];
         const cell = row.cells[cellNo];
@@ -140,8 +143,8 @@ class TableBuilder {
           (prev, current) => prev + current[0].length,
           0,
         );
-        if (columnsWidth[cellNo] < textLen) {
-          columnsWidth[cellNo] = textLen;
+        if (columnsWidth[cellNo] < textLen + 1) {
+          columnsWidth[cellNo] = textLen + 1;
         }
       }
     }
@@ -177,9 +180,17 @@ class TableBuilder {
           0,
         );
         if (textLen < columnsWidth[cellNo]) {
-          log(' '.repeat(columnsWidth[cellNo] - textLen));
+          if (textLen === 0 && cell.startPos) {
+            // textpos = cellpos + 1 (cell opening) + 1 (para opening)
+            log(
+              ' '.repeat(columnsWidth[cellNo] - textLen),
+              { map: [cell.startPos + 2] } as Token,
+            );
+          } else {
+            log(' '.repeat(columnsWidth[cellNo] - textLen));
+          }
         }
-        log(' |');
+        log('|');
       }
 
       log('\n');
@@ -287,7 +298,7 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
         const align = style === 'text-align:right' ? 'right' : 'left';
 
         const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
-        tableBuilder.appendCell(align);
+        tableBuilder.appendCell(align, token);
         ctx.current.meta['table_cell_para_count'] = 0;
       },
     ],
@@ -311,7 +322,7 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
         const align = style === 'text-align:right' ? 'right' : 'left';
 
         const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
-        tableBuilder.appendCell(align);
+        tableBuilder.appendCell(align, token);
         ctx.current.meta['table_cell_para_count'] = 0;
       },
     ],
