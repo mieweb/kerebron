@@ -1,4 +1,4 @@
-import type { Node, Schema } from 'prosemirror-model';
+import { Node, Schema } from 'prosemirror-model';
 import { DOMParser } from 'prosemirror-model';
 
 import type { Token } from './types.ts';
@@ -15,15 +15,25 @@ function listIsTight(tokens: readonly Token[], i: number) {
   return false;
 }
 
+const tokenizer = await sitterTokenizer();
+
 export async function mdToPmConverter(
   buffer: Uint8Array,
   config: MdConfig,
   schema: Schema,
 ): Promise<Node> {
   const content = new TextDecoder().decode(buffer);
+  return syncMdToPmConverter(content, config, schema);
+}
+
+export function syncMdToPmConverter(
+  content: string,
+  config: MdConfig,
+  schema: Schema,
+): Node {
   const defaultMarkdownParser = new MarkdownParser(
     schema,
-    await sitterTokenizer(),
+    tokenizer,
     {
       frontmatter: {
         node: 'frontmatter',
