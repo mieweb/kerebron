@@ -25,9 +25,8 @@ window.addEventListener('load', async () => {
     extensions: [
       new CodeEditorKit('yaml'),
       YjsEditorKit.createFrom(ydoc, roomId),
-      await LspEditorKit.createFrom(),
+      LspEditorKit.createFrom(),
     ],
-    // content: pmDoc
   });
 
   editor.addEventListener('selection', (event: CustomEvent) => {
