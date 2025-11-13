@@ -5,6 +5,8 @@ interface MarkdownPosItem {
   pos: number;
   targetPos: number;
   maxPos: number;
+  col: number;
+  row: number;
 }
 
 function findFirstLetterPosition(
@@ -54,6 +56,8 @@ export class PositionMapper {
           pos: item.nodeIdx,
           targetPos: item.targetPos,
           maxPos: item.nodeIdx,
+          row: item.targetRow,
+          col: item.targetCol,
         });
       }
     }
@@ -73,6 +77,21 @@ export class PositionMapper {
       const row = this.markdownArr[i];
       if (pos >= row.pos && pos <= row.maxPos) {
         return row.targetPos + pos - row.pos;
+      }
+    }
+    return -1;
+  }
+
+  fromLineChar(line: number, character: number) {
+    for (let i = 0; i < this.markdownArr.length; i++) {
+      const item = this.markdownArr[i];
+      const len = item.maxPos - item.pos;
+
+      if (
+        item.row === line && character >= item.col && character < item.col + len
+      ) {
+        const offset = character - item.col;
+        return item.pos + offset;
       }
     }
     return -1;

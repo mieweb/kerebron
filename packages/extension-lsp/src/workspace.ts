@@ -15,6 +15,7 @@ export interface WorkspaceFile {
   content: string;
   getEditor(main?: CoreEditor): CoreEditor | undefined;
   getUi(): EditorUi | undefined;
+  mapper: PositionMapper;
 }
 
 interface WorkspaceFileUpdate {
@@ -70,6 +71,7 @@ class DefaultWorkspaceFile implements WorkspaceFile {
     readonly languageId: string,
     public version: number,
     public content: string,
+    public mapper: PositionMapper,
     readonly extensionLsp: ExtensionLsp,
     readonly mapper: PositionMapper,
   ) {
@@ -117,6 +119,7 @@ export class DefaultWorkspace extends Workspace {
 
       file.syncedContent = file.content;
       file.content = content;
+      file.mapper = mapper;
       file.version = this.nextFileVersion(file.uri);
     }
 
@@ -144,8 +147,8 @@ export class DefaultWorkspace extends Workspace {
       languageId,
       this.nextFileVersion(uri),
       content,
-      extensionLsp,
       mapper,
+      extensionLsp,
     );
     this.files.push(file);
     this.client.didOpen(file);
