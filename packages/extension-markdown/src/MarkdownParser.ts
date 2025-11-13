@@ -304,14 +304,17 @@ export class MarkdownParser {
   /// [Markdown
   /// parser](https://markdown-it.github.io/markdown-it/#MarkdownIt.parse).
   parse(text: string, markdownEnv: Record<string, any> = {}) {
-    let state = new MarkdownParseState(this.schema, this.tokenHandlers), doc;
+    const state = new MarkdownParseState(this.schema, this.tokenHandlers);
 
     const tokens = this.tokenizer.parse(text, markdownEnv);
 
     state.parseTokens(tokens);
+
+    let doc;
     do {
       doc = state.closeNode();
     } while (state.stack.length);
+
     return doc || this.schema.topNodeType.createAndFill()!;
   }
 }
