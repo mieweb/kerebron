@@ -32,6 +32,10 @@ class CustomRenderer extends DefaultRenderer<CompletionItem> {
     }
     li.innerText = item.label;
     li.title = item.detail;
+    li.style.cursor = 'pointer';
+    li.addEventListener('click', () => {
+      this.command(item);
+    });
     return li;
   }
 }

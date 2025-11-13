@@ -96,6 +96,10 @@ export class DefaultRenderer<Item> implements AutocompleteRenderer {
       li.classList.add('active');
     }
     li.innerText = '' + item; // TODO item to string and item formatting
+    li.style.cursor = 'pointer';
+    li.addEventListener('click', () => {
+      this.command(item);
+    });
     return li;
   }
 
