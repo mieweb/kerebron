@@ -98,7 +98,7 @@ export default {
         extensions: [
           new DevAdvancedEditorKit(myMenu),
           YjsEditorKit.createFrom(ydoc, this.roomId),
-          await LspEditorKit.createFrom()
+          LspEditorKit.createFrom()
         ]
       });
 

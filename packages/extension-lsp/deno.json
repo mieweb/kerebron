@@ -4,6 +4,6 @@
   "imports": {},
   "exports": {
     ".": "./src/mod.ts",
-    "./simpleLspWebSocketTransport": "./src/simpleLspWebSocketTransport.ts"
+    "./LspWebSocketTransport": "./src/LspWebSocketTransport.ts"
   }
 }
