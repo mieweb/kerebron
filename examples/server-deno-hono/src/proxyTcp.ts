@@ -1,6 +1,50 @@
 import { Context } from 'hono';
 import type { WSContext, WSEvents } from 'hono/ws';
 
+export function processText(text: string, dispatchEvent: (event: MessageEvent) => void) {
+  let origText = text;
+
+  let retry = true;
+  let contentLength = 0;
+  while (retry) {
+    retry = false;
+    const parts = text.split(/\r\n/);
+    const firstLine = parts[0];
+    if (firstLine.startsWith('Content-Length: ')) {
+      contentLength = +firstLine.substring('Content-Length: '.length);
+      let i = 1;
+      while (i < parts.length) {
+        if (parts[i] === '') {
+          break;
+        }
+        i++;
+      }
+      text = parts.slice(i + 1).join('\r\n');
+    }
+
+    if (contentLength === 0) {
+      return origText;
+    }
+
+    if (text.length < contentLength) {
+      return origText;
+    }
+
+    const line = text.substring(0, contentLength);
+    text = text.substring(contentLength);
+    const event = new MessageEvent('message', {
+      data: line,
+    });
+    dispatchEvent(event);
+
+    contentLength = 0;
+    retry = true;
+    origText = text;
+  }
+
+  return origText;
+}
+
 class TcpClient extends EventTarget {
   private conn: Deno.Conn | undefined;
   private encoder = new TextEncoder();
@@ -25,21 +69,22 @@ class TcpClient extends EventTarget {
     await this.conn.write(payload);
   }
 
-  close() {
+  close(code?: number) {
     if (this.conn) {
       this.conn.close();
       this.conn = undefined;
     }
-    this.dispatchEvent(new CloseEvent('close'));
+    this.dispatchEvent(new CloseEvent('close', { code }));
   }
 
   private async startReading() {
     if (!this.conn) {
       return;
     }
-    const buf = new Uint8Array(4096);
+    let text = '';
     try {
       while (true) {
+        const buf = new Uint8Array(4096);
         const n = await this.conn.read(buf);
         if (n === null) {
           // Remote closed the connection
@@ -49,29 +94,19 @@ class TcpClient extends EventTarget {
         }
 
         const chunk = buf.subarray(0, n);
-        const text = this.decoder.decode(chunk, { stream: true });
-
-        const lines = text.split(/\r\n|\r|\n/)
-          .filter((line) => !line.startsWith('Content-Length:'));
-
-        for (const line of lines) {
-          if (line.length > 0) {
-            const event = new MessageEvent('message', {
-              data: line,
-            });
-            this.dispatchEvent(event);
-          }
-        }
+        text += this.decoder.decode(chunk, { stream: true });
+        text = processText(text, (e) => this.dispatchEvent(e));
       }
     } catch (err) {
       if (err instanceof Deno.errors.BadResource) {
         console.log('Socket already closed');
       } else {
-        console.error('Read error:', err);
+        console.error('Read error:', err, err.name, err.code);
       }
-    } finally {
       this.close();
     }
+    console.log('__ CLOSE');
+    this.close();
   }
 }
 
@@ -95,6 +130,8 @@ class ProxyContext implements WSEvents<WebSocket> {
       if (event instanceof MessageEvent) {
         if (wsContext.readyState === WebSocket.OPEN) {
           wsContext.send(event.data);
+        } else {
+          console.error('LSP server not connected');
         }
       }
     });
@@ -117,7 +154,8 @@ class ProxyContext implements WSEvents<WebSocket> {
     }
   }
 
-  onError() {
+  onError(err: Event) {
+    console.error(err);
   }
 }
 
