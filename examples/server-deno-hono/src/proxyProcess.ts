@@ -1,5 +1,6 @@
 import { Context } from 'hono';
 import type { WSContext, WSEvents } from 'hono/ws';
+import { processText } from './proxyTcp.ts';
 
 class ProcessClient extends EventTarget {
   private encoder = new TextEncoder();
@@ -60,7 +61,9 @@ class ProcessClient extends EventTarget {
         const n = await reader.read();
         const chunk = n.value;
         const text = this.decoder.decode(chunk, { stream: true });
-        console.error('DEBUG:', text);
+        if (text) {
+          console.debug('DEBUG:', text);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -75,23 +78,23 @@ class ProcessClient extends EventTarget {
     }
     const reader = this.process.stdout.getReader();
 
+    let text = '';
     try {
       while (true) {
-        const n = await reader.read();
-        if (n === null) {
+        const { done, value } = await reader.read();
+        if (value === null) {
           // Remote closed the connection
           this.process = undefined;
           this.dispatchEvent(new CloseEvent('close'));
           break;
         }
 
-        const chunk = n.value;
-        const text = this.decoder.decode(chunk, { stream: true });
+        text += this.decoder.decode(value, { stream: true });
+        text = processText(text, this.dispatchEvent);
 
-        const event = new MessageEvent('message', {
-          data: text,
-        });
-        this.dispatchEvent(event);
+        if (done) {
+          break;
+        }
       }
     } catch (err) {
       if (err instanceof Deno.errors.BadResource) {
