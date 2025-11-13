@@ -1,7 +1,10 @@
 import { Context } from 'hono';
 import type { WSContext, WSEvents } from 'hono/ws';
 
-export function processText(text: string, dispatchEvent: (event: MessageEvent) => void) {
+export function processText(
+  text: string,
+  dispatchEvent: (event: MessageEvent) => void,
+) {
   let origText = text;
 
   let retry = true;
