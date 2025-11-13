@@ -1,0 +1,49 @@
+# Jane Doe
+
+**Email:** [jane.doe@example.com](mailto:jane.doe@example.com)
+**Website:** [https://janedoe.dev](https://janedoe.dev)
+
+## Summary
+Full-stack engineer exploring **Rust**, **TypeScript**, and _language servers_.
+
+> TODO: Add personal mission statement.
+
+## Skills
+- **Languages:** JavaScript, TypeScript, Python, Rust
+- **Tools:** Docker, Git, Kubernetes
+- [Project Report](./acme-report.md) <!-- intentional broken link -->
+
+## Internationalization Examples
+
+> Each TODO keyword below uses native language equivalents and shows localized diagnostic messages:
+
+**English:** TODO: Review the quarterly performance metrics and prepare summary.
+
+**Spanish:** PENDIENTE: Revisar las métricas de rendimiento trimestrales y preparar resumen.
+
+**French:** À FAIRE: Examiner les métriques de performance trimestrielles et préparer un résumé.
+
+**Polish:** ZROBIĆ: Przejrzeć kwartalne wskaźniki wydajności i przygotować podsumowanie.
+
+> Additional TODO keywords supported:
+> - English: TODO, FIXME, BUG, HACK, NOTE, WARNING
+> - Spanish: PENDIENTE, ARREGLAR, CORREGIR, NOTA, ADVERTENCIA
+> - French: AFAIRE, À FAIRE, CORRIGER, RÉPARER, NOTE, ATTENTION
+> - Polish: ZROBIĆ, NAPRAWIĆ, POPRAWIĆ, UWAGA, NOTATKA
+
+ADVERTENCIA
+
+
+**More examples:**
+- FIXME: Update contact information
+- ARREGLAR: Actualizar información de contacto
+- CORRIGER: Mettre à jour les informations de contact
+- NAPRAWIĆ: Zaktualizować informacje kontaktowe
+
+> More broken links for testing:
+> - [Missing File ES](./archivo-perdido.md)
+> - [Fichier Manquant FR](./fichier-manquant.md)
+> - [Brakujący Plik PL](./brakujacy-plik.md)
+
+## Contact
+Reach me via `contact("Jane", "Doe")`

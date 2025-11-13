@@ -77,6 +77,11 @@ export default {
               run: () => this.loadDoc(),
             }),
             new MenuItem({
+              label: 'Simulate loadLspToy',
+              enable: () => true,
+              run: () => this.loadLspToy(),
+            }),
+            new MenuItem({
               label: 'Load',
               enable: () => true,
               run: () => this.loadDoc2(),
@@ -143,6 +148,12 @@ export default {
         await this.editor.loadDocument(file.type, await file.bytes());
       });
       input.click();
+      return true;
+    },
+
+    async loadLspToy() {
+      const example = await import('./example.lsptoy?raw');
+      await this.editor.loadDocument('text/x-markdown', new TextEncoder().encode(example.default));
       return true;
     }
   },
