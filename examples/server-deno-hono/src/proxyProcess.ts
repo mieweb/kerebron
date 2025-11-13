@@ -2,9 +2,10 @@ import { Context } from 'hono';
 import type { WSContext, WSEvents } from 'hono/ws';
 import { processText } from './proxyTcp.ts';
 
+const decoder = new TextDecoder();
+const encoder = new TextEncoder();
+
 class ProcessClient extends EventTarget {
-  private encoder = new TextEncoder();
-  private decoder = new TextDecoder();
   process: Deno.ChildProcess | undefined;
   writer: WritableStreamDefaultWriter<Uint8Array<ArrayBufferLike>> | undefined;
 
@@ -37,9 +38,9 @@ class ProcessClient extends EventTarget {
     if (!this.process || !this.writer) {
       return;
     }
-    const payload = typeof data === 'string' ? this.encoder.encode(data) : data;
+    const payload = typeof data === 'string' ? encoder.encode(data) : data;
     const header = `Content-Length: ${payload.length}\r\n\r\n`;
-    await this.writer.write(this.encoder.encode(header));
+    await this.writer.write(encoder.encode(header));
     await this.writer.write(payload);
   }
 
@@ -60,7 +61,7 @@ class ProcessClient extends EventTarget {
       while (true) {
         const n = await reader.read();
         const chunk = n.value;
-        const text = this.decoder.decode(chunk, { stream: true });
+        const text = decoder.decode(chunk, { stream: true });
         if (text) {
           console.debug('DEBUG:', text);
         }
@@ -78,19 +79,24 @@ class ProcessClient extends EventTarget {
     }
     const reader = this.process.stdout.getReader();
 
-    let text = '';
+    let arr = new Uint8Array();
     try {
       while (true) {
         const { done, value } = await reader.read();
-        if (value === null) {
+        if (!value) {
           // Remote closed the connection
           this.process = undefined;
           this.dispatchEvent(new CloseEvent('close'));
           break;
         }
 
-        text += this.decoder.decode(value, { stream: true });
-        text = processText(text, this.dispatchEvent);
+        const concat = new Uint8Array(arr.length + value.length);
+        concat.set(arr, 0);
+        concat.set(value, arr.length);
+
+        arr = Uint8Array.from(
+          processText(concat, (e) => this.dispatchEvent(e)),
+        );
 
         if (done) {
           break;

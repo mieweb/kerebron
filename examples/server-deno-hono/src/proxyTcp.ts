@@ -1,57 +1,68 @@
 import { Context } from 'hono';
 import type { WSContext, WSEvents } from 'hono/ws';
 
-export function processText(
-  text: string,
-  dispatchEvent: (event: MessageEvent) => void,
-) {
-  let origText = text;
+const decoder = new TextDecoder();
+const encoder = new TextEncoder();
 
+export function processText(
+  arr: Uint8Array,
+  dispatchEvent: (event: MessageEvent) => void,
+): Uint8Array {
   let retry = true;
-  let contentLength = 0;
   while (retry) {
     retry = false;
-    const parts = text.split(/\r\n/);
-    const firstLine = parts[0];
-    if (firstLine.startsWith('Content-Length: ')) {
-      contentLength = +firstLine.substring('Content-Length: '.length);
-      let i = 1;
-      while (i < parts.length) {
-        if (parts[i] === '') {
-          break;
-        }
-        i++;
+
+    const asText = decoder.decode(arr);
+
+    const parts = asText.split('\r\n');
+    const headers = [];
+    for (let i = 0; i < parts.length; i++) {
+      headers.push(parts[i]);
+      if (parts[i] === '') {
+        break;
       }
-      text = parts.slice(i + 1).join('\r\n');
     }
 
+    if (headers.length >= parts.length) {
+      return arr;
+    }
+
+    const contentLenLine = headers.find((line) =>
+      line.startsWith('Content-Length: ')
+    );
+    if (!contentLenLine) {
+      return arr;
+    }
+
+    const contentLength = +contentLenLine.substring('Content-Length: '.length)
+      .trim();
     if (contentLength === 0) {
-      return origText;
+      return arr;
     }
 
-    if (text.length < contentLength) {
-      return origText;
+    const headersSize = encoder.encode(headers.join('\r\n')).length + 2;
+    const rest = arr.subarray(headersSize);
+
+    if (rest.length < contentLength) {
+      return arr;
     }
 
-    const line = text.substring(0, contentLength);
-    text = text.substring(contentLength);
+    const line = decoder.decode(rest.subarray(0, contentLength));
+    arr = rest.subarray(contentLength);
+
     const event = new MessageEvent('message', {
       data: line,
     });
     dispatchEvent(event);
 
-    contentLength = 0;
     retry = true;
-    origText = text;
   }
 
-  return origText;
+  return arr;
 }
 
 class TcpClient extends EventTarget {
   private conn: Deno.Conn | undefined;
-  private encoder = new TextEncoder();
-  private decoder = new TextDecoder();
 
   constructor(public readonly host: string, public readonly port: number) {
     super();
@@ -66,9 +77,9 @@ class TcpClient extends EventTarget {
     if (!this.conn) {
       return;
     }
-    const payload = typeof data === 'string' ? this.encoder.encode(data) : data;
+    const payload = typeof data === 'string' ? encoder.encode(data) : data;
     const header = `Content-Length: ${payload.length}\r\n\r\n`;
-    await this.conn.write(this.encoder.encode(header));
+    await this.conn.write(encoder.encode(header));
     await this.conn.write(payload);
   }
 
@@ -84,7 +95,7 @@ class TcpClient extends EventTarget {
     if (!this.conn) {
       return;
     }
-    let text = '';
+    let arr = new Uint8Array();
     try {
       while (true) {
         const buf = new Uint8Array(4096);
@@ -97,8 +108,13 @@ class TcpClient extends EventTarget {
         }
 
         const chunk = buf.subarray(0, n);
-        text += this.decoder.decode(chunk, { stream: true });
-        text = processText(text, (e) => this.dispatchEvent(e));
+        const concat = new Uint8Array(arr.length + chunk.length);
+        concat.set(arr, 0);
+        concat.set(chunk, arr.length);
+
+        arr = Uint8Array.from(
+          processText(concat, (e) => this.dispatchEvent(e)),
+        );
       }
     } catch (err) {
       if (err instanceof Deno.errors.BadResource) {
@@ -108,7 +124,6 @@ class TcpClient extends EventTarget {
       }
       this.close();
     }
-    console.log('__ CLOSE');
     this.close();
   }
 }
