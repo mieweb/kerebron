@@ -250,7 +250,7 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
             return null;
           }
 
-          let node = document.createElement('span');
+          const node = document.createElement('span');
           node.className = config.decorationClass || 'kb-autocomplete--decor';
           node.setAttribute('data-decoration-id', decorationId);
 

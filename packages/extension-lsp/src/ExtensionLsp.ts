@@ -13,6 +13,7 @@ import { createAutocompletePlugin } from './AutocompletePlugin.ts';
 import { LSPClient, Transport } from './client.ts';
 import { AutocompletePlugin } from '@kerebron/extension-autocomplete/AutocompletePlugin';
 import { DefaultRenderer } from '../../extension-autocomplete/src/DefaultRenderer.ts';
+import { DiagnosticPlugin } from './DiagnosticPlugin.ts';
 
 export interface LspConfig {
   lspTransport?: Transport;
@@ -101,11 +102,8 @@ export class ExtensionLsp extends Extension {
       },
     };
 
-    const plugin = new AutocompletePlugin(config, editor);
-
-    plugins.push(
-      plugin,
-    );
+    plugins.push(new AutocompletePlugin(config, editor));
+    plugins.push(new DiagnosticPlugin({}, this));
 
     return plugins;
   }

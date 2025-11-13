@@ -20,7 +20,8 @@ export class LspEditorKit extends Extension {
 
   static createFrom(config?: LspEditorKitConfig) {
     const protocol = globalThis.location.protocol === 'http:' ? 'ws:' : 'wss:';
-    const uri = config?.uri || protocol + '//' + globalThis.location.host + '/lsp';
+    const uri = config?.uri ||
+      protocol + '//' + globalThis.location.host + '/lsp';
     const lspTransport = new LspWebSocketTransport(uri);
 
     return new LspEditorKit(config, lspTransport);
