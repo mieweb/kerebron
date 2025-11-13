@@ -248,6 +248,7 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
 
     'html_block': [
       (token: Token, ctx: ContextStash) => {
+        ctx.current.log(token.content, token);
       },
     ],
 
@@ -401,6 +402,7 @@ export function getHtmlInlineTokensHandlers(): Record<
     ],
     'html_block': [
       (token: Token, ctx: ContextStash) => {
+        ctx.current.log(token.content, token);
       },
     ],
 

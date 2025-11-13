@@ -110,7 +110,7 @@ export function syncMdToPmConverter(
           const parser = DOMParser.fromSchema(schema);
           const parsed = parser.parse(elementFromString(token.content));
 
-          state.importNodes(parsed.children);
+          // state.importNodes(parsed.children); // breaks lsptoy example
         },
       },
       footnote_ref: {
