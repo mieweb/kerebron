@@ -148,6 +148,14 @@ export class CoreEditor extends EventTarget {
       });
       this.dispatchEvent(event);
     }
+    if (transaction.docChanged) {
+      const event = new CustomEvent('changed', {
+        detail: {
+          editor: this
+        },
+      });
+      this.dispatchEvent(event);
+    }
   }
 
   private setupPlugins() {

@@ -3,7 +3,7 @@ import { TextDocumentSyncKind } from 'vscode-languageserver-protocol';
 
 import type { CoreEditor, EditorUi } from '@kerebron/editor';
 
-import { LSPClient } from './client.ts';
+import { LSPClient } from './LSPClient.ts';
 import { ExtensionLsp } from './ExtensionLsp.ts';
 import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
 import { computeIncrementalChanges } from './computeIncrementalChanges.ts';
@@ -42,21 +42,20 @@ export abstract class Workspace {
   }
 
   abstract openFile(uri: string, languageId: string, editor: CoreEditor): void;
-
+  abstract changedFile(uri: string): void;
   abstract closeFile(uri: string): void;
 
-  connected(): void {
-    for (const file of this.files) {
-      this.client.didOpen(file);
+  async connected(): Promise<void> {
+    for await (const file of this.files) {
+      const result = await this.client.didOpen(file);
     }
   }
 
-  disconnected(): void {}
-
-  // updateFile(uri: string, update: TransactionSpec): void {
-  //   let file = this.getFile(uri);
-  //   if (file) file.getEditor()?.dispatch(update);
-  // }
+  disconnected(): void {
+    for (const file of this.files) {
+      this.client.workspace.closeFile(file.uri);
+    }
+  }
 
   getUi(uri: string): Promise<EditorUi | undefined> {
     const file = this.getFile(uri);
@@ -73,7 +72,6 @@ class DefaultWorkspaceFile implements WorkspaceFile {
     public content: string,
     public mapper: PositionMapper,
     readonly extensionLsp: ExtensionLsp,
-    readonly mapper: PositionMapper,
   ) {
   }
 
@@ -101,10 +99,19 @@ export class DefaultWorkspace extends Workspace {
 
     const result: WorkspaceFileUpdate[] = [];
     for (const file of this.files) {
+      this.changedFile(file.uri);
+    }
+
+    return result;
+  }
+
+  async changedFile(uri: string) {
+    const file = this.files.find((f) => f.uri == uri) || null;
+    if (file) {
       const mappedContent = file.extensionLsp.getMappedContent();
       const { content, mapper } = mappedContent;
 
-      this.client.notification<lsp.DidChangeTextDocumentParams>(
+      if (await this.client.notification<lsp.DidChangeTextDocumentParams>(
         'textDocument/didChange',
         {
           textDocument: { uri: file.uri, version: file.version },
@@ -115,22 +122,18 @@ export class DefaultWorkspace extends Workspace {
             this.client.supportSync == TextDocumentSyncKind.Incremental,
           ),
         },
-      );
-
-      file.syncedContent = file.content;
-      file.content = content;
-      file.mapper = mapper;
-      file.version = this.nextFileVersion(file.uri);
+      )) {
+        file.syncedContent = file.content;
+        file.content = content;
+        file.mapper = mapper;
+        file.version = this.nextFileVersion(file.uri);
+      }
     }
-
-    return result;
   }
 
   openFile(uri: string, languageId: string, editor: CoreEditor) {
     if (this.getFile(uri)) {
-      throw new Error(
-        "Default workspace implementation doesn't support multiple views on the same file",
-      );
+      this.closeFile(uri);
     }
 
     const extensionLsp: ExtensionLsp | undefined = editor.getExtension('lsp');
@@ -151,13 +154,14 @@ export class DefaultWorkspace extends Workspace {
       extensionLsp,
     );
     this.files.push(file);
+
     this.client.didOpen(file);
   }
 
   closeFile(uri: string) {
     const file = this.getFile(uri);
     if (file) {
-      this.files = this.files.filter((f) => f != file);
+      this.files = this.files.filter((f) => f.uri !== uri);
       this.client.didClose(uri);
     }
   }
@@ -178,19 +182,5 @@ function contentChangesFor(
   }
 
   const changes = computeIncrementalChanges(file.content, newContent);
-  // if (changes.length > 0) {
-  //   result.push({ changes, file, prevDoc: file.content });
-  // }
-
-  // let events: lsp.TextDocumentContentChangeEvent[] = [];
-  // changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
-  //   events.push({
-  //     range: {
-  //       start: toPosition(startDoc, fromA),
-  //       end: toPosition(startDoc, toA),
-  //     },
-  //     text: inserted.toString(),
-  //   });
-  // });
   return changes.reverse();
 }

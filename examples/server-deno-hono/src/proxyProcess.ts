@@ -14,7 +14,9 @@ class ProcessClient extends EventTarget {
     public readonly args: string[],
   ) {
     super();
+  }
 
+  async connect() {
     const command = new Deno.Command(this.execPath, {
       args: this.args,
       stdin: 'piped',
@@ -27,11 +29,9 @@ class ProcessClient extends EventTarget {
     this.process = command.spawn();
 
     this.writer = this.process.stdin.getWriter();
-    this.startReading();
+    this.dispatchEvent(new Event('open'));
     this.startDebugger();
-  }
-
-  async connect() {
+    this.startReading();
   }
 
   async send(data: string | Uint8Array) {
@@ -56,20 +56,28 @@ class ProcessClient extends EventTarget {
     if (!this.process) {
       return;
     }
-    const reader = this.process.stderr.getReader();
     try {
-      while (true) {
-        const n = await reader.read();
-        const chunk = n.value;
+      for await (const chunk of this.process.stderr) {
         const text = decoder.decode(chunk, { stream: true });
+
+        if (text.indexOf('Listeners setup complete - server is ready!') > -1) {
+          console.info('LSP server ready');
+          const message = {
+            "jsonrpc":"2.0",
+            "method":"window/logMessage",
+            "params":{"type":4,"message":"LSP ready"}
+          };
+          this.dispatchEvent(new MessageEvent('message', {
+            data: JSON.stringify(message)
+          }));
+        }
+
         if (text) {
           console.debug('DEBUG:', text);
         }
       }
     } catch (err) {
       console.error(err);
-    } finally {
-      this.close();
     }
   }
 
@@ -77,12 +85,10 @@ class ProcessClient extends EventTarget {
     if (!this.process) {
       return;
     }
-    const reader = this.process.stdout.getReader();
 
     let arr = new Uint8Array();
     try {
-      while (true) {
-        const { done, value } = await reader.read();
+      for await (const value of this.process.stdout) {
         if (!value) {
           // Remote closed the connection
           this.process = undefined;
@@ -97,14 +103,10 @@ class ProcessClient extends EventTarget {
         arr = Uint8Array.from(
           processText(concat, (e) => this.dispatchEvent(e)),
         );
-
-        if (done) {
-          break;
-        }
       }
     } catch (err) {
       if (err instanceof Deno.errors.BadResource) {
-        console.log('Socket already closed');
+        console.warn('Socket already closed');
       } else {
         console.error('Read error:', err);
       }
@@ -125,9 +127,7 @@ class ProxyContext implements WSEvents<WebSocket> {
     this.client = new ProcessClient(this.execPath, this.args);
   }
 
-  async onOpen(event: Event, wsContext: WSContext<WebSocket>) {
-    await this.client.connect();
-
+  onOpen(event: Event, wsContext: WSContext<WebSocket>) {
     this.client.addEventListener('message', (event) => {
       if (event instanceof MessageEvent) {
         if (wsContext.readyState === WebSocket.OPEN) {
@@ -136,19 +136,26 @@ class ProxyContext implements WSEvents<WebSocket> {
       }
     });
     this.client.addEventListener('close', () => {
+      console.info('LSP server closed', wsContext.readyState);
       wsContext.close();
     });
+    this.client.addEventListener('open', () => {
+      console.info('LSP server open');
+    });
+    this.client.connect();
   }
 
   onMessage(event: Event, wsContext: WSContext<WebSocket>) {
     if (event instanceof MessageEvent) {
       if (this.client) {
+        // console.log('BROWSER says: ', event.data);
         this.client.send(event.data);
       }
     }
   }
 
-  onClose() {
+  onClose(event: Event) {
+    console.info('BROWSER close:', 'code' in event ? event.code : '');
     if (this.client) {
       this.client.close();
     }
@@ -164,6 +171,5 @@ export async function proxyProcess(
   c: Context,
 ): Promise<WSEvents<WebSocket>> {
   const proxy = new ProxyContext(execPath, args, c);
-  await new Promise((res) => setTimeout(res, 1000));
   return proxy;
 }
