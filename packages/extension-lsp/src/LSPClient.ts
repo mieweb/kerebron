@@ -30,17 +30,21 @@ const defaultNotificationHandlers: {
   },
 };
 
-/// An object of this type should be used to wrap whatever transport
-/// layer you use to talk to your language server. Messages should
-/// contain only the JSON messages, no LSP headers.
 export type Transport = {
-  /// Send a message to the server. Should throw if the connection is
-  /// broken somehow.
+  connect(): void;
+  disconnect(): void;
   send(message: string): void;
-  /// Register a handler for messages coming from the server.
-  subscribe(handler: (value: string) => void): void;
-  /// Unregister a handler registered with `subscribe`.
-  unsubscribe(handler: (value: string) => void): void;
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  removeEventListener(
+    type: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: EventListenerOptions | boolean,
+  ): void;
+  isConnected(): boolean;
 };
 
 class Request<Result> {
@@ -134,61 +138,76 @@ export type LSPClientConfig = {
   ) => void;
 };
 
-/// An LSP client manages a connection to a language server. It should
-/// be explicitly [connected](#lsp-client.LSPClient.connect) before
-/// use.
+export class LSPError extends Error {
+  isTimeout = false;
+  readonly isLSP = true;
+
+  static createTimeout() {
+    const err = new LSPError('Request timed out');
+    err.isTimeout = true;
+    return err;
+  }
+}
+
 export class LSPClient extends EventTarget {
-  /// @internal
-  transport: Transport | null = null;
-  /// The client's [workspace](#lsp-client.Workspace).
   workspace: Workspace;
   private nextReqID = 0;
   private requests: Request<any>[] = [];
 
-  /// The capabilities advertised by the server. Will be null when not
-  /// connected or initialized.
   serverCapabilities: lsp.ServerCapabilities | null = null;
   public supportSync: TextDocumentSyncKind = TextDocumentSyncKind.None;
-  /// A promise that resolves once the client connection is initialized. Will be
-  /// replaced by a new promise object when you call `disconnect`.
-  initializing: Promise<null>;
-  declare private init: {
-    resolve: (value: null) => void;
-    reject: (err: any) => void;
-  };
-  private timeout: number;
+
+  private readonly timeout: number;
+
+  private readonly receiveListener: EventListenerOrEventListenerObject;
+  active: boolean = false;
 
   /// Create a client object.
   constructor(
-    /// @internal
+    private readonly transport: Transport,
     readonly config: LSPClientConfig = {},
   ) {
     super();
-    this.receiveMessage = this.receiveMessage.bind(this);
-    this.initializing = new Promise((resolve, reject) =>
-      this.init = { resolve, reject }
-    );
+
     this.timeout = config.timeout ?? 3000;
+
+    this.receiveListener = (event) => this.receiveMessage(event);
+
+    transport.addEventListener('message', this.receiveListener);
+    transport.addEventListener('ready', () => {
+      try {
+        console.info('LSP transport ready');
+        this.onConnected();
+      } catch (err: any) {
+        if (err.isLSP) {
+          console.error('Timeout as client.onConnected()', err.message, this.onConnected);
+        } else {
+          throw err;
+        }
+      }
+    });
+    transport.addEventListener('close', (event) => {
+      this.dispatchEvent(new CloseEvent('close'));
+    });
+
     this.workspace = config.workspace
       ? config.workspace(this)
       : new DefaultWorkspace(this);
   }
 
-  /// Whether this client is connected (has a transport).
-  get connected() {
-    return !!this.transport;
+  async restart() {
+    this.active = true;
+    if (!this.transport.isConnected()) {
+      this.transport.connect();
+    } else {
+      this.onConnected();
+    }
   }
 
-  /// Connect this client to a server over the given transport. Will
-  /// immediately start the initialization exchange with the server,
-  /// and resolve `this.initializing` (which it also returns) when
-  /// successful.
-  connect(transport: Transport) {
-    if (this.transport) this.transport.unsubscribe(this.receiveMessage);
-    this.transport = transport;
-    transport.subscribe(this.receiveMessage);
+  async onConnected() {
     const capabilities = clientCapabilities;
-    this.requestInner<lsp.InitializeParams, lsp.InitializeResult>(
+
+    const resp = await this.requestInner<lsp.InitializeParams, lsp.InitializeResult>(
       'initialize',
       {
         processId: null,
@@ -196,37 +215,36 @@ export class LSPClient extends EventTarget {
         rootUri: this.config.rootUri || null,
         capabilities,
       },
-    ).promise.then((resp) => {
-      this.serverCapabilities = resp.capabilities;
-      let sync = resp.capabilities.textDocumentSync;
-      this.supportSync = TextDocumentSyncKind.None;
-      if (sync) {
-        this.supportSync = typeof sync == 'number'
-          ? sync
-          : sync.change ?? TextDocumentSyncKind.None;
-      }
-      transport.send(
-        JSON.stringify({ jsonrpc: '2.0', method: 'initialized', params: {} }),
-      );
-      this.init.resolve(null);
-    }, this.init.reject);
+    ).promise;
+
+    this.serverCapabilities = resp.capabilities;
+    const sync = resp.capabilities.textDocumentSync;
+    this.supportSync = TextDocumentSyncKind.None;
+    if (sync) {
+      this.supportSync = typeof sync == 'number'
+        ? sync
+        : sync.change ?? TextDocumentSyncKind.None;
+    }
+    this.transport.send(
+      JSON.stringify({ jsonrpc: '2.0', method: 'initialized', params: {} }),
+    );
+
     this.workspace.connected();
-    return this;
   }
 
-  /// Disconnect the client from the server.
   disconnect() {
-    if (this.transport) this.transport.unsubscribe(this.receiveMessage);
+    this.active = false;
+    this.transport.removeEventListener('data', this.receiveListener);
     this.serverCapabilities = null;
-    this.initializing = new Promise((resolve, reject) =>
-      this.init = { resolve, reject }
-    );
     this.workspace.disconnected();
   }
 
   /// Send a `textDocument/didOpen` notification to the server.
-  didOpen(file: WorkspaceFile) {
-    this.notification<lsp.DidOpenTextDocumentParams>('textDocument/didOpen', {
+  async didOpen(file: WorkspaceFile) {
+    if (!this.transport.isConnected()) {
+      return false;
+    }
+    await this.notification<lsp.DidOpenTextDocumentParams>('textDocument/didOpen', {
       textDocument: {
         uri: file.uri,
         languageId: file.languageId,
@@ -234,17 +252,21 @@ export class LSPClient extends EventTarget {
         version: file.version,
       },
     });
+    return true;
   }
 
   /// Send a `textDocument/didClose` notification to the server.
   didClose(uri: string) {
+    if (!this.transport.isConnected()) {
+      return;
+    }
     this.notification<lsp.DidCloseTextDocumentParams>('textDocument/didClose', {
       textDocument: { uri },
     });
   }
 
-  private receiveMessage(msg: string) {
-    console.log(msg);
+  private receiveMessage(event: Event) {
+    const msg = (event as MessageEvent).data;
 
     const value = JSON.parse(msg) as
       | lsp.ResponseMessage
@@ -286,26 +308,24 @@ export class LSPClient extends EventTarget {
           message: 'Method not implemented',
         },
       };
-      this.transport!.send(JSON.stringify(resp));
+      this.transport.send(JSON.stringify(resp));
     }
   }
 
-  /// Make a request to the server. Returns a promise that resolves to
-  /// the response or rejects with a failure message. You'll probably
-  /// want to use types from the `vscode-languageserver-protocol`
-  /// package for the type parameters.
-  ///
-  /// The caller is responsible for
-  /// [synchronizing](#lsp-client.LSPClient.sync) state before the
-  /// request and correctly handling state drift caused by local
-  /// changes that happend during the request.
-  request<Params, Result>(method: string, params: Params): Promise<Result> {
-    if (!this.transport) {
-      return Promise.reject(new Error('Client not connected'));
+  async request<Params, Result>(
+    method: string,
+    params: Params,
+  ): Promise<Result> {
+    if (!this.transport.isConnected()) {
+      if (this.active) {
+        this.transport.connect();
+      }
+      throw new LSPError('Not connected');
     }
-    return this.initializing.then(() =>
-      this.requestInner<Params, Result>(method, params).promise
-    );
+
+    const retVal = await this.requestInner<Params, Result>(method, params)
+      .promise;
+    return retVal;
   }
 
   private requestInner<Params, Result>(
@@ -313,6 +333,16 @@ export class LSPClient extends EventTarget {
     params: Params,
     mapped = false,
   ): Request<Result> {
+    if (!this.transport) {
+      throw new Error('No transport');
+    };
+    if (!this.transport.isConnected()) {
+      if (this.active) {
+        this.transport.connect();
+      }
+      throw new Error('Transport not connected');
+    }
+
     const id = ++this.nextReqID,
       data: lsp.RequestMessage = {
         jsonrpc: '2.0',
@@ -324,38 +354,50 @@ export class LSPClient extends EventTarget {
     const req = new Request<Result>(
       id,
       params,
-      setTimeout(() => this.timeoutRequest(req, id, params), this.timeout),
+      setTimeout(
+        () => this.timeoutRequest(req, method, id, params),
+        this.timeout,
+      ),
     );
-    this.requests.push(req);
+
     try {
-      this.transport!.send(JSON.stringify(data));
+      if (!this.transport) {
+        throw new LSPError('No transport');
+      }
+      this.transport.send(JSON.stringify(data));
+      this.requests.push(req);
     } catch (e) {
+      console.error(e);
+      clearTimeout(req.timeout);
       req.reject(e);
     }
     return req;
   }
 
-  /// Send a notification to the server.
-  notification<Params>(method: string, params: Params) {
-    if (!this.transport) return;
-    this.initializing.then(() => {
-      let data: lsp.NotificationMessage = {
-        jsonrpc: '2.0',
-        method,
-        params: params as any,
-      };
-      this.transport!.send(JSON.stringify(data));
-    });
+  async notification<Params>(method: string, params: Params): Promise<boolean> {
+    if (!this.transport) return false;
+    if (!this.transport.isConnected()) {
+      if (this.active) {
+        this.transport.connect();
+      }
+      return false;
+    }
+    const data: lsp.NotificationMessage = {
+      jsonrpc: '2.0',
+      method,
+      params: params as any,
+    };
+    this.transport.send(JSON.stringify(data));
+    return true;
   }
 
-  /// Cancel the in-progress request with the given parameter value
-  /// (which is compared by identity).
   cancelRequest(params: any) {
-    let found = this.requests.find((r) => r.params === params);
-    if (found) this.notification('$/cancelRequest', found.id);
+    const found = this.requests.find((r) => r.params === params);
+    if (found) {
+      this.notification('$/cancelRequest', found.id);
+    }
   }
 
-  /// @internal
   hasCapability(name: keyof lsp.ServerCapabilities) {
     return this.serverCapabilities ? !!this.serverCapabilities[name] : null;
   }
@@ -364,12 +406,17 @@ export class LSPClient extends EventTarget {
     this.workspace.syncFiles();
   }
 
-  private timeoutRequest<T>(req: Request<T>, id: number, params: any) {
-    console.log('this.timeoutRequest', this.timeout, id, params);
+  private timeoutRequest<T>(
+    req: Request<T>,
+    method: string,
+    id: number,
+    params: any,
+  ) {
+    console.error('this.timeoutRequest', this.timeout, method, id, params);
 
-    let index = this.requests.indexOf(req);
+    const index = this.requests.indexOf(req);
     if (index > -1) {
-      req.reject(new Error('Request timed out'));
+      req.reject(LSPError.createTimeout());
       this.requests.splice(index, 1);
     }
   }

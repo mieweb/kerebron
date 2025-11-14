@@ -12,7 +12,7 @@ import {
 import { createDefaultMatcher } from './createDefaultMatcher.ts';
 import { DefaultRenderer } from './DefaultRenderer.ts';
 
-export const AutocompletePluginKey = new PluginKey('autocomplete');
+const AutocompletePluginKey = new PluginKey('autocomplete');
 
 export class AutocompletePlugin<Item, TSelected> extends Plugin {
   constructor(config: AutocompleteConfig, editor: CoreEditor) {
@@ -86,7 +86,16 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
 
             if (handleChange || handleStart) {
               if (config.getItems) {
-                props.items = await config.getItems(state.query);
+                try {
+                  props.items = await config.getItems(state.query);
+                } catch (err: any) {
+                  if (err.isLSP) {
+                    props.items = [];
+                    console.error('LSP error config.getItems()', err.message, config.getItems);
+                  } else {
+                    throw err;
+                  }
+                }
               }
             }
 
@@ -148,6 +157,11 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
           const { empty, from } = selection;
           const next = { ...prev };
 
+          const meta = transaction.getMeta(AutocompletePluginKey);
+          if (!meta && !transaction.isGeneric) {
+            return next;
+          }
+
           next.composing = composing;
 
           const parentNode = selection.$anchor.parent;
@@ -203,7 +217,6 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
 
           // Make sure to empty the range if suggestion is inactive
           if (!next.active) {
-            const meta = transaction.getMeta(AutocompletePluginKey);
             if (meta?.type === 'activate') {
               next.range = { from: selection.from, to: selection.to };
               next.active = true;

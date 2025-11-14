@@ -9,14 +9,13 @@ import {
 } from '@kerebron/extension-autocomplete';
 import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
 
-import { createAutocompletePlugin } from './AutocompletePlugin.ts';
-import { LSPClient, Transport } from './client.ts';
+import { LSPClient, Transport } from './LSPClient.ts';
 import { AutocompletePlugin } from '@kerebron/extension-autocomplete/AutocompletePlugin';
 import { DefaultRenderer } from '../../extension-autocomplete/src/DefaultRenderer.ts';
 import { DiagnosticPlugin } from './DiagnosticPlugin.ts';
 
 export interface LspConfig {
-  lspTransport?: Transport;
+  lspTransport: Transport;
 }
 
 interface CompletionItem {
@@ -56,10 +55,7 @@ export class ExtensionLsp extends Extension {
   constructor(protected override config: LspConfig) {
     super(config);
 
-    this.client = new LSPClient();
-    if (config.lspTransport) {
-      this.client.connect(config.lspTransport);
-    }
+    this.client = new LSPClient(config.lspTransport);
   }
 
   override getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
@@ -73,18 +69,24 @@ export class ExtensionLsp extends Extension {
       getItems: async (query: string) => {
         const lspPos = { line: 0, character: 0 };
 
-        const completions: { items: CompletionItem[] } | Array<CompletionItem> =
-          await this.client.request('textDocument/completion', {
-            textDocument: { uri: this.uri },
-            position: lspPos,
-            context: { triggerKind: 2, triggerCharacter: query },
-          });
+        this.client.sync();
+        try {
+          const completions: { items: CompletionItem[] } | Array<CompletionItem> =
+            await this.client.request('textDocument/completion', {
+              textDocument: { uri: this.uri },
+              position: lspPos,
+              context: { triggerKind: 2, triggerCharacter: query },
+            });
 
-        if (Array.isArray(completions)) {
-          return completions;
+          if (Array.isArray(completions)) {
+            return completions;
+          }
+
+          return completions.items;
+        } catch (err: any) {
+          console.error(err.message);
+          return [];
         }
-
-        return completions.items;
       },
       onSelect: (selected: CompletionItem, range: TextRange) => {
         const rawText = cleanPlaceholders(selected.insertText);
@@ -125,6 +127,7 @@ export class ExtensionLsp extends Extension {
       const languageID = 'TODO';
       this.uri = this.editor.config.uri;
       if (this.editor.config.uri) {
+        await this.client.restart();
         this.client.workspace.openFile(
           this.editor.config.uri,
           languageID,
@@ -133,9 +136,17 @@ export class ExtensionLsp extends Extension {
       }
     });
 
+    this.editor.addEventListener('changed', async (ev: CustomEvent) => {
+      if (this.editor.config.uri) {
+        this.client.workspace.changedFile(
+          this.editor.config.uri,
+        );
+      }
+    });
+
     this.editor.addEventListener('beforeDestroy', async (ev: CustomEvent) => {
       if (this.uri) {
-        this.client.workspace.closeFile(this.uri);
+        this.client.disconnect();
       }
     });
   }
@@ -148,9 +159,6 @@ export class ExtensionLsp extends Extension {
       ...result,
       mapper,
     };
-
-    // this.from = mapper.toMarkDownPos(selection.from);
-    // this.to = mapper.toMarkDownPos(selection.to);
   }
 
   getClient(): LSPClient {

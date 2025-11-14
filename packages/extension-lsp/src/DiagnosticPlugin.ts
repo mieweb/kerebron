@@ -28,10 +28,12 @@ interface DiagnosticPluginState {
 interface DiagnosticConfig {
 }
 
-export const DiagnosticPluginKey = new PluginKey('lsp-diagnostic');
+const DiagnosticPluginKey = new PluginKey('lsp-diagnostic');
 
 export class DiagnosticPlugin extends Plugin<DiagnosticPluginState> {
   listener: ((event: Event) => void) | undefined;
+  listenerDisconnect: ((event: Event) => void) | undefined;
+  listenerChange: ((event: Event) => void) | undefined;
 
   constructor(config: DiagnosticConfig, extension: ExtensionLsp) {
     super({
@@ -40,10 +42,19 @@ export class DiagnosticPlugin extends Plugin<DiagnosticPluginState> {
         return {
           destroy: () => {
             if (this.listener) {
-              extension.client.addEventListener(
+              extension.client.removeEventListener(
                 'textDocument/publishDiagnostics',
                 this.listener,
               );
+            }
+            if (this.listenerDisconnect) {
+              extension.client.removeEventListener(
+                'close',
+                this.listenerDisconnect,
+              );
+            }
+            if (this.changeListener) {
+              extension.getEditor().removeEventListener('change', this.changeListener);
             }
           },
         };
@@ -63,7 +74,6 @@ export class DiagnosticPlugin extends Plugin<DiagnosticPluginState> {
           const next = { ...prev };
 
           const meta = tr.getMeta(DiagnosticPluginKey);
-          console.log('meta', meta);
           if (meta?.diagnostics) {
             next.diagnostics = meta.diagnostics;
           }
@@ -111,6 +121,8 @@ export class DiagnosticPlugin extends Plugin<DiagnosticPluginState> {
       },
     });
 
+    let lastDiag = 0;
+
     const editor = extension.getEditor();
 
     const uri = editor.config.uri;
@@ -122,6 +134,8 @@ export class DiagnosticPlugin extends Plugin<DiagnosticPluginState> {
         }
 
         event.preventDefault();
+
+        lastDiag = +Date();
 
         const file = extension.client.workspace.getFile(uri);
         if (file) {
@@ -139,6 +153,32 @@ export class DiagnosticPlugin extends Plugin<DiagnosticPluginState> {
         'textDocument/publishDiagnostics',
         this.listener,
       );
+
+      this.listenerDisconnect = (event: Event) => {
+        const tr = editor.view.state.tr.setMeta(DiagnosticPluginKey, {
+          diagnostics: [],
+          mapper: undefined,
+        });
+        editor.view.dispatch(tr);
+      };
+
+      extension.client.addEventListener(
+        'close',
+        this.listenerDisconnect,
+      );
+
+      this.listenerChange = (event: Event) => {
+        if (lastDiag === 0 && +Date() - lastDiag > 10_1000) {
+          return;
+        }
+        const tr = editor.view.state.tr.setMeta(DiagnosticPluginKey, {
+          diagnostics: [],
+          mapper: undefined,
+        });
+        editor.view.dispatch(tr);
+      };
+
+      // extension.getEditor().addEventListener('changed', this.listenerChange);
     }
   }
 }

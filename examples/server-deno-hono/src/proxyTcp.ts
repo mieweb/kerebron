@@ -50,6 +50,8 @@ export function processText(
     const line = decoder.decode(rest.subarray(0, contentLength));
     arr = rest.subarray(contentLength);
 
+    // console.log('LSP says: ', line);
+
     const event = new MessageEvent('message', {
       data: line,
     });
@@ -70,6 +72,17 @@ class TcpClient extends EventTarget {
 
   async connect() {
     this.conn = await Deno.connect({ hostname: this.host, port: this.port });
+    this.dispatchEvent(new Event('open'));
+
+    const message = {
+      "jsonrpc":"2.0",
+      "method":"window/logMessage",
+      "params":{"type":4,"message":"LSP ready"}
+    };
+    this.dispatchEvent(new MessageEvent('message', {
+      data: JSON.stringify(message)
+    }));
+
     this.startReading();
   }
 
@@ -118,7 +131,7 @@ class TcpClient extends EventTarget {
       }
     } catch (err) {
       if (err instanceof Deno.errors.BadResource) {
-        console.log('Socket already closed');
+        console.warn('Socket already closed');
       } else {
         console.error('Read error:', err, err.name, err.code);
       }
@@ -140,8 +153,6 @@ class ProxyContext implements WSEvents<WebSocket> {
 
   async onOpen(event: Event, wsContext: WSContext<WebSocket>) {
     const client = new TcpClient(this.host, this.port);
-    await client.connect();
-
     this.client = client;
 
     client.addEventListener('message', (event) => {
@@ -154,13 +165,20 @@ class ProxyContext implements WSEvents<WebSocket> {
       }
     });
     client.addEventListener('close', () => {
+      console.info('LSP server closed');
       wsContext.close();
     });
+    client.addEventListener('open', () => {
+      console.info('LSP server open');
+    });
+
+    await client.connect();
   }
 
   onMessage(event: Event, wsContext: WSContext<WebSocket>) {
     if (event instanceof MessageEvent) {
       if (this.client) {
+        // console.log('BROWSER says: ', event.data);
         this.client.send(event.data);
       }
     }
