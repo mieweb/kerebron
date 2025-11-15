@@ -75,13 +75,15 @@ class TcpClient extends EventTarget {
     this.dispatchEvent(new Event('open'));
 
     const message = {
-      "jsonrpc":"2.0",
-      "method":"window/logMessage",
-      "params":{"type":4,"message":"LSP ready"}
+      'jsonrpc': '2.0',
+      'method': 'window/logMessage',
+      'params': { 'type': 4, 'message': 'LSP ready' },
     };
-    this.dispatchEvent(new MessageEvent('message', {
-      data: JSON.stringify(message)
-    }));
+    this.dispatchEvent(
+      new MessageEvent('message', {
+        data: JSON.stringify(message),
+      }),
+    );
 
     this.startReading();
   }
@@ -90,10 +92,18 @@ class TcpClient extends EventTarget {
     if (!this.conn) {
       return;
     }
-    const payload = typeof data === 'string' ? encoder.encode(data) : data;
-    const header = `Content-Length: ${payload.length}\r\n\r\n`;
-    await this.conn.write(encoder.encode(header));
-    await this.conn.write(payload);
+    const payload: Uint8Array = typeof data === 'string'
+      ? encoder.encode(data)
+      : data;
+    const header: Uint8Array = encoder.encode(
+      `Content-Length: ${payload.length}\r\n\r\n`,
+    );
+
+    const packet = new Uint8Array(header.length + payload.length);
+    packet.set(header, 0);
+    packet.set(payload, header.length);
+
+    await this.conn.write(packet);
   }
 
   close(code?: number) {

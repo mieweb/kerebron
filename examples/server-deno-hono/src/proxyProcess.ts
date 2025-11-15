@@ -63,13 +63,15 @@ class ProcessClient extends EventTarget {
         if (text.indexOf('Listeners setup complete - server is ready!') > -1) {
           console.info('LSP server ready');
           const message = {
-            "jsonrpc":"2.0",
-            "method":"window/logMessage",
-            "params":{"type":4,"message":"LSP ready"}
+            'jsonrpc': '2.0',
+            'method': 'window/logMessage',
+            'params': { 'type': 4, 'message': 'LSP ready' },
           };
-          this.dispatchEvent(new MessageEvent('message', {
-            data: JSON.stringify(message)
-          }));
+          this.dispatchEvent(
+            new MessageEvent('message', {
+              data: JSON.stringify(message),
+            }),
+          );
         }
 
         if (text) {
