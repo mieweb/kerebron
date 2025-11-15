@@ -87,11 +87,15 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
             if (handleChange || handleStart) {
               if (config.getItems) {
                 try {
-                  props.items = await config.getItems(state.query);
+                  props.items = await config.getItems(state.query, props);
                 } catch (err: any) {
                   if (err.isLSP) {
                     props.items = [];
-                    console.error('LSP error config.getItems()', err.message, config.getItems);
+                    console.error(
+                      'LSP error config.getItems()',
+                      err.message,
+                      config.getItems,
+                    );
                   } else {
                     throw err;
                   }
@@ -215,6 +219,8 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
 
           next.manual = false;
 
+          console.log('meta', meta);
+
           // Make sure to empty the range if suggestion is inactive
           if (!next.active) {
             if (meta?.type === 'activate') {
@@ -240,6 +246,7 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
         handleKeyDown(view, event) {
           const { active, range } = this.getState(view.state);
 
+          console.log('KEY!', active, event.key === ' ' && event.ctrlKey);
           if (!active) {
             if (event.key === ' ' && event.ctrlKey) {
               const tr = view.state.tr.setMeta(AutocompletePluginKey, {
@@ -258,6 +265,8 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
         // Setup decorator on the currently active suggestion.
         decorations(state) {
           const { active, range, decorationId } = this.getState(state);
+
+          console.log('decor', active);
 
           if (!active) {
             return null;
