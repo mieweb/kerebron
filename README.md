@@ -37,6 +37,18 @@ deno task build
 
 ## Development
 
+### Setup
+
+After cloning the repository, install git hooks:
+
+```sh
+deno task install-hooks
+```
+
+This will set up automatic code formatting on commit.
+
+### Running the development server
+
 To start example server:
 
 ```sh

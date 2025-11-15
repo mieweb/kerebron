@@ -54,7 +54,10 @@ export class DiagnosticPlugin extends Plugin<DiagnosticPluginState> {
               );
             }
             if (this.changeListener) {
-              extension.getEditor().removeEventListener('change', this.changeListener);
+              extension.getEditor().removeEventListener(
+                'change',
+                this.changeListener,
+              );
             }
           },
         };

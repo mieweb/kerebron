@@ -111,18 +111,20 @@ export class DefaultWorkspace extends Workspace {
       const mappedContent = file.extensionLsp.getMappedContent();
       const { content, mapper } = mappedContent;
 
-      if (await this.client.notification<lsp.DidChangeTextDocumentParams>(
-        'textDocument/didChange',
-        {
-          textDocument: { uri: file.uri, version: file.version },
-          contentChanges: contentChangesFor(
-            file,
-            content,
-            mapper,
-            this.client.supportSync == TextDocumentSyncKind.Incremental,
-          ),
-        },
-      )) {
+      if (
+        await this.client.notification<lsp.DidChangeTextDocumentParams>(
+          'textDocument/didChange',
+          {
+            textDocument: { uri: file.uri, version: file.version },
+            contentChanges: contentChangesFor(
+              file,
+              content,
+              mapper,
+              this.client.supportSync == TextDocumentSyncKind.Incremental,
+            ),
+          },
+        )
+      ) {
         file.syncedContent = file.content;
         file.content = content;
         file.mapper = mapper;
