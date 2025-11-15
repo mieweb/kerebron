@@ -32,7 +32,7 @@ number of output npm modules.
 ### Build static examples and `.wasm` files
 
 ```sh
-deno task -r build
+deno task build
 ```
 
 ## Development
