@@ -157,6 +157,11 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
         // this.#forceReady();
       },
       onError: (evt: Event, wsContext: WSContext<WebSocket>) => {
+        console.log(
+          '[HonoYjsMemAdapter] WebSocket error event:',
+          evt.type,
+          evt,
+        );
         if (evt instanceof ErrorEvent) {
           if (evt.message.indexOf('Connection reset by peer') > -1) {
             return;
@@ -165,7 +170,14 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
             return;
           }
           console.warn(
-            new Error('HonoYjsMemAdapter.onError: ' + evt.message, { cause: evt.error }),
+            'HonoYjsMemAdapter WebSocket error:',
+            evt.message,
+            evt.error,
+          );
+        } else {
+          console.warn(
+            'HonoYjsMemAdapter WebSocket error (non-ErrorEvent):',
+            evt,
           );
         }
       },
