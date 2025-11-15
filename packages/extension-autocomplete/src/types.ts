@@ -23,6 +23,17 @@ export interface AutocompleteRenderer<I = any, TSelected = any> {
   onUpdate?: (props: SuggestionProps<I, TSelected>) => void;
   onExit?: (props: SuggestionProps<I, TSelected>) => void;
   onKeyDown?: (props: SuggestionKeyDownProps) => boolean;
+
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  removeEventListener(
+    type: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: EventListenerOptions | boolean,
+  ): void;
 }
 
 export interface SuggestionProps<I = any, TSelected = any> {

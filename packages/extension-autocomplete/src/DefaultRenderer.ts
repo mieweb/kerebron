@@ -7,13 +7,15 @@ import {
 
 const CSS_PREFIX = 'kb-autocomplete';
 
-export class DefaultRenderer<Item> implements AutocompleteRenderer {
+export class DefaultRenderer<Item> extends EventTarget
+  implements AutocompleteRenderer {
   command: (props: any) => void;
   wrapper: HTMLElement | undefined;
   items: Array<Item> = [];
   pos: number = -1;
 
   constructor(private editor: CoreEditor) {
+    super();
     this.command = () => {};
   }
 
@@ -45,6 +47,7 @@ export class DefaultRenderer<Item> implements AutocompleteRenderer {
       this.wrapper.parentNode?.removeChild(this.wrapper);
       this.wrapper = undefined;
     }
+    this.dispatchEvent(new Event('close'));
     this.pos = -1;
   }
 

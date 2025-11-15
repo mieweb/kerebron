@@ -5,6 +5,6 @@
   "exports": {
     ".": "./src/mod.ts",
     "./AutocompletePlugin": "./src/AutocompletePlugin.ts",
-    "./DefaultRenderer": "./srcDefaultRenderer.ts"
+    "./DefaultRenderer": "./src/DefaultRenderer.ts"
   }
 }
