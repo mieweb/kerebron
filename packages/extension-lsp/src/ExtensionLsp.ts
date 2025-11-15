@@ -1,49 +1,18 @@
 import { Plugin } from 'prosemirror-state';
 import { Schema } from 'prosemirror-model';
 
-import { type CoreEditor, Extension, TextRange } from '@kerebron/editor';
+import { type CoreEditor, Extension } from '@kerebron/editor';
 import { type ExtensionMarkdown } from '@kerebron/extension-markdown';
-import {
-  type AutocompleteProps,
-  createRegexMatcher,
-  type ExtensionAutocomplete,
-} from '@kerebron/extension-autocomplete';
+import { type ExtensionAutocomplete } from '@kerebron/extension-autocomplete';
 import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
 
 import { LSPClient, Transport } from './LSPClient.ts';
 import { AutocompletePlugin } from '@kerebron/extension-autocomplete/AutocompletePlugin';
-import { DefaultRenderer } from '../../extension-autocomplete/src/DefaultRenderer.ts';
 import { DiagnosticPlugin } from './DiagnosticPlugin.ts';
+import { createLspAutocomplete } from './createLspAutocomplete.ts';
 
 export interface LspConfig {
   lspTransport: Transport;
-}
-
-interface CompletionItem {
-  label: string;
-  detail: string;
-  insertText: string;
-}
-
-class CustomRenderer extends DefaultRenderer<CompletionItem> {
-  override createListItem(item: CompletionItem, cnt: number) { // override
-    const li = document.createElement('li');
-    if (cnt === this.pos) {
-      li.classList.add('active');
-    }
-    li.innerText = item.label;
-    li.title = item.detail;
-    li.style.cursor = 'pointer';
-    li.addEventListener('click', () => {
-      this.command(item);
-    });
-    return li;
-  }
-}
-
-export function cleanPlaceholders(input: string): string {
-  const regex = /\$\{\d+:([^}]+)}/g;
-  return input.replace(regex, '$1');
 }
 
 export class ExtensionLsp extends Extension {
@@ -62,56 +31,9 @@ export class ExtensionLsp extends Extension {
   override getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
     const plugins: Plugin[] = [];
 
-    const renderer = new CustomRenderer(editor);
+    const { autocompleteConfig } = createLspAutocomplete(this);
 
-    const config = {
-      renderer,
-      matchers: [createRegexMatcher([/\w+/, /(^|\s)@\w*/, /^#\w*/])],
-      getItems: async (query: string, props: AutocompleteProps) => {
-        const { mapper } = this.getMappedContent();
-
-        const lspPos = mapper.toMarkDownLspPos(props.range.from);
-
-        this.client.sync();
-        try {
-          const completions:
-            | { items: CompletionItem[] }
-            | Array<CompletionItem> = await this.client.request(
-              'textDocument/completion',
-              {
-                textDocument: { uri: this.uri },
-                position: lspPos,
-                context: { triggerKind: 2, triggerCharacter: query },
-              },
-            );
-
-          if (Array.isArray(completions)) {
-            return completions;
-          }
-
-          return completions.items;
-        } catch (err: any) {
-          console.error(err.message);
-          return [];
-        }
-      },
-      onSelect: (selected: CompletionItem, range: TextRange) => {
-        const rawText = cleanPlaceholders(selected.insertText);
-        const slice = this.extensionMarkdown.fromMarkdown(rawText);
-
-        if (slice.content.content.length === 1) {
-          const first = slice.content.content[0];
-          if (first.isBlock) {
-            this.editor.chain().insertBlockSmart(range.from, first).run();
-            return;
-          }
-        }
-
-        this.editor.chain().replaceRangeSlice(range, slice).run();
-      },
-    };
-
-    plugins.push(new AutocompletePlugin(config, editor));
+    plugins.push(new AutocompletePlugin(autocompleteConfig, editor));
     plugins.push(new DiagnosticPlugin({}, this));
 
     return plugins;

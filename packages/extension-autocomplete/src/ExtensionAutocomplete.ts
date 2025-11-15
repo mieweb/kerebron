@@ -1,4 +1,4 @@
-import type { EditorState, Plugin, Transaction } from 'prosemirror-state';
+import type { EditorState, Plugin } from 'prosemirror-state';
 import { Schema } from 'prosemirror-model';
 
 import { type CoreEditor, Extension, type TextRange } from '@kerebron/editor';
