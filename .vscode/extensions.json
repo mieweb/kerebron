@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "denoland.vscode-deno",
-        "eamodio.gitlens"
+        "eamodio.gitlens",
+        "vue.volar"
     ]
 }
