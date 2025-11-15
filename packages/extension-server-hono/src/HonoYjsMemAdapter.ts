@@ -161,8 +161,11 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
           if (evt.message.indexOf('Connection reset by peer') > -1) {
             return;
           }
+          if (evt.message.indexOf('No response from ping frame.') > -1) {
+            return;
+          }
           console.warn(
-            new Error('HonoYjsMemAdapter.onError', { cause: evt.error }),
+            new Error('HonoYjsMemAdapter.onError: ' + evt.message, { cause: evt.error }),
           );
         }
       },
