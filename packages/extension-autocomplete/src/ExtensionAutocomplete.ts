@@ -6,12 +6,18 @@ import { type CoreEditor, Extension, type TextRange } from '@kerebron/editor';
 import { AutocompletePlugin } from './AutocompletePlugin.ts';
 import { AutocompleteMatcher, AutocompleteRenderer } from './types.ts';
 
+export interface AutocompleteProps {
+  state: EditorState;
+  range: TextRange;
+  isActive?: boolean;
+}
+
 export interface AutocompleteConfig<I = any, TSelected = any> {
-  getItems: (query: string) => I[] | Promise<I[]>;
+  getItems: (query: string, props: AutocompleteProps) => I[] | Promise<I[]>;
 
   onSelect?: (selected: TSelected, range: TextRange) => void;
   allow?: (
-    props: { state: EditorState; range: TextRange; isActive?: boolean },
+    props: AutocompleteProps,
   ) => boolean;
 
   matchers?: AutocompleteMatcher[];

@@ -4,6 +4,7 @@ import { Schema } from 'prosemirror-model';
 import { type CoreEditor, Extension, TextRange } from '@kerebron/editor';
 import { type ExtensionMarkdown } from '@kerebron/extension-markdown';
 import {
+  type AutocompleteProps,
   createRegexMatcher,
   type ExtensionAutocomplete,
 } from '@kerebron/extension-autocomplete';
@@ -41,7 +42,7 @@ class CustomRenderer extends DefaultRenderer<CompletionItem> {
 }
 
 export function cleanPlaceholders(input: string): string {
-  const regex = /\$\{\d+:([^}]+)\}/g;
+  const regex = /\$\{\d+:([^}]+)}/g;
   return input.replace(regex, '$1');
 }
 
@@ -66,17 +67,23 @@ export class ExtensionLsp extends Extension {
     const config = {
       renderer,
       matchers: [createRegexMatcher([/\w+/, /(^|\s)@\w*/, /^#\w*/])],
-      getItems: async (query: string) => {
-        const lspPos = { line: 0, character: 0 };
+      getItems: async (query: string, props: AutocompleteProps) => {
+        const { mapper } = this.getMappedContent();
+
+        const lspPos = mapper.toMarkDownLspPos(props.range.from);
 
         this.client.sync();
         try {
-          const completions: { items: CompletionItem[] } | Array<CompletionItem> =
-            await this.client.request('textDocument/completion', {
-              textDocument: { uri: this.uri },
-              position: lspPos,
-              context: { triggerKind: 2, triggerCharacter: query },
-            });
+          const completions:
+            | { items: CompletionItem[] }
+            | Array<CompletionItem> = await this.client.request(
+              'textDocument/completion',
+              {
+                textDocument: { uri: this.uri },
+                position: lspPos,
+                context: { triggerKind: 2, triggerCharacter: query },
+              },
+            );
 
           if (Array.isArray(completions)) {
             return completions;
@@ -118,7 +125,7 @@ export class ExtensionLsp extends Extension {
     }
     this.extensionMarkdown = extensionMarkdown;
 
-    this.editor.addEventListener('doc:loaded', async (ev: CustomEvent) => {
+    this.editor.addEventListener('doc:loaded', async () => {
       // const doc = ev.detail.doc;
       // if (!languageID) {
       //   let lang = view.state.facet(language);
@@ -136,7 +143,7 @@ export class ExtensionLsp extends Extension {
       }
     });
 
-    this.editor.addEventListener('changed', async (ev: CustomEvent) => {
+    this.editor.addEventListener('changed', async () => {
       if (this.editor.config.uri) {
         this.client.workspace.changedFile(
           this.editor.config.uri,
@@ -144,7 +151,7 @@ export class ExtensionLsp extends Extension {
       }
     });
 
-    this.editor.addEventListener('beforeDestroy', async (ev: CustomEvent) => {
+    this.editor.addEventListener('beforeDestroy', async () => {
       if (this.uri) {
         this.client.disconnect();
       }

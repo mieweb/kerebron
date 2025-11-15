@@ -74,12 +74,22 @@ export class PositionMapper {
 
   toMarkDownPos(pos: number) {
     for (let i = 0; i < this.markdownArr.length; i++) {
-      const row = this.markdownArr[i];
-      if (pos >= row.pos && pos <= row.maxPos) {
-        return row.targetPos + pos - row.pos;
+      const item = this.markdownArr[i];
+      if (pos >= item.pos && pos <= item.maxPos) {
+        return item.targetPos + pos - item.pos;
       }
     }
     return -1;
+  }
+
+  toMarkDownLspPos(pos: number) {
+    for (let i = 0; i < this.markdownArr.length; i++) {
+      const item = this.markdownArr[i];
+      if (pos >= item.pos && pos <= item.maxPos) {
+        return { line: item.row, character: item.col + pos - item.pos };
+      }
+    }
+    return { line: 0, character: 0 };
   }
 
   fromLineChar(line: number, character: number) {
