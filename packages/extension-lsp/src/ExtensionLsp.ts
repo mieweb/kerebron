@@ -47,26 +47,61 @@ export class ExtensionLsp extends Extension {
     }
     this.extensionMarkdown = extensionMarkdown;
 
-    this.editor.addEventListener('doc:loaded', async () => {
-      // const doc = ev.detail.doc;
-      // if (!languageID) {
-      //   let lang = view.state.facet(language);
-      //   languageID = lang ? lang.name : '';
-      // }
-      const languageID = 'TODO';
-      this.uri = this.editor.config.uri;
-      if (this.editor.config.uri) {
-        await this.client.restart();
+    let hasOpenedFile = false;
+    let isConnecting = false;
+
+    const tryOpenFile = async () => {
+      if (hasOpenedFile || isConnecting || !this.editor.config.uri) {
+        return;
+      }
+
+      const mappedContent = this.getMappedContent();
+      const hasContent = mappedContent.content.trim().length > 0;
+
+      // Only open the file if we have actual content or if we've waited long enough
+      if (hasContent) {
+        isConnecting = true;
+        hasOpenedFile = true;
+        const languageID = 'TODO';
         this.client.workspace.openFile(
           this.editor.config.uri,
           languageID,
           this.editor,
         );
+        await this.client.restart();
+        isConnecting = false;
+      }
+    };
+
+    this.editor.addEventListener('doc:loaded', async () => {
+      this.uri = this.editor.config.uri;
+      // Try to open immediately if we have content
+      await tryOpenFile();
+
+      // If we didn't open (no content yet), set a timeout as fallback
+      if (!hasOpenedFile && this.editor.config.uri) {
+        setTimeout(async () => {
+          if (!hasOpenedFile) {
+            isConnecting = true;
+            hasOpenedFile = true;
+            const languageID = 'TODO';
+            this.client.workspace.openFile(
+              this.editor.config.uri!,
+              languageID,
+              this.editor,
+            );
+            await this.client.restart();
+            isConnecting = false;
+          }
+        }, 1000); // Wait 1 second for YJS to sync
       }
     });
 
     this.editor.addEventListener('changed', async () => {
-      if (this.editor.config.uri) {
+      if (!hasOpenedFile) {
+        // Try to open the file now that content has changed
+        await tryOpenFile();
+      } else if (this.editor.config.uri) {
         this.client.workspace.changedFile(
           this.editor.config.uri,
         );

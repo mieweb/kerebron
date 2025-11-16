@@ -218,12 +218,21 @@ export class LSPClient extends EventTarget {
     console.log(
       '[LSP Client] Restart called, transport connected:',
       this.transport.isConnected(),
+      'isInitialized:',
+      this.isInitialized,
     );
     this.active = true;
     if (!this.transport.isConnected()) {
       this.transport.connect();
-    } else {
+    } else if (!this.isInitialized) {
+      // Only send initialize if not already initialized
       this.sendInitialize();
+    } else {
+      console.log(
+        '[LSP Client] Already initialized, calling workspace.connected() to sync files',
+      );
+      // If already initialized and connected, just sync the workspace files
+      this.workspace.connected();
     }
   }
 
