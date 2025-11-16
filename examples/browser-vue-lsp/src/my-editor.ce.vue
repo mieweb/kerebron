@@ -98,7 +98,7 @@ export default {
         extensions: [
           new DevAdvancedEditorKit(myMenu),
           YjsEditorKit.createFrom(ydoc, this.roomId),
-          LspEditorKit.createFrom()
+          LspEditorKit.createFrom({ uri:'ws://localhost:8080/' }),
         ]
       });
 

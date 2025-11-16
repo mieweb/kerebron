@@ -10,14 +10,31 @@ const defaultNotificationHandlers: {
   [method: string]: (client: LSPClient, params: any) => void;
 } = {
   'window/logMessage': (client, params: lsp.LogMessageParams) => {
+    const message = params.message;
+
+    // Show in status bar if available
+    for (const f of client.workspace.files) {
+      const ui = f.getUi();
+      if (ui && 'showStatus' in ui && typeof ui.showStatus === 'function') {
+        const type = params.type === MessageType.Error
+          ? 'error'
+          : params.type === MessageType.Warning
+          ? 'warning'
+          : 'info';
+        ui.showStatus(message, type);
+        break; // Only show once
+      }
+    }
+
+    // Also log to console
     if (params.type == MessageType.Error) {
-      console.error('[lsp] ' + params.message);
+      console.error('[lsp] ' + message);
     } else if (params.type == MessageType.Warning) {
-      console.warn('[lsp] ' + params.message);
+      console.warn('[lsp] ' + message);
     } else if (params.type == MessageType.Info) {
-      console.info('[lsp] ' + params.message);
+      console.info('[lsp] ' + message);
     } else if (params.type == MessageType.Log) {
-      console.log('[lsp] ' + params.message);
+      console.log('[lsp] ' + message);
     }
   },
   'window/showMessage': (client, params: lsp.ShowMessageParams) => {
@@ -161,6 +178,7 @@ export class LSPClient extends EventTarget {
 
   private readonly receiveListener: EventListenerOrEventListenerObject;
   active: boolean = false;
+  private isInitialized: boolean = false;
 
   /// Create a client object.
   constructor(
@@ -174,17 +192,18 @@ export class LSPClient extends EventTarget {
     this.receiveListener = (event) => this.receiveMessage(event);
 
     transport.addEventListener('message', this.receiveListener);
-    transport.addEventListener('ready', () => {
+    transport.addEventListener('connected', () => {
       try {
-        console.info('LSP transport ready');
-        this.onConnected();
+        console.info('[LSP Client] Transport connected, sending initialize');
+        this.sendInitialize();
       } catch (err: any) {
-        if (err.isLSP) {
-          console.error('Timeout as client.onConnected()', err.message, this.onConnected);
-        } else {
-          throw err;
-        }
+        console.error('[LSP Client] Error during initialize:', err);
       }
+    });
+    transport.addEventListener('ready', () => {
+      console.info('[LSP Client] Initialize response received');
+      // Ready event fires when initialize response is received
+      // The actual processing happens in receiveMessage
     });
     transport.addEventListener('close', (event) => {
       this.dispatchEvent(new CloseEvent('close'));
@@ -195,28 +214,49 @@ export class LSPClient extends EventTarget {
       : new DefaultWorkspace(this);
   }
 
-  async restart() {
+  restart() {
+    console.log(
+      '[LSP Client] Restart called, transport connected:',
+      this.transport.isConnected(),
+    );
     this.active = true;
     if (!this.transport.isConnected()) {
       this.transport.connect();
     } else {
-      this.onConnected();
+      this.sendInitialize();
     }
   }
 
-  async onConnected() {
+  private async sendInitialize() {
+    console.log(
+      '[LSP Client] sendInitialize called, sending initialize request',
+    );
     const capabilities = clientCapabilities;
 
-    const resp = await this.requestInner<lsp.InitializeParams, lsp.InitializeResult>(
+    const resp = await this.requestInner<
+      lsp.InitializeParams,
+      lsp.InitializeResult
+    >(
       'initialize',
       {
         processId: null,
-        clientInfo: { name: '@kerebron/lsp-client' },
+        clientInfo: {
+          name: '@kerebron/lsp-client',
+          version: '1.0.0',
+          // @ts-ignore - Custom extension to signal header preference
+          transport: {
+            'rpc-header': false,
+          },
+        },
         rootUri: this.config.rootUri || null,
         capabilities,
       },
     ).promise;
 
+    console.log(
+      '[LSP Client] Initialize response received:',
+      resp.capabilities,
+    );
     this.serverCapabilities = resp.capabilities;
     const sync = resp.capabilities.textDocumentSync;
     this.supportSync = TextDocumentSyncKind.None;
@@ -225,15 +265,21 @@ export class LSPClient extends EventTarget {
         ? sync
         : sync.change ?? TextDocumentSyncKind.None;
     }
+    console.log('[LSP Client] Sending initialized notification');
     this.transport.send(
       JSON.stringify({ jsonrpc: '2.0', method: 'initialized', params: {} }),
     );
 
+    this.isInitialized = true;
+    console.log(
+      '[LSP Client] Server initialized, notifying workspace of connection',
+    );
     this.workspace.connected();
   }
 
   disconnect() {
     this.active = false;
+    this.isInitialized = false;
     this.transport.removeEventListener('data', this.receiveListener);
     this.serverCapabilities = null;
     this.workspace.disconnected();
@@ -241,23 +287,26 @@ export class LSPClient extends EventTarget {
 
   /// Send a `textDocument/didOpen` notification to the server.
   async didOpen(file: WorkspaceFile) {
-    if (!this.transport.isConnected()) {
+    if (!this.isInitialized) {
       return false;
     }
-    await this.notification<lsp.DidOpenTextDocumentParams>('textDocument/didOpen', {
-      textDocument: {
-        uri: file.uri,
-        languageId: file.languageId,
-        text: file.content,
-        version: file.version,
+    await this.notification<lsp.DidOpenTextDocumentParams>(
+      'textDocument/didOpen',
+      {
+        textDocument: {
+          uri: file.uri,
+          languageId: file.languageId,
+          text: file.content,
+          version: file.version,
+        },
       },
-    });
+    );
     return true;
   }
 
   /// Send a `textDocument/didClose` notification to the server.
   didClose(uri: string) {
-    if (!this.transport.isConnected()) {
+    if (!this.isInitialized) {
       return;
     }
     this.notification<lsp.DidCloseTextDocumentParams>('textDocument/didClose', {
@@ -316,8 +365,11 @@ export class LSPClient extends EventTarget {
     method: string,
     params: Params,
   ): Promise<Result> {
-    if (!this.transport.isConnected()) {
-      if (this.active) {
+    if (!this.isInitialized) {
+      if (this.active && this.transport.isConnected()) {
+        // Connected but not initialized yet, wait a moment
+        throw new LSPError('Server not initialized');
+      } else if (this.active) {
         this.transport.connect();
       }
       throw new LSPError('Not connected');
@@ -335,12 +387,16 @@ export class LSPClient extends EventTarget {
   ): Request<Result> {
     if (!this.transport) {
       throw new Error('No transport');
-    };
+    }
     if (!this.transport.isConnected()) {
       if (this.active) {
         this.transport.connect();
       }
       throw new Error('Transport not connected');
+    }
+    // Allow initialize request to go through even if not initialized
+    if (method !== 'initialize' && !this.isInitialized) {
+      throw new Error('Server not initialized');
     }
 
     const id = ++this.nextReqID,
@@ -374,10 +430,13 @@ export class LSPClient extends EventTarget {
     return req;
   }
 
-  async notification<Params>(method: string, params: Params): Promise<boolean> {
+  notification<Params>(method: string, params: Params): boolean {
     if (!this.transport) return false;
-    if (!this.transport.isConnected()) {
-      if (this.active) {
+    if (!this.isInitialized) {
+      if (this.active && this.transport.isConnected()) {
+        // Connected but not initialized yet
+        return false;
+      } else if (this.active) {
         this.transport.connect();
       }
       return false;
