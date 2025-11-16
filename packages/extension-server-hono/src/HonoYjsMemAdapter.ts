@@ -146,7 +146,11 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
         room.socketContexts.set(wsContext.raw, socketContext);
 
         // Set up heartbeat to keep connection alive and prevent ping timeout
-        // Send awareness state every 30 seconds to maintain activity
+        // Send awareness state every 15 seconds to maintain activity
+        // Deno's WebSocket implementation closes idle connections after ~30 seconds
+        // of inactivity. During collaborative editing sessions, users may pause
+        // without typing, so we need regular heartbeats to prevent unexpected
+        // disconnections and maintain user presence/awareness state.
         socketContext.heartbeatInterval = setInterval(() => {
           if (wsContext.raw?.readyState === WebSocket.OPEN) {
             const encoder = encoding.createEncoder();
@@ -160,7 +164,7 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
             );
             this.send(wsContext.raw, encoding.toUint8Array(encoder));
           }
-        }, 30000);
+        }, 15000);
 
         const encoder = encoding.createEncoder();
         encoding.writeVarUint(encoder, messageType.sync);
@@ -182,12 +186,8 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
         // this.#forceReady();
       },
       onError: (evt: Event, wsContext: WSContext<WebSocket>) => {
-        console.log(
-          '[HonoYjsMemAdapter] WebSocket error event:',
-          evt.type,
-          evt,
-        );
         if (evt instanceof ErrorEvent) {
+          // Suppress expected errors from normal connection lifecycle
           if (evt.message.indexOf('Connection reset by peer') > -1) {
             return;
           }
@@ -195,13 +195,13 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
             return;
           }
           console.warn(
-            'HonoYjsMemAdapter WebSocket error:',
+            '[HonoYjsMemAdapter] WebSocket error:',
             evt.message,
             evt.error,
           );
         } else {
           console.warn(
-            'HonoYjsMemAdapter WebSocket error (non-ErrorEvent):',
+            '[HonoYjsMemAdapter] WebSocket error (non-ErrorEvent):',
             evt,
           );
         }
