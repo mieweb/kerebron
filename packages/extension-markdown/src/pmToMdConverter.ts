@@ -1,4 +1,4 @@
-import type { Mark, MarkType, Node, Schema } from 'prosemirror-model';
+import { Mark, MarkType, Node, Schema } from 'prosemirror-model';
 import { Fragment } from 'prosemirror-model';
 import { Token } from './types.ts';
 
@@ -6,6 +6,7 @@ import {
   type CoreEditor,
   NodeAndPos,
   nodeToTreeStringOutput,
+  SourceMap,
 } from '@kerebron/editor';
 
 import { MarkdownSerializer } from './MarkdownSerializer.ts';
@@ -94,12 +95,37 @@ class MdStashContext {
   }
 }
 
-export default async function pmToMdConverter(
+export async function pmToMdConverter(
   document: Node,
   config: MdConfig,
   schema: Schema,
   editor: CoreEditor,
 ): Promise<Uint8Array> {
+  const result = syncPmToMdConverter(document, config, schema, editor);
+  return new TextEncoder().encode(result.content);
+}
+
+export interface MarkdownResult {
+  content: string;
+  debugMap: Record<number, { targetRow: number; targetCol: number }>;
+  markdownMap: Array<
+    {
+      nodeIdx: number;
+      targetRow: number;
+      targetCol: number;
+      sourceCol?: number;
+      targetPos: number;
+    }
+  >;
+  sourceMap?: SourceMap;
+}
+
+export function syncPmToMdConverter(
+  document: Node,
+  config: MdConfig,
+  schema: Schema,
+  editor: CoreEditor,
+): MarkdownResult {
   const ctx = new MdStashContext();
 
   // TODO: refactor to Tokenizer
@@ -408,7 +434,6 @@ export default async function pmToMdConverter(
       //   return token;
       // },
       // open: (mark: Mark) => {
-      //   //console.log('coooo', mark)
       // },
       // close: (mark: Mark) => {
       //   const token = new Token('code_inline', 'code', 0);
@@ -446,7 +471,7 @@ export default async function pmToMdConverter(
     // },
   });
 
-  document = removeMarkedContent(document, schema.marks.change);
+  document = removeMarkedContent(document, schema.marks.change)!;
   // deleteAllMarkedText('change', state, dispatch)
 
   const tokens = defaultMarkdownTokenizer.serialize(document);
@@ -461,7 +486,31 @@ export default async function pmToMdConverter(
   }
 
   const serializer = new MarkdownSerializer();
-  const output = await serializer.serialize(tokens);
+  const output = serializer.serialize(tokens);
+
+  const event = new CustomEvent('md:output', {
+    detail: {
+      output,
+    },
+  });
+  editor.dispatchEvent(event);
+
+  const debugMap: Record<
+    number,
+    { targetRow: number; targetCol: number }
+  > = {};
+
+  const markdownMap: Array<
+    {
+      nodeIdx: number;
+      targetRow: number;
+      targetCol: number;
+      sourceCol?: number;
+      targetPos: number;
+    }
+  > = [];
+
+  let sourceMap: SourceMap | undefined;
 
   if (config.sourceMap) {
     // https://sourcemaps.info/spec.html
@@ -470,11 +519,6 @@ export default async function pmToMdConverter(
 
     const debugOutput = new SmartOutput<NodeAndPos>();
     nodeToTreeStringOutput(debugOutput, document);
-
-    const debugMap: Record<
-      number,
-      { targetRow: number; targetCol: number }
-    > = {};
 
     debugOutput.getSourceMap(
       (item: NodeAndPos, targetRow: number, targetCol: number) => {
@@ -485,24 +529,24 @@ export default async function pmToMdConverter(
       },
     );
 
-    const markdownMap: Record<
-      number,
-      { targetRow: number; targetCol: number; sourceCol: number }
-    > = {};
-
-    const sourceMap = output.getSourceMap(
-      (item: Token, targetRow: number, targetCol: number) => {
-        // console.log('ossss', item, targetRow, targetCol);
-
+    sourceMap = output.getSourceMap(
+      (
+        item: Token,
+        targetRow: number,
+        targetCol: number,
+        targetPos: number,
+      ) => {
         if (item?.map) {
           const pos = item.map[0];
-          const sourceCol = item.map[2] || 0;
+          const sourceCol = item.map[2];
 
-          markdownMap[pos] = {
+          markdownMap.push({
+            nodeIdx: pos,
+            targetPos,
             targetRow,
             targetCol,
             sourceCol,
-          };
+          });
 
           if (debugMap[pos]) {
             return {
@@ -518,7 +562,9 @@ export default async function pmToMdConverter(
     sourceMap.file = 'target.md';
     sourceMap.sources = ['debug.txt'];
     sourceMap.sourcesContent = [debugOutput.toString()];
+  }
 
+  if (config.dispatchSourceMap) {
     const event = new CustomEvent('md:sourcemap', {
       detail: {
         sourceMap,
@@ -529,5 +575,10 @@ export default async function pmToMdConverter(
     editor.dispatchEvent(event);
   }
 
-  return new TextEncoder().encode(output.toString());
+  return {
+    content: output.toString(),
+    sourceMap,
+    debugMap,
+    markdownMap,
+  };
 }

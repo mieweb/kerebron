@@ -1,5 +1,7 @@
 import { Node } from 'prosemirror-model';
 import {
+  Decoration,
+  DecorationSource,
   EditorView,
   EditorView as PMEditorView,
   NodeView,
@@ -14,10 +16,7 @@ import {
   lineNumbers,
   rectangularSelection,
 } from '@codemirror/view';
-import {
-  highlightSelectionMatches,
-  selectNextOccurrence,
-} from '@codemirror/search';
+import { selectNextOccurrence } from '@codemirror/search';
 import {
   bracketMatching,
   defaultHighlightStyle,
@@ -30,10 +29,14 @@ import {
   autocompletion,
   closeBrackets,
   closeBracketsKeymap,
+  CompletionContext,
   completionKeymap,
 } from '@codemirror/autocomplete';
 import { defaultKeymap, indentWithTab } from '@codemirror/commands';
 import { Compartment, EditorState } from '@codemirror/state';
+
+import { CoreEditor } from '@kerebron/editor';
+import type { ExtensionLsp } from '@kerebron/extension-lsp';
 
 import {
   backspaceHandler,
@@ -45,12 +48,13 @@ import {
   valueChanged,
 } from './utils.ts';
 import { CodeBlockSettings } from './types.ts';
-import { YSyncConfig, ySyncFacet } from './y-sync.ts';
+import { RemoteSyncConfig, remoteSyncFacet } from './remote-sync.ts';
 import {
   yRemoteSelections,
   yRemoteSelectionsTheme,
-} from './y-remote-selections.ts';
-import { CoreEditor } from '@kerebron/editor';
+} from './remote-selections.ts';
+import { languageServerExtensions } from './lsp/index.ts';
+import { LSPExtension } from './lsp/LSPExtension.ts';
 
 export const themeCallbacks: Array<(theme: string) => void> = [];
 
@@ -59,13 +63,13 @@ class CodeMirrorBlockNodeView implements NodeView {
   codeMirrorView: CodeMirror;
   updating: boolean;
   createCopyButtonCB: () => void;
-  selectDeleteCB: () => void;
+  selectDeleteCB: undefined | (() => void);
   languageConf: Compartment;
 
   constructor(
     private node: Node,
     private view: EditorView,
-    private getPos: boolean | (() => number),
+    private getPos: () => number | undefined,
     private settings: CodeBlockSettings,
     private editor: CoreEditor,
   ) {
@@ -78,132 +82,151 @@ class CodeMirrorBlockNodeView implements NodeView {
 
     const yCollab = () => {
       const plugins = [];
-      if (settings.provider?.awareness) {
-        const ySyncConfig = new YSyncConfig(
-          () => this.node,
-          getPos,
-          settings.provider.awareness,
-        );
-        plugins.push(ySyncFacet.of(ySyncConfig));
-        plugins.push(
-          yRemoteSelectionsTheme,
-          yRemoteSelections,
-        );
-      }
+      const remoteSyncConfig = new RemoteSyncConfig(
+        () => this.node,
+        getPos,
+        editor,
+      );
+      plugins.push(remoteSyncFacet.of(remoteSyncConfig));
+      plugins.push(
+        yRemoteSelectionsTheme,
+        yRemoteSelections,
+      );
       return plugins;
     };
 
-    const state = EditorState.create({
-      extensions: [
-        EditorState.readOnly.of(settings.readOnly),
-        CodeMirror.editable.of(!settings.readOnly),
-        lineNumbers(),
-        highlightActiveLineGutter(),
-        foldGutter(),
-        bracketMatching(),
-        closeBrackets(),
-        highlightSelectionMatches(),
-        autocompletion(),
-        rectangularSelection(),
-        drawSelection({ cursorBlinkRate: 1000 }), // broken focus
-        EditorState.allowMultipleSelections.of(true),
-        highlightActiveLine(),
-        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-        this.languageConf.of([]),
-        indentOnInput(),
-        keymap.of([
-          { key: 'Mod-d', run: selectNextOccurrence, preventDefault: true },
-          {
-            key: 'ArrowUp',
-            run: (cmView) => maybeEscape('line', -1, cmView, view, getPos),
-          },
-          {
-            key: 'ArrowLeft',
-            run: (cmView) => maybeEscape('char', -1, cmView, view, getPos),
-          },
-          {
-            key: 'ArrowDown',
-            run: (cmView) => maybeEscape('line', 1, cmView, view, getPos),
-          },
-          {
-            key: 'ArrowRight',
-            run: (cmView) => maybeEscape('char', 1, cmView, view, getPos),
-          },
-          {
-            key: 'Ctrl-Enter',
-            run: () => {
-              if (!editor.run.exitCode(view.state, view.dispatch)) {
-                return false;
-              }
-              view.focus();
-              return true;
-            },
-          },
-          {
-            key: 'Mod-z',
-            run: () => settings.undo?.(view.state, view.dispatch) || true,
-            shift: () => settings.redo?.(view.state, view.dispatch) || true,
-          },
-          {
-            key: 'Mod-y',
-            run: () => settings.redo?.(view.state, view.dispatch) || true,
-          },
-          {
-            key: 'Backspace',
-            run: (cmView) => backspaceHandler(view, cmView, editor),
-          },
-          {
-            key: 'Mod-Backspace',
-            run: (cmView) => backspaceHandler(view, cmView, editor),
-          },
-          {
-            key: 'Mod-a',
-            run: () => {
-              const result = editor.run.selectAll(
-                view.state,
-                view.dispatch,
-              );
-              view.focus();
-              return result;
-            },
-          },
-          {
-            key: 'Enter',
-            run: (cmView) => {
-              const sel = cmView.state.selection.main;
-              if (
-                cmView.state.doc.line(cmView.state.doc.lines).text === '' &&
-                sel.from === sel.to &&
-                sel.from === cmView.state.doc.length
-              ) {
-                editor.run.exitCode(view.state, view.dispatch);
-                view.focus();
-                return true;
-              }
+    const extensions = [
+      EditorState.readOnly.of(settings.readOnly),
+      CodeMirror.editable.of(!settings.readOnly),
+      lineNumbers(),
+      highlightActiveLineGutter(),
+      foldGutter(),
+      bracketMatching(),
+      closeBrackets(),
+      rectangularSelection(),
+      drawSelection({ cursorBlinkRate: 1000 }), // broken focus
+      syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+      this.languageConf.of([]),
+      indentOnInput(),
+      keymap.of([
+        { key: 'Mod-d', run: selectNextOccurrence, preventDefault: true },
+        {
+          key: 'ArrowUp',
+          run: (cmView) => maybeEscape('line', -1, cmView, view, getPos),
+        },
+        {
+          key: 'ArrowLeft',
+          run: (cmView) => maybeEscape('char', -1, cmView, view, getPos),
+        },
+        {
+          key: 'ArrowDown',
+          run: (cmView) => maybeEscape('line', 1, cmView, view, getPos),
+        },
+        {
+          key: 'ArrowRight',
+          run: (cmView) => maybeEscape('char', 1, cmView, view, getPos),
+        },
+        {
+          key: 'Ctrl-Enter',
+          run: () => {
+            if (!editor.run.exitCode()) {
               return false;
-            },
+            }
+            view.focus();
+            return true;
           },
-          ...defaultKeymap,
-          ...foldKeymap,
-          ...closeBracketsKeymap,
-          ...completionKeymap,
-          indentWithTab,
-          {
-            key: 'Ctrl-`',
-            run: () => {
-              editor.chain().toggleDevToolkit().run();
-              return true;
-            },
+        },
+        {
+          key: 'Mod-z',
+          run: () => settings.undo?.(view.state, view.dispatch) || true,
+          shift: () => settings.redo?.(view.state, view.dispatch) || true,
+        },
+        {
+          key: 'Mod-y',
+          run: () => settings.redo?.(view.state, view.dispatch) || true,
+        },
+        {
+          key: 'Backspace',
+          run: (cmView) => backspaceHandler(view, cmView, editor),
+        },
+        {
+          key: 'Mod-Backspace',
+          run: (cmView) => backspaceHandler(view, cmView, editor),
+        },
+        {
+          key: 'Mod-a',
+          run: () => {
+            const result = editor.run.selectAll();
+            view.focus();
+            return result;
           },
-        ]),
-        ...(settings.theme ? settings.theme : []),
-        themeConfig.of([]),
-        yCollab(),
-      ],
+        },
+        ...defaultKeymap,
+        ...foldKeymap,
+        ...closeBracketsKeymap,
+        ...completionKeymap,
+        indentWithTab,
+        {
+          key: 'Ctrl-`',
+          run: () => {
+            editor.chain().toggleDevToolkit().run();
+            return true;
+          },
+        },
+      ]),
+      ...(settings.theme ? settings.theme : []),
+      themeConfig.of([]),
+      yCollab(),
+    ];
+
+    const extensionLsp: ExtensionLsp | undefined = editor.getExtension('lsp');
+    if (extensionLsp) {
+      const client = extensionLsp.getClient();
+      const extension = new LSPExtension({
+        getPos: this.getPos,
+        extensions: languageServerExtensions(),
+      });
+      extensions.push(extension.plugin(client, editor));
+    } else {
+      // Define custom completions
+      const myCompletions = [
+        { label: 'console.log', type: 'function' },
+        { label: 'const', type: 'keyword' },
+        { label: 'let', type: 'keyword' },
+        { label: 'var', type: 'keyword' },
+        { label: 'function', type: 'keyword' },
+      ];
+
+      // Custom autocomplete function
+      const complete = (context: CompletionContext) => {
+        let word = context.matchBefore(/\w*/);
+        if (!word) {
+          return null;
+        }
+        if (word.from == word.to && !context.explicit) return null;
+        return {
+          from: word.from,
+          options: myCompletions,
+        };
+      };
+
+      extensions.push(
+        autocompletion({
+          override: [
+            complete,
+          ],
+        }),
+      );
+    }
+
+    const state = EditorState.create({
+      extensions,
       doc: node.textContent,
     });
 
-    const root = settings.shadowRoot || editor.view?.root || document;
+    const root = (editor.view && 'root' in editor.view)
+      ? editor.view.root
+      : document || document;
 
     this.codeMirrorView = new CodeMirror({
       state,
@@ -338,14 +361,16 @@ export const codeMirrorBlockNodeView: (
   settings: CodeBlockSettings,
   editor: CoreEditor,
 ) => (
-  pmNode: Node,
-  view: PMEditorView,
-  getPos: (() => number) | boolean,
+  node: Node,
+  view: EditorView,
+  getPos: () => number | undefined,
+  decorations: readonly Decoration[],
+  innerDecorations: DecorationSource,
 ) => NodeView = (settings, editor) => {
   return (
     pmNode: Node,
     view: PMEditorView,
-    getPos: (() => number) | boolean,
+    getPos: () => number | undefined,
   ) => {
     return new CodeMirrorBlockNodeView(pmNode, view, getPos, settings, editor);
   };

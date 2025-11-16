@@ -9,7 +9,7 @@ import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionOdt } from '@kerebron/extension-odt';
 import { ExtensionTables } from '@kerebron/extension-tables';
-import { NodeCodeMirror } from '@kerebron/extension-codemirror';
+import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
 
 globalThis.DOMParser = DOMParser;
 globalThis.XMLSerializer = XMLSerializer;
@@ -28,7 +28,7 @@ Deno.test('convert odt to md', async () => {
 
   const extensions = [
     new ExtensionBasicEditor(),
-    new NodeCodeMirror(),
+    new ExtensionCodeMirror(),
     new ExtensionTables(),
     extMd,
     extOdt,

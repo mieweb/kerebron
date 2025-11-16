@@ -1,20 +1,13 @@
 import * as Y from 'yjs';
-import * as random from 'lib0/random';
-import { WebsocketProvider } from './y-websocket.ts';
 
 import { CoreEditor } from '@kerebron/editor';
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
-import { ExtensionMarkdown } from '@kerebron/extension-markdown';
-import { ExtensionYjs } from '@kerebron/extension-yjs';
-import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
+import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
+import { CodeEditorKit } from '@kerebron/editor-kits/CodeEditorKit';
+import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
+import type { ExtensionMarkdown } from '@kerebron/extension-markdown';
+import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
 
-import {
-  NodeCodeMirror,
-  NodeDocumentCode,
-} from '@kerebron/extension-codemirror';
-import { userColors } from '@kerebron/extension-yjs/userColors';
-
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
   const docUrl = globalThis.location.hash.slice(1);
   let roomId;
   if (docUrl.startsWith('room:')) {
@@ -25,41 +18,44 @@ window.addEventListener('load', () => {
   }
   const ydoc = new Y.Doc();
 
-  const protocol = globalThis.location.protocol === 'http:' ? 'ws:' : 'wss:';
-  const wsProvider = new WebsocketProvider(
-    protocol + '//' + globalThis.location.host + '/yjs',
-    roomId,
-    ydoc,
-  );
-  console.log('roomId', roomId);
-  wsProvider.on('status', (event) => {
-    console.log('wsProvider status', event.status); // logs "connected" or "disconnected"
-  });
-
-  const userColor = userColors[random.uint32() % userColors.length];
-  wsProvider.awareness.setLocalStateField('user', {
-    name: 'Anonymous ' + Math.floor(Math.random() * 100),
-    color: userColor.color,
-    colorLight: userColor.light,
-  });
-
   const editor = new CoreEditor({
+    uri: 'test.yaml',
     topNode: 'doc_code',
     element: document.getElementById('editor') || undefined,
     extensions: [
-      new ExtensionBasicEditor(),
-      new ExtensionMarkdown(),
-      new NodeDocumentCode({ lang: 'yaml' }),
-      new ExtensionYjs({ ydoc, provider: wsProvider }),
-      new ExtensionDevToolkit(),
-      new NodeCodeMirror({
-        ydoc,
-        provider: wsProvider,
-        languageWhitelist: ['yaml'],
-        readOnly: false,
-      }),
+      new CodeEditorKit('yaml'),
+      YjsEditorKit.createFrom(ydoc, roomId),
+      LspEditorKit.createFrom(),
     ],
-    // content: pmDoc
+  });
+
+  editor.addEventListener('selection', (event: CustomEvent) => {
+    const selection = event.detail.selection;
+    const extensionMarkdown: ExtensionMarkdown | undefined = editor
+      .getExtension('markdown');
+    if (extensionMarkdown) {
+      const result = extensionMarkdown.toMarkdown(editor.state.doc);
+      const md = result.content;
+
+      const mapper = new PositionMapper(editor, result.markdownMap);
+      const from = mapper.toMarkDownPos(selection.from);
+      const to = mapper.toMarkDownPos(selection.to);
+
+      if (from > -1 && to > -1) {
+        const parts = [
+          md.substring(0, from),
+          md.substring(from, to),
+          md.substring(to),
+        ];
+        const preHtml = '<span>' + parts[0] + '</span>' +
+          '<span class="md-selected">' + parts[1] + '</span>' +
+          '<span>' + parts[2] + '</span>';
+
+        document.getElementById('markdown').innerHTML = preHtml;
+      } else {
+        return md;
+      }
+    }
   });
 
   editor.addEventListener('transaction', async (ev: CustomEvent) => {

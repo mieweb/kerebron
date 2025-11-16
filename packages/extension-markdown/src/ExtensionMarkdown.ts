@@ -1,13 +1,22 @@
 import type { Node, Schema } from 'prosemirror-model';
+import { Slice } from 'prosemirror-model';
 import { type Converter, type CoreEditor, Extension } from '@kerebron/editor';
 
-import pmToMdConverter from './pmToMdConverter.ts';
-import mdToPmConverter from './mdToPmConverter.ts';
+import {
+  MarkdownResult,
+  pmToMdConverter,
+  syncPmToMdConverter,
+} from './pmToMdConverter.ts';
+import { mdToPmConverter, syncMdToPmConverter } from './mdToPmConverter.ts';
+import type { Token } from './types.ts';
 
 export interface MdConfig {
   sourceMap?: boolean;
+  dispatchSourceMap?: boolean;
   debugTokens?: boolean;
 }
+
+export type { Token };
 
 export class ExtensionMarkdown extends Extension {
   name = 'markdown';
@@ -28,5 +37,30 @@ export class ExtensionMarkdown extends Extension {
           mdToPmConverter(source, this.config, schema),
       },
     };
+  }
+
+  toMarkdown(source: Node): MarkdownResult {
+    return syncPmToMdConverter(
+      source,
+      {
+        sourceMap: true,
+      },
+      this.editor.schema,
+      this.editor,
+    );
+  }
+
+  fromMarkdown(source: string): Slice {
+    const doc = syncMdToPmConverter(source, this.config, this.editor.schema);
+
+    const fragment = doc.content;
+    if (fragment.content.length === 1) {
+      const first = fragment.content[0];
+      if (first.type.name === 'paragraph') {
+        return new Slice(first.content, 0, 0);
+      }
+    }
+
+    return new Slice(fragment, 0, 0);
   }
 }

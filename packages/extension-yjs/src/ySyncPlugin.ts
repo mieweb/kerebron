@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-window
 import * as Y from 'yjs';
 import { createMutex } from 'lib0/mutex';
 import * as PModel from 'prosemirror-model';
@@ -22,6 +23,8 @@ import * as environment from 'lib0/environment';
 import * as dom from 'lib0/dom';
 import * as eventloop from 'lib0/eventloop';
 import * as map from 'lib0/map';
+
+import { remoteSelectionPluginKey } from '@kerebron/extension-basic-editor/ExtensionRemoteSelection';
 
 import { ySyncPluginKey, yUndoPluginKey } from './keys.ts';
 import * as utils from './utils.ts';
@@ -62,7 +65,7 @@ interface YSyncOpts {
   colorMapping?: Map<string, ColorDef>;
   permanentUserData?: Y.PermanentUserData | null;
   mapping?: ProsemirrorMapping;
-  onFirstRender?: Function;
+  onFirstRender?: () => void;
 }
 
 const defaultColors: Array<ColorDef> = [{
@@ -84,7 +87,7 @@ const getUserColor = (
     }
     colorMapping.set(user, random.oneOf(colors));
   }
-  return colorMapping.get(user);
+  return colorMapping.get(user) || defaultColors[0];
 };
 
 /**
@@ -449,7 +452,6 @@ export class ProsemirrorBinding implements BindingMetadata {
           this,
         )
       ).filter((n) => n !== null);
-      // @ts-ignore
       const _tr = state.tr.setMeta('addToHistory', false);
       const tr = _tr.replace(
         0,
@@ -481,7 +483,6 @@ export class ProsemirrorBinding implements BindingMetadata {
           this,
         )
       ).filter((n) => n !== null);
-      // @ts-ignore
       const _tr = state.tr.setMeta('addToHistory', false);
       const tr = _tr.replace(
         0,
@@ -508,7 +509,8 @@ export class ProsemirrorBinding implements BindingMetadata {
         );
       }
       this.prosemirrorView.dispatch(
-        tr.setMeta(ySyncPluginKey, { isChangeOrigin: true, binding: this }),
+        tr.setMeta(ySyncPluginKey, { isChangeOrigin: true, binding: this })
+          .setMeta(remoteSelectionPluginKey, { isChangeOrigin: true }),
       );
     });
   }
@@ -597,6 +599,10 @@ export class ProsemirrorBinding implements BindingMetadata {
           historyType,
           new Y.Snapshot(prevSnapshot.ds, snapshot.sv),
         ).map((t) => {
+          if (!this.prosemirrorView) {
+            return null;
+          }
+
           if (
             !t._item.deleted || isVisible(t._item, snapshot) ||
             isVisible(t._item, prevSnapshot)
@@ -615,18 +621,20 @@ export class ProsemirrorBinding implements BindingMetadata {
             return null;
           }
         }).filter((n) => n !== null);
-        const _tr = this.prosemirrorView.state.tr.setMeta(
-          'addToHistory',
-          false,
-        );
-        const tr = _tr.replace(
-          0,
-          this.prosemirrorView.state.doc.content.size,
-          new PModel.Slice(PModel.Fragment.from(fragmentContent), 0, 0),
-        );
-        this.prosemirrorView.dispatch(
-          tr.setMeta(ySyncPluginKey, { isChangeOrigin: true }),
-        );
+        if (this.prosemirrorView) {
+          const _tr = this.prosemirrorView.state.tr.setMeta(
+            'addToHistory',
+            false,
+          );
+          const tr = _tr.replace(
+            0,
+            this.prosemirrorView.state.doc.content.size,
+            new PModel.Slice(PModel.Fragment.from(fragmentContent), 0, 0),
+          );
+          this.prosemirrorView.dispatch(
+            tr.setMeta(ySyncPluginKey, { isChangeOrigin: true }),
+          );
+        }
       }, ySyncPluginKey);
     });
   }
@@ -869,7 +877,6 @@ const createTextNodesFromYText = (
     }, ySyncPluginKey);
     return null;
   }
-  // @ts-ignore
   return nodes;
 };
 
@@ -882,7 +889,6 @@ const createTypeFromTextNodes = (
 ): Y.XmlText => {
   const type = new Y.XmlText();
   const delta = nodes.map((node) => ({
-    // @ts-ignore
     insert: node.text,
     attributes: marksToAttributes(node.marks, meta),
   }));

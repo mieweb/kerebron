@@ -1,4 +1,4 @@
-import type { EditorView } from 'prosemirror-view';
+import { EditorView } from 'prosemirror-view';
 import type { EditorState, Transaction } from 'prosemirror-state';
 
 import type { CoreEditor } from '../CoreEditor.ts';
@@ -14,7 +14,7 @@ import { baseCommandFactories } from './baseCommandFactories.ts';
 import { keyCommandFactories } from './keyCommandFactories.ts';
 import { replaceCommandFactories } from './replaceCommandFactories.ts';
 
-type CommandRunner = () => void;
+type CommandRunner = (...args: any[]) => boolean;
 
 export class CommandManager {
   public readonly commandFactories: { [key: string]: CommandFactory } = {};
@@ -68,9 +68,9 @@ export class CommandManager {
         const state = this.editor.state;
         const view = this.editor.view;
         if (view instanceof EditorView) {
-          command(state, view.dispatch, view);
+          return command(state, view.dispatch, view);
         } else {
-          command(state, view.dispatch);
+          return command(state, view.dispatch);
         }
       };
     }

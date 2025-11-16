@@ -1,3 +1,5 @@
+import * as awarenessProtocol from 'y-protocols/awareness';
+
 import type { Schema } from 'prosemirror-model';
 import type { Plugin } from 'prosemirror-state';
 import * as Y from 'yjs';
@@ -9,15 +11,20 @@ import type {
   CommandShortcuts,
 } from '@kerebron/editor/commands';
 import { ySyncPlugin } from './ySyncPlugin.ts';
-import { yCursorPlugin } from './yCursorPlugin.ts';
+import { yPositionPlugin } from './yPositionPlugin.ts';
 import { redo, undo, yUndoPlugin } from './yUndoPlugin.ts';
 import { initProseMirrorDoc } from './convertUtils.ts';
 
+export interface YjsProvider {
+  on(eventName: string, callback: (event: any) => void): void;
+  awareness: awarenessProtocol.Awareness;
+}
+
 export class ExtensionYjs extends Extension {
   name = 'yjs';
-  doc: any;
 
   override conflicts = ['history'];
+  requires = ['remote-selection'];
 
   // declare type Command = (state: EditorState, dispatch?: (tr: Transaction) => void, view?: EditorView) => boolean;
   override getCommandFactories(): Partial<CommandFactories> {
@@ -42,7 +49,7 @@ export class ExtensionYjs extends Extension {
 
     return [
       ySyncPlugin(fragment, { mapping }),
-      yCursorPlugin(this.config.provider.awareness),
+      yPositionPlugin(this.config.provider.awareness, editor),
       yUndoPlugin(),
     ];
   }

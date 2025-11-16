@@ -1,4 +1,5 @@
 export interface OutputMeta<K> {
+  pos: number;
   rowPos: number;
   colPos: number;
   item: K;
@@ -23,23 +24,26 @@ export interface SourceMap {
 export class SmartOutput<K> {
   private _rowPos = 0;
   private _colPos = 0;
+  private _pos = 0;
 
   private chunks: Array<string> = [];
   private metas: Array<OutputMeta<K>> = [];
 
   log(text: string, item: K) {
-    this.chunks.push(text);
-
     if (text.length === 0) {
       return;
     }
-    const lines = text.split('\n');
+
+    this.chunks.push(text);
 
     this.metas.push({
+      pos: this._pos,
       colPos: this._colPos,
       rowPos: this._rowPos,
       item,
     });
+
+    const lines = text.split('\n');
 
     if (lines.length === 1) {
       this._colPos += lines[lines.length - 1].length;
@@ -47,6 +51,11 @@ export class SmartOutput<K> {
       this._rowPos += lines.length - 1;
       this._colPos = lines[lines.length - 1].length;
     }
+    this._pos += text.length;
+  }
+
+  getMetas() {
+    return this.metas;
   }
 
   get chunkPos() {
@@ -66,6 +75,10 @@ export class SmartOutput<K> {
     return this._colPos;
   }
 
+  get pos() {
+    return this._pos;
+  }
+
   endsWith(text: string) {
     return this.chunks.join('').endsWith(text);
   }
@@ -75,7 +88,12 @@ export class SmartOutput<K> {
   }
 
   getSourceMap(
-    mapper: (item: K, rowPos: number, colPos: number) => Mapping | void,
+    mapper: (
+      item: K,
+      rowPos: number,
+      colPos: number,
+      pos: number,
+    ) => Mapping | void,
   ): SourceMap {
     const mappingRows: Array<Array<Array<number>>> = [];
 
@@ -98,7 +116,7 @@ export class SmartOutput<K> {
         if (lastRow != meta.rowPos) {
           prevColPos = 0;
         }
-        const mapping = mapper(meta.item, meta.rowPos, meta.colPos);
+        const mapping = mapper(meta.item, meta.rowPos, meta.colPos, meta.pos);
         if (mapping) {
           currentRow.push([
             meta.colPos - prevColPos,

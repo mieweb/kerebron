@@ -7,13 +7,15 @@ import {
 
 const CSS_PREFIX = 'kb-autocomplete';
 
-export class DefaultRenderer<Item> implements AutocompleteRenderer {
+export class DefaultRenderer<Item> extends EventTarget
+  implements AutocompleteRenderer {
   command: (props: any) => void;
   wrapper: HTMLElement | undefined;
   items: Array<Item> = [];
   pos: number = -1;
 
   constructor(private editor: CoreEditor) {
+    super();
     this.command = () => {};
   }
 
@@ -45,10 +47,18 @@ export class DefaultRenderer<Item> implements AutocompleteRenderer {
       this.wrapper.parentNode?.removeChild(this.wrapper);
       this.wrapper = undefined;
     }
+    this.dispatchEvent(new Event('close'));
     this.pos = -1;
   }
 
   onKeyDown(props: SuggestionKeyDownProps) {
+    if (!this.wrapper) {
+      return false;
+    }
+    if (this.items.length === 0) {
+      return false;
+    }
+
     if (props.event.key === 'Escape') {
       if (this.wrapper) {
         this.wrapper.parentNode?.removeChild(this.wrapper);
@@ -75,9 +85,10 @@ export class DefaultRenderer<Item> implements AutocompleteRenderer {
     if (props.event.key === 'Enter') {
       if (this.pos > -1 && this.pos < this.items.length) {
         this.command(this.items[this.pos]);
+        this.items.splice(0, this.items.length);
         this.onExit();
+        return true;
       }
-      return true;
     }
     return false;
   }
@@ -88,6 +99,10 @@ export class DefaultRenderer<Item> implements AutocompleteRenderer {
       li.classList.add('active');
     }
     li.innerText = '' + item; // TODO item to string and item formatting
+    li.style.cursor = 'pointer';
+    li.addEventListener('click', () => {
+      this.command(item);
+    });
     return li;
   }
 

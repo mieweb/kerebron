@@ -5,17 +5,18 @@ import * as dom from 'lib0/dom';
 import * as pair from 'lib0/pair';
 import * as math from 'lib0/math';
 
-import * as awarenessProtocol from 'y-protocols/awareness';
+import { RemoteSyncConfig, remoteSyncFacet } from './remote-sync.ts';
+import type { CoreEditor } from '@kerebron/editor';
 
-import { YSyncConfig, ySyncFacet } from './y-sync.ts';
+import type { ExtensionRemoteSelection } from '@kerebron/extension-basic-editor/ExtensionRemoteSelection';
 
 export const yRemoteSelectionsTheme = cmView.EditorView.baseTheme({
-  '.cm-ySelection': {},
-  '.cm-yLineSelection': {
+  '.cm-rSelection': {},
+  '.cm-rLineSelection': {
     padding: 0,
     margin: '0px 2px 0px 4px',
   },
-  '.cm-ySelectionCaret': {
+  '.cm-rSelectionCaret': {
     position: 'relative',
     borderLeft: '1px solid black',
     borderRight: '1px solid black',
@@ -24,7 +25,7 @@ export const yRemoteSelectionsTheme = cmView.EditorView.baseTheme({
     boxSizing: 'border-box',
     display: 'inline',
   },
-  '.cm-ySelectionCaretDot': {
+  '.cm-rSelectionCaretDot': {
     borderRadius: '50%',
     position: 'absolute',
     width: '.4em',
@@ -35,11 +36,11 @@ export const yRemoteSelectionsTheme = cmView.EditorView.baseTheme({
     transition: 'transform .3s ease-in-out',
     boxSizing: 'border-box',
   },
-  '.cm-ySelectionCaret:hover > .cm-ySelectionCaretDot': {
+  '.cm-rSelectionCaret:hover > .cm-rSelectionCaretDot': {
     transformOrigin: 'bottom center',
     transform: 'scale(0)',
   },
-  '.cm-ySelectionInfo': {
+  '.cm-rSelectionInfo': {
     position: 'absolute',
     top: '-1.05em',
     left: '-1px',
@@ -60,7 +61,7 @@ export const yRemoteSelectionsTheme = cmView.EditorView.baseTheme({
     transitionDelay: '0s',
     whiteSpace: 'nowrap',
   },
-  '.cm-ySelectionCaret:hover > .cm-ySelectionInfo': {
+  '.cm-rSelectionCaret:hover > .cm-rSelectionInfo': {
     opacity: 1,
     transitionDelay: '0s',
   },
@@ -111,98 +112,56 @@ class YRemoteCaretWidget extends cmView.WidgetType {
 }
 
 export class YRemoteSelectionsPluginValue {
-  conf: YSyncConfig;
-  private _listener: (
-    { added, updated, removed }: {
-      added: number[];
-      updated: number[];
-      removed: number[];
-    },
-    s: any,
-    t: any,
-  ) => void;
-  private _awareness: awarenessProtocol.Awareness;
+  conf: RemoteSyncConfig;
+  private editor: CoreEditor;
   decorations: cmView.DecorationSet;
+  private _remoteSelectionChange: () => void;
 
   constructor(view: cmView.EditorView) {
-    this.conf = view.state.facet(ySyncFacet);
-    this._listener = ({ added, updated, removed }) => {
-      const clients = added.concat(updated).concat(removed);
-      if (
-        clients.findIndex((id: number) =>
-          id !== this.conf.awareness.doc.clientID
-        ) >= 0
-      ) {
-        view.dispatch({ annotations: [yRemoteSelectionsAnnotation.of([])] });
-      }
-    };
-    this._awareness = this.conf.awareness;
-    this._awareness.on('change', this._listener);
+    this.conf = view.state.facet(remoteSyncFacet);
+    this.editor = this.conf.editor;
     this.decorations = cmState.RangeSet.of([]);
+
+    this._remoteSelectionChange = () => {
+      view.dispatch({ annotations: [yRemoteSelectionsAnnotation.of([])] });
+    };
+    this.editor.addEventListener(
+      'remoteSelectionChange',
+      this._remoteSelectionChange,
+    );
   }
 
   destroy() {
-    this._awareness.off('change', this._listener);
+    this.editor.removeEventListener(
+      'remoteSelectionChange',
+      this._remoteSelectionChange,
+    );
   }
 
   update(update: cmView.ViewUpdate) {
-    const awareness = this.conf.awareness;
-
     const decorations: cmState.Range<cmView.Decoration>[] = [];
-    const localAwarenessState = this.conf.awareness.getLocalState();
 
-    // set local awareness state (update cursors)
+    const extension: ExtensionRemoteSelection = this.editor.getExtension(
+      'remote-selection',
+    )!;
 
-    if (localAwarenessState != null) {
-      const hasFocus = update.view.hasFocus &&
-        update.view.dom.ownerDocument.hasFocus();
-      const sel = hasFocus ? update.state.selection.main : null;
+    const remoteStates = extension.getRemoteStates();
+    for (const state of remoteStates) {
+      const clientId = state.clientId;
 
-      if (sel != null && 'function' === typeof this.conf.getPmPos) {
-        const nodePos = this.conf.getPmPos();
-        const currentAnchor = localAwarenessState['cm-cursor'] == null
-          ? -1
-          : localAwarenessState['cm-cursor'].anchor - nodePos;
-        const currentHead = localAwarenessState['cm-cursor'] == null
-          ? -1
-          : localAwarenessState['cm-cursor'].head - nodePos;
+      const cursor = state.cursor;
+      if (cursor?.anchor == null || cursor?.head == null) {
+        return;
+      }
 
-        const anchor = nodePos + sel.anchor;
-        const head = nodePos + sel.head;
+      const nodeAnchor = this.conf.getPmPos();
+      if ('undefined' !== typeof nodeAnchor) {
+        const nodeHead = nodeAnchor + this.conf.getNode().nodeSize;
+
         if (
-          localAwarenessState['cm-cursor'] == null ||
-          (currentAnchor != anchor) || (currentHead != head)
+          cursor.anchor >= nodeAnchor && cursor.anchor < nodeHead &&
+          cursor.head >= nodeAnchor && cursor.head < nodeHead
         ) {
-          awareness.setLocalStateField('cm-cursor', {
-            anchor,
-            head,
-          });
-        }
-      } else if (localAwarenessState['cm-cursor'] != null && hasFocus) {
-        awareness.setLocalStateField('cm-cursor', null);
-      }
-    }
-
-    // update decorations (remote selections)
-    awareness.getStates().forEach((state, clientId) => {
-      if (clientId === awareness.doc.clientID) {
-        return;
-      }
-
-      if (!state.user) {
-        return;
-      }
-
-      const cursor = state['cm-cursor'];
-      if (cursor == null || cursor.anchor == null || cursor.head == null) {
-        return;
-      }
-
-      if ('function' === typeof this.conf.getPmPos) {
-        const nodeAnchor = this.conf.getPmPos();
-        const nodeHead = this.conf.getPmPos() + this.conf.getNode().nodeSize;
-
-        if (cursor.anchor >= nodeAnchor && cursor.anchor <= nodeHead) {
           const anchor = { index: cursor.anchor - nodeAnchor };
           const head = { index: cursor.head - nodeAnchor };
 
@@ -222,7 +181,7 @@ export class YRemoteSelectionsPluginValue {
                 to: end,
                 value: cmView.Decoration.mark({
                   attributes: { style: `background-color: ${colorLight}` },
-                  class: 'cm-ySelection',
+                  class: 'cm-rSelection',
                 }),
               });
             } else {
@@ -233,7 +192,7 @@ export class YRemoteSelectionsPluginValue {
                 to: startLine.from + startLine.length,
                 value: cmView.Decoration.mark({
                   attributes: { style: `background-color: ${colorLight}` },
-                  class: 'cm-ySelection',
+                  class: 'cm-rSelection',
                 }),
               });
               // render text-selection in the last line
@@ -242,7 +201,7 @@ export class YRemoteSelectionsPluginValue {
                 to: end,
                 value: cmView.Decoration.mark({
                   attributes: { style: `background-color: ${colorLight}` },
-                  class: 'cm-ySelection',
+                  class: 'cm-rSelection',
                 }),
               });
               for (let i = startLine.number + 1; i < endLine.number; i++) {
@@ -253,7 +212,7 @@ export class YRemoteSelectionsPluginValue {
                   value: cmView.Decoration.line({
                     attributes: {
                       style: `background-color: ${colorLight}`,
-                      class: 'cm-yLineSelection',
+                      class: 'cm-rLineSelection',
                     },
                   }),
                 });
@@ -273,8 +232,26 @@ export class YRemoteSelectionsPluginValue {
           }
         }
       }
-    });
+    }
+
     this.decorations = cmView.Decoration.set(decorations, true);
+
+    const hasFocus = update.view.hasFocus &&
+      update.view.dom.ownerDocument.hasFocus();
+    const sel = hasFocus ? update.state.selection.main : null;
+    const nodePos = this.conf.getPmPos();
+    if (sel != null && 'undefined' !== typeof nodePos) {
+      const anchor = nodePos + sel.anchor;
+      const head = nodePos + sel.head;
+
+      const event = new CustomEvent('localPositionChanged', {
+        detail: {
+          anchor,
+          head,
+        },
+      });
+      this.editor.dispatchEvent(event);
+    }
   }
 }
 

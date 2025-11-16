@@ -12,7 +12,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
   const retVal: Array<Token> = [];
   let blockLevel = 0;
 
-  const pushInlineNode = (someInlineToken: Token) => {
+  const pushInlineNode = (someInlineToken: Token, debug: string) => {
     const lastBlockToken: Token | undefined = retVal[retVal.length - 1];
 
     if (lastBlockToken?.type === 'inline') {
@@ -25,6 +25,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
     }
 
     const blockToken = new Token('inline', '', NESTING_SELF_CLOSING);
+    blockToken.info = debug;
     blockToken.level = blockLevel;
     blockToken.children = [someInlineToken];
     blockToken.content = blockToken.children.map((c) => c.content || '').join(
@@ -51,7 +52,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
         token.map = map;
         token.meta = 'noEscText';
         token.content = node.text ?? '';
-        pushInlineNode(token);
+        pushInlineNode(token, 'walkInline');
         continue;
       }
 
@@ -67,7 +68,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             token.map = map;
             token.meta = 'noEscText';
             token.content = node.text ?? '';
-            pushInlineNode(token);
+            pushInlineNode(token, 'text');
             break;
           }
           break;
@@ -100,11 +101,8 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
               token.meta = 'noEscText';
 
               token.content = content;
-              pushInlineNode(token);
+              pushInlineNode(token, 'latex_block');
             }
-
-            // console.log(node);
-            // throw new Error('lllll');
           }
           break;
 
@@ -113,7 +111,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             const token = new Token('hardbreak', 'br', NESTING_SELF_CLOSING);
             token.map = map;
             token.content = node.text ?? '';
-            pushInlineNode(token);
+            pushInlineNode(token, 'whitespace \n');
             break;
           }
           if (node.text && node.text.match(/^\s+$/)) {
@@ -121,7 +119,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             token.map = map;
             token.meta = 'noEscText';
             token.content = node.text ?? '';
-            pushInlineNode(token);
+            pushInlineNode(token, 'whitespace space');
             break;
           }
           if (node.text.trim().length > 0) {
@@ -129,7 +127,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             token.map = map;
             token.meta = 'noEscText';
             token.content = node.text ?? '';
-            pushInlineNode(token);
+            pushInlineNode(token, 'whitespace other');
             break;
           }
 
@@ -155,7 +153,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
               openToken.attrSet('title', title.text || '');
             }
 
-            pushInlineNode(openToken);
+            pushInlineNode(openToken, 'shortcut_link');
 
             node.children
               .filter((c) => c.type === 'link_text')
@@ -164,7 +162,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
                 token.map = map;
                 token.meta = 'noEscText';
                 token.content = c.text ?? '';
-                pushInlineNode(token);
+                pushInlineNode(token, 'link_text');
               });
 
             // walkInline(node.children);
@@ -174,7 +172,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
               tagName,
               NESTING_CLOSING,
             );
-            pushInlineNode(closeToken);
+            pushInlineNode(closeToken, '/shortcut_link');
           }
           break;
 
@@ -198,7 +196,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
               openToken.attrSet('title', title.text || '');
             }
 
-            pushInlineNode(openToken);
+            pushInlineNode(openToken, 'inline_link');
 
             node.children
               .filter((c) => c.type === 'link_text')
@@ -207,7 +205,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
                 token.map = map;
                 token.meta = 'noEscText';
                 token.content = c.text ?? '';
-                pushInlineNode(token);
+                pushInlineNode(token, 'inline_link_txt');
               });
 
             // walkInline(node.children);
@@ -217,7 +215,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
               tagName,
               NESTING_CLOSING,
             );
-            pushInlineNode(closeToken);
+            pushInlineNode(closeToken, '/inline_link');
           }
           break;
         case 'image':
@@ -240,7 +238,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
               token.attrSet('title', title.text || '');
             }
 
-            pushInlineNode(token);
+            pushInlineNode(token, 'image');
           }
           break;
         case 'strong_emphasis':
@@ -252,7 +250,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
               tagName,
               NESTING_OPENING,
             );
-            pushInlineNode(openToken);
+            pushInlineNode(openToken, 'strongem');
 
             walkInline(node.children);
 
@@ -261,7 +259,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
               tagName,
               NESTING_CLOSING,
             );
-            pushInlineNode(closeToken);
+            pushInlineNode(closeToken, '/strongem');
           }
           break;
         case 'emphasis':
@@ -279,7 +277,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
               tagName,
               NESTING_OPENING,
             );
-            pushInlineNode(openToken);
+            pushInlineNode(openToken, 'em');
 
             walkInline(children);
 
@@ -288,7 +286,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
               tagName,
               NESTING_CLOSING,
             );
-            pushInlineNode(closeToken);
+            pushInlineNode(closeToken, '/em');
           }
           break;
         case 'strikethrough':
@@ -300,7 +298,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
               tagName,
               NESTING_OPENING,
             );
-            pushInlineNode(openToken);
+            pushInlineNode(openToken, 's');
 
             walkInline(node.children);
 
@@ -309,7 +307,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
               tagName,
               NESTING_CLOSING,
             );
-            pushInlineNode(closeToken);
+            pushInlineNode(closeToken, '/s');
           }
           break;
         case 'code_span':
@@ -321,7 +319,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
               tagName,
               NESTING_OPENING,
             );
-            pushInlineNode(openToken);
+            pushInlineNode(openToken, 'code');
 
             walkInline(node.children);
 
@@ -330,7 +328,22 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
               tagName,
               NESTING_CLOSING,
             );
-            pushInlineNode(closeToken);
+            pushInlineNode(closeToken, '/code');
+          }
+          break;
+        case 'html_tag':
+          {
+            const tokenName = 'html_block';
+            const tagName = '';
+            const token = new Token(
+              tokenName,
+              tagName,
+              NESTING_SELF_CLOSING,
+            );
+
+            token.content = node.text;
+
+            pushInlineNode(token, 'html_block');
           }
           break;
         default:
@@ -371,17 +384,21 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
         ];
         token.meta = 'noEscText';
         token.content = node.text ?? '';
-        pushInlineNode(token);
+        pushInlineNode(token, 'txt2');
         return;
       }
       if (node.type === 'whitespace') {
-        if (node.text === '\n') {
+        if (blockLevel === 0) {
+          return;
+        }
+        if (node.text.match(/^\n+$/)) {
           //   const token = new Token('hardbreak', 'br', NESTING_SELF_CLOSING);
           // token.map = [ +node.startPosition?.row, +node.endPosition?.row, +node.startPosition?.column, +node.endPosition?.column ];
           //   token.content = node.text ?? '';
           //   retVal.push(token);
           return;
         }
+
         if (node.text && node.text.match(/^\s+$/)) {
           const token = new Token('text', 'br', NESTING_SELF_CLOSING);
           token.map = [
@@ -392,7 +409,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           ];
           token.meta = 'noEscText';
           token.content = node.text ?? '';
-          pushInlineNode(token);
+          pushInlineNode(token, 'txt3');
           return;
         }
         if (node.text.trim().length > 0) {
@@ -405,7 +422,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           ];
           token.meta = 'noEscText';
           token.content = node.text ?? '';
-          pushInlineNode(token);
+          pushInlineNode(token, 'txt4');
           return;
         }
       }
@@ -478,13 +495,6 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           );
           closeToken.level = blockLevel;
           retVal.push(closeToken);
-
-          // console.log('node', node);
-          // console.log('openToken', openToken);
-          // console.log('children', children);
-
-          // console.log(retVal)
-          // throw new Error('INMMAKRKER');
         }
         break;
 
@@ -671,7 +681,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
               token.map = map;
               token.meta = 'noEscText';
               token.content = node.text?.replace(/\s+$/, '') ?? '';
-              pushInlineNode(token);
+              pushInlineNode(token, 'txt5');
             }
 
             const closeToken = new Token(
@@ -962,20 +972,19 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
 
   walkRecursive(tree.rootNode);
 
-  // console.log('tree.language.types', JSON.stringify(tree.language.types.filter(a => !!a), null, 2));
-  // console.log('tree.language', tree.language);
-
   return retVal;
 }
 
-import markdownWasm from '../wasm/tree-sitter-markdown.wasm?raw' with {
-  type: 'bytes',
-};
-import inlineWasm from '../wasm/tree-sitter-markdown_inline.wasm?raw' with {
-  type: 'bytes',
-};
+import markdownWasmUrl from '../wasm/tree-sitter-markdown.wasm?url';
+import inlineWasmUrl from '../wasm/tree-sitter-markdown_inline.wasm?url';
 
 export async function sitterTokenizer() {
+  const response = await fetch(markdownWasmUrl);
+  const markdownWasm = new Uint8Array(await response.arrayBuffer());
+
+  const response2 = await fetch(inlineWasmUrl);
+  const inlineWasm = new Uint8Array(await response2.arrayBuffer());
+
   const blockParser: Parser = await createParser(markdownWasm);
   const inlineParser: Parser = await createParser(inlineWasm);
 

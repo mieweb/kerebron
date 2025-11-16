@@ -13,10 +13,18 @@ export interface MarkConfig {
 export abstract class Mark {
   readonly type = 'mark';
   name: string = 'node';
+  protected editor!: CoreEditor;
 
   public readonly attributes: Record<string, Attribute<any>> = {};
 
   public constructor(protected config: Partial<MarkConfig> = {}) {}
+
+  setEditor(editor: CoreEditor) {
+    this.editor = editor;
+  }
+
+  created() {
+  }
 
   getMarkSpec(): MarkSpec {
     throw new Error('MarkSpec not defined: ' + this.name);

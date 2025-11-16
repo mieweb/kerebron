@@ -8,11 +8,17 @@
     <style>
       @import '@kerebron/editor/assets/index.css';
       @import '@kerebron/extension-codemirror/assets/codemirror.css';
+
+      .md-selected {
+        background: #ff000066;
+        outline: #ff000066 1px solid;
+      }
     </style>
   </head>
   <body>
     <button id="loadDoc">loadDoc</button>
     <div id="editor"></div>
     <script type="module" src="./src/main.ts"></script>
+    <pre id="markdown"></pre>
   </body>
 </html>

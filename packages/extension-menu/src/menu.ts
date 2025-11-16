@@ -126,7 +126,10 @@ export type IconSpec = { path: string; width: number; height: number } | {
 /// The configuration object passed to the `MenuItem` constructor.
 export interface MenuItemSpec {
   /// The function to execute when the menu item is activated.
-  run: (state: EditorState, dispatch: (tr: Transaction) => void) => boolean;
+  run: (
+    state: EditorState,
+    dispatch: (tr: Transaction) => void,
+  ) => boolean | Promise<boolean>;
 
   /// Optional function that is used to determine whether the item is
   /// appropriate at the moment. Deselected items will be hidden.
@@ -243,7 +246,7 @@ export class Dropdown implements MenuElement {
     let close = () => {
       if (open && open.close()) {
         open = null;
-        win.removeEventListener('mousedown', listeningOnClose!);
+        win?.removeEventListener('mousedown', listeningOnClose!);
       }
     };
     label.addEventListener('mousedown', (e) => {
@@ -255,7 +258,7 @@ export class Dropdown implements MenuElement {
       } else {
         open = this.expand(wrap, content.dom);
         wrap.classList.add('kb-dropdown--open');
-        win.addEventListener(
+        win?.addEventListener(
           'mousedown',
           listeningOnClose = () => {
             if (!isMenuEvent(wrap)) close();
@@ -371,12 +374,12 @@ export class DropdownSubmenu implements MenuElement {
       const isOpen = wrap.classList.contains(CSS_PREFIX + '--open');
       setClass(wrap, CSS_PREFIX + '--open', !isOpen);
       if (!isOpen && !listeningOnClose) {
-        win.addEventListener(
+        win?.addEventListener(
           'mousedown',
           listeningOnClose = () => {
             if (!isMenuEvent(wrap)) {
               wrap.classList.remove(CSS_PREFIX + '--open');
-              win.removeEventListener('mousedown', listeningOnClose!);
+              win?.removeEventListener('mousedown', listeningOnClose!);
               listeningOnClose = null;
             }
           },

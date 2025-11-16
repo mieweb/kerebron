@@ -2,6 +2,7 @@
   "license": "MIT",
   "workspace": [
     "packages/editor",
+    "packages/editor-kits",
     "packages/extension-basic-editor",
     "packages/extension-tables",
     "packages/extension-menu",
@@ -9,6 +10,7 @@
     "packages/extension-markdown",
     "packages/extension-odt",
     "packages/extension-yjs",
+    "packages/extension-lsp",
     "packages/extension-codemirror",
     "packages/extension-autocomplete",
     "packages/extension-dev-toolkit",
@@ -19,6 +21,7 @@
     "examples/browser-vanilla-code-editor",
     "examples/browser-vue",
     "examples/browser-vue-custom-element",
+    "examples/browser-vue-lsp",
     "examples/cli-html-generator",
     "examples/server-deno-hono",
     "examples/mcptest"
@@ -28,7 +31,7 @@
   },
   "tasks": {
     "build": "deno task build:ext-md; deno task build:ext-odt",
-    "build:ext-odt": "cd packages/odt-wasm && deno task build && cd ../../examples/example-vue && deno task build && cd ../example-vue-custom-element && deno task build && cd ../..",
+    "build:ext-odt": "cd packages/odt-wasm && deno task build",
     "build:ext-md": "cd packages/extension-markdown && deno task build"
   },
   "imports": {
@@ -51,6 +54,11 @@
     "lib0": "npm:lib0@0.2.109",
     "orderedmap": "npm:orderedmap@latest",
 
+    "tree-sitter": "npm:tree-sitter@0.25.0",
+
+    "vscode-languageserver-protocol": "npm:vscode-languageserver-protocol@3.17.5",
+    "vscode-languageserver-textdocument": "npm:vscode-languageserver-textdocument@1.0.12",
+
     "@codemirror/state": "npm:@codemirror/state@6.5.2",
     "@codemirror/view": "npm:@codemirror/view@6.38.1",
     "@codemirror/commands": "npm:@codemirror/commands@6.8.1",
@@ -58,6 +66,7 @@
     "@codemirror/language": "npm:@codemirror/language@6.11.0",
     "@codemirror/autocomplete": "npm:@codemirror/autocomplete@6.18.6",
     "@codemirror/legacy-modes": "npm:@codemirror/legacy-modes@6.5.0",
+    "@codemirror/lint": "npm:@codemirror/lint@6.9.2",
 
     "@codemirror/lang-cpp": "npm:@codemirror/lang-cpp@latest",
     "@codemirror/lang-css": "npm:@codemirror/lang-css@latest",

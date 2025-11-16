@@ -36,13 +36,15 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
 
             const handleStart = started || (moved && changed);
             const handleChange = changed || moved;
-            const handleExit = stopped || (moved && changed);
+            let handleExit = stopped || (moved && changed);
 
             if (!handleStart && !handleChange && !handleExit) {
               return;
             }
 
             const state = handleExit && !handleStart ? prev : next;
+
+            // await new Promise(r => setTimeout(r, 100));
             const decorationNode = view.dom.querySelector(
               `[data-decoration-id="${state.decorationId}"]`,
             );
@@ -84,7 +86,24 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
 
             if (handleChange || handleStart) {
               if (config.getItems) {
-                props.items = await config.getItems(state.query);
+                try {
+                  const ctx = { state, range: state.range, isActive: true };
+                  props.items = await config.getItems(state.query, ctx);
+                } catch (err: any) {
+                  if (err.isLSP) {
+                    props.items = [];
+                    console.error(
+                      'LSP error config.getItems()',
+                      err.message,
+                      config.getItems,
+                    );
+                  } else {
+                    throw err;
+                  }
+                }
+                if (props.items.length === 0) {
+                  handleExit = true;
+                }
               }
             }
 
@@ -115,6 +134,7 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
         // Initialize the plugin's internal state.
         init() {
           const state: {
+            manual: boolean;
             active: boolean;
             range: TextRange;
             query: null | string;
@@ -122,6 +142,7 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
             composing: boolean;
             decorationId?: string | null;
           } = {
+            manual: false,
             active: false,
             range: {
               from: 0,
@@ -144,9 +165,33 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
           const { empty, from } = selection;
           const next = { ...prev };
 
+          const meta = transaction.getMeta(AutocompletePluginKey);
+          if (!meta && !transaction.isGeneric) {
+            return next;
+          }
+
+          if (meta?.type === 'deactivate') {
+            console.info('Deactivate autocomplete');
+            next.active = false;
+            return next;
+          }
+          if (meta?.type === 'activate') {
+            console.info('Trigger manual autocomplete');
+            next.range = { from: selection.from, to: selection.to };
+            next.active = true;
+            next.manual = true;
+            next.query = null;
+            return next;
+          }
+
           next.composing = composing;
 
-          if (isEditable && (empty || editor.view.composing)) {
+          const parentNode = selection.$anchor.parent;
+
+          if (
+            !['code_block'].includes(parentNode?.type.name) && isEditable &&
+            (empty || editor.view.composing)
+          ) {
             // Reset active state if we just left the previous suggestion range
             if (
               (from < prev.range.from || from > prev.range.to) && !composing &&
@@ -158,6 +203,7 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
             const matchers: AutocompleteMatcher[] = config.matchers ||
               [createDefaultMatcher()];
             let match = undefined;
+
             for (const matcher of matchers) {
               match = matcher(selection.$from);
               if (match) {
@@ -175,6 +221,7 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
                 isActive: prev.active,
               }))
             ) {
+              console.info('Trigger matcher autocomplete', match);
               next.active = true;
               next.decorationId = prev.decorationId
                 ? prev.decorationId
@@ -188,6 +235,10 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
           } else {
             next.active = false;
           }
+
+          next.manual = false;
+
+          console.log('meta', meta);
 
           // Make sure to empty the range if suggestion is inactive
           if (!next.active) {
@@ -206,11 +257,20 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
         handleKeyDown(view, event) {
           const { active, range } = this.getState(view.state);
 
-          if (!active) {
-            return false;
+          if (event.key === ' ' && event.ctrlKey) {
+            const tr = view.state.tr.setMeta(AutocompletePluginKey, {
+              type: 'activate',
+            });
+            console.info('Manual autocomplete key');
+            view.dispatch(tr);
+            return true;
           }
 
-          return renderer?.onKeyDown?.({ view, event, range }) || false;
+          if (active) {
+            return renderer?.onKeyDown?.({ view, event, range }) || false;
+          }
+
+          return false;
         },
 
         // Setup decorator on the currently active suggestion.
@@ -221,15 +281,23 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
             return null;
           }
 
+          const node = document.createElement('span');
+          node.className = config.decorationClass || 'kb-autocomplete--decor';
+          node.setAttribute('data-decoration-id', decorationId);
+
           return DecorationSet.create(state.doc, [
-            Decoration.inline(range.from, range.to, {
-              nodeName: config.decorationTag || 'span',
-              class: config.decorationClass || 'kb-autocomplete--decor',
-              'data-decoration-id': decorationId,
-            }),
+            Decoration.widget(range.from, node),
           ]);
         },
       },
+    });
+
+    renderer.addEventListener('close', () => {
+      const tr = editor.state.tr.setMeta(AutocompletePluginKey, {
+        type: 'deactivate',
+      });
+      console.info('Manual autocomplete deactivate');
+      editor.view.dispatch(tr);
     });
   }
 }
