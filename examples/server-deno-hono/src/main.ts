@@ -35,4 +35,10 @@ for (
 }
 
 const server = new Server({ devProxyUrls });
-Deno.serve(server.fetch);
+// Configure Deno.serve with WebSocket idle timeout disabled
+// to prevent "No response from ping frame" errors in long-lived collaborative sessions
+Deno.serve({
+  onListen: ({ port, hostname }) => {
+    console.log(`Server running on http://${hostname}:${port}`);
+  },
+}, server.fetch);

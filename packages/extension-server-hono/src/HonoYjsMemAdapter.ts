@@ -39,8 +39,16 @@ export const getYDoc = (docname: string, gc = true): Y.Doc => {
 
 export class SocketContext {
   public readonly controlledIds: Set<number> = new Set();
+  public heartbeatInterval?: number;
 
   constructor(public readonly room: Room, public readonly socket: WebSocket) {
+  }
+
+  destroy() {
+    if (this.heartbeatInterval !== undefined) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = undefined;
+    }
   }
 }
 
@@ -115,7 +123,7 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
     this.rooms = rooms;
   }
 
-  async getRoomNames() {
+  getRoomNames() {
     return Array.from(rooms.keys());
   }
 
@@ -136,6 +144,23 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
         const socketContext = new SocketContext(room, wsContext.raw);
         this.sockets.set(wsContext.raw, socketContext);
         room.socketContexts.set(wsContext.raw, socketContext);
+
+        // Set up heartbeat to keep connection alive and prevent ping timeout
+        // Send awareness state every 30 seconds to maintain activity
+        socketContext.heartbeatInterval = setInterval(() => {
+          if (wsContext.raw?.readyState === WebSocket.OPEN) {
+            const encoder = encoding.createEncoder();
+            encoding.writeVarUint(encoder, messageType.awareness);
+            encoding.writeVarUint8Array(
+              encoder,
+              awarenessProtocol.encodeAwarenessUpdate(
+                room.awareness,
+                Array.from(room.awareness.getStates().keys()),
+              ),
+            );
+            this.send(wsContext.raw, encoding.toUint8Array(encoder));
+          }
+        }, 30000);
 
         const encoder = encoding.createEncoder();
         encoding.writeVarUint(encoder, messageType.sync);
@@ -244,7 +269,7 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
       }
     } catch (err) {
       console.error(err);
-      // @ts-ignore
+      // @ts-ignore: doc variable not in scope but kept for compatibility
       doc.emit('error', [err]);
     }
   }
@@ -257,6 +282,9 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
   #removeSocket(conn: WebSocket) {
     const socketContext = this.sockets.get(conn);
     if (socketContext) {
+      // Clean up heartbeat interval
+      socketContext.destroy();
+
       const room = socketContext.room;
       room.socketContexts.delete(socketContext.socket);
       awarenessProtocol.removeAwarenessStates(
