@@ -39,6 +39,18 @@ const server = new Server({ devProxyUrls });
 // to prevent "No response from ping frame" errors in long-lived collaborative sessions
 Deno.serve({
   onListen: ({ port, hostname }) => {
-    console.log(`Server running on http://${hostname}:${port}`);
+    // Use localhost instead of 0.0.0.0 for better browser compatibility (Safari)
+    const displayHost = hostname === '0.0.0.0' ? 'localhost' : hostname;
+    console.log(`\n=================================================`);
+    console.log(`\nAvailable examples (proxied from Vite):`);
+    for (const examplePath in devProxyUrls) {
+      const viteUrl = devProxyUrls[examplePath];
+      const honoUrl = `http://${displayHost}:${port}${examplePath}`;
+      console.log(`  ${examplePath}`);
+      console.log(`    Editor:  ${honoUrl} synced by Hono:  ${viteUrl}`);
+    }
+    console.log(`=================================================`);
+    console.log(`Server running on http://${displayHost}:${port}`);
+    console.log(`\n=================================================\n`);
   },
 }, server.fetch);
