@@ -26,6 +26,7 @@ interface WorkspaceFileUpdate {
 
 export abstract class Workspace {
   abstract files: WorkspaceFile[];
+  protected isConnected = false;
 
   constructor(
     readonly client: LSPClient,
@@ -46,6 +47,7 @@ export abstract class Workspace {
   abstract closeFile(uri: string): void;
 
   async connected(): Promise<void> {
+    this.isConnected = true;
     for await (const file of this.files) {
       const result = await this.client.didOpen(file);
     }
@@ -55,6 +57,7 @@ export abstract class Workspace {
     for (const file of this.files) {
       this.client.workspace.closeFile(file.uri);
     }
+    this.isConnected = false;
   }
 
   getUi(uri: string): Promise<EditorUi | undefined> {
@@ -107,22 +110,31 @@ export class DefaultWorkspace extends Workspace {
 
   async changedFile(uri: string) {
     const file = this.files.find((f) => f.uri == uri) || null;
+
     if (file) {
       const mappedContent = file.extensionLsp.getMappedContent();
       const { content, mapper } = mappedContent;
 
-      if (await this.client.notification<lsp.DidChangeTextDocumentParams>(
-        'textDocument/didChange',
-        {
-          textDocument: { uri: file.uri, version: file.version },
-          contentChanges: contentChangesFor(
-            file,
-            content,
-            mapper,
-            this.client.supportSync == TextDocumentSyncKind.Incremental,
-          ),
-        },
-      )) {
+      if (!this.isConnected) {
+        file.content = content;
+        file.mapper = mapper;
+        return;
+      }
+
+      if (
+        await this.client.notification<lsp.DidChangeTextDocumentParams>(
+          'textDocument/didChange',
+          {
+            textDocument: { uri: file.uri, version: file.version },
+            contentChanges: contentChangesFor(
+              file,
+              content,
+              mapper,
+              this.client.supportSync == TextDocumentSyncKind.Incremental,
+            ),
+          },
+        )
+      ) {
         file.syncedContent = file.content;
         file.content = content;
         file.mapper = mapper;

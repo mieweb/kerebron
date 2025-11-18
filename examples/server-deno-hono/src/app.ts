@@ -50,7 +50,11 @@ export class Server {
     this.app.get(
       '/lsp',
       upgradeWebSocket((c) => {
-        // return proxyProcess('node', ['../../../lsp-toy/server/out/server.js'], c);
+        // return proxyProcess(
+        //   'node',
+        //   ['../../../lsp-toy/server/out/server.js'],
+        //   c,
+        // );
         return proxyTcp('127.0.0.1:2087', c);
       }),
     );

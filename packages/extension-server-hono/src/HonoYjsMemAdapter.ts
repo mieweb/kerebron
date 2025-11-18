@@ -165,7 +165,9 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
             return;
           }
           console.warn(
-            new Error('HonoYjsMemAdapter.onError: ' + evt.message, { cause: evt.error }),
+            new Error('HonoYjsMemAdapter.onError: ' + evt.message, {
+              cause: evt.error,
+            }),
           );
         }
       },

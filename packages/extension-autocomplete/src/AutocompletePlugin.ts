@@ -238,8 +238,6 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
 
           next.manual = false;
 
-          console.log('meta', meta);
-
           // Make sure to empty the range if suggestion is inactive
           if (!next.active) {
             next.decorationId = null;

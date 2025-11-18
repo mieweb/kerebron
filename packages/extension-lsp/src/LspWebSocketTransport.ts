@@ -3,7 +3,7 @@ import { type Transport } from './LSPClient.ts';
 function shouldReconnectOnCode(code: number) {
   // https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code
   // Reconnect on server going away (1001), but NOT on normal close (1000)
-  const reconnectCodes = [1001, 1006, 1011, 1012, 1013];
+  const reconnectCodes = [1001, 1005, 1006, 1011, 1012, 1013];
   return reconnectCodes.includes(code);
 }
 
@@ -13,6 +13,7 @@ export class LspWebSocketTransport extends EventTarget implements Transport {
   private maxAttempts = 10;
   private readonly baseDelay = 1000;
   isConnecting: boolean = false;
+  initialized = false;
 
   constructor(public readonly uri: string) {
     super();
@@ -20,6 +21,10 @@ export class LspWebSocketTransport extends EventTarget implements Transport {
 
   isConnected() {
     return this.socket?.readyState === WebSocket.OPEN;
+  }
+
+  isInitialized() {
+    return this.initialized;
   }
 
   connect() {
@@ -37,20 +42,25 @@ export class LspWebSocketTransport extends EventTarget implements Transport {
     console.info('LSP transport disconnect()');
     this.socket?.close();
     this.socket = undefined;
+    this.initialized = false;
     this.reconnectAttempts = 0;
   }
 
   bindEvents(socket: WebSocket) {
     socket.addEventListener('message', (event) => {
-      if (event.data.indexOf('LSP ready') > -1) {
-        this.dispatchEvent(new Event('ready'));
-      }
+      try {
+        const json = JSON.parse(event.data);
+        if (json?.result?.capabilities) {
+          this.reconnectAttempts = 0;
+          this.initialized = true;
+          this.dispatchEvent(new Event('initialized'));
+        }
+      } catch (ignoredError) {}
       this.dispatchEvent(new MessageEvent('message', { data: event.data }));
     });
     socket.addEventListener('open', (event) => {
-      this.reconnectAttempts = 0;
       this.isConnecting = false;
-      this.dispatchEvent(new CustomEvent('connected'));
+      this.dispatchEvent(new CustomEvent('open'));
     });
     socket.addEventListener('error', (event) => {
       console.error(event);

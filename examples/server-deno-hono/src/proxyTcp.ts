@@ -182,7 +182,25 @@ class ProxyContext implements WSEvents<WebSocket> {
       console.info('LSP server open');
     });
 
-    await client.connect();
+    try {
+      await client.connect();
+    } catch (err) {
+      if (err.message.indexOf('Connection refused') > -1) {
+        wsContext.send(
+          JSON.stringify({
+            'jsonrpc': '2.0',
+            'method': 'window/logMessage',
+            'params': { 'type': 1, 'message': err.message },
+          }),
+        );
+        setTimeout(() => {
+          wsContext.close();
+        }, 100);
+      } else {
+        console.error(err);
+        wsContext.close();
+      }
+    }
   }
 
   onMessage(event: Event, wsContext: WSContext<WebSocket>) {

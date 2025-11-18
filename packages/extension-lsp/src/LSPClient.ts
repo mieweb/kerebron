@@ -45,6 +45,7 @@ export type Transport = {
     options?: EventListenerOptions | boolean,
   ): void;
   isConnected(): boolean;
+  isInitialized(): boolean;
 };
 
 class Request<Result> {
@@ -55,7 +56,7 @@ class Request<Result> {
   constructor(
     readonly id: number,
     readonly params: any,
-    readonly timeout: number,
+    readonly timeout: ReturnType<typeof setTimeout>,
   ) {
     this.promise = new Promise((resolve, reject) => {
       this.resolve = resolve;
@@ -158,11 +159,11 @@ export class LSPClient extends EventTarget {
   public supportSync: TextDocumentSyncKind = TextDocumentSyncKind.None;
 
   private readonly timeout: number;
+  private initializing: ReturnType<typeof setInterval> | undefined;
 
   private readonly receiveListener: EventListenerOrEventListenerObject;
   active: boolean = false;
 
-  /// Create a client object.
   constructor(
     private readonly transport: Transport,
     readonly config: LSPClientConfig = {},
@@ -174,19 +175,28 @@ export class LSPClient extends EventTarget {
     this.receiveListener = (event) => this.receiveMessage(event);
 
     transport.addEventListener('message', this.receiveListener);
-    transport.addEventListener('ready', () => {
+    transport.addEventListener('initialized', () => {
       try {
-        console.info('LSP transport ready');
-        this.onConnected();
+        console.info('LSP initialized');
+        this.onInitialized();
       } catch (err: any) {
         if (err.isLSP) {
-          console.error('Timeout as client.onConnected()', err.message, this.onConnected);
+          console.error(
+            'Timeout as client.onConnected()',
+            err.message,
+            this.onInitialized,
+          );
         } else {
           throw err;
         }
       }
     });
+    transport.addEventListener('open', () => {
+      this.startInitializing();
+    });
     transport.addEventListener('close', (event) => {
+      this.active = false;
+      this.serverCapabilities = null;
       this.dispatchEvent(new CloseEvent('close'));
     });
 
@@ -195,36 +205,59 @@ export class LSPClient extends EventTarget {
       : new DefaultWorkspace(this);
   }
 
+  startInitializing() {
+    if (this.initializing) {
+      return;
+    }
+    this.initializing = setInterval(async () => {
+      const capabilities = clientCapabilities;
+
+      try {
+        const resp = await this.requestInner<
+          lsp.InitializeParams,
+          lsp.InitializeResult
+        >(
+          'initialize',
+          {
+            processId: null,
+            clientInfo: { name: '@kerebron/lsp-client' },
+            rootUri: this.config.rootUri || null,
+            capabilities,
+          },
+        ).promise;
+
+        this.stopInitializing();
+
+        this.serverCapabilities = resp.capabilities;
+        const sync = this.serverCapabilities.textDocumentSync;
+        this.supportSync = TextDocumentSyncKind.None;
+        if (sync) {
+          this.supportSync = typeof sync == 'number'
+            ? sync
+            : sync.change ?? TextDocumentSyncKind.None;
+        }
+      } catch (ignoreConnectErrors) {
+      }
+    }, this.timeout);
+  }
+
+  stopInitializing() {
+    if (this.initializing) {
+      clearInterval(this.initializing);
+      this.initializing = undefined;
+    }
+  }
+
   async restart() {
     this.active = true;
     if (!this.transport.isConnected()) {
       this.transport.connect();
     } else {
-      this.onConnected();
+      this.startInitializing();
     }
   }
 
-  async onConnected() {
-    const capabilities = clientCapabilities;
-
-    const resp = await this.requestInner<lsp.InitializeParams, lsp.InitializeResult>(
-      'initialize',
-      {
-        processId: null,
-        clientInfo: { name: '@kerebron/lsp-client' },
-        rootUri: this.config.rootUri || null,
-        capabilities,
-      },
-    ).promise;
-
-    this.serverCapabilities = resp.capabilities;
-    const sync = resp.capabilities.textDocumentSync;
-    this.supportSync = TextDocumentSyncKind.None;
-    if (sync) {
-      this.supportSync = typeof sync == 'number'
-        ? sync
-        : sync.change ?? TextDocumentSyncKind.None;
-    }
+  onInitialized() {
     this.transport.send(
       JSON.stringify({ jsonrpc: '2.0', method: 'initialized', params: {} }),
     );
@@ -234,30 +267,34 @@ export class LSPClient extends EventTarget {
 
   disconnect() {
     this.active = false;
-    this.transport.removeEventListener('data', this.receiveListener);
     this.serverCapabilities = null;
+    this.transport.removeEventListener('data', this.receiveListener);
     this.workspace.disconnected();
+    this.dispatchEvent(new CloseEvent('close'));
   }
 
   /// Send a `textDocument/didOpen` notification to the server.
   async didOpen(file: WorkspaceFile) {
-    if (!this.transport.isConnected()) {
+    if (!this.transport.isInitialized()) {
       return false;
     }
-    await this.notification<lsp.DidOpenTextDocumentParams>('textDocument/didOpen', {
-      textDocument: {
-        uri: file.uri,
-        languageId: file.languageId,
-        text: file.content,
-        version: file.version,
+    await this.notification<lsp.DidOpenTextDocumentParams>(
+      'textDocument/didOpen',
+      {
+        textDocument: {
+          uri: file.uri,
+          languageId: file.languageId,
+          text: file.content,
+          version: file.version,
+        },
       },
-    });
+    );
     return true;
   }
 
   /// Send a `textDocument/didClose` notification to the server.
   didClose(uri: string) {
-    if (!this.transport.isConnected()) {
+    if (!this.transport.isInitialized()) {
       return;
     }
     this.notification<lsp.DidCloseTextDocumentParams>('textDocument/didClose', {
@@ -380,6 +417,9 @@ export class LSPClient extends EventTarget {
       if (this.active) {
         this.transport.connect();
       }
+      return false;
+    }
+    if (!this.transport.isInitialized()) {
       return false;
     }
     const data: lsp.NotificationMessage = {

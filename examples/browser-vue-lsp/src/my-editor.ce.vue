@@ -93,12 +93,12 @@ export default {
       }
 
       this.editor = new CoreEditor({
-        uri: 'test.md',
+        uri: 'file:///test.md',
         element: this.$refs.editor,
         extensions: [
           new DevAdvancedEditorKit(myMenu),
           YjsEditorKit.createFrom(ydoc, this.roomId),
-          LspEditorKit.createFrom()
+          LspEditorKit.createFrom(),
         ]
       });
 
