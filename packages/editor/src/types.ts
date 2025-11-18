@@ -42,3 +42,16 @@ export interface TextRange {
   from: number;
   to: number;
 }
+
+export interface RawTextMapEntry {
+  nodeIdx: number;
+  targetRow: number;
+  targetCol: number;
+  sourceCol?: number;
+  targetPos: number;
+}
+
+export interface RawTextResult {
+  content: string;
+  rawTextMap: Array<RawTextMapEntry>;
+}

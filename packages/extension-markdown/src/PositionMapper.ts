@@ -1,12 +1,12 @@
 import type { Node } from 'prosemirror-model';
-import type { CoreEditor, TextRange } from '@kerebron/editor';
+import type { CoreEditor, RawTextMapEntry } from '@kerebron/editor';
 
-interface MarkdownPosItem {
-  pos: number;
+interface RawTextPosItem {
+  nodeIdx: number;
+  maxNodeIdx: number;
   targetPos: number;
-  maxPos: number;
-  col: number;
-  row: number;
+  targetRow: number;
+  targetCol: number;
 }
 
 function findFirstLetterPosition(
@@ -33,75 +33,76 @@ function findFirstLetterPosition(
 }
 
 export class PositionMapper {
-  private readonly markdownArr: MarkdownPosItem[];
+  private readonly rawTextArr: RawTextPosItem[];
   public readonly doc: Node;
 
   constructor(
     editor: CoreEditor,
-    public readonly markdownMap: Array<
-      {
-        nodeIdx: number;
-        targetRow: number;
-        targetCol: number;
-        sourceCol?: number;
-        targetPos: number;
-      }
-    >,
+    public readonly rawTextMap: Array<RawTextMapEntry>,
   ) {
     this.doc = editor.state.doc;
-    this.markdownArr = [];
-    for (const item of markdownMap) {
+    this.rawTextArr = [];
+    for (const item of rawTextMap) {
       if (item.nodeIdx > 0) {
-        this.markdownArr.push({
-          pos: item.nodeIdx,
+        this.rawTextArr.push({
+          nodeIdx: item.nodeIdx,
+          maxNodeIdx: item.nodeIdx,
           targetPos: item.targetPos,
-          maxPos: item.nodeIdx,
-          row: item.targetRow,
-          col: item.targetCol,
+          targetRow: item.targetRow,
+          targetCol: item.targetCol,
         });
       }
     }
-    this.markdownArr.sort((b, a) => b.pos - a.pos);
-    for (let i = 0; i < this.markdownArr.length; i++) {
+    this.rawTextArr.sort((b, a) => b.nodeIdx - a.nodeIdx);
+    for (let i = 0; i < this.rawTextArr.length; i++) {
       const next = i + 1;
-      if (next < this.markdownArr.length) {
-        this.markdownArr[i].maxPos = this.markdownArr[next].pos - 1;
+      if (next < this.rawTextArr.length) {
+        this.rawTextArr[i].maxNodeIdx = this.rawTextArr[next].nodeIdx - 1;
       } else {
-        this.markdownArr[i].maxPos = this.doc.nodeSize;
+        this.rawTextArr[i].maxNodeIdx = this.doc.nodeSize;
       }
     }
   }
 
-  toMarkDownPos(pos: number) {
-    for (let i = 0; i < this.markdownArr.length; i++) {
-      const item = this.markdownArr[i];
-      if (pos >= item.pos && pos <= item.maxPos) {
-        return item.targetPos + pos - item.pos;
+  toRawTextPos(pos: number) {
+    for (let i = 0; i < this.rawTextArr.length; i++) {
+      const item = this.rawTextArr[i];
+      if (pos >= item.nodeIdx && pos <= item.maxNodeIdx) {
+        return item.targetPos + pos - item.nodeIdx;
       }
     }
     return -1;
   }
 
-  toMarkDownLspPos(pos: number) {
-    for (let i = 0; i < this.markdownArr.length; i++) {
-      const item = this.markdownArr[i];
-      if (pos >= item.pos && pos <= item.maxPos) {
-        return { line: item.row, character: item.col + pos - item.pos };
+  toRawTextLspPos(pos: number) {
+    for (let i = 0; i < this.rawTextArr.length; i++) {
+      const item = this.rawTextArr[i];
+      if (pos >= item.nodeIdx && pos <= item.maxNodeIdx) {
+        return {
+          line: item.targetRow,
+          character: item.targetCol + pos - item.nodeIdx,
+        };
       }
     }
     return { line: 0, character: 0 };
   }
 
   fromLineChar(line: number, character: number) {
-    for (let i = 0; i < this.markdownArr.length; i++) {
-      const item = this.markdownArr[i];
-      const len = item.maxPos - item.pos;
+    for (let i = 0; i < this.rawTextArr.length; i++) {
+      const item = this.rawTextArr[i];
+      const len = item.maxNodeIdx - item.nodeIdx + 1;
 
-      if (
-        item.row === line && character >= item.col && character < item.col + len
-      ) {
-        const offset = character - item.col;
-        return item.pos + offset;
+      if (item.targetRow === line) {
+        if (character >= item.targetCol && character < item.targetCol + len) {
+          const offset = character - item.targetCol;
+          return item.nodeIdx + offset;
+        }
+
+        const nextItem = this.rawTextArr[i + 1];
+        const isLastInRow = !nextItem || nextItem.targetRow > item.targetRow;
+        if (isLastInRow && character >= item.targetCol + len) {
+          return item.maxNodeIdx;
+        }
       }
     }
     return -1;

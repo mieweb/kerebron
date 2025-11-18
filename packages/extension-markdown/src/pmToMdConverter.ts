@@ -6,6 +6,8 @@ import {
   type CoreEditor,
   NodeAndPos,
   nodeToTreeStringOutput,
+  RawTextMapEntry,
+  RawTextResult,
   SourceMap,
 } from '@kerebron/editor';
 
@@ -105,18 +107,8 @@ export async function pmToMdConverter(
   return new TextEncoder().encode(result.content);
 }
 
-export interface MarkdownResult {
-  content: string;
+export interface MarkdownResult extends RawTextResult {
   debugMap: Record<number, { targetRow: number; targetCol: number }>;
-  markdownMap: Array<
-    {
-      nodeIdx: number;
-      targetRow: number;
-      targetCol: number;
-      sourceCol?: number;
-      targetPos: number;
-    }
-  >;
   sourceMap?: SourceMap;
 }
 
@@ -500,7 +492,7 @@ export function syncPmToMdConverter(
     { targetRow: number; targetCol: number }
   > = {};
 
-  const markdownMap: Array<
+  const rawTextMap: Array<
     {
       nodeIdx: number;
       targetRow: number;
@@ -540,7 +532,7 @@ export function syncPmToMdConverter(
           const pos = item.map[0];
           const sourceCol = item.map[2];
 
-          markdownMap.push({
+          rawTextMap.push({
             nodeIdx: pos,
             targetPos,
             targetRow,
@@ -569,7 +561,7 @@ export function syncPmToMdConverter(
       detail: {
         sourceMap,
         debugMap,
-        markdownMap,
+        rawTextMap,
       },
     });
     editor.dispatchEvent(event);
@@ -579,6 +571,6 @@ export function syncPmToMdConverter(
     content: output.toString(),
     sourceMap,
     debugMap,
-    markdownMap,
+    rawTextMap,
   };
 }

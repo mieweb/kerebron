@@ -1,11 +1,11 @@
 import * as Y from 'yjs';
 
 import { CoreEditor } from '@kerebron/editor';
-import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
 import { CodeEditorKit } from '@kerebron/editor-kits/CodeEditorKit';
+import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
 import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
-import type { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
+import type { ExtensionBasicCodeEditor } from '@kerebron/extension-basic-editor/ExtensionBasicCodeEditor';
 
 window.addEventListener('load', async () => {
   const docUrl = globalThis.location.hash.slice(1);
@@ -31,21 +31,21 @@ window.addEventListener('load', async () => {
 
   editor.addEventListener('selection', (event: CustomEvent) => {
     const selection = event.detail.selection;
-    const extensionMarkdown: ExtensionMarkdown | undefined = editor
-      .getExtension('markdown');
+    const extensionMarkdown: ExtensionBasicCodeEditor | undefined = editor
+      .getExtension('basic-code-editor');
     if (extensionMarkdown) {
-      const result = extensionMarkdown.toMarkdown(editor.state.doc);
-      const md = result.content;
+      const result = extensionMarkdown.toRawText(editor.state.doc);
+      const code = result.content;
 
-      const mapper = new PositionMapper(editor, result.markdownMap);
-      const from = mapper.toMarkDownPos(selection.from);
-      const to = mapper.toMarkDownPos(selection.to);
+      const mapper = new PositionMapper(editor, result.rawTextMap);
+      const from = mapper.toRawTextPos(selection.from);
+      const to = mapper.toRawTextPos(selection.to);
 
       if (from > -1 && to > -1) {
         const parts = [
-          md.substring(0, from),
-          md.substring(from, to),
-          md.substring(to),
+          code.substring(0, from),
+          code.substring(from, to),
+          code.substring(to),
         ];
         const preHtml = '<span>' + parts[0] + '</span>' +
           '<span class="md-selected">' + parts[1] + '</span>' +
@@ -53,7 +53,7 @@ window.addEventListener('load', async () => {
 
         document.getElementById('markdown').innerHTML = preHtml;
       } else {
-        return md;
+        return code;
       }
     }
   });
