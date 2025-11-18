@@ -6,28 +6,27 @@ import {
   Extension,
 } from '@kerebron/editor';
 import { createNodeFromObject } from '@kerebron/editor/utilities';
-import { NodeCodeMirror, NodeCodeMirrorConfig } from './NodeCodeMirror.ts';
+import { NodeCodeJar, NodeCodeJarConfig } from './NodeCodeJar.ts';
 
-export * from './NodeCodeMirror.ts';
+export * from './NodeCodeJar.ts';
 
-export interface ExtensionCodeMirrorConfig {
-  languageWhitelist?: NodeCodeMirrorConfig['languageWhitelist'];
-  theme?: NodeCodeMirrorConfig['theme'];
+export interface ExtensionCodeJarConfig {
   readOnly?: boolean;
+  lang: string;
 }
 
-export class ExtensionCodeMirror extends Extension {
-  override name = 'code-mirror';
+export class ExtensionCodeJar extends Extension {
+  override name = 'code-jar';
   requires: AnyExtensionOrReq[];
 
-  constructor(protected override config: ExtensionCodeMirrorConfig) {
+  constructor(protected override config: ExtensionCodeJarConfig) {
     super(config);
 
     this.requires = [
-      new NodeCodeMirror({
-        languageWhitelist: config.languageWhitelist,
-        theme: config.theme,
-        lspTransport: config.lspTransport,
+      new NodeCodeJar({
+        // languageWhitelist: config.languageWhitelist,
+        // theme: config.theme,
+        // lspTransport: config.lspTransport,
       }),
     ];
   }

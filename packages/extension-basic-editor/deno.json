@@ -15,6 +15,7 @@
     "./ExtensionRemoteSelection": "./src/remote-selection/ExtensionRemoteSelection.ts",
     "./ExtensionHtml": "./src/ExtensionHtml.ts",
     "./NodeDocument": "./src/NodeDocument.ts",
+    "./NodeDocumentCode": "./src/NodeDocumentCode.ts",
     "./NodeText": "./src/NodeText.ts",
     "./NodeParagraph": "./src/NodeParagraph.ts",
     "./NodeHardBreak": "./src/NodeHardBreak.ts",

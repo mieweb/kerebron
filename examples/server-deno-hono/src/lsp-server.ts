@@ -265,6 +265,10 @@ export class LspWsAdapter {
           result = null;
           break;
 
+        case 'workspace/configuration':
+          console.log('workspace/configuration', params);
+          break;
+
         default:
           error = { code: -32601, message: 'Method not found' };
       }

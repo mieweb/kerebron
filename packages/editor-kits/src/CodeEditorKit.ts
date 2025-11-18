@@ -4,11 +4,8 @@ import { AnyExtensionOrReq, Extension } from '@kerebron/editor';
 import { ExtensionBasicCodeEditor } from '@kerebron/extension-basic-editor/ExtensionBasicCodeEditor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
-import { ExtensionMenuLegacy } from '@kerebron/extension-menu-legacy';
-import {
-  ExtensionCodeMirror,
-  NodeDocumentCode,
-} from '@kerebron/extension-codemirror';
+// import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
+import { ExtensionCodeJar } from '@kerebron/extension-codejar';
 
 export class CodeEditorKit extends Extension {
   override name = 'dev-advanced-editor';
@@ -20,10 +17,11 @@ export class CodeEditorKit extends Extension {
       new ExtensionBasicCodeEditor({ lang }),
       new ExtensionMarkdown(),
       new ExtensionDevToolkit(),
-      new ExtensionCodeMirror({
-        languageWhitelist: [lang],
-        readOnly: false,
-      }),
+      // new ExtensionCodeMirror({
+      //   languageWhitelist: [lang],
+      //   readOnly: false,
+      // }),
+      new ExtensionCodeJar({ lang }),
     ];
   }
 }
