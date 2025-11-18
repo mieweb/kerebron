@@ -13,6 +13,7 @@
     "./ExtensionGapcursor": "./src/ExtensionGapcursor.ts",
     "./ExtensionMediaUpload": "./src/ExtensionMediaUpload.ts",
     "./ExtensionRemoteSelection": "./src/remote-selection/ExtensionRemoteSelection.ts",
+    "./ExtensionHtml": "./src/ExtensionHtml.ts",
     "./NodeDocument": "./src/NodeDocument.ts",
     "./NodeText": "./src/NodeText.ts",
     "./NodeParagraph": "./src/NodeParagraph.ts",

@@ -335,7 +335,7 @@ export class LSPClient extends EventTarget {
   ): Request<Result> {
     if (!this.transport) {
       throw new Error('No transport');
-    };
+    }
     if (!this.transport.isConnected()) {
       if (this.active) {
         this.transport.connect();

@@ -109,9 +109,9 @@ export default {
           const result = extensionMarkdown.toMarkdown(this.editor.state.doc);
           this.md = result.content;
 
-          const mapper = new PositionMapper(this.editor, result.markdownMap);
-          this.from = mapper.toMarkDownPos(selection.from);
-          this.to = mapper.toMarkDownPos(selection.to);
+          const mapper = new PositionMapper(this.editor, result.rawTextMap);
+          this.from = mapper.toRawTextPos(selection.from);
+          this.to = mapper.toRawTextPos(selection.to);
         }
       });
 

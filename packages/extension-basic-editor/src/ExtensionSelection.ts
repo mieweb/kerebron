@@ -310,7 +310,6 @@ const selectText: CommandFactory = (
 
 export class ExtensionSelection extends Extension {
   name = 'selection';
-  private editor!: CoreEditor;
 
   extractSelection(): Node {
     const state = this.editor.state;

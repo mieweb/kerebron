@@ -7,7 +7,7 @@ import {
   pmToMdConverter,
   syncPmToMdConverter,
 } from './pmToMdConverter.ts';
-import { mdToPmConverter, syncMdToPmConverter } from './mdToPmConverter.ts';
+import { mdToPmConverter, mdToPmConverterText } from './mdToPmConverter.ts';
 import type { Token } from './types.ts';
 
 export interface MdConfig {
@@ -50,8 +50,12 @@ export class ExtensionMarkdown extends Extension {
     );
   }
 
-  fromMarkdown(source: string): Slice {
-    const doc = syncMdToPmConverter(source, this.config, this.editor.schema);
+  async fromMarkdown(source: string): Promise<Slice> {
+    const doc = await mdToPmConverterText(
+      source,
+      this.config,
+      this.editor.schema,
+    );
 
     const fragment = doc.content;
     if (fragment.content.length === 1) {

@@ -1,12 +1,13 @@
 import { Node, Schema } from 'prosemirror-model';
 import { DOMParser } from 'prosemirror-model';
 
+import { MdConfig } from '@kerebron/extension-markdown';
+import { elementFromString } from '@kerebron/extension-basic-editor/ExtensionHtml';
+
 import type { Token } from './types.ts';
 
 import { MarkdownParser, type MarkdownParseState } from './MarkdownParser.ts';
-import { MdConfig } from '@kerebron/extension-markdown';
 import { sitterTokenizer } from './treeSitterTokenizer.ts';
-import { elementFromString } from '../../extension-basic-editor/src/ExtensionHtml.ts';
 
 function listIsTight(tokens: readonly Token[], i: number) {
   while (++i < tokens.length) {
@@ -15,22 +16,22 @@ function listIsTight(tokens: readonly Token[], i: number) {
   return false;
 }
 
-const tokenizer = await sitterTokenizer();
-
 export async function mdToPmConverter(
   buffer: Uint8Array,
   config: MdConfig,
   schema: Schema,
 ): Promise<Node> {
   const content = new TextDecoder().decode(buffer);
-  return syncMdToPmConverter(content, config, schema);
+  return mdToPmConverterText(content, config, schema);
 }
 
-export function syncMdToPmConverter(
+export async function mdToPmConverterText(
   content: string,
   config: MdConfig,
   schema: Schema,
-): Node {
+): Promise<Node> {
+  const tokenizer = await sitterTokenizer();
+
   const defaultMarkdownParser = new MarkdownParser(
     schema,
     tokenizer,

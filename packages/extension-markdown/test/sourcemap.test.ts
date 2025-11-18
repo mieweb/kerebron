@@ -57,7 +57,7 @@ Deno.test('sourcemap test', async () => {
   editor.addEventListener(
     'md:sourcemap',
     ((event: CustomEvent) => {
-      const { sourceMap, debugMap, markdownMap } = event.detail;
+      const { sourceMap, debugMap, rawTextMap } = event.detail;
       sourceMap.file = 'sourcemap.result.md';
       Deno.writeTextFileSync(
         __dirname + '/sourcemap.result.json',

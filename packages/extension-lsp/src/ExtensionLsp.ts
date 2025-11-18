@@ -83,7 +83,7 @@ export class ExtensionLsp extends Extension {
   getMappedContent() {
     const result = this.extensionMarkdown.toMarkdown(this.editor.state.doc);
 
-    const mapper = new PositionMapper(this.editor, result.markdownMap);
+    const mapper = new PositionMapper(this.editor, result.rawTextMap);
     return {
       ...result,
       mapper,

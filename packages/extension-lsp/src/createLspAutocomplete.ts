@@ -45,7 +45,7 @@ export function createLspAutocomplete(extensionLsp: ExtensionLsp) {
     getItems: async (query: string, props: AutocompleteProps) => {
       const { mapper } = extensionLsp.getMappedContent();
 
-      const lspPos = mapper.toMarkDownLspPos(props.range.from);
+      const lspPos = mapper.toRawTextLspPos(props.range.from);
 
       extensionLsp.client.sync();
       try {
@@ -70,9 +70,9 @@ export function createLspAutocomplete(extensionLsp: ExtensionLsp) {
         return [];
       }
     },
-    onSelect: (selected: CompletionItem, range: TextRange) => {
+    onSelect: async (selected: CompletionItem, range: TextRange) => {
       const rawText = cleanPlaceholders(selected.insertText);
-      const slice = extensionLsp.extensionMarkdown.fromMarkdown(rawText);
+      const slice = await extensionLsp.extensionMarkdown.fromMarkdown(rawText);
 
       if (slice.content.content.length === 1) {
         const first = slice.content.content[0];
