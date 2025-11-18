@@ -1,3 +1,4 @@
+import * as path from '@std/path';
 import { xmlStylePreview } from 'https://deno.land/x/deno_tree_sitter@0.2.8.6/main.js';
 
 // import { parseMarkdown } from '../../../tree-sitter/md-to-html-incremental.ts';
@@ -7,6 +8,8 @@ import { WSContext, WSEvents, WSMessageReceive } from 'hono/ws';
 // md-to-html-incremental.ts
 import { createParser } from 'https://deno.land/x/deno_tree_sitter@1.0.1.2/main/main.js';
 
+const __dirname = import.meta.dirname!;
+
 async function loadWasm(url: string): Promise<Uint8Array> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Failed to fetch WASM: ${url}`);
@@ -14,13 +17,32 @@ async function loadWasm(url: string): Promise<Uint8Array> {
 }
 
 // Load Markdown grammars (block and inline)
-const markdownWasmUrl =
-  'https://github.com/tree-sitter-grammars/tree-sitter-markdown/releases/download/v0.5.0/tree-sitter-markdown.wasm';
-const inlineWasmUrl =
-  'https://github.com/tree-sitter-grammars/tree-sitter-markdown/releases/download/v0.5.0/tree-sitter-markdown_inline.wasm';
-
-const markdownWasm = await loadWasm(markdownWasmUrl);
-const inlineWasm = await loadWasm(inlineWasmUrl);
+const markdownWasm = await Deno.readFile(
+  path.resolve(
+    __dirname,
+    '..',
+    '..',
+    '..',
+    'packages',
+    'wasm',
+    'files',
+    'tree-sitter-markdown',
+    'tree-sitter-markdown.wasm',
+  ),
+);
+const inlineWasm = await Deno.readFile(
+  path.resolve(
+    __dirname,
+    '..',
+    '..',
+    '..',
+    'packages',
+    'wasm',
+    'files',
+    'tree-sitter-markdown',
+    'tree-sitter-markdown_inline.wasm',
+  ),
+);
 
 const BlockParser = await createParser(markdownWasm);
 const InlineParser = await createParser(inlineWasm);

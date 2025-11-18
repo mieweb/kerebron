@@ -151,7 +151,7 @@ export class CoreEditor extends EventTarget {
     if (transaction.docChanged) {
       const event = new CustomEvent('changed', {
         detail: {
-          editor: this
+          editor: this,
         },
       });
       this.dispatchEvent(event);

@@ -1,0 +1,20 @@
+[
+  {
+    "repo": "tree-sitter-grammars/tree-sitter-markdown",
+    "version": "latest",
+    "files": ["tree-sitter-markdown.wasm", "tree-sitter-markdown_inline.wasm"],
+    "queries": {
+      "highlights.scm": "split_parser/tree-sitter-markdown/queries/highlights.scm",
+      "injections.scm": "split_parser/tree-sitter-markdown/queries/injections.scm",
+      "highlights_inline.scm": "split_parser/tree-sitter-markdown-inline/queries/highlights.scm",
+      "injections_inline.scm": "split_parser/tree-sitter-markdown-inline/queries/injections.scm"
+    }
+  },
+  {
+    "repo": "tree-sitter-grammars/tree-sitter-yaml",
+    "files": ["tree-sitter-yaml.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm"
+    }
+  }
+]

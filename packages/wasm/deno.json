@@ -1,0 +1,11 @@
+{
+  "name": "@kerebron/wasm",
+  "description": "Mirror of https://github.com/tree-sitter-grammars and other wasm files",
+  "tasks": {
+    "build": "deno --allow-net --allow-read=./files --allow-write=./files ./fetch_wasm.ts ./files"
+  },
+  "imports": {},
+  "exports": {
+    ".": "./src/mod.ts"
+  }
+}

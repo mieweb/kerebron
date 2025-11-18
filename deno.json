@@ -16,6 +16,7 @@
     "packages/extension-dev-toolkit",
     "packages/extension-server-hono",
     "packages/odt-wasm",
+    "packages/wasm",
     "packages/test-utils",
 
     "examples/browser-vanilla-code-editor",
@@ -30,9 +31,9 @@
     "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
   },
   "tasks": {
-    "build": "deno task build:ext-md; deno task build:ext-odt",
+    "build": "deno task build:ext-wasm && deno task build:ext-odt",
     "build:ext-odt": "cd packages/odt-wasm && deno task build",
-    "build:ext-md": "cd packages/extension-markdown && deno task build"
+    "build:ext-wasm": "cd packages/wasm && deno task build"
   },
   "imports": {
     "@deno/dnt": "jsr:@deno/dnt@^0.42.1",
@@ -40,6 +41,8 @@
     "@std/fs": "jsr:@std/fs@1.0.19",
     "@std/path": "jsr:@std/path@1.1.2",
     "asserts": "https://deno.land/std@0.178.0/testing/asserts.ts",
+
+    "$deno_tree_sitter": "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/",
 
     "prosemirror-state": "npm:prosemirror-state@1.4.3",
     "prosemirror-view": "npm:prosemirror-view@1.40.0",

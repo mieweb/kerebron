@@ -1,6 +1,6 @@
-import { createParser } from 'https://deno.land/x/deno_tree_sitter@1.0.1.2/main/main.js';
-import type { Parser } from 'https://deno.land/x/deno_tree_sitter@1.0.1.2/main/tree_sitter/parser.js';
-import type { Tree } from 'https://deno.land/x/deno_tree_sitter@1.0.1.2/main/tree_sitter/tree.js';
+import { createParser } from '$deno_tree_sitter/main.js';
+import type { Parser } from '$deno_tree_sitter/tree_sitter/parser.js';
+import type { Tree } from '$deno_tree_sitter/tree_sitter/tree.js';
 import {
   NESTING_CLOSING,
   NESTING_OPENING,
@@ -975,14 +975,15 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
   return retVal;
 }
 
-import markdownWasmUrl from '../wasm/tree-sitter-markdown.wasm?url';
-import inlineWasmUrl from '../wasm/tree-sitter-markdown_inline.wasm?url';
-
 export async function sitterTokenizer() {
-  const response = await fetch(markdownWasmUrl);
+  const response = await fetch(
+    '/wasm/tree-sitter-markdown/tree-sitter-markdown.wasm',
+  );
   const markdownWasm = new Uint8Array(await response.arrayBuffer());
 
-  const response2 = await fetch(inlineWasmUrl);
+  const response2 = await fetch(
+    '/wasm/tree-sitter-markdown/tree-sitter-markdown_inline.wasm',
+  );
   const inlineWasm = new Uint8Array(await response2.arrayBuffer());
 
   const blockParser: Parser = await createParser(markdownWasm);
