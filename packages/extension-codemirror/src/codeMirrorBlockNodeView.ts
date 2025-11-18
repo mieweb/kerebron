@@ -304,7 +304,23 @@ class CodeMirrorBlockNodeView implements NodeView {
     this.updating = false;
   }
 
-  update(updateNode: Node) {
+  update(
+    updateNode: Node,
+    decorations: readonly Decoration[],
+    innerDecorations: DecorationSource,
+  ) {
+    const codeDecorations: Decoration[] = [];
+
+    innerDecorations
+      .forEachSet((set) =>
+        set.find()
+          .map((d) => {
+            console.log(d);
+            codeDecorations.push(d);
+          })
+      );
+
+    // https://codemirror.net/examples/decoration/
     if (updateNode.type.name !== this.node.type.name) return false;
     if (updateNode.attrs.lang !== this.node.attrs.lang) {
       setMode(
@@ -330,6 +346,7 @@ class CodeMirrorBlockNodeView implements NodeView {
           insert: change.text,
         },
         selection: { anchor: change.from + change.text.length },
+        // effects <- codeDecorations
       });
       this.updating = false;
     }

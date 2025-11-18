@@ -54,7 +54,10 @@ export class DiagnosticPlugin extends Plugin<DiagnosticPluginState> {
               );
             }
             if (this.changeListener) {
-              extension.getEditor().removeEventListener('change', this.changeListener);
+              extension.getEditor().removeEventListener(
+                'change',
+                this.changeListener,
+              );
             }
           },
         };
@@ -104,13 +107,12 @@ export class DiagnosticPlugin extends Plugin<DiagnosticPluginState> {
                 );
 
                 if (from > -1 && end > -1) {
-                  decorations.push(
-                    Decoration.inline(
-                      from,
-                      end,
-                      { class: 'kb-lsp__error', title: diag.message },
-                    ),
+                  const decoration = Decoration.inline(
+                    from,
+                    end,
+                    { class: 'kb-lsp__error', title: diag.message },
                   );
+                  decorations.push(decoration);
                 }
               }
             }
