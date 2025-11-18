@@ -25,7 +25,7 @@ window.addEventListener('load', async () => {
     extensions: [
       new CodeEditorKit('yaml'),
       YjsEditorKit.createFrom(ydoc, roomId),
-      LspEditorKit.createFrom(),
+      LspEditorKit.createFrom({ uri: 'ws://localhost:9991' }), // lsp-ws-proxy --listen 9991 -- yaml-language-server
     ],
   });
 

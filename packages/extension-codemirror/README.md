@@ -7,8 +7,8 @@ import { CoreEditor } from '@kerebron/editor';
 import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
 import {
   ExtensionCodeMirror,
-  NodeDocumentCode,
 } from '@kerebron/extension-codemirror';
+import { NodeDocumentCode } from '@kerebron/extension-basic-editor/NodeDocumentCode';
 
 this.editor = new CoreEditor({
   topNode: 'doc_code',
