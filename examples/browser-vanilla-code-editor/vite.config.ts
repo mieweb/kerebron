@@ -19,6 +19,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      '$deno_tree_sitter': 'https://deno.land/x/deno_tree_sitter@1.0.1.2/main/',
       '@kerebron/editor/assets': __dirname + '/../../' +
         'packages/editor/assets',
       '@kerebron/extension-tables/assets': __dirname + '/../../' +
