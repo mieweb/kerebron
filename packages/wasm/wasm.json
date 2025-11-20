@@ -28,6 +28,15 @@
     }
   },
   {
+    "repo": "tree-sitter/tree-sitter-html",
+    "version": "latest",
+    "files": ["tree-sitter-html.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm",
+      "injections.scm": "master/queries/injections.scm"
+    }
+  },
+  {
     "repo": "tree-sitter-grammars/tree-sitter-toml",
     "version": "latest",
     "files": ["tree-sitter-toml.wasm"],
