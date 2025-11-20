@@ -19,6 +19,15 @@
     }
   },
   {
+    "repo": "tree-sitter-grammars/tree-sitter-xml",
+    "version": "latest",
+    "files": ["tree-sitter-xml.wasm", "tree-sitter-dtd.wasm"],
+    "queries": {
+      "highlights_xml.scm": "master/queries/xml/highlights.scm",
+      "highlights_dtd.scm": "master/queries/dtd/highlights.scm"
+    }
+  },
+  {
     "repo": "tree-sitter-grammars/tree-sitter-yaml",
     "files": ["tree-sitter-yaml.wasm"],
     "queries": {
