@@ -46,6 +46,15 @@
     }
   },
   {
+    "repo": "tree-sitter/tree-sitter-java",
+    "version": "latest",
+    "files": ["tree-sitter-java.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm",
+      "tags.scm": "master/queries/tags.scm"
+    }
+  },
+  {
     "repo": "tree-sitter-grammars/tree-sitter-yaml",
     "files": ["tree-sitter-yaml.wasm"],
     "queries": {
