@@ -45,6 +45,14 @@
     }
   },
   {
+    "repo": "tree-sitter/tree-sitter-json",
+    "version": "latest",
+    "files": ["tree-sitter-json.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm"
+    }
+  },
+  {
     "repo": "tree-sitter/tree-sitter-typescript",
     "version": "latest",
     "files": ["tree-sitter-typescript.wasm", "tree-sitter-tsx.wasm"],
