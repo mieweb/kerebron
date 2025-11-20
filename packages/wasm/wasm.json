@@ -23,7 +23,7 @@
     "version": "latest",
     "files": ["tree-sitter-xml.wasm", "tree-sitter-dtd.wasm"],
     "queries": {
-      "highlights-xml.scm": "master/queries/xml/highlights.scm",
+      "highlights.scm": "master/queries/xml/highlights.scm",
       "highlights-dtd.scm": "master/queries/dtd/highlights.scm"
     }
   },

@@ -23,9 +23,13 @@ window.addEventListener('load', async () => {
     topNode: 'doc_code',
     element: document.getElementById('editor') || undefined,
     extensions: [
-      new CodeEditorKit('yaml'),
+      new CodeEditorKit('json'),
       YjsEditorKit.createFrom(ydoc, roomId),
-      LspEditorKit.createFrom({ uri: 'ws://localhost:9991' }), // lsp-ws-proxy --listen 9991 -- yaml-language-server
+      LspEditorKit.createFrom({ uri: 'ws://localhost:9991' }),
+      // lsp-ws-proxy --listen 9991 -- npx yaml-language-server --stdio
+      // lsp-ws-proxy --listen 9991 -- npx vscode-json-languageserver --stdio
+      // ... https://www.npmjs.com/search?q=language-server
+      // ... https://www.npmjs.com/search?q=keywords:LSP
     ],
   });
 

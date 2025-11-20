@@ -1,18 +1,22 @@
 import { createParser } from '$deno_tree_sitter/main.js';
 import { Parser } from '$deno_tree_sitter/tree_sitter/parser.js';
 import type { Tree } from '$deno_tree_sitter/tree_sitter/tree.js';
-import { DecorationInline, Decorator } from './Decorator.ts';
 
-// http://localhost:8000/wasm/tree-sitter-yaml/tree-sitter-yaml.wasm
+import { getLangTreeSitter } from '@kerebron/wasm';
+
+import { DecorationInline, Decorator } from './Decorator.ts';
 
 export class TreeSitterHighlighter {
   parser: Parser | undefined;
   hightligtScm: string | undefined;
+  cdnUrl = 'http://localhost:8000/wasm/';
 
-  async init() {
-    const response = await fetch(
-      '/wasm/tree-sitter-yaml/tree-sitter-yaml.wasm',
-    );
+  async init(lang: string) {
+    const treeSitterConfig = getLangTreeSitter(lang, this.cdnUrl);
+    const wasmUrl = treeSitterConfig.files[0]; // TODO add support for split parsers like markdown
+    const highlightUrl = treeSitterConfig.queries['highlights.scm'];
+
+    const response = await fetch(wasmUrl);
     if (response.status >= 400) {
       throw new Error(`Error fetching ${response.status}`);
     }
@@ -21,9 +25,7 @@ export class TreeSitterHighlighter {
 
     this.parser = await createParser(wasm);
 
-    const responseScm = await fetch(
-      '/wasm/tree-sitter-yaml/highlights.scm',
-    );
+    const responseScm = await fetch(highlightUrl);
     if (responseScm.status >= 400) {
       throw new Error(`Error fetching ${responseScm.status}`);
     }

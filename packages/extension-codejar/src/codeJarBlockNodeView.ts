@@ -14,6 +14,7 @@ import { computeChange, forwardSelection, valueChanged } from './utils.ts';
 import { TreeSitterHighlighter } from './TreeSitterHighlighter.ts';
 import { DecorationInline, Decorator } from './Decorator.ts';
 import { withLineNumbers } from './codeJarLineNumbers.ts';
+import { NodeCodeJarConfig } from './NodeCodeJar.ts';
 
 class CodeJarBlockNodeView implements NodeView {
   dom: HTMLDivElement;
@@ -27,7 +28,7 @@ class CodeJarBlockNodeView implements NodeView {
     private node: Node,
     private view: EditorView,
     private getPos: () => number | undefined,
-    private settings: {},
+    private settings: NodeCodeJarConfig,
     private editor: CoreEditor,
   ) {
     this.updating = false;
@@ -47,6 +48,9 @@ class CodeJarBlockNodeView implements NodeView {
       withLineNumbers((element) => this.highlight(element)),
       {
         tab: '  ',
+        indentOn: new RegExp('^(?!)'),
+        moveToNewLine: new RegExp('^(?!)'),
+        history: false,
       },
     );
 
@@ -67,7 +71,9 @@ class CodeJarBlockNodeView implements NodeView {
   }
 
   async init() {
-    await this.highlighter.init();
+    if (this.node.attrs.lang) {
+      await this.highlighter.init(this.node.attrs.lang);
+    }
   }
 
   setSelection(anchor: number, head: number) {
@@ -169,7 +175,7 @@ class CodeJarBlockNodeView implements NodeView {
 }
 
 export const codeJarBlockNodeView: (
-  settings: {},
+  settings: NodeCodeJarConfig,
   editor: CoreEditor,
 ) => (
   node: Node,
