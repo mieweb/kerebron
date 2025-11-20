@@ -37,6 +37,14 @@
     }
   },
   {
+    "repo": "tree-sitter/tree-sitter-css",
+    "version": "latest",
+    "files": ["tree-sitter-css.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm"
+    }
+  },
+  {
     "repo": "tree-sitter-grammars/tree-sitter-toml",
     "version": "latest",
     "files": ["tree-sitter-toml.wasm"],
