@@ -19,6 +19,7 @@ import {
 } from '@kerebron/editor/plugins/input-rules';
 import { codeJarBlockNodeView } from './codeJarBlockNodeView.ts';
 import { getShadowRoot } from '@kerebron/editor/utilities';
+import { getLangsList } from '@kerebron/wasm';
 
 export const codeJarBlockKey = new PluginKey('code-jar-block');
 
@@ -44,29 +45,9 @@ function arrowHandler(dir: 'left' | 'right' | 'up' | 'down') {
   };
 }
 
-const LANGS = [
-  'diff',
-  'dockerfile',
-  'http',
-  'nginx',
-  'properties',
-  'shell',
-  'toml',
-  'yaml',
-  'sql',
-  'javascript',
-  'cpp',
-  'css',
-  'xml',
-  'java',
-  'json',
-  'markdown',
-  'rust',
-  'html',
-];
-
 export interface NodeCodeJarConfig {
   readOnly?: any;
+  languageWhitelist?: string[];
 }
 
 export class NodeCodeJar extends Node {
@@ -155,7 +136,7 @@ export class NodeCodeJar extends Node {
     const shadowRoot = getShadowRoot(editor.config.element);
 
     const settings = {
-      // languageWhitelist: this.config.languageWhitelist || LANGS,
+      languageWhitelist: this.config.languageWhitelist || getLangsList(),
       shadowRoot,
       // ...defaultSettings,
       readOnly: this.config.readOnly,
