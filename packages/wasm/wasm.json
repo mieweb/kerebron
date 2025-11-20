@@ -61,6 +61,14 @@
     }
   },
   {
+    "repo": "tree-sitter/tree-sitter-regex",
+    "version": "latest",
+    "files": ["tree-sitter-regex.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm"
+    }
+  },
+  {
     "repo": "tree-sitter/tree-sitter-rust",
     "version": "latest",
     "files": ["tree-sitter-rust.wasm"],
