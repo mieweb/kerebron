@@ -36,6 +36,16 @@
     }
   },
   {
+    "repo": "tree-sitter/tree-sitter-typescript",
+    "version": "latest",
+    "files": ["tree-sitter-typescript.wasm", "tree-sitter-tsx.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm",
+      "locals.scm": "master/queries/locals.scm",
+      "tags.scm": "master/queries/tags.scm"
+    }
+  },
+  {
     "repo": "tree-sitter-grammars/tree-sitter-yaml",
     "files": ["tree-sitter-yaml.wasm"],
     "queries": {
