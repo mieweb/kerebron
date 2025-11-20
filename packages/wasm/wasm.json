@@ -53,6 +53,16 @@
     }
   },
   {
+    "repo": "tree-sitter/tree-sitter-rust",
+    "version": "latest",
+    "files": ["tree-sitter-rust.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm",
+      "injections.scm": "master/queries/injections.scm",
+      "tags.scm": "master/queries/tags.scm"
+    }
+  },
+  {
     "repo": "tree-sitter/tree-sitter-typescript",
     "version": "latest",
     "files": ["tree-sitter-typescript.wasm", "tree-sitter-tsx.wasm"],
