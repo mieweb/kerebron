@@ -28,6 +28,14 @@
     }
   },
   {
+    "repo": "tree-sitter-grammars/tree-sitter-toml",
+    "version": "latest",
+    "files": ["tree-sitter-toml.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm"
+    }
+  },
+  {
     "repo": "tree-sitter-grammars/tree-sitter-yaml",
     "files": ["tree-sitter-yaml.wasm"],
     "queries": {
