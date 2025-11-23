@@ -7,6 +7,7 @@ import {
   NESTING_SELF_CLOSING,
   Token,
 } from './types.ts';
+import { fetchWasm, getLangTreeSitter } from '@kerebron/wasm';
 
 function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
   const retVal: Array<Token> = [];
@@ -976,15 +977,16 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
 }
 
 export async function sitterTokenizer() {
-  const response = await fetch(
-    '/wasm/tree-sitter-markdown/tree-sitter-markdown.wasm',
-  );
-  const markdownWasm = new Uint8Array(await response.arrayBuffer());
+  const jsonManifest = getLangTreeSitter('markdown', '');
+  const blockUrl: string = jsonManifest.files.find((url) =>
+    url.indexOf('_inline') === -1
+  )!;
+  const inlineUrl: string = jsonManifest.files.find((url) =>
+    url.indexOf('_inline') > -1
+  )!;
 
-  const response2 = await fetch(
-    '/wasm/tree-sitter-markdown/tree-sitter-markdown_inline.wasm',
-  );
-  const inlineWasm = new Uint8Array(await response2.arrayBuffer());
+  const markdownWasm = await fetchWasm(blockUrl);
+  const inlineWasm = await fetchWasm(inlineUrl);
 
   const blockParser: Parser = await createParser(markdownWasm);
   const inlineParser: Parser = await createParser(inlineWasm);

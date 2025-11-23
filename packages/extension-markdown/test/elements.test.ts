@@ -43,7 +43,6 @@ dolor sit amet
     extensions: [
       new ExtensionBasicEditor(),
       new ExtensionTables(),
-      new ExtensionCodeMirror(),
       markdownExtension,
     ],
   });
