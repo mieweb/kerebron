@@ -1,5 +1,5 @@
 import { Server } from './app.ts';
-import { createServer as createViteServer } from 'npm:vite';
+import { createServer as createViteServer } from 'vite';
 
 const __dirname = import.meta.dirname;
 

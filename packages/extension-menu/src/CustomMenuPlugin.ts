@@ -1,3 +1,5 @@
+// deno-lint-ignore-file no-window
+
 import { EditorState, Plugin } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 
@@ -95,7 +97,7 @@ export class CustomMenuView {
 
     // Add window resize listener to re-render on mobile/desktop changes
     if (typeof window !== 'undefined') {
-      window.addEventListener('resize', () => {
+      globalThis.addEventListener('resize', () => {
         this.render();
       });
     }

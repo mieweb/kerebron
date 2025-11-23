@@ -181,8 +181,7 @@ export const yCursorPlugin = (
     },
     view: (view) => {
       const awarenessListener = () => {
-        // @ts-ignore
-        if (view.docView) {
+        if ('docView' in view) {
           setMeta(view, yCursorPluginKey, { awarenessUpdated: true });
         }
       };

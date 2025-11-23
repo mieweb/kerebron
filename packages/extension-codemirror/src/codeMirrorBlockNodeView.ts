@@ -96,7 +96,7 @@ class CodeMirrorBlockNodeView implements NodeView {
     };
 
     const extensions = [
-      EditorState.readOnly.of(settings.readOnly),
+      EditorState.readOnly.of(!!settings.readOnly),
       CodeMirror.editable.of(!settings.readOnly),
       lineNumbers(),
       highlightActiveLineGutter(),

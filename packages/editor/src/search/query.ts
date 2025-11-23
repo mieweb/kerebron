@@ -143,17 +143,24 @@ export class SearchQuery {
     for (let part of replParts) {
       if (typeof part == 'string') { // Replacement text
         frag = frag.addToEnd(state.schema.text(part, marks));
-      } else if (groupSpan = groups[part.group]) {
-        let from = result.matchStart + groupSpan[0],
-          to = result.matchStart + groupSpan[1];
-        if (part.copy) { // Copied content
-          frag = frag.append(state.doc.slice(from, to).content);
-        } else { // Skipped content
-          if (frag != Fragment.empty || from > pos) {
-            ranges.push({ from: pos, to: from, insert: new Slice(frag, 0, 0) });
-            frag = Fragment.empty;
+      } else {
+        groupSpan = groups[part.group];
+        if (groupSpan) {
+          let from = result.matchStart + groupSpan[0],
+            to = result.matchStart + groupSpan[1];
+          if (part.copy) { // Copied content
+            frag = frag.append(state.doc.slice(from, to).content);
+          } else { // Skipped content
+            if (frag != Fragment.empty || from > pos) {
+              ranges.push({
+                from: pos,
+                to: from,
+                insert: new Slice(frag, 0, 0),
+              });
+              frag = Fragment.empty;
+            }
+            pos = to;
           }
-          pos = to;
         }
       }
     }

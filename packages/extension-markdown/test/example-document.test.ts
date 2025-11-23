@@ -9,9 +9,7 @@ const sampleMarkdown = new TextDecoder().decode(
 );
 
 Deno.test('example-document.md', async () => {
-  console.log('000');
   const tokenizer = await sitterTokenizer();
-  console.log('1111');
   const tokens = tokenizer.parse(sampleMarkdown);
 
   // Deno.writeTextFileSync(__dirname + '/example-document.tree.json', JSON.stringify(tree?.rootNode, null, 2));
@@ -23,7 +21,7 @@ Deno.test('example-document.md', async () => {
   const serializedMarkdown = output.toString();
 
   Deno.writeTextFileSync(
-    __dirname + '/example-document.tokens.json',
+    __dirname + '/example-document2.tokens.json',
     JSON.stringify(tokens, null, 2),
   );
 

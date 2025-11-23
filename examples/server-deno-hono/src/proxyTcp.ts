@@ -139,7 +139,7 @@ class TcpClient extends EventTarget {
           processText(concat, (e) => this.dispatchEvent(e)),
         );
       }
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof Deno.errors.BadResource) {
         console.warn('Socket already closed');
       } else {
@@ -184,7 +184,7 @@ class ProxyContext implements WSEvents<WebSocket> {
 
     try {
       await client.connect();
-    } catch (err) {
+    } catch (err: any) {
       if (err.message.indexOf('Connection refused') > -1) {
         wsContext.send(
           JSON.stringify({

@@ -12,12 +12,14 @@ export function writeIndented(
   output: SmartOutput<Token>,
   text: string,
   currentCtx: SerializerContext,
-  token: Token,
+  token?: Token,
 ) {
   const lines = text.split('\n');
 
   let offset = 0;
-  const startPos = token.map && token.map.length > 0 ? token.map[0] : 0;
+  const startPos = token
+    ? (token.map && token.map.length > 0 ? token.map[0] : 0)
+    : 0;
   for (let lineNo = 0; lineNo < lines.length; lineNo++) {
     const line = lines[lineNo];
 
@@ -67,7 +69,7 @@ export function writeIndented(
     }
 
     const tok = structuredClone(token);
-    if (startPos) {
+    if (startPos && tok) {
       tok.map = [startPos + offset];
     }
     output.log(line, tok);
@@ -75,7 +77,7 @@ export function writeIndented(
     if (lineNo < lines.length - 1) {
       currentCtx.itemRow++;
       const tok = structuredClone(token);
-      if (startPos) {
+      if (startPos && tok) {
         tok.map = [startPos + offset];
       }
       output.log('\n', tok);
@@ -96,7 +98,7 @@ export interface SerializerContext {
   itemSymbol: string;
 
   handlers: Record<string, Array<TokenHandler>>;
-  log: (txt: string, token: Token) => void;
+  log: (txt: string, token?: Token) => void;
 }
 
 export class ContextStash {
@@ -117,7 +119,7 @@ export class ContextStash {
       itemSymbol: '',
 
       handlers,
-      log: (txt: string, token: Token) => this.output.log(txt, token),
+      log: (txt: string, token?: Token) => this.output.log(txt, token),
     };
     this.stash();
   }
@@ -288,7 +290,7 @@ export class MarkdownSerializer {
       if (token.type === 'inline') {
         if (token.children) {
           this.ctx.stash();
-          this.ctx.current.log = (txt: string, token: Token) => {
+          this.ctx.current.log = (txt: string, token?: Token) => {
             writeIndented(this.ctx.output, txt, this.ctx.current, token);
           };
 

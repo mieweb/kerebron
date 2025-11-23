@@ -19,6 +19,7 @@ export class GapCursor extends Selection {
   /// Create a gap cursor.
   constructor($pos: ResolvedPos) {
     super($pos, $pos);
+    this.visible = false;
   }
 
   map(doc: Node, mapping: Mappable): Selection {
@@ -47,7 +48,7 @@ export class GapCursor extends Selection {
   }
 
   /// @internal
-  override getBookmark() {
+  override getBookmark(): GapBookmark {
     return new GapBookmark(this.anchor);
   }
 
@@ -108,9 +109,6 @@ export class GapCursor extends Selection {
   }
 }
 
-GapCursor.prototype.visible = false;
-(GapCursor as any).findFrom = GapCursor.findGapCursorFrom;
-
 Selection.jsonID('gapcursor', GapCursor);
 
 class GapBookmark {
@@ -119,7 +117,7 @@ class GapBookmark {
   map(mapping: Mappable) {
     return new GapBookmark(mapping.map(this.pos));
   }
-  resolve(doc: Node) {
+  resolve(doc: Node): Selection {
     let $pos = doc.resolve(this.pos);
     return GapCursor.valid($pos) ? new GapCursor($pos) : Selection.near($pos);
   }

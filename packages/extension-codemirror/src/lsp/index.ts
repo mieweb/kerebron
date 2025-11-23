@@ -21,11 +21,11 @@ export { hoverTooltips } from './hover.ts';
 //   jumpToImplementation,
 //   jumpToTypeDefinition,
 // } from './definition.ts';
-export {
-  closeReferencePanel,
-  findReferences,
-  findReferencesKeymap,
-} from './references.ts';
+// export {
+//   closeReferencePanel,
+//   findReferences,
+//   findReferencesKeymap,
+// } from './references.ts';
 // export { serverDiagnostics } from './diagnostics.ts';
 
 import { serverCompletion } from './completion.ts';

@@ -28,14 +28,14 @@ export function inchesToMm(value: string): number {
   return 0;
 }
 
-export function inchesToPixels(value): number {
+export function inchesToPixels(value: string): number {
   if (!value) {
     return 0;
   }
   return Math.floor(100 * inchesToMm(value));
 }
 
-export function fixCharacters(text) {
+export function fixCharacters(text: string) {
   return text
     .replace(/’/g, "'")
     .replace(/“/g, '"')

@@ -1,6 +1,8 @@
 import { createParser } from '$deno_tree_sitter/main.js';
-import type { Parser } from '$deno_tree_sitter/tree_sitter/parser.js';
-import type { Tree } from '$deno_tree_sitter/tree_sitter/tree.js';
+import type { Parser } from '$deno_tree_sitter/tree_sitter/parser.ts';
+import type { Tree } from '$deno_tree_sitter/tree_sitter/tree.ts';
+import type { Node as TreeSitterNode } from '$deno_tree_sitter/tree_sitter/node.ts';
+
 import {
   NESTING_CLOSING,
   NESTING_OPENING,
@@ -8,6 +10,11 @@ import {
   Token,
 } from './types.ts';
 import { fetchWasm, getLangTreeSitter } from '@kerebron/wasm';
+
+interface HasStartPosition {
+  startPosition: { row: number; column: number };
+  endPosition: { row: number; column: number };
+}
 
 function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
   const retVal: Array<Token> = [];
@@ -36,7 +43,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
   };
 
   const walkInline = (
-    children: any[],
+    children: TreeSitterNode[],
     startPosition = { row: 0, column: 0 },
   ) => {
     for (const node of children) {
@@ -354,7 +361,10 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
     }
   };
 
-  const walkRecursive = (node?, ctx = { tableRowType: 'tbody' }) => {
+  const walkRecursive = (
+    node?: TreeSitterNode,
+    ctx = { tableRowType: 'tbody' },
+  ) => {
     if (!node) {
       return;
     }
@@ -988,12 +998,17 @@ export async function sitterTokenizer() {
   const markdownWasm = await fetchWasm(blockUrl);
   const inlineWasm = await fetchWasm(inlineUrl);
 
-  const blockParser: Parser = await createParser(markdownWasm);
-  const inlineParser: Parser = await createParser(inlineWasm);
+  const blockParser: Parser =
+    (await createParser(markdownWasm)) as unknown as Parser;
+  const inlineParser: Parser =
+    (await createParser(inlineWasm)) as unknown as Parser;
 
   return {
     parse: (source: string): Array<Token> => {
-      const tree: Tree = blockParser.parse(source);
+      const tree: Tree | null = blockParser.parse(source);
+      if (!tree) {
+        throw new Error('Tree is null');
+      }
       return treeToTokens(tree, inlineParser);
     },
   };

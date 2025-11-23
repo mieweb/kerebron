@@ -248,7 +248,7 @@ function createMediaUploadPlugin(options: MediaUploadOptions = {}): Plugin {
 export class ExtensionMediaUpload extends Extension {
   name = 'mediaUpload';
 
-  constructor(protected config: Partial<MediaUploadOptions> = {}) {
+  constructor(protected override config: Partial<MediaUploadOptions> = {}) {
     super(config);
   }
 

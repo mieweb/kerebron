@@ -63,7 +63,7 @@ async function downloadFile(url: string, destPath: string) {
   return data.length;
 }
 
-async function verifyWasmFile(filePath: string) {
+function verifyWasmFile(filePath: string) {
   const data = fs.readFileSync(filePath);
 
   // Check WASM magic number: 0x00 0x61 0x73 0x6D (\\0asm)

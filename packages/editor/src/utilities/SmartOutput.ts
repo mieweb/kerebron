@@ -2,7 +2,7 @@ export interface OutputMeta<K> {
   pos: number;
   rowPos: number;
   colPos: number;
-  item: K;
+  item?: K;
 }
 
 interface Mapping {
@@ -29,7 +29,7 @@ export class SmartOutput<K> {
   private chunks: Array<string> = [];
   private metas: Array<OutputMeta<K>> = [];
 
-  log(text: string, item: K) {
+  log(text: string, item?: K) {
     if (text.length === 0) {
       return;
     }
@@ -89,10 +89,10 @@ export class SmartOutput<K> {
 
   getSourceMap(
     mapper: (
-      item: K,
       rowPos: number,
       colPos: number,
       pos: number,
+      item?: K,
     ) => Mapping | void,
   ): SourceMap {
     const mappingRows: Array<Array<Array<number>>> = [];
@@ -116,7 +116,7 @@ export class SmartOutput<K> {
         if (lastRow != meta.rowPos) {
           prevColPos = 0;
         }
-        const mapping = mapper(meta.item, meta.rowPos, meta.colPos, meta.pos);
+        const mapping = mapper(meta.rowPos, meta.colPos, meta.pos, meta.item);
         if (mapping) {
           currentRow.push([
             meta.colPos - prevColPos,

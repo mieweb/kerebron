@@ -55,6 +55,7 @@ export class LspWebSocketTransport extends EventTarget implements Transport {
           this.initialized = true;
           this.dispatchEvent(new Event('initialized'));
         }
+        // deno-lint-ignore no-empty
       } catch (ignoredError) {}
       this.dispatchEvent(new MessageEvent('message', { data: event.data }));
     });

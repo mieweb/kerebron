@@ -200,12 +200,10 @@ export const relativePositionToAbsolutePosition = (
     pos += 1; // increase because we go out of n
   }
   while (type !== documentType && type._item !== null) {
-    // @ts-ignore
     const parent = type._item.parent;
     if (parent instanceof Y.ID || parent === null) {
       continue;
     }
-    // @ts-ignore
     if (parent._item === null || !parent._item.deleted) {
       pos += 1; // the start tag
       let n = /** @type {Y.AbstractType} */ (parent)._first;

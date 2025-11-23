@@ -115,7 +115,7 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
     this.rooms = rooms;
   }
 
-  async getRoomNames() {
+  getRoomNames() {
     return Array.from(rooms.keys());
   }
 
@@ -234,8 +234,7 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
       }
     } catch (err) {
       console.error(err);
-      // @ts-ignore
-      doc.emit('error', [err]);
+      // room.doc.emit('error', [err]);
     }
   }
 

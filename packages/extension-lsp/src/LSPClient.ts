@@ -236,8 +236,8 @@ export class LSPClient extends EventTarget {
             ? sync
             : sync.change ?? TextDocumentSyncKind.None;
         }
-      } catch (ignoreConnectErrors) {
-      }
+        // deno-lint-ignore no-empty
+      } catch (ignoreConnectErrors) {}
     }, this.timeout);
   }
 

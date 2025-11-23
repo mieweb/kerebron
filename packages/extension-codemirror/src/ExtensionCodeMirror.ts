@@ -27,7 +27,6 @@ export class ExtensionCodeMirror extends Extension {
       new NodeCodeMirror({
         languageWhitelist: config.languageWhitelist,
         theme: config.theme,
-        lspTransport: config.lspTransport,
       }),
     ];
   }

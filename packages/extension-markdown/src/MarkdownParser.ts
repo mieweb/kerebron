@@ -153,7 +153,7 @@ function tokenHandlers(schema: Schema, tokens: { [token: string]: ParseSpec }) {
   for (let type in tokens) {
     let spec = tokens[type];
     if (spec.block) {
-      let nodeType = schema.nodeType(spec.block);
+      let nodeType = schema.nodes[spec.block];
       if (noCloseToken(spec, type)) {
         handlers[type] = (state, tok, tokens, i) => {
           state.openNode(nodeType, attrs(spec, tok, tokens, i));
@@ -166,7 +166,7 @@ function tokenHandlers(schema: Schema, tokens: { [token: string]: ParseSpec }) {
         handlers[type + '_close'] = (state) => state.closeNode();
       }
     } else if (spec.node) {
-      let nodeType = schema.nodeType(spec.node);
+      let nodeType = schema.nodes[spec.node];
       handlers[type] = (state, tok, tokens, i) =>
         state.addNode(nodeType, attrs(spec, tok, tokens, i));
     } else if (spec.mark) {
