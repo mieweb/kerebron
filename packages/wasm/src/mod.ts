@@ -1,5 +1,7 @@
 import manifest from '../wasm.json' with { type: 'json' };
 
+const __dirname = import.meta.dirname;
+
 export function getLangsList(): string[] {
   return manifest
     .map(
@@ -33,6 +35,32 @@ export function getLangTreeSitter(
     files: langManifest.files.map((file) => cdnUrl + file),
     queries: Object.fromEntries(queries),
   };
+}
+
+export async function fetchWasm(wasmUrl: string): Promise<Uint8Array> {
+  if ('Deno' in globalThis) {
+    return globalThis.Deno.readFileSync(__dirname + '/../files' + wasmUrl);
+  }
+
+  const response = await fetch(wasmUrl);
+  if (response.status >= 400) {
+    throw new Error(`Error fetching ${response.status}`);
+  }
+
+  return new Uint8Array(await response.arrayBuffer());
+}
+
+export async function fetchTextResource(url: string) {
+  if ('Deno' in globalThis) {
+    return globalThis.Deno.readFileSync(__dirname + '/../files' + url);
+  }
+
+  const responseScm = await fetch(url);
+  if (responseScm.status >= 400) {
+    throw new Error(`Error fetching ${responseScm.status}`);
+  }
+
+  return await responseScm.text();
 }
 
 export { manifest };

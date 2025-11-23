@@ -1,8 +1,11 @@
 import { createParser } from '$deno_tree_sitter/main.js';
 import { Parser } from '$deno_tree_sitter/tree_sitter/parser.js';
-import type { Tree } from '$deno_tree_sitter/tree_sitter/tree.js';
 
-import { getLangTreeSitter } from '@kerebron/wasm';
+import {
+  fetchTextResource,
+  fetchWasm,
+  getLangTreeSitter,
+} from '@kerebron/wasm';
 
 import { DecorationInline, Decorator } from './Decorator.ts';
 
@@ -16,21 +19,11 @@ export class TreeSitterHighlighter {
     const wasmUrl = treeSitterConfig.files[0]; // TODO add support for split parsers like markdown
     const highlightUrl = treeSitterConfig.queries['highlights.scm'];
 
-    const response = await fetch(wasmUrl);
-    if (response.status >= 400) {
-      throw new Error(`Error fetching ${response.status}`);
-    }
-
-    const wasm = new Uint8Array(await response.arrayBuffer());
+    const wasm = await fetchWasm(wasmUrl);
 
     this.parser = await createParser(wasm);
 
-    const responseScm = await fetch(highlightUrl);
-    if (responseScm.status >= 400) {
-      throw new Error(`Error fetching ${responseScm.status}`);
-    }
-
-    this.hightligtScm = await responseScm.text();
+    this.hightligtScm = await fetchTextResource(highlightUrl);
   }
 
   highlight(code: string, decorator: Decorator) {
