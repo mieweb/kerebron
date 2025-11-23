@@ -236,6 +236,7 @@ function findCommonPrefix(uris: string[]) {
       let e = Math.min(prefix, uri.length);
       j < e && first[j] == uri[j];
       j++
+      // deno-lint-ignore no-empty
     ) {}
     prefix = j;
   }

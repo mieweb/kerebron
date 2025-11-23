@@ -64,7 +64,7 @@ export class ExtensionLsp extends Extension {
       }
     });
 
-    this.editor.addEventListener('changed', async () => {
+    this.editor.addEventListener('changed', () => {
       if (this.editor.config.uri) {
         this.client.workspace.changedFile(
           this.editor.config.uri,
@@ -72,7 +72,7 @@ export class ExtensionLsp extends Extension {
       }
     });
 
-    this.editor.addEventListener('beforeDestroy', async () => {
+    this.editor.addEventListener('beforeDestroy', () => {
       if (this.uri) {
         this.client.disconnect();
       }

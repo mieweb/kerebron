@@ -16,7 +16,7 @@ class ProcessClient extends EventTarget {
     super();
   }
 
-  async connect() {
+  connect() {
     const command = new Deno.Command(this.execPath, {
       args: this.args,
       stdin: 'piped',
@@ -167,11 +167,11 @@ class ProxyContext implements WSEvents<WebSocket> {
   }
 }
 
-export async function proxyProcess(
+export function proxyProcess(
   execPath: string,
   args: string[],
   c: Context,
-): Promise<WSEvents<WebSocket>> {
+): WSEvents<WebSocket> {
   const proxy = new ProxyContext(execPath, args, c);
   return proxy;
 }

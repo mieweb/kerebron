@@ -152,7 +152,7 @@ export const serverCompletionSource: CompletionSource = async (context) => {
         from: changes.mapPos(result.from),
       }),
     };
-  } catch (err) {
+  } catch (err: any) {
     if (
       'code' in err &&
       (err as lsp.ResponseError).code == -32800 /* RequestCancelled */

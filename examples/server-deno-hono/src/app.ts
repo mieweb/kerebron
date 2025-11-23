@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-import { proxy } from 'hono/proxy';
 import { serveStatic, upgradeWebSocket } from 'hono/deno';
 import { cors } from 'hono/cors';
 
@@ -7,7 +6,6 @@ import { HonoYjsMemAdapter } from '@kerebron/extension-server-hono/HonoYjsMemAda
 import { proxyWs } from './proxyWs.ts';
 import { LspWsAdapter } from './lsp-server.ts';
 import { proxyTcp } from './proxyTcp.ts';
-import { proxyProcess } from './proxyProcess.ts';
 
 const __dirname = import.meta.dirname;
 
@@ -28,8 +26,8 @@ export class Server {
     this.app = app;
     this.fetch = app.fetch;
 
-    this.app.get('/api/rooms', async (c) => {
-      const retVal = await yjsAdapter.getRoomNames();
+    this.app.get('/api/rooms', (c) => {
+      const retVal = yjsAdapter.getRoomNames();
       return c.json(retVal);
     });
 
@@ -63,7 +61,7 @@ export class Server {
       const devProxyUrl = this.opts.devProxyUrls[path];
       console.log(`Proxy: ${path} => ${devProxyUrl}`);
 
-      this.app.all(path + '/*', async (c) => {
+      this.app.all(path + '/*', (c) => {
         const queryString = c.req.url
           .split('?')
           .map((e: string, idx: number) => {

@@ -1,3 +1,5 @@
+// deno-lint-ignore-file no-window
+
 type Position = {
   top: string;
   left: string;

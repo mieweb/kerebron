@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import debug from 'npm:debug';
-import { build, type Loader } from 'npm:esbuild';
-import fg from 'npm:fast-glob';
-import ts from 'npm:typescript';
+import debug from 'npm:debug@latest';
+import { build, type Loader } from 'npm:esbuild@latest';
+import fg from 'npm:fast-glob@latest';
+import ts from 'npm:typescript@latest';
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,7 @@ import ts from 'npm:typescript';
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Plugin } from 'npm:vite';
+import type { Plugin } from 'vite';
 
 type FilePath = string;
 

@@ -38,28 +38,28 @@ function removeMarkedContent(node: Node, markType: MarkType) {
   return node.copy(Fragment.fromArray(newContent));
 }
 
-function convertDomToLowerCase(node: Node) {
-  // If the node is an element, change its tag name and attributes
-  if (node.nodeType === 1) { // Element node
-    // Convert tag name to lowercase
-    try {
-      node.nodeName = node.nodeName.toLowerCase();
-    } catch (ignore) {
-      /* HACK FOR: Uncaught TypeError: setting getter-only property "nodeName" */
-    }
+// function convertDomToLowerCase(node: Node) {
+//   // If the node is an element, change its tag name and attributes
+//   if (node.nodeType === 1) { // Element node
+//     // Convert tag name to lowercase
+//     try {
+//       node.nodeName = node.nodeName.toLowerCase();
+//     } catch (ignore) {
+//       /* HACK FOR: Uncaught TypeError: setting getter-only property "nodeName" */
+//     }
 
-    // Loop through attributes and convert them to lowercase
-    for (let i = 0; i < node.attributes.length; i++) {
-      const attr = node.attributes[i];
-      node.setAttribute(attr.name.toLowerCase(), attr.value);
-    }
-  }
+//     // Loop through attributes and convert them to lowercase
+//     for (let i = 0; i < node.attributes.length; i++) {
+//       const attr = node.attributes[i];
+//       node.setAttribute(attr.name.toLowerCase(), attr.value);
+//     }
+//   }
 
-  // Recursively convert children nodes
-  for (let i = 0; i < node.childNodes.length; i++) {
-    convertDomToLowerCase(node.childNodes[i]);
-  }
-}
+//   // Recursively convert children nodes
+//   for (let i = 0; i < node.childNodes.length; i++) {
+//     convertDomToLowerCase(node.childNodes[i]);
+//   }
+// }
 
 export interface MdContext {
   meta: Record<string, any>;
@@ -513,7 +513,15 @@ export function syncPmToMdConverter(
     nodeToTreeStringOutput(debugOutput, document);
 
     debugOutput.getSourceMap(
-      (item: NodeAndPos, targetRow: number, targetCol: number) => {
+      (
+        targetRow: number,
+        targetCol: number,
+        pos: number,
+        item?: NodeAndPos,
+      ) => {
+        if (!item) {
+          return;
+        }
         debugMap[item.pos] = {
           targetRow,
           targetCol,
@@ -523,10 +531,10 @@ export function syncPmToMdConverter(
 
     sourceMap = output.getSourceMap(
       (
-        item: Token,
         targetRow: number,
         targetCol: number,
         targetPos: number,
+        item?: Token,
       ) => {
         if (item?.map) {
           const pos = item.map[0];

@@ -4,7 +4,6 @@ import { type CoreEditor, Node } from '@kerebron/editor';
 import {
   type CommandFactories,
   type CommandShortcuts,
-  setBlockType,
 } from '@kerebron/editor/commands';
 import {
   type InputRule,

@@ -1,4 +1,4 @@
-import { defineConfig } from 'npm:vite';
+import { defineConfig } from 'vite';
 import wasm from 'vite-plugin-wasm';
 import denoPlugin from '../../build/vite-plugins/resolvePlugin.ts';
 import denoPrefixPlugin from '../../build/vite-plugins/prefixPlugin.ts';

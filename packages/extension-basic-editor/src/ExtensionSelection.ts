@@ -26,10 +26,12 @@ function normalizeSiblings(fragment: Fragment, $context: ResolvedPos) {
   for (let d = $context.depth; d >= 0; d--) {
     let parent = $context.node(d);
     let match = parent.contentMatchAt($context.index(d));
-    let lastWrap: readonly NodeType[] | undefined, result: Node[] | null = [];
+    let lastWrap: readonly NodeType[] | undefined;
+    let result: Node[] | null = [];
     fragment.forEach((node) => {
       if (!result) return;
-      let wrap = match.findWrapping(node.type), inLast;
+      let wrap = match.findWrapping(node.type);
+      let inLast;
       if (!wrap) return result = null;
       if (
         inLast = result.length && lastWrap!.length &&
@@ -179,11 +181,13 @@ function fixSlice(slice: Slice, $context: ResolvedPos): Slice {
       let node = slice.content.firstChild;
       openStart < slice.openStart && !node!.type.spec.isolating;
       openStart++, node = node!.firstChild
+      // deno-lint-ignore no-empty
     ) {}
     for (
       let node = slice.content.lastChild;
       openEnd < slice.openEnd && !node!.type.spec.isolating;
       openEnd++, node = node!.lastChild
+      // deno-lint-ignore no-empty
     ) {}
     slice = closeSlice(slice, openStart, openEnd);
   }

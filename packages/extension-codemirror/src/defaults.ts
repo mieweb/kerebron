@@ -8,7 +8,7 @@ export const defaultCreateSelect = (
   dom: HTMLElement,
   node: Node,
   view: EditorView,
-  getPos: (() => number) | boolean,
+  getPos: () => number | undefined,
 ) => {
   if (!settings.languageLoaders) return () => {};
   const { languageLoaders } = settings;
@@ -34,12 +34,13 @@ export const defaultCreateSelect = (
     });
   select.value = node.attrs.lang || 'none';
   dom.prepend(select);
-  select.onchange = async (e) => {
+  select.onchange = (e) => {
     if (!(e.target instanceof HTMLSelectElement)) return;
     const lang = e.target.value;
-    if (typeof getPos === 'function') {
+    const pos = getPos();
+    if (pos) {
       view.dispatch(
-        view.state.tr.setNodeMarkup(getPos(), undefined, {
+        view.state.tr.setNodeMarkup(pos, undefined, {
           ...node.attrs,
           lang,
         }),
@@ -55,7 +56,7 @@ const defaultUpdateSelect = (
   dom: HTMLElement,
   node: Node,
   view: EditorView,
-  getPos: (() => number) | boolean,
+  getPos: () => number | undefined,
   oldNode: Node,
 ) => {
   if (oldNode.attrs.lang !== node.attrs.lang) {

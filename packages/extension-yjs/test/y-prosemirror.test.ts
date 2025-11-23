@@ -2,14 +2,13 @@ import * as t from 'lib0/testing';
 import * as prng from 'lib0/prng';
 import * as math from 'lib0/math';
 import * as Y from 'yjs';
-// @ts-ignore
 import { applyRandomTests } from 'yjs/testHelper';
 
 import { EditorState, Plugin, TextSelection } from 'prosemirror-state';
 // import { EditorView } from 'prosemirror-view'
 
 import { Schema } from 'prosemirror-model';
-import * as basicSchema from 'npm:prosemirror-schema-basic';
+import * as basicSchema from 'npm:prosemirror-schema-basic@1.2.4';
 import { findWrapping } from 'prosemirror-transform';
 import { schema as complexSchema } from './complexSchema.ts';
 import * as promise from 'lib0/promise';
@@ -69,7 +68,6 @@ export const testPluginIntegrity = (_tc) => {
     },
   });
   const view = new DummyEditorView({
-    // @ts-ignore
     state: EditorState.create({
       schema,
       plugins: [
@@ -664,7 +662,6 @@ export const testAddToHistoryIgnore = (_tc) => {
 
 const createNewProsemirrorViewWithSchema = (y, schema, undoManager = false) => {
   const view = new DummyEditorView({
-    // @ts-ignore
     state: EditorState.create({
       schema,
       plugins: [ySyncPlugin(y.get('prosemirror', Y.XmlFragment))].concat(

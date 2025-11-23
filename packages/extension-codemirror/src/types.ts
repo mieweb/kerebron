@@ -48,7 +48,7 @@ export type CodeBlockSettings = {
   redo?: (state: EditorState, dispatch: (tr: Transaction) => void) => void;
   theme?: CmExtension[];
   themes: ThemeItem[];
-  readOnly: boolean;
+  readOnly?: boolean;
   getCurrentTheme?: () => string;
   codeBlockName?: string;
   lspTransport?: Transport;

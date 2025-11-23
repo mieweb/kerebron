@@ -54,6 +54,7 @@
     "npm:prosemirror-history@1.4.1": "1.4.1",
     "npm:prosemirror-model@1.25.3": "1.25.3",
     "npm:prosemirror-model@latest": "1.25.3",
+    "npm:prosemirror-schema-basic@*": "1.2.4",
     "npm:prosemirror-state@1.4.3": "1.4.3",
     "npm:prosemirror-state@latest": "1.4.3",
     "npm:prosemirror-transform@1.10.4": "1.10.4",
@@ -1398,6 +1399,12 @@
         "orderedmap"
       ]
     },
+    "prosemirror-schema-basic@1.2.4": {
+      "integrity": "sha512-ELxP4TlX3yr2v5rM7Sb70SqStq5NvI15c0j9j/gjsrO5vaw+fnnpovCLEGIcpeGfifkuqJwl4fon6b+KdrODYQ==",
+      "dependencies": [
+        "prosemirror-model"
+      ]
+    },
     "prosemirror-state@1.4.3": {
       "integrity": "sha512-goFKORVbvPuAQaXhpbemJFRKJ2aixr+AZMGiquiqKxaucC6hlpHNZHWgz5R7dS4roHiwq9vDctE//CZ++o0W1Q==",
       "dependencies": [
@@ -1763,9 +1770,12 @@
     "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/tree_sitter/lookahead_iterator.js": "118a03413bf90664881d9e4b48650b78dec83a5f46e1bc828a9d35622ecb6657",
     "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/tree_sitter/marshal.js": "77f89ce492117cc222ff5ebb3f7edd17b8c1575638809141c8e8f699cea10a41",
     "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/tree_sitter/node.js": "a6ec64a651fe33c348a20c2bde09080c13be8f082a6c33de883dff710755b387",
+    "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/tree_sitter/node.ts": "3104e9ddd0f1edd9734bcd55b74ce867cc50b2e56008d9197bf566649c0f50ba",
     "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/tree_sitter/parser.js": "70bb5a5a52bfa28e2a66bb1dea91738a22a982ebac0204d9a670a11b0d601a34",
+    "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/tree_sitter/parser.ts": "695da2a611864c0a91406add8828d20d2785f2ec2e14240398c68d27b153ea33",
     "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/tree_sitter/query.js": "c00c4bba6ad3026ea8e204500bd97b8640281697cec4354628ba831e7896d454",
     "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/tree_sitter/tree.js": "914ee29a67af544915cb65afba7faf26f1611416026d642d3a08d46f27899b02",
+    "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/tree_sitter/tree.ts": "8c35444ccc224e37745e9e4c793465e0749f6a404917168c09057dd206d32170",
     "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/tree_sitter/tree_cursor.js": "a63a92f4a202054d3664c43c9aeffe209221b86cf3a82ebfc14ff6a9a0608907",
     "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/tree_sitter_wasm.js": "abeae162f42d86d12d51f04225b1546c9e42df738f1c531f9e0712404f61b97e",
     "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/wasm_loader.js": "64b7a707038e6dcf14fd132023889e2e94370a70fb43674bd9782062b14f81c9",

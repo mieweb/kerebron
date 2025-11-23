@@ -28,10 +28,10 @@ export const codeMirrorBlockKey = new PluginKey('codemirror-block');
 function arrowHandler(dir: 'left' | 'right' | 'up' | 'down') {
   return (
     state: EditorState,
-    dispatch: (tr: Transaction) => void,
-    view: EditorView,
+    dispatch: ((tr: Transaction) => void) | undefined,
+    view?: EditorView,
   ) => {
-    if (state.selection.empty && view.endOfTextblock(dir)) {
+    if (state.selection.empty && view && view.endOfTextblock(dir)) {
       let side = dir == 'left' || dir == 'up' ? -1 : 1;
       let $head = state.selection.$head;
       let nextPos = Selection.near(
@@ -39,7 +39,9 @@ function arrowHandler(dir: 'left' | 'right' | 'up' | 'down') {
         side,
       );
       if (nextPos.$head && nextPos.$head.parent.type.name == 'code_block') {
-        dispatch(state.tr.setSelection(nextPos));
+        if (dispatch) {
+          dispatch(state.tr.setSelection(nextPos));
+        }
         return true;
       }
     }
@@ -69,6 +71,7 @@ const LANGS = [
 ];
 
 export interface NodeCodeMirrorConfig {
+  readOnly?: boolean;
   languageWhitelist?: CodeBlockSettings['languageWhitelist'];
   theme?: CodeBlockSettings['theme'];
 }
@@ -178,7 +181,7 @@ export class NodeCodeMirror extends Node {
         key: codeMirrorBlockKey,
         props: {
           nodeViews: {
-            [this.name]: codeMirrorBlockNodeView(settings, editor),
+            [this.name]: codeMirrorBlockNodeView(settings, this.editor),
           },
         },
       }),

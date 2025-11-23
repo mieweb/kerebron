@@ -41,8 +41,9 @@ export function createTable(
     );
   }
 
-  const attrs = {};
-  for (const [key, attrSpec] of Object.entries(types.table.attrs)) {
+  const attrs: Record<string, string> = {};
+  const tableSpec = schema.spec.nodes.get('table')!;
+  for (const [key, attrSpec] of Object.entries(tableSpec.attrs || {})) {
     if ('undefined' !== typeof attrSpec.default) {
       attrs[key] = attrSpec.default;
     }
