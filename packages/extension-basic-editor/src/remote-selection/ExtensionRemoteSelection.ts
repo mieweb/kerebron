@@ -25,9 +25,9 @@ export class ExtensionRemoteSelection extends Extension {
 
   private remoteStates: SelectionState[] = [];
 
-  override getProseMirrorPlugins(editor: CoreEditor): Plugin[] {
+  override getProseMirrorPlugins(): Plugin[] {
     return [
-      remoteSelectionPlugin(this, editor),
+      remoteSelectionPlugin(this, this.editor),
     ];
   }
 

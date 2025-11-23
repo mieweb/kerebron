@@ -124,7 +124,7 @@ export class ExtensionManager {
         const nodeType = this.schema.nodes[extension.name];
         inputRules.push(...extension.getInputRules(nodeType));
         plugins.push(
-          ...extension.getProseMirrorPlugins(this.editor, this.schema),
+          ...extension.getProseMirrorPlugins(),
         );
         this.commandManager.mergeCommandFactories(
           extension.getCommandFactories(this.editor, nodeType),
@@ -157,7 +157,7 @@ export class ExtensionManager {
       }
       if (extension.type === 'extension') {
         plugins.push(
-          ...extension.getProseMirrorPlugins(this.editor, this.schema),
+          ...extension.getProseMirrorPlugins(),
         );
         this.commandManager.mergeCommandFactories(
           extension.getCommandFactories(this.editor),

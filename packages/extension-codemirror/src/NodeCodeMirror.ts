@@ -155,8 +155,8 @@ export class NodeCodeMirror extends Node {
     };
   }
 
-  override getProseMirrorPlugins(editor: CoreEditor): Plugin[] {
-    const shadowRoot = getShadowRoot(editor.config.element);
+  override getProseMirrorPlugins(): Plugin[] {
+    const shadowRoot = getShadowRoot(this.editor.config.element);
 
     const settings = {
       languageWhitelist: this.config.languageWhitelist || LANGS,
@@ -165,10 +165,10 @@ export class NodeCodeMirror extends Node {
       readOnly: this.config.readOnly,
       languageLoaders: { ...languageLoaders, ...legacyLanguageLoaders },
       undo: () => {
-        editor.chain().undo().run();
+        this.editor.chain().undo().run();
       },
       redo: () => {
-        editor.chain().redo().run();
+        this.editor.chain().redo().run();
       },
       theme: [...(this.config.theme || [])],
     };

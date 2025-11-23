@@ -1,7 +1,6 @@
 import { Plugin } from 'prosemirror-state';
-import { Schema } from 'prosemirror-model';
 
-import { type CoreEditor, Extension } from '@kerebron/editor';
+import { Extension } from '@kerebron/editor';
 import { type ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { type ExtensionAutocomplete } from '@kerebron/extension-autocomplete';
 import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
@@ -28,12 +27,12 @@ export class ExtensionLsp extends Extension {
     this.client = new LSPClient(config.lspTransport);
   }
 
-  override getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
+  override getProseMirrorPlugins(): Plugin[] {
     const plugins: Plugin[] = [];
 
     const { autocompleteConfig } = createLspAutocomplete(this);
 
-    plugins.push(new AutocompletePlugin(autocompleteConfig, editor));
+    plugins.push(new AutocompletePlugin(autocompleteConfig, this.editor));
     plugins.push(new DiagnosticPlugin({}, this));
 
     return plugins;

@@ -14,7 +14,6 @@ import {
 } from '@kerebron/editor/utilities';
 
 import { createTable } from './utilities/createTable.ts';
-import { fixTables } from './utilities/fixTables.ts';
 import { CellSelection } from './utilities/CellSelection.ts';
 import { columnResizing } from './utilities/columnResizing.ts';
 import { tableEditing } from './utilities/tableEditing.ts';
@@ -135,7 +134,7 @@ export class NodeTable extends Node {
     return keys;
   }
 
-  override getProseMirrorPlugins(editor: CoreEditor): Plugin[] {
+  override getProseMirrorPlugins(): Plugin[] {
     return [
       columnResizing(),
       tableEditing(),
