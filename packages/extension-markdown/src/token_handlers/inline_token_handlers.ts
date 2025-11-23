@@ -101,15 +101,26 @@ function getLinkTokensHandlers(): Record<string, Array<TokenHandler>> {
           const href: string = lastStackToken.attrGet('href') || '';
           const title: string = lastStackToken.attrGet('title') || '';
 
-          if (ctx.current.meta['link_text'] === href && !title) {
+          if (!title && ctx.current.meta['link_text'] === href) {
             ctx.current.log(href, token);
+          } else if (!title && !href) {
+            ctx.current.log('[', token);
+            ctx.current.log(
+              ctx.current.meta['link_text'],
+              ctx.current.meta['link_token_token'],
+            );
+            ctx.current.log(`]${title}`, token);
           } else {
             ctx.current.log('[', token);
             ctx.current.log(
               ctx.current.meta['link_text'],
               ctx.current.meta['link_token_token'],
             );
-            ctx.current.log(`](${href}${title})`, token);
+            if (title) {
+              ctx.current.log(`](${href} ${title})`, token);
+            } else {
+              ctx.current.log(`](${href})`, token);
+            }
           }
 
           ctx.unstash();
@@ -167,12 +178,12 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
     ],
     'strike_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log(token.markup || '~~', token);
+        ctx.current.log(token.markup || '~', token);
       },
     ],
     'strike_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log(token.markup || '~~', token);
+        ctx.current.log(token.markup || '~', token);
       },
     ],
 
@@ -225,7 +236,9 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
       (token: Token, ctx: ContextStash) => {
         {
           const src = token.attrGet('src');
-          let alt = '';
+          const altAttr = token.attrGet('alt');
+
+          let alt = altAttr || '';
           if (token.children) {
             for (const child of token.children) {
               if (child.type === 'text') {
@@ -235,10 +248,15 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
           }
 
           ctx.current.log(`![${alt}]`, token);
+          // ctx.current.log(
+          //   `(${src})`,
+          //   token,
+          // );
+
+          const title = token.attrGet('title');
           if (src) {
-            const title = token.attrGet('title');
             ctx.current.log(
-              `(${src}${title ? ' "' + title + '"' : ''})`,
+              `(${src}${title ? ' ' + title : ''})`,
               token,
             );
           }

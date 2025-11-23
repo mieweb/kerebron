@@ -157,7 +157,7 @@ class TableBuilder {
         for (let cellNo = 0; cellNo < lastHeader.length; cellNo++) {
           const cell = lastHeader[cellNo];
           log(' ');
-          log('-'.repeat(columnsWidth[cellNo]));
+          log('-'.repeat(columnsWidth[cellNo] - 1));
 
           if (cell.align === 'right') {
             log(':|');
@@ -172,6 +172,7 @@ class TableBuilder {
 
       for (let cellNo = 0; cellNo < row.cells.length; cellNo++) {
         const cell = row.cells[cellNo];
+        log(' '.repeat(1));
         for (const pair of cell.value) {
           log(pair[0], pair[1]);
         }

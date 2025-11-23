@@ -129,6 +129,9 @@ export async function mdToPmConverterText(
       th: {
         block: 'table_header',
       },
+      thead: {
+        ignore: true,
+      },
     },
   );
 
