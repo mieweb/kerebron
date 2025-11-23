@@ -6,20 +6,19 @@ import {
   Selection,
   Transaction,
 } from 'prosemirror-state';
-import type { NodeSpec, NodeType } from 'prosemirror-model';
+import type { NodeType } from 'prosemirror-model';
 
-import { type CoreEditor, Node } from '@kerebron/editor';
+import { type CoreEditor } from '@kerebron/editor';
+import { getShadowRoot } from '@kerebron/editor/utilities';
 import {
   type CommandFactories,
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
-import {
-  type InputRule,
-  textblockTypeInputRule,
-} from '@kerebron/editor/plugins/input-rules';
-import { codeJarBlockNodeView } from './codeJarBlockNodeView.ts';
-import { getShadowRoot } from '@kerebron/editor/utilities';
+
 import { getLangsList } from '@kerebron/wasm';
+import { NodeCodeBlock } from '@kerebron/extension-basic-editor/NodeCodeBlock';
+
+import { codeJarBlockNodeView } from './codeJarBlockNodeView.ts';
 
 export const codeJarBlockKey = new PluginKey('code-jar-block');
 
@@ -50,62 +49,9 @@ export interface NodeCodeJarConfig {
   languageWhitelist?: string[];
 }
 
-export class NodeCodeJar extends Node {
-  override name = 'code_block';
-  // requires = ['doc'];
-
+export class NodeCodeJar extends NodeCodeBlock {
   constructor(override config: NodeCodeJarConfig) {
     super(config);
-  }
-
-  override getNodeSpec(): NodeSpec {
-    // const langs = this.config.languageWhitelist || LANGS;
-
-    return {
-      content: 'text*',
-      marks: '',
-      group: 'block',
-      code: true,
-      defining: true,
-      parseDOM: [
-        {
-          tag: 'pre',
-          preserveWhitespace: 'full',
-          getAttrs(dom: HTMLElement) {
-            let lang = dom.getAttribute('lang');
-
-            // if (!lang) {
-            //   for (const className of dom.classList) {
-            //     if (
-            //       className.startsWith('lang-') &&
-            //       langs.indexOf(className.substring('lang-'.length)) > -1
-            //     ) {
-            //       lang = className.substring('lang-'.length);
-            //       break;
-            //     }
-            //   }
-            // }
-
-            return {
-              lang,
-            };
-          },
-        },
-      ],
-      attrs: { lang: { default: null } },
-      toDOM(node) {
-        const { lang } = node.attrs;
-        return ['pre', { lang }, ['code', 0]];
-      },
-    };
-  }
-
-  override getInputRules(type: NodeType): InputRule[] {
-    /// Given a code block node type, returns an input rule that turns a
-    /// textblock starting with three backticks into a code block.
-    return [
-      textblockTypeInputRule(/^```$/, type),
-    ];
   }
 
   override getCommandFactories(

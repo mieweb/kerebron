@@ -6,8 +6,9 @@ import { CoreEditor } from '@kerebron/editor';
 import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionTables } from '@kerebron/extension-tables';
-import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
 import { assertEquals, trimLines } from '@kerebron/test-utils';
+import { NodeDocumentCode } from '@kerebron/extension-basic-editor/NodeDocumentCode';
+import { NodeCodeBlock } from '@kerebron/extension-basic-editor/NodeCodeBlock';
 
 globalThis.DOMParser = DOMParser;
 globalThis.XMLSerializer = XMLSerializer;
@@ -33,7 +34,8 @@ Deno.test('sourcemap test', async () => {
     extensions: [
       new ExtensionBasicEditor(),
       new ExtensionTables(),
-      new ExtensionCodeMirror(),
+      new NodeDocumentCode({ lang: 'markdown' }),
+      new NodeCodeBlock(),
       markdownExtension,
     ],
   });

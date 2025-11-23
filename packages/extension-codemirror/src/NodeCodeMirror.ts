@@ -6,22 +6,20 @@ import {
   Selection,
   Transaction,
 } from 'prosemirror-state';
-import type { NodeSpec, NodeType } from 'prosemirror-model';
+import type { NodeType } from 'prosemirror-model';
 
-import { type CoreEditor, Node } from '@kerebron/editor';
+import { type CoreEditor } from '@kerebron/editor';
+import { getShadowRoot } from '@kerebron/editor/utilities';
 import {
   type CommandFactories,
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
-import {
-  type InputRule,
-  textblockTypeInputRule,
-} from '@kerebron/editor/plugins/input-rules';
+import { NodeCodeBlock } from '@kerebron/extension-basic-editor/NodeCodeBlock';
+
 import { CodeBlockSettings } from './types.ts';
 import { codeMirrorBlockNodeView } from './codeMirrorBlockNodeView.ts';
 import { defaultSettings } from './defaults.ts';
 import languageLoaders, { legacyLanguageLoaders } from './languageLoaders.ts';
-import { getShadowRoot } from '@kerebron/editor/utilities';
 
 export const codeMirrorBlockKey = new PluginKey('codemirror-block');
 
@@ -76,62 +74,9 @@ export interface NodeCodeMirrorConfig {
   theme?: CodeBlockSettings['theme'];
 }
 
-export class NodeCodeMirror extends Node {
-  override name = 'code_block';
-  // requires = ['doc'];
-
+export class NodeCodeMirror extends NodeCodeBlock {
   constructor(override config: NodeCodeMirrorConfig) {
     super(config);
-  }
-
-  override getNodeSpec(): NodeSpec {
-    const langs = this.config.languageWhitelist || LANGS;
-
-    return {
-      content: 'text*',
-      marks: '',
-      group: 'block',
-      code: true,
-      defining: true,
-      parseDOM: [
-        {
-          tag: 'pre',
-          preserveWhitespace: 'full',
-          getAttrs(dom: HTMLElement) {
-            let lang = dom.getAttribute('lang');
-
-            if (!lang) {
-              for (const className of dom.classList) {
-                if (
-                  className.startsWith('lang-') &&
-                  langs.indexOf(className.substring('lang-'.length)) > -1
-                ) {
-                  lang = className.substring('lang-'.length);
-                  break;
-                }
-              }
-            }
-
-            return {
-              lang,
-            };
-          },
-        },
-      ],
-      attrs: { lang: { default: null } },
-      toDOM(node) {
-        const { lang } = node.attrs;
-        return ['pre', { lang }, ['code', 0]];
-      },
-    };
-  }
-
-  override getInputRules(type: NodeType): InputRule[] {
-    /// Given a code block node type, returns an input rule that turns a
-    /// textblock starting with three backticks into a code block.
-    return [
-      textblockTypeInputRule(/^```$/, type),
-    ];
   }
 
   override getCommandFactories(

@@ -16,7 +16,6 @@ Deno.test('example-document.md', async () => {
 
   const serializer = new MarkdownSerializer();
   const output = await serializer.serialize(tokens);
-  console.log('ooo', output);
 
   const serializedMarkdown = output.toString();
 

@@ -24,7 +24,10 @@ export function writeIndented(
     const line = lines[lineNo];
 
     if (output.colPos === 0 && line.length > 0) {
-      output.log('> '.repeat(currentCtx.blockquoteCnt));
+      output.log('>'.repeat(currentCtx.blockquoteCnt));
+      if (currentCtx.blockquoteCnt > 0) {
+        output.log(' ');
+      }
       output.log('    '.repeat(currentCtx.footnoteCnt));
 
       if (currentCtx.listType === 'tl') {
