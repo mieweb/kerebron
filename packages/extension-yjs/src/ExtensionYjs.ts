@@ -1,10 +1,9 @@
+import type { Plugin } from 'prosemirror-state';
+
+import * as Y from 'yjs';
 import * as awarenessProtocol from 'y-protocols/awareness';
 
-import type { Schema } from 'prosemirror-model';
-import type { Plugin } from 'prosemirror-state';
-import * as Y from 'yjs';
-
-import { type CoreEditor, Extension } from '@kerebron/editor';
+import { Extension } from '@kerebron/editor';
 
 import type {
   CommandFactories,
@@ -41,15 +40,15 @@ export class ExtensionYjs extends Extension {
     };
   }
 
-  override getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
+  override getProseMirrorPlugins(): Plugin[] {
     const ydoc: Y.Doc = this.config.ydoc;
     const fragment = ydoc.getXmlFragment('prosemirror');
 
-    const { mapping } = initProseMirrorDoc(fragment, schema);
+    const { mapping } = initProseMirrorDoc(fragment, this.editor.schema);
 
     return [
       ySyncPlugin(fragment, { mapping }),
-      yPositionPlugin(this.config.provider.awareness, editor),
+      yPositionPlugin(this.config.provider.awareness, this.editor),
       yUndoPlugin(),
     ];
   }

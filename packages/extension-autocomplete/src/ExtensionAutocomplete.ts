@@ -37,9 +37,9 @@ export class ExtensionAutocomplete extends Extension {
     super(config);
   }
 
-  override getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
+  override getProseMirrorPlugins(): Plugin[] {
     return [
-      new AutocompletePlugin(this.config, editor),
+      new AutocompletePlugin(this.config, this.editor),
     ];
   }
 }

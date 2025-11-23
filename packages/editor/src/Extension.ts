@@ -42,7 +42,7 @@ export abstract class Extension {
     return [];
   }
 
-  getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
+  getProseMirrorPlugins(): Plugin[] {
     return [];
   }
 

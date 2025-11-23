@@ -41,7 +41,7 @@ export abstract class Node {
     return [];
   }
 
-  getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
+  getProseMirrorPlugins(): Plugin[] {
     return [];
   }
 

@@ -1,7 +1,6 @@
 import { Plugin } from 'prosemirror-state';
-import { Schema } from 'prosemirror-model';
 
-import { type CoreEditor, Extension } from '@kerebron/editor';
+import { Extension } from '@kerebron/editor';
 import { type MenuElement } from './menu.ts';
 import { buildMenu } from './buildMenu.ts';
 import { CustomMenuPlugin } from './CustomMenuPlugin.ts';
@@ -15,11 +14,11 @@ export interface CustomMenuOptions {
 export class ExtensionCustomMenu extends Extension {
   name = 'customMenu';
 
-  override getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
-    const content = buildMenu(editor, schema);
+  override getProseMirrorPlugins(): Plugin[] {
+    const content = buildMenu(this.editor, this.editor.schema);
 
     return [
-      new CustomMenuPlugin(editor, {
+      new CustomMenuPlugin(this.editor, {
         content,
       }),
     ];
