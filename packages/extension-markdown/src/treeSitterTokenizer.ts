@@ -36,9 +36,10 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
     blockToken.info = debug;
     blockToken.level = blockLevel;
     blockToken.children = [someInlineToken];
-    blockToken.content = blockToken.children.map((c) => c.content || '').join(
-      '',
-    );
+    blockToken.content = blockToken.children
+      .map((c) => c.content || '').join(
+        '',
+      );
     retVal.push(blockToken);
   };
 
@@ -377,7 +378,11 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
 
   const walkRecursive = (
     node?: TreeSitterNode,
-    ctx = { tableRowType: 'tbody' },
+    ctx: {
+      tableRowType: 'thead' | 'tbody';
+      cellNo: number;
+      cellAlign: Array<'left' | 'right'>;
+    } = { tableRowType: 'tbody', cellNo: 0, cellAlign: [] },
   ) => {
     if (!node) {
       return;
@@ -388,12 +393,16 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
       if (!inlineText) {
         throw new Error('!inlineText');
       }
-      const inlineTree = inlineParser.parse(inlineText);
-      if (!inlineTree) {
-        throw new Error('!inlineTree');
-      }
 
-      walkInline(inlineTree?.rootNode.children, node.startPosition);
+      if (node.children.length > 0) {
+        walkInline(node.children, node.startPosition);
+      } else {
+        const inlineTree = inlineParser.parse(inlineText);
+        if (!inlineTree) {
+          throw new Error('!inlineTree');
+        }
+        walkInline(inlineTree?.rootNode.children, node.startPosition);
+      }
 
       return;
     }
@@ -503,6 +512,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           );
           openToken.level = blockLevel;
           openToken.markup = underline?.text || '#';
+          retVal.push(openToken);
 
           const children = node.children.filter((c) =>
             !c.type.startsWith('setext_')
@@ -662,17 +672,29 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             NESTING_SELF_CLOSING,
           );
           token.level = blockLevel;
-          // TODO indent from first whitespace
 
-          // const children = [...node.children
-          // .filter((item) => item.type === 'code_fence_content')];
+          let indent = 0;
+          if ('indent' in node) {
+            indent = (node.indent as string).length;
+          }
 
-          const content = node.children.map((item) =>
-            item.children
-              .map((inline) => inline.text || '')
-              .join('')
-          ).join('');
+          const lines = node.text.split('\n');
+          for (const line of lines) {
+            const m = line.match(/^ +/);
+            if (!m) {
+              indent = 0;
+            } else {
+              if (indent > m[0].length) {
+                indent = m[0].length;
+              }
+            }
+          }
 
+          const content = lines
+            .map((line) => line.substring(indent))
+            .join('\n');
+
+          token.attrSet('indent', '' + indent);
           token.content = content;
 
           retVal.push(token);
@@ -714,6 +736,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             tagName,
             NESTING_OPENING,
           );
+          openToken.attrSet('align', ctx.cellAlign[ctx.cellNo] || 'left');
           openToken.level = blockLevel;
           retVal.push(openToken);
 
@@ -775,6 +798,8 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           );
           closeToken.level = blockLevel;
           retVal.push(closeToken);
+
+          ctx.cellNo++;
         }
         break;
 
@@ -821,6 +846,27 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
 
           blockLevel++;
 
+          const delimiterRows = node.children
+            ?.filter((c) => c.type === 'pipe_table_delimiter_row');
+
+          const cellAlign: Array<'left' | 'right'> = [];
+          if (delimiterRows.length > 0) {
+            const delimiterRow = delimiterRows[0];
+            const delimiterCells = delimiterRow.children
+              ?.filter((c) => c.type === 'pipe_table_delimiter_cell');
+
+            for (let cellNo = 0; cellNo < delimiterCells.length; cellNo++) {
+              const cell = delimiterCells[cellNo];
+              if (
+                cell.children.find((c) => c.type === 'pipe_table_align_right')
+              ) {
+                cellAlign.push('right');
+              } else {
+                cellAlign.push('left');
+              }
+            }
+          }
+
           const headRows = node.children
             ?.filter((c) => c.type === 'pipe_table_header');
           if (headRows.length > 0) {
@@ -836,7 +882,12 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
 
             blockLevel++;
             headRows.forEach((child) =>
-              walkRecursive(child, { ...ctx, tableRowType: 'thead' })
+              walkRecursive(child, {
+                ...ctx,
+                tableRowType: 'thead',
+                cellNo: 0,
+                cellAlign: cellAlign,
+              })
             );
             blockLevel--;
 
@@ -865,7 +916,11 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
 
             blockLevel++;
             bodyRows.forEach((child) =>
-              walkRecursive(child, { ...ctx, tableRowType: 'tbody' })
+              walkRecursive(child, {
+                ...ctx,
+                tableRowType: 'tbody',
+                cellAlign: cellAlign,
+              })
             );
             blockLevel--;
 
@@ -992,10 +1047,11 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             node.children.find((item) => item.type === 'paragraph'),
             ctx,
           );
-          walkRecursive(
-            node.children.find((item) => item.type === 'list'),
-            ctx,
-          );
+
+          const lists = node.children.filter((item) => item.type === 'list');
+          for (const list of lists) {
+            walkRecursive(list, ctx);
+          }
           blockLevel--;
 
           const closeToken = new Token(

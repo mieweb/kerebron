@@ -42,6 +42,7 @@ export function getHtmlBasicTokensHandlers(): Record<
 
     'code_block': [
       (token: Token, ctx: ContextStash) => {
+        ctx.current.log('<pre>' + token.content + '</pre>\n', token);
         // ctx.current.log(
         //   token.content
         //     .split('\n')
@@ -102,7 +103,7 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
     'heading_close': [
       (token: Token, ctx: ContextStash) => {
         if (token.markup === '---') {
-          ctx.current.log(token.markup + '\n', token);
+          ctx.current.log('\n' + token.markup + '\n', token);
         }
         ctx.current.log('\n', token);
         ctx.unstash();
@@ -140,11 +141,13 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
 
     'code_block': [
       (token: Token, ctx: ContextStash) => {
+        const indent = +(token.attrGet('indent') || 0);
+
         ctx.current.log(
           token.content
             .split('\n')
-            .map((t) => t ? ('    ' + t) : '')
-            .join('\n') + '\n',
+            .map((t) => t ? (' '.repeat(indent) + t) : '')
+            .join('\n'),
           token,
         );
       },

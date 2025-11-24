@@ -16,6 +16,13 @@ export function writeIndented(
 ) {
   const lines = text.split('\n');
 
+  const typeIndent: Record<ListType, number> = {
+    ul: 2,
+    ol: 4,
+    dl: 2,
+    tl: 4,
+  };
+
   let offset = 0;
   const startPos = token
     ? (token.map && token.map.length > 0 ? token.map[0] : 0)
@@ -23,15 +30,22 @@ export function writeIndented(
   for (let lineNo = 0; lineNo < lines.length; lineNo++) {
     const line = lines[lineNo];
 
+    if (lineNo === lines.length - 1 && line.length === 0) {
+      continue;
+    }
+
+    if (output.colPos === 0) {
+      output.log('> '.repeat(currentCtx.blockquoteCnt).trim());
+    }
     if (output.colPos === 0 && line.length > 0) {
-      output.log('>'.repeat(currentCtx.blockquoteCnt));
-      if (currentCtx.blockquoteCnt > 0) {
-        output.log(' ');
-      }
       output.log('    '.repeat(currentCtx.footnoteCnt));
 
+      const indent = currentCtx.listPath
+        .slice(0, currentCtx.listPath.length - 1)
+        .map((type) => typeIndent[type])
+        .reduce((p, c) => p + c, 0);
       if (currentCtx.listType === 'tl') {
-        output.log('    '.repeat(currentCtx.listLevel - 1));
+        output.log(' '.repeat(indent));
         if (currentCtx.itemRow === 0) {
           output.log('- ');
           if (currentCtx.itemSymbol) {
@@ -44,7 +58,7 @@ export function writeIndented(
         }
       }
       if (currentCtx.listType === 'ul') {
-        output.log('    '.repeat(currentCtx.listLevel - 1));
+        output.log(' '.repeat(indent));
         if (currentCtx.itemRow === 0) {
           output.log(currentCtx.itemSymbol + ' ');
         } else {
@@ -53,11 +67,11 @@ export function writeIndented(
       }
       if (currentCtx.listType === 'ol') {
         const no = currentCtx.itemSymbol;
-        output.log('    '.repeat(currentCtx.listLevel - 1));
+        output.log(' '.repeat(indent));
         if (currentCtx.itemRow === 0) {
           output.log(no);
         } else {
-          output.log('    ');
+          output.log(' '.repeat(4));
         }
       }
       if (currentCtx.listType === 'dl') {
@@ -75,6 +89,16 @@ export function writeIndented(
     if (startPos && tok) {
       tok.map = [startPos + offset];
     }
+
+    if (line.length > 0) {
+      if (
+        currentCtx.blockquoteCnt > 0 &&
+        output.colPos === currentCtx.blockquoteCnt * 2 - 1
+      ) {
+        output.log(' ');
+      }
+    }
+
     output.log(line, tok);
     offset += line.length;
     if (lineNo < lines.length - 1) {
@@ -89,13 +113,15 @@ export function writeIndented(
   }
 }
 
+type ListType = 'ul' | 'ol' | 'dl' | 'tl';
+
 export interface SerializerContext {
   meta: Record<string, any>;
   metaObj: Record<string, any>;
   blockquoteCnt: number;
   footnoteCnt: number;
-  listLevel: number;
-  listType?: 'ul' | 'ol' | 'dl' | 'tl';
+  listPath: Array<ListType>;
+  listType?: ListType;
   itemRow: number;
   itemNumber: number;
   itemSymbol: string;
@@ -117,7 +143,7 @@ export class ContextStash {
       blockquoteCnt: 0,
       footnoteCnt: 0,
       itemRow: 0,
-      listLevel: 0,
+      listPath: [],
       itemNumber: 0,
       itemSymbol: '',
 
@@ -128,6 +154,7 @@ export class ContextStash {
   }
 
   public stash(): number {
+    console.trace('stash');
     this.ctxStash.push(this.currentCtx);
     const funcs = {
       log: this.currentCtx.log,
@@ -150,6 +177,7 @@ export class ContextStash {
   }
 
   public unstash() {
+    console.trace('unstash');
     const ctx = this.ctxStash.pop();
     if (!ctx) {
       throw new Error('Unstash failed');
@@ -287,6 +315,19 @@ export class MarkdownSerializer {
         }
       }
 
+      if (token.nesting !== NESTING_CLOSING && token.level > 0) {
+        const prevTopTokenType = prevLevelTokenType[token.level] || '';
+        if (
+          [
+            'paragraph_close',
+          ].includes(prevTopTokenType)
+        ) {
+          if (this.ctx.current.blockquoteCnt === token.level) {
+            writeIndented(this.ctx.output, '\n', this.ctx.current, token);
+          }
+        }
+      }
+
       const tokenHandlers: Array<TokenHandler> =
         this.ctx.current.handlers[token.type] ||
         this.ctx.current.handlers['default'];
@@ -308,6 +349,10 @@ export class MarkdownSerializer {
           }
         }
       } else if (!tokenHandlers) {
+        console.warn(
+          'current.handlers',
+          Object.keys(this.ctx.current.handlers).sort(),
+        );
         throw new Error(
           `Unknown token: ${token.type} ` + JSON.stringify(token),
         );
