@@ -110,7 +110,7 @@ function getLongDefinitionTokensHandlers(): Record<
     'dl_open': [
       (token: Token, ctx: ContextStash) => {
         ctx.stash();
-        ctx.current.listLevel++;
+        ctx.current.listPath.push('dl');
         ctx.current.listType = 'dl';
       },
     ],
@@ -146,7 +146,7 @@ function getShortDefinitionTokensHandlers(): Record<
     ctx.output.rollback(outputPos);
 
     ctx.stash();
-    ctx.current.listLevel++;
+    ctx.current.listPath.push('dl');
     ctx.current.listType = 'dl';
     ctx.current.handlers = getLongDefinitionTokensHandlers();
   };
@@ -158,7 +158,7 @@ function getShortDefinitionTokensHandlers(): Record<
         ctx.current.meta['def_rollback'] = rollbackPos;
         ctx.current.meta['def_token_start'] = tokenSource.pos;
         ctx.current.meta['def_output_pos'] = ctx.output.chunkPos;
-        ctx.current.listLevel++;
+        ctx.current.listPath.push('dl');
         ctx.current.listType = 'dl';
         ctx.current.handlers = getShortDefinitionTokensHandlers();
       },
@@ -237,7 +237,7 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
     'task_list_open': [
       (token: Token, ctx: ContextStash) => {
         ctx.stash();
-        ctx.current.listLevel++;
+        ctx.current.listPath.push('tl');
         ctx.current.listType = 'tl';
         ctx.current.itemSymbol = '';
         ctx.current.itemNumber = 0;
@@ -274,7 +274,7 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
     'bullet_list_open': [
       (token: Token, ctx: ContextStash) => {
         ctx.stash();
-        ctx.current.listLevel++;
+        ctx.current.listPath.push('ul');
         ctx.current.listType = 'ul';
         ctx.current.itemSymbol = '';
         ctx.current.itemNumber = 0;
@@ -292,7 +292,7 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
       (token: Token, ctx: ContextStash) => {
         {
           ctx.stash();
-          ctx.current.listLevel++;
+          ctx.current.listPath.push('ol');
           ctx.current.listType = 'ol';
 
           const htmlInlineHandlers = Object.entries(

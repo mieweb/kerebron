@@ -6,18 +6,17 @@ import { CoreEditor } from '@kerebron/editor';
 import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionTables } from '@kerebron/extension-tables';
-import { assertEquals, trimLines } from '@kerebron/test-utils';
 import { NodeDocumentCode } from '@kerebron/extension-basic-editor/NodeDocumentCode';
 import { NodeCodeBlock } from '@kerebron/extension-basic-editor/NodeCodeBlock';
 
-globalThis.DOMParser = DOMParser;
+globalThis.DOMParser = DOMParser as any;
 globalThis.XMLSerializer = XMLSerializer;
 const doc = new DOMParser().parseFromString(
   '<html><body></body></html>',
   'text/html',
 )!;
 
-globalThis.document = doc;
+globalThis.document = doc as any;
 
 const __dirname = import.meta.dirname;
 const sampleMarkdown = new TextDecoder().decode(
