@@ -477,7 +477,11 @@ export function syncPmToMdConverter(
     editor.dispatchEvent(event);
   }
 
-  const serializer = new MarkdownSerializer();
+  const markdownSerializerConfig = {
+    debug: config.serializerDebug,
+  };
+
+  const serializer = new MarkdownSerializer(markdownSerializerConfig);
   const output = serializer.serialize(tokens);
 
   const event = new CustomEvent('md:output', {

@@ -1,4 +1,4 @@
-import type { Token } from '../types.ts';
+import { Token } from '../types.ts';
 
 import type {
   ContextStash,
@@ -19,7 +19,7 @@ function getHtmlTableTokensHandlers(): Record<string, Array<TokenHandler>> {
 
     'table_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.stash();
+        ctx.stash('getHtmlTableTokensHandlers.table_open');
         ctx.current.meta['html_mode'] = true;
         ctx.current.log('<table>\n', token);
       },
@@ -27,7 +27,7 @@ function getHtmlTableTokensHandlers(): Record<string, Array<TokenHandler>> {
     'table_close': [
       (token: Token, ctx: ContextStash) => {
         ctx.current.log('</table>\n', token);
-        ctx.unstash();
+        ctx.unstash('getHtmlTableTokensHandlers.table_close');
       },
     ],
     'thead_open': [
@@ -222,27 +222,29 @@ class TableBuilder {
   }
 }
 
+export interface RollbackData {
+  sourcePos: number;
+  outputPos: number;
+  ctxDepth: number;
+}
+
 function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
-  const rollbackTable = (
+  const rollbackMdTable = (
     token: Token,
     ctx: ContextStash,
     tokenSource: TokenSource<Token>,
   ) => {
-    const rollbackPos = ctx.current.meta['table_rollback'];
-    if (!ctx.current.meta['table_token_start']) {
-      throw new Error('No table_token_start');
-    }
-    const outputPos = ctx.current.meta['table_output_pos'];
-    if ('undefined' === typeof ctx.current.meta['table_output_pos']) {
-      throw new Error('No table_output_pos');
+    if (!ctx.current.meta['html_rollback']) {
+      throw new Error('No html_rollback');
     }
 
-    tokenSource.rewind(ctx.current.meta['table_token_start']);
+    const rollback: RollbackData = ctx.current.meta['html_rollback'];
 
-    ctx.rollback(rollbackPos);
-    ctx.output.rollback(outputPos);
+    tokenSource.rewind(rollback.sourcePos);
+    ctx.rollback(rollback.ctxDepth, 'rollbackMdTable, ' + token.type);
+    ctx.output.rollback(rollback.outputPos);
 
-    ctx.stash();
+    ctx.stash('getMdTableTokensHandler.rollbackTable');
     ctx.current.meta['html_mode'] = true;
     ctx.current.log('<table>\n', token);
     ctx.current.handlers = getHtmlTableTokensHandlers();
@@ -262,21 +264,27 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
         ctx.current.meta['table_cell_para_count'] =
           +ctx.current.meta['table_cell_para_count'] + 1;
         if (ctx.current.meta['table_cell_para_count'] > 1) { // Only 1 line in markdown pipe table
-          rollbackTable(token, ctx, tokenSource);
+          rollbackMdTable(token, ctx, tokenSource);
         }
       },
     ],
 
     'default': [
-      rollbackTable,
+      rollbackMdTable,
     ],
 
     'table_open': [
       (token: Token, ctx: ContextStash, tokenSource: TokenSource<Token>) => {
-        const rollbackPos = ctx.stash();
-        ctx.current.meta['table_rollback'] = rollbackPos;
-        ctx.current.meta['table_token_start'] = tokenSource.pos;
-        ctx.current.meta['table_output_pos'] = ctx.output.chunkPos;
+        const rollbackDepth = ctx.stash('getMdTableTokensHandler.table_open');
+        if (!ctx.current.meta['html_rollback']) {
+          const rollback: RollbackData = {
+            sourcePos: tokenSource.pos,
+            outputPos: ctx.output.chunkPos,
+            ctxDepth: rollbackDepth,
+          };
+          ctx.current.meta['html_rollback'] = rollback;
+        }
+
         ctx.current.metaObj['table_builder'] = new TableBuilder();
         ctx.current.handlers = getMdTableTokensHandler();
       },
@@ -286,7 +294,7 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
       (token: Token, ctx: ContextStash) => {
         const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
         tableBuilder.render(ctx.current.log);
-        ctx.unstash();
+        ctx.unstash('getMdTableTokensHandler.table_close');
       },
     ],
     'thead_open': [

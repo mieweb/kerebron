@@ -92,7 +92,7 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
     ],
     'heading_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.stash();
+        ctx.stash('getBasicTokensHandlers.heading_open');
         ctx.current.handlers = getHeaderTokensHandlers();
         if (token.markup === '---') {
           return;
@@ -106,7 +106,7 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
           ctx.current.log('\n' + token.markup + '\n', token);
         }
         ctx.current.log('\n', token);
-        ctx.unstash();
+        ctx.unstash('getBasicTokensHandlers.heading_close');
       },
     ],
     'paragraph_open': [

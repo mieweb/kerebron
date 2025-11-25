@@ -43,7 +43,7 @@
     "@std/path": "jsr:@std/path@1.1.2",
     "asserts": "https://deno.land/std@0.178.0/testing/asserts.ts",
 
-    "$deno_tree_sitter": "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/",
+    "$deno_tree_sitter/": "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/",
 
     "prosemirror-state": "npm:prosemirror-state@1.4.3",
     "prosemirror-view": "npm:prosemirror-view@1.40.0",
