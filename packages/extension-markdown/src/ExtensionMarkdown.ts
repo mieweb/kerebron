@@ -14,6 +14,7 @@ export interface MdConfig {
   sourceMap?: boolean;
   dispatchSourceMap?: boolean;
   debugTokens?: boolean;
+  serializerDebug?: (...args: any[]) => void;
 }
 
 export type { Token };

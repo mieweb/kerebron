@@ -128,6 +128,7 @@ export interface SerializerContext {
 
   handlers: Record<string, Array<TokenHandler>>;
   log: (txt: string, token?: Token) => void;
+  debug: (...args: any[]) => void;
 }
 
 export class ContextStash {
@@ -149,15 +150,19 @@ export class ContextStash {
 
       handlers,
       log: (txt: string, token?: Token) => this.output.log(txt, token),
+      debug: () => {},
     };
-    this.stash();
+    this.stash('ContextStash.constructor()');
   }
 
-  public stash(): number {
-    console.trace('stash');
+  public stash(reason: string): number {
+    this.currentCtx.debug(
+      '  '.repeat(this.ctxStash.length) + 'stash: ' + reason,
+    );
     this.ctxStash.push(this.currentCtx);
     const funcs = {
       log: this.currentCtx.log,
+      debug: this.currentCtx.debug,
     };
     const handlers = { ...this.currentCtx.handlers };
     const metaObj = { ...this.currentCtx.metaObj };
@@ -165,6 +170,7 @@ export class ContextStash {
       ...structuredClone({
         ...this.currentCtx,
         log: undefined,
+        debug: undefined,
         handlers: undefined,
       }),
       metaObj,
@@ -176,21 +182,24 @@ export class ContextStash {
     return rollbackPos;
   }
 
-  public unstash() {
-    console.trace('unstash');
+  public unstash(reason: string) {
     const ctx = this.ctxStash.pop();
+    this.currentCtx.debug(
+      '  '.repeat(this.ctxStash.length) + 'unstash: ' + reason,
+    );
     if (!ctx) {
       throw new Error('Unstash failed');
     }
     this.currentCtx = ctx;
   }
 
-  public rollback(rollbackPos: number) {
+  public rollback(rollbackPos: number, reason: string) {
     const rollbackCtx = this.ctxStash[rollbackPos];
     if (!rollbackCtx) {
       throw new RangeError('Invalid rollbackPos: ' + rollbackPos);
     }
 
+    this.currentCtx.debug('rollback ' + reason, rollbackPos);
     this.ctxStash.splice(rollbackPos);
     this.currentCtx = this.ctxStash[this.ctxStash.length - 1];
   }
@@ -243,10 +252,14 @@ export type TokenHandler = (
   tokenSource: TokenSource<Token>,
 ) => boolean | void;
 
+export interface MarkdownSerializerConfig {
+  debug?: (...args: any[]) => void;
+}
+
 export class MarkdownSerializer {
   private ctx: ContextStash;
 
-  constructor() {
+  constructor(config: MarkdownSerializerConfig = {}) {
     this.ctx = new ContextStash({
       ...getInlineTokensHandlers(),
       ...getTableTokensHandlers(),
@@ -254,6 +267,10 @@ export class MarkdownSerializer {
       ...getFootnoteTokensHandlers(),
       ...getListsTokensHandlers(),
     });
+
+    if (config.debug) {
+      this.ctx.current.debug = config.debug;
+    }
   }
 
   private get endsWithEmptyLine() {
@@ -333,15 +350,16 @@ export class MarkdownSerializer {
         this.ctx.current.handlers['default'];
       if (token.type === 'inline') {
         if (token.children) {
-          this.ctx.stash();
+          this.ctx.stash('serializeInlineTokens()');
           this.ctx.current.log = (txt: string, token?: Token) => {
             writeIndented(this.ctx.output, txt, this.ctx.current, token);
           };
 
           try {
             serializeInlineTokens(this.ctx, tokenSource, token.children);
-            this.ctx.unstash();
+            this.ctx.unstash('serializeInlineTokens()');
           } catch (err: any) {
+            this.ctx.current.debug(err.message);
             if (err.message === 'Rewinded before inline tokens') {
               return;
             }
@@ -349,7 +367,7 @@ export class MarkdownSerializer {
           }
         }
       } else if (!tokenHandlers) {
-        console.warn(
+        this.ctx.current.debug(
           'current.handlers',
           Object.keys(this.ctx.current.handlers).sort(),
         );

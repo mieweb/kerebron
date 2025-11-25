@@ -123,7 +123,7 @@ function getLinkTokensHandlers(): Record<string, Array<TokenHandler>> {
             }
           }
 
-          ctx.unstash();
+          ctx.unstash('getLinkTokensHandlers.link_close');
         }
       },
     ],
@@ -195,7 +195,7 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
 
     'link_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.stash();
+        ctx.stash('getInlineTokensHandlers.link_open');
 
         ctx.current.handlers = getLinkTokensHandlers();
 
@@ -341,7 +341,7 @@ export function getHtmlInlineTokensHandlers(): Record<
 
     'link_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.stash();
+        ctx.stash('getHtmlInlineTokensHandlers.link_open');
 
         const href = token.attrGet('href') || '';
         const titleValue = token.attrGet('title');
@@ -356,7 +356,7 @@ export function getHtmlInlineTokensHandlers(): Record<
       (token: Token, ctx: ContextStash) => {
         {
           ctx.current.log('</a>', token);
-          ctx.unstash();
+          ctx.unstash('getHtmlInlineTokensHandlers.link_close');
         }
       },
     ],

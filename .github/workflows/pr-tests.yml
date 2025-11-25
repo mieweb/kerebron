@@ -18,13 +18,22 @@ jobs:
         with:
           deno-version: v2.x # Use the latest stable Deno version
 
+      - name: Setup rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Deno install deps
+        run: deno install
+
       - name: Check format
         run: deno fmt --check
 
-#      # Optional: Add linting for style and syntax checks
-#      - name: Lint code
-#        run: deno lint
-#
-#      # Optional: Add tests
-#      - name: Run tests
-#        run: deno test
+      #      # Optional: Add linting for style and syntax checks
+      #      - name: Lint code
+      #        run: deno lint
+      #
+      - name: Build wasm
+        run: deno task build
+
+      - name: Run tests
+        run: deno test -A --no-check packages/extension-markdown/test/
+#        run: deno test -A
