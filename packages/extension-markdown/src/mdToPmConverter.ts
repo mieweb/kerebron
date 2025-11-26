@@ -30,7 +30,7 @@ export async function mdToPmConverterText(
   config: MdConfig,
   schema: Schema,
 ): Promise<Node> {
-  const tokenizer = await sitterTokenizer();
+  const tokenizer = await sitterTokenizer(config.cdnUrl);
 
   const defaultMarkdownParser = new MarkdownParser(
     schema,
@@ -73,7 +73,7 @@ export async function mdToPmConverterText(
       code_block: { block: 'code_block', noCloseToken: true },
       fence: {
         block: 'code_block',
-        getAttrs: (tok) => ({ params: tok.info || '' }),
+        getAttrs: (tok) => ({ lang: tok.attrGet('lang') || undefined }),
         noCloseToken: true,
       },
       hr: { node: 'hr' },

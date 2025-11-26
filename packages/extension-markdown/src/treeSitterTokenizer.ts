@@ -615,7 +615,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           token.level = blockLevel;
           token.markup = '```';
           if (info) {
-            token.info = info.text;
+            token.attrSet('lang', info.text);
           }
 
           const children = [...node.children
@@ -1105,8 +1105,8 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
   return retVal;
 }
 
-export async function sitterTokenizer() {
-  const jsonManifest = getLangTreeSitter('markdown', '');
+export async function sitterTokenizer(cdnUrl = '') {
+  const jsonManifest = getLangTreeSitter('markdown', cdnUrl);
   const blockUrl: string = jsonManifest.files.find((url) =>
     url.indexOf('_inline') === -1
   )!;
