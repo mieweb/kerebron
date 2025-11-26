@@ -60,6 +60,9 @@ export function refreshNumbers(
     text += `${i + 1}\n`;
   }
   lineNumbers.innerText = text;
+
+  // Hack editor styles
+  editor.style.paddingLeft = `calc(40px + 5px)`;
 }
 
 export function initLineNumbers(
