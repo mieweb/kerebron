@@ -2,15 +2,28 @@ import { Extension } from '@kerebron/editor';
 import type { AnyExtensionOrReq } from '@kerebron/editor';
 
 import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
-import { ExtensionLsp } from '@kerebron/extension-lsp';
+import { ExtensionLsp, type LspTransportGetter } from '@kerebron/extension-lsp';
 
 import type { Token } from '@kerebron/extension-markdown';
 import { SmartOutput } from '@kerebron/editor/utilities';
 import { Transport } from '@kerebron/extension-lsp';
 
 export interface LspEditorKitConfig {
-  uri?: string;
+  getLspTransport: LspTransportGetter;
 }
+
+const defaultGetLspTransport: LspTransportGetter = (
+  lang: string,
+): Transport | undefined => {
+  const protocol = globalThis.location.protocol === 'http:' ? 'ws:' : 'wss:';
+  const uri = protocol + '//' + globalThis.location.host + '/lsp';
+
+  switch (lang) {
+    case 'json':
+      return new LspWebSocketTransport(uri);
+  }
+  return undefined;
+};
 
 export class LspEditorKit extends Extension {
   override name = 'lsp-kit';
@@ -19,22 +32,18 @@ export class LspEditorKit extends Extension {
   md: string = '';
 
   static createFrom(config?: LspEditorKitConfig) {
-    const protocol = globalThis.location.protocol === 'http:' ? 'ws:' : 'wss:';
-    const uri = config?.uri ||
-      protocol + '//' + globalThis.location.host + '/lsp';
-    const lspTransport = new LspWebSocketTransport(uri);
-
-    return new LspEditorKit(config, lspTransport);
+    return new LspEditorKit(config);
   }
 
   constructor(
     config: ConstructorParameters<typeof Extension>[0],
-    lspTransport: Transport,
   ) {
     super(config);
 
+    const getLspTransport = config?.getLspTransport || defaultGetLspTransport;
+
     this.requires = [
-      new ExtensionLsp({ lspTransport }),
+      new ExtensionLsp({ getLspTransport: getLspTransport }),
     ];
   }
 

@@ -38,7 +38,7 @@ export function getLangTreeSitter(
 }
 
 export async function fetchWasm(wasmUrl: string): Promise<Uint8Array> {
-  if ('Deno' in globalThis) {
+  if ('Deno' in globalThis) { // Test or server-side
     return globalThis.Deno.readFileSync(__dirname + '/../files' + wasmUrl);
   }
 
@@ -50,9 +50,11 @@ export async function fetchWasm(wasmUrl: string): Promise<Uint8Array> {
   return new Uint8Array(await response.arrayBuffer());
 }
 
-export async function fetchTextResource(url: string) {
+export async function fetchTextResource(url: string): Promise<string> {
   if ('Deno' in globalThis) {
-    return globalThis.Deno.readFileSync(__dirname + '/../files' + url);
+    return new TextDecoder().decode(
+      globalThis.Deno.readFileSync(__dirname + '/../files' + url),
+    );
   }
 
   const responseScm = await fetch(url);

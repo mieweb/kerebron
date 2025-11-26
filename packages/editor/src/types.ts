@@ -15,7 +15,9 @@ export interface EditorConfig {
   content: Content;
   parseOptions: ParseOptions;
   extensions: AnyExtensionOrReq[];
+  cdnUrl?: string;
   uri?: string;
+  languageID?: string;
   topNode?: string;
 }
 

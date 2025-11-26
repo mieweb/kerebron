@@ -8,6 +8,7 @@ import { ExtensionTables } from '@kerebron/extension-tables';
 import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
 import { ExtensionMenuLegacy } from '@kerebron/extension-menu-legacy';
 import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
+import { ExtensionCodeJar } from '@kerebron/extension-codejar';
 
 export class DevAdvancedEditorKit extends Extension {
   override name = 'dev-advanced-editor';
@@ -22,9 +23,10 @@ export class DevAdvancedEditorKit extends Extension {
       new ExtensionTables(),
       new ExtensionDevToolkit(),
       new ExtensionMenuLegacy(menu),
-      new ExtensionCodeMirror({
-        theme: [dracula],
-      }),
+      // new ExtensionCodeMirror({
+      //   theme: [dracula],
+      // }),
+      new ExtensionCodeJar(),
     ];
   }
 }

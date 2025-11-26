@@ -43,30 +43,35 @@ export function createLspAutocomplete(extensionLsp: ExtensionLsp) {
     renderer,
     matchers: [createRegexMatcher([/\w+/, /(^|\s)@\w*/, /^#\w*/])],
     getItems: async (query: string, props: AutocompleteProps) => {
-      const { mapper } = extensionLsp.getMappedContent();
+      const { mapper } = extensionLsp.source.getMappedContent();
 
       const lspPos = mapper.toRawTextLspPos(props.range.from);
 
-      extensionLsp.client.sync();
-      try {
-        const completions:
-          | { items: CompletionItem[] }
-          | Array<CompletionItem> = await extensionLsp.client.request(
-            'textDocument/completion',
-            {
-              textDocument: { uri: extensionLsp.uri },
-              position: lspPos,
-              context: { triggerKind: 2, triggerCharacter: query },
-            },
-          );
+      const client = extensionLsp.getClient(extensionLsp.mainLang);
+      if (client) {
+        client.sync();
+        try {
+          const completions:
+            | { items: CompletionItem[] }
+            | Array<CompletionItem> = await client.request(
+              'textDocument/completion',
+              {
+                textDocument: { uri: extensionLsp.uri },
+                position: lspPos,
+                context: { triggerKind: 2, triggerCharacter: query },
+              },
+            );
 
-        if (Array.isArray(completions)) {
-          return completions;
+          if (Array.isArray(completions)) {
+            return completions;
+          }
+
+          return completions.items;
+        } catch (err: any) {
+          console.error(err.message);
+          return [];
         }
-
-        return completions.items;
-      } catch (err: any) {
-        console.error(err.message);
+      } else {
         return [];
       }
     },

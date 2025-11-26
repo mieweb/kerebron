@@ -23,7 +23,7 @@ import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
 import { DevAdvancedEditorKit } from '@kerebron/editor-kits/DevAdvancedEditorKit';
 import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
 import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
-
+import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
 import { Dropdown, MenuElement, MenuItem } from '@kerebron/extension-menu';
 
 export default {
@@ -92,13 +92,32 @@ export default {
         },
       }
 
+      const getLspTransport: LspTransportGetter = (lang: string): Transport | undefined => {
+        const protocol = globalThis.location.protocol === 'http:' ? 'ws:' : 'wss:';
+        const uri = protocol + '//' + globalThis.location.host + '/lsp';
+
+        switch (lang) {
+          case 'markdown':
+            return new LspWebSocketTransport(uri + '/mine');
+          case 'json':
+            return new LspWebSocketTransport(uri + '/deno');
+          case 'typescript':
+          case 'javascript':
+            return new LspWebSocketTransport(uri + '/typescript');
+          case 'yaml':
+            return new LspWebSocketTransport(uri + '/yaml');
+        }
+        return undefined;
+      }
+
       this.editor = new CoreEditor({
+        cdnUrl: 'http://localhost:8000/wasm/',
         uri: 'file:///test.md',
         element: this.$refs.editor,
         extensions: [
           new DevAdvancedEditorKit(myMenu),
           YjsEditorKit.createFrom(ydoc, this.roomId),
-          LspEditorKit.createFrom(),
+          LspEditorKit.createFrom({ getLspTransport }),
         ]
       });
 
@@ -132,9 +151,8 @@ export default {
     },
 
     async loadDoc() {
-      const buffer = new TextEncoder().encode(
-        '# TEST \n\n1.  aaa **bold**\n2.  bbb\n\n```js\nconsole.log("TEST")\n```\n',
-      );
+      const example = await import('./example.md?raw');
+      const buffer = new TextEncoder().encode(example.default);
       await this.editor.loadDocument('text/x-markdown', buffer);
       return true;
     },
@@ -165,6 +183,7 @@ export default {
 /*@import '@kerebron/extension-menu/assets/custom-menu.css';*/
 @import '@kerebron/extension-menu-legacy/assets/menu.css';
 @import '@kerebron/extension-codemirror/assets/codemirror.css';
+@import '@kerebron/extension-codejar/assets/codejar.css';
 @import '@kerebron/extension-autocomplete/assets/autocomplete.css';
 
 .md-selected {

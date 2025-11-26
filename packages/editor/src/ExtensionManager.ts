@@ -46,7 +46,7 @@ export class ExtensionManager {
   public readonly schema: Schema;
 
   private extensions: Set<AnyExtension> = new Set();
-  readonly plugins: Plugin[];
+  readonly plugins: Plugin[] = [];
   readonly nodeViews: Record<string, NodeViewConstructor> = {};
 
   public converters: Record<string, Converter> = {};
@@ -68,7 +68,6 @@ export class ExtensionManager {
       },
     });
     editor.dispatchEvent(event);
-    this.plugins = this.getPlugins();
   }
 
   getExtension<T extends Extension>(name: string): T | undefined {
@@ -83,9 +82,7 @@ export class ExtensionManager {
     }
   }
 
-  private getPlugins() {
-    const plugins: Plugin[] = [];
-
+  private initPlugins() {
     const inputRules: InputRule[] = [];
     const keyBindings: Map<string, Command> = new Map();
 
@@ -123,7 +120,7 @@ export class ExtensionManager {
       if (extension.type === 'node') {
         const nodeType = this.schema.nodes[extension.name];
         inputRules.push(...extension.getInputRules(nodeType));
-        plugins.push(
+        this.plugins.push(
           ...extension.getProseMirrorPlugins(),
         );
         this.commandManager.mergeCommandFactories(
@@ -156,7 +153,7 @@ export class ExtensionManager {
         );
       }
       if (extension.type === 'extension') {
-        plugins.push(
+        this.plugins.push(
           ...extension.getProseMirrorPlugins(),
         );
         this.commandManager.mergeCommandFactories(
@@ -194,11 +191,9 @@ export class ExtensionManager {
 
     this.converters = converters;
 
-    plugins.push(new InputRulesPlugin(inputRules));
-    plugins.push(new KeymapPlugin(Object.fromEntries(keyBindings)));
-    plugins.push(new TrackSelecionPlugin(this.editor));
-
-    return plugins;
+    this.plugins.push(new InputRulesPlugin(inputRules));
+    this.plugins.push(new KeymapPlugin(Object.fromEntries(keyBindings)));
+    this.plugins.push(new TrackSelecionPlugin(this.editor));
   }
 
   private setupExtensions(extensions: Set<AnyExtensionOrReq>) {
@@ -324,6 +319,8 @@ export class ExtensionManager {
   }
 
   created() {
+    this.initPlugins();
+
     for (const extension of this.extensions) {
       extension.created();
     }

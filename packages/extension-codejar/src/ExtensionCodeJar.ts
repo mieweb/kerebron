@@ -12,21 +12,20 @@ export * from './NodeCodeJar.ts';
 
 export interface ExtensionCodeJarConfig {
   readOnly?: boolean;
-  lang: string;
+  languageWhitelist?: string[];
 }
 
 export class ExtensionCodeJar extends Extension {
   override name = 'code-jar';
   requires: AnyExtensionOrReq[];
 
-  constructor(protected override config: ExtensionCodeJarConfig) {
+  constructor(protected override config: ExtensionCodeJarConfig = {}) {
     super(config);
 
     this.requires = [
       new NodeCodeJar({
-        // languageWhitelist: config.languageWhitelist,
+        languageWhitelist: config.languageWhitelist,
         // theme: config.theme,
-        // lspTransport: config.lspTransport,
       }),
     ];
   }

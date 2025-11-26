@@ -9,22 +9,25 @@ import { LSPClient, Transport } from './LSPClient.ts';
 import { AutocompletePlugin } from '@kerebron/extension-autocomplete/AutocompletePlugin';
 import { DiagnosticPlugin } from './DiagnosticPlugin.ts';
 import { createLspAutocomplete } from './createLspAutocomplete.ts';
+import { LspSource } from './workspace.ts';
+
+export type LspTransportGetter = (lang: string) => Transport | undefined;
 
 export interface LspConfig {
-  lspTransport: Transport;
+  getLspTransport: LspTransportGetter;
 }
 
 export class ExtensionLsp extends Extension {
   name = 'lsp';
-  client: LSPClient;
+  clients: Record<string, LSPClient> = {};
   uri: string | undefined;
   extensionMarkdown!: ExtensionMarkdown;
   extensionAutocomplete!: ExtensionAutocomplete;
+  mainLang: string = 'markdown';
+  source!: LspSource;
 
   constructor(protected override config: LspConfig) {
     super(config);
-
-    this.client = new LSPClient(config.lspTransport);
   }
 
   override getProseMirrorPlugins(): Plugin[] {
@@ -39,6 +42,21 @@ export class ExtensionLsp extends Extension {
   }
 
   override created() {
+    this.mainLang = this.editor.config.languageID || 'markdown';
+
+    this.source = {
+      ui: this.editor.ui,
+      getMappedContent: () => {
+        const editor = this.editor;
+        const result = this.extensionMarkdown.toMarkdown(editor.state.doc);
+        const mapper = new PositionMapper(editor, result.rawTextMap);
+        return {
+          ...result,
+          mapper,
+        };
+      },
+    };
+
     const extensionMarkdown: ExtensionMarkdown | undefined = this.editor
       .getExtension('markdown');
     if (!extensionMarkdown) {
@@ -47,49 +65,52 @@ export class ExtensionLsp extends Extension {
     this.extensionMarkdown = extensionMarkdown;
 
     this.editor.addEventListener('doc:loaded', async () => {
-      // const doc = ev.detail.doc;
-      // if (!languageID) {
-      //   let lang = view.state.facet(language);
-      //   languageID = lang ? lang.name : '';
-      // }
-      const languageID = 'TODO';
+      const languageID = this.mainLang;
       this.uri = this.editor.config.uri;
-      if (this.editor.config.uri) {
-        await this.client.restart();
-        this.client.workspace.openFile(
-          this.editor.config.uri,
-          languageID,
-          this.editor,
-        );
+      if (this.uri) {
+        const client = this.getClient(this.mainLang);
+        if (client) {
+          client.connect(this.uri, this.source);
+          await client.restart();
+          client.workspace.openFile(
+            this.uri,
+            languageID,
+            this.source,
+          );
+        }
       }
     });
 
     this.editor.addEventListener('changed', () => {
       if (this.editor.config.uri) {
-        this.client.workspace.changedFile(
-          this.editor.config.uri,
-        );
+        const client = this.getClient(this.mainLang);
+        if (client) {
+          client.workspace.changedFile(
+            this.editor.config.uri,
+          );
+        }
       }
     });
 
     this.editor.addEventListener('beforeDestroy', () => {
       if (this.uri) {
-        this.client.disconnect();
+        const client = this.getClient(this.mainLang);
+        if (client) {
+          client.disconnect(this.uri);
+        }
       }
     });
   }
 
-  getMappedContent() {
-    const result = this.extensionMarkdown.toMarkdown(this.editor.state.doc);
-
-    const mapper = new PositionMapper(this.editor, result.rawTextMap);
-    return {
-      ...result,
-      mapper,
-    };
-  }
-
-  getClient(): LSPClient {
-    return this.client;
+  getClient(lang: string): LSPClient | undefined {
+    if (!this.clients[lang]) {
+      const transport = this.config.getLspTransport(lang);
+      if (!transport) {
+        console.warn(`No lsp transport for ${lang}`);
+        return undefined;
+      }
+      this.clients[lang] = new LSPClient(transport, { rootUri: 'file:///' });
+    }
+    return this.clients[lang];
   }
 }

@@ -1,19 +1,23 @@
 import type * as lsp from 'vscode-languageserver-protocol';
 import { TextDocumentSyncKind } from 'vscode-languageserver-protocol';
 
-import type { CoreEditor, EditorUi } from '@kerebron/editor';
+import type { EditorUi } from '@kerebron/editor';
 
 import { LSPClient } from './LSPClient.ts';
-import { ExtensionLsp } from './ExtensionLsp.ts';
 import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
 import { computeIncrementalChanges } from './computeIncrementalChanges.ts';
+
+export interface LspSource {
+  ui: EditorUi;
+  getMappedContent(): { content: string; mapper: PositionMapper };
+}
 
 export interface WorkspaceFile {
   uri: string;
   languageId: string;
   version: number;
   content: string;
-  getEditor(main?: CoreEditor): CoreEditor | undefined;
+  source: LspSource;
   getUi(): EditorUi | undefined;
   mapper: PositionMapper;
 }
@@ -42,7 +46,7 @@ export abstract class Workspace {
     return Promise.resolve(this.getFile(uri));
   }
 
-  abstract openFile(uri: string, languageId: string, editor: CoreEditor): void;
+  abstract openFile(uri: string, languageId: string, source: LspSource): void;
   abstract changedFile(uri: string): void;
   abstract closeFile(uri: string): void;
 
@@ -74,16 +78,12 @@ class DefaultWorkspaceFile implements WorkspaceFile {
     public version: number,
     public content: string,
     public mapper: PositionMapper,
-    readonly extensionLsp: ExtensionLsp,
+    public source: LspSource,
   ) {
   }
 
-  getEditor() {
-    return this.extensionLsp.getEditor();
-  }
-
   getUi() {
-    return this.getEditor().ui;
+    return this.source.ui;
   }
 }
 
@@ -112,14 +112,14 @@ export class DefaultWorkspace extends Workspace {
     const file = this.files.find((f) => f.uri == uri) || null;
 
     if (file) {
-      const mappedContent = file.extensionLsp.getMappedContent();
-      const { content, mapper } = mappedContent;
+      const { content, mapper } = file.source.getMappedContent();
 
       if (!this.isConnected) {
         file.content = content;
         file.mapper = mapper;
         return;
       }
+      console.debug('changedFile', uri, file, content, mapper);
 
       if (
         await this.client.notification<lsp.DidChangeTextDocumentParams>(
@@ -143,19 +143,14 @@ export class DefaultWorkspace extends Workspace {
     }
   }
 
-  openFile(uri: string, languageId: string, editor: CoreEditor) {
+  openFile(uri: string, languageId: string, source: LspSource) {
+    // if (uri) {}
+
     if (this.getFile(uri)) {
       this.closeFile(uri);
     }
 
-    const extensionLsp: ExtensionLsp | undefined = editor.getExtension('lsp');
-    if (!extensionLsp) {
-      throw new Error(
-        'No LSP extension',
-      );
-    }
-
-    const mappedContent = extensionLsp.getMappedContent();
+    const mappedContent = source.getMappedContent();
     const { content, mapper } = mappedContent;
     const file = new DefaultWorkspaceFile(
       uri,
@@ -163,7 +158,7 @@ export class DefaultWorkspace extends Workspace {
       this.nextFileVersion(uri),
       content,
       mapper,
-      extensionLsp,
+      source,
     );
     this.files.push(file);
 
