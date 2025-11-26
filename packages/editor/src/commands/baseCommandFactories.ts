@@ -40,11 +40,16 @@ const wrapInList = (
   listType: NodeType,
   attrs: Attrs | null = null,
 ): Command => {
-  return function (state: EditorState, dispatch?: (tr: Transaction) => void) {
+  return function (
+    state: EditorState,
+    dispatch?: (tr: Transaction) => void,
+    view?: EditorView,
+  ) {
     let { $from, $to } = state.selection;
     let range = $from.blockRange($to);
     if (!range) return false;
-    let tr = dispatch ? state.tr : null;
+    // let tr = dispatch ? state.tr : null;
+    const tr = state.tr;
     if (!wrapRangeInList(tr, range, listType, attrs)) return false;
     if (dispatch) dispatch(tr!.scrollIntoView());
     return true;
@@ -61,33 +66,31 @@ const wrapRangeInList = (
   range: NodeRange,
   listType: NodeType,
   attrs: Attrs | null = null,
-): Command => {
-  return () => {
-    let doJoin = false, outerRange = range, doc = range.$from.doc;
-    // This is at the top of an existing list item
-    if (
-      range.depth >= 2 &&
-      range.$from.node(range.depth - 1).type.compatibleContent(listType) &&
-      range.startIndex == 0
-    ) {
-      // Don't do anything if this is the top of the list
-      if (range.$from.index(range.depth - 1) == 0) return false;
-      let $insert = doc.resolve(range.start - 2);
-      outerRange = new NodeRange($insert, $insert, range.depth);
-      if (range.endIndex < range.parent.childCount) {
-        range = new NodeRange(
-          range.$from,
-          doc.resolve(range.$to.end(range.depth)),
-          range.depth,
-        );
-      }
-      doJoin = true;
+): boolean => {
+  let doJoin = false, outerRange = range, doc = range.$from.doc;
+  // This is at the top of an existing list item
+  if (
+    range.depth >= 2 &&
+    range.$from.node(range.depth - 1).type.compatibleContent(listType) &&
+    range.startIndex == 0
+  ) {
+    // Don't do anything if this is the top of the list
+    if (range.$from.index(range.depth - 1) == 0) return false;
+    let $insert = doc.resolve(range.start - 2);
+    outerRange = new NodeRange($insert, $insert, range.depth);
+    if (range.endIndex < range.parent.childCount) {
+      range = new NodeRange(
+        range.$from,
+        doc.resolve(range.$to.end(range.depth)),
+        range.depth,
+      );
     }
-    let wrap = findWrapping(outerRange, listType, attrs, range);
-    if (!wrap) return false;
-    if (tr) doWrapInList(tr, range, wrap, doJoin, listType);
-    return true;
-  };
+    doJoin = true;
+  }
+  let wrap = findWrapping(outerRange, listType, attrs, range);
+  if (!wrap) return false;
+  if (tr) doWrapInList(tr, range, wrap, doJoin, listType);
+  return true;
 };
 
 function doWrapInList(
