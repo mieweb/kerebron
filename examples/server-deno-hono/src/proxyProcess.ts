@@ -24,6 +24,7 @@ class ProcessClient extends EventTarget {
       stderr: 'piped',
       env: {
         'LSP_TOY_DEBUG': 'true',
+        'RUST_BACKTRACE': 'full',
       },
     });
     this.process = command.spawn();
@@ -46,7 +47,11 @@ class ProcessClient extends EventTarget {
 
   close() {
     if (this.process) {
-      this.process.kill();
+      try {
+        this.process.kill();
+      } catch (err) {
+        console.error(err);
+      }
       this.process = undefined;
     }
     this.dispatchEvent(new CloseEvent('close'));
@@ -59,20 +64,6 @@ class ProcessClient extends EventTarget {
     try {
       for await (const chunk of this.process.stderr) {
         const text = decoder.decode(chunk, { stream: true });
-
-        if (text.indexOf('Listeners setup complete - server is ready!') > -1) {
-          console.info('LSP server ready');
-          const message = {
-            'jsonrpc': '2.0',
-            'method': 'window/logMessage',
-            'params': { 'type': 4, 'message': 'LSP ready' },
-          };
-          this.dispatchEvent(
-            new MessageEvent('message', {
-              data: JSON.stringify(message),
-            }),
-          );
-        }
 
         if (text) {
           console.debug('DEBUG:', text);
@@ -132,6 +123,7 @@ class ProxyContext implements WSEvents<WebSocket> {
   onOpen(event: Event, wsContext: WSContext<WebSocket>) {
     this.client.addEventListener('message', (event) => {
       if (event instanceof MessageEvent) {
+        // console.log('LSP says:', event.data);
         if (wsContext.readyState === WebSocket.OPEN) {
           wsContext.send(event.data);
         }
@@ -150,7 +142,7 @@ class ProxyContext implements WSEvents<WebSocket> {
   onMessage(event: Event, wsContext: WSContext<WebSocket>) {
     if (event instanceof MessageEvent) {
       if (this.client) {
-        // console.log('BROWSER says: ', event.data);
+        // console.log('BROWSER says:', event.data);
         this.client.send(event.data);
       }
     }

@@ -1,5 +1,6 @@
 import { createParser } from '$deno_tree_sitter/main.js';
 import { Parser } from '$deno_tree_sitter/tree_sitter/parser.js';
+import { Language } from '$deno_tree_sitter/tree_sitter/language.js';
 
 import {
   fetchTextResource,
@@ -12,26 +13,42 @@ import { DecorationInline, Decorator } from './Decorator.ts';
 export class TreeSitterHighlighter {
   parser: Parser | undefined;
   hightligtScm: string | undefined;
-  cdnUrl = 'http://localhost:8000/wasm/';
+  cdnUrl? = 'http://localhost:8000/wasm/';
 
   async init(lang: string) {
     const treeSitterConfig = getLangTreeSitter(lang, this.cdnUrl);
     const wasmUrl = treeSitterConfig.files[0]; // TODO add support for split parsers like markdown
     const highlightUrl = treeSitterConfig.queries['highlights.scm'];
 
-    const wasm = await fetchWasm(wasmUrl);
+    try {
+      const wasm = await fetchWasm(wasmUrl);
 
-    this.parser = await createParser(wasm);
+      await Parser.init();
+      const Lang = await Language.load(wasm);
+      this.parser = new Parser();
+      this.parser.setLanguage(Lang);
 
-    this.hightligtScm = await fetchTextResource(highlightUrl);
+      // this.parser = await createParser(wasm);
+      this.hightligtScm = await fetchTextResource(highlightUrl);
+    } catch (err) {
+      console.error('Error init highlight for: ' + lang, err);
+    }
+
+    if (!this.parser) {
+      console.warn('Parser not inited');
+      return false;
+    }
+    if (!this.hightligtScm) {
+      console.warn('hightligtScm not inited');
+      return false;
+    }
+
+    return true;
   }
 
   highlight(code: string, decorator: Decorator) {
-    if (!this.parser) {
-      throw new Error('Parser not inited');
-    }
-    if (!this.hightligtScm) {
-      throw new Error('hightligtScm not inited');
+    if (!this.parser || !this.hightligtScm) {
+      return decorator.highlight(code);
     }
 
     const tree = this.parser.parse(code)!;

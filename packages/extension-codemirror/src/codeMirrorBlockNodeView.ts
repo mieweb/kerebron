@@ -181,7 +181,7 @@ class CodeMirrorBlockNodeView implements NodeView {
 
     const extensionLsp: ExtensionLsp | undefined = editor.getExtension('lsp');
     if (extensionLsp) {
-      const client = extensionLsp.getClient();
+      const client = extensionLsp.getClient(node.attrs.lang);
       const extension = new LSPExtension({
         getPos: this.getPos,
         extensions: languageServerExtensions(),
@@ -315,7 +315,6 @@ class CodeMirrorBlockNodeView implements NodeView {
       .forEachSet((set) =>
         set.find()
           .map((d) => {
-            console.log(d);
             codeDecorations.push(d);
           })
       );

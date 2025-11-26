@@ -9,25 +9,27 @@ type Options = {
   color: string;
 };
 
+export const lineNumberOptions: Options = {
+  class: 'codejar-linenumbers',
+  wrapClass: 'codejar-wrap',
+  width: '35px',
+  backgroundColor: 'rgba(128, 128, 128, 0.15)',
+  color: '',
+};
+
 export function withLineNumbers(
   highlight: (e: HTMLElement) => void,
   options: Partial<Options> = {},
 ) {
-  const opts: Options = {
-    class: 'codejar-linenumbers',
-    wrapClass: 'codejar-wrap',
-    width: '35px',
-    backgroundColor: 'rgba(128, 128, 128, 0.15)',
-    color: '',
-    ...options,
-  };
-
   let lineNumbers: HTMLElement;
   return function (editor: HTMLElement) {
     highlight(editor);
 
     if (!lineNumbers) {
-      lineNumbers = init(editor, opts);
+      lineNumbers = initLineNumbers(editor, {
+        ...lineNumberOptions,
+        ...options,
+      });
       editor.addEventListener(
         'scroll',
         () => lineNumbers.style.top = `-${editor.scrollTop}px`,
@@ -46,7 +48,24 @@ export function withLineNumbers(
   };
 }
 
-function init(editor: HTMLElement, opts: Options): HTMLElement {
+export function refreshNumbers(
+  lineNumbers: HTMLElement,
+  editor: HTMLElement,
+) {
+  const code = editor.textContent || '';
+  const linesCount = code.replace(/\n$/g, '').split('\n').length;
+
+  let text = '';
+  for (let i = 0; i < linesCount; i++) {
+    text += `${i + 1}\n`;
+  }
+  lineNumbers.innerText = text;
+}
+
+export function initLineNumbers(
+  editor: HTMLElement,
+  opts: Options,
+): HTMLElement {
   const css = getComputedStyle(editor);
 
   const wrap = document.createElement('div');
@@ -97,5 +116,11 @@ function init(editor: HTMLElement, opts: Options): HTMLElement {
   // Swap editor with a wrap
   editor.parentNode!.insertBefore(wrap, editor);
   wrap.appendChild(editor);
+
+  editor.addEventListener(
+    'scroll',
+    () => lineNumbers.style.top = `-${editor.scrollTop}px`,
+  );
+
   return lineNumbers;
 }

@@ -8,6 +8,13 @@ import { WSContext, WSEvents, WSMessageReceive } from 'hono/ws';
 // md-to-html-incremental.ts
 import { createParser } from 'https://deno.land/x/deno_tree_sitter@1.0.1.2/main/main.js';
 
+import type {
+  Diagnostic,
+  LspPosition,
+  LspRange,
+  PublishDiagnosticsParams,
+} from '@kerebron/extension-lsp/types';
+
 const __dirname = import.meta.dirname!;
 
 async function loadWasm(url: string): Promise<Uint8Array> {
@@ -72,10 +79,10 @@ function parseMarkdown(source: string, oldTree?: any) {
   }
   parseInlines(root);
 
-  console.log(
-    'parseMarkdown.xmlStylePreview:\n',
-    xmlStylePreview(root, { alwaysShowTextAttr: true }),
-  );
+  // console.log(
+  //   'parseMarkdown.xmlStylePreview:\n',
+  //   xmlStylePreview(root, { alwaysShowTextAttr: true }),
+  // );
 
   // const jsonPreview = typeof root.toJSON === "function" ? root.toJSON() : root;
   // console.log("JSON Tree Preview:\n", JSON.stringify(jsonPreview, null, 2));
@@ -168,21 +175,6 @@ interface Document {
   uri: string;
   text: string;
   version: number;
-}
-
-type LspPosition = { line: number; character: number };
-type LspRange = { start: LspPosition; end: LspPosition };
-
-interface Diagnostic {
-  range: LspRange;
-  severity?: number;
-  source?: string;
-  message: string;
-}
-
-interface PublishDiagnosticsParams {
-  uri: string;
-  diagnostics: Diagnostic[];
 }
 
 interface DocumentState extends Document {

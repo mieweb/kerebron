@@ -4,7 +4,12 @@ import {
   TextDocumentSyncKind,
 } from 'vscode-languageserver-protocol';
 
-import { DefaultWorkspace, Workspace, WorkspaceFile } from './workspace.ts';
+import {
+  DefaultWorkspace,
+  LspSource,
+  Workspace,
+  WorkspaceFile,
+} from './workspace.ts';
 
 const defaultNotificationHandlers: {
   [method: string]: (client: LSPClient, params: any) => void;
@@ -151,6 +156,8 @@ export class LSPError extends Error {
 }
 
 export class LSPClient extends EventTarget {
+  sources: Record<string, LspSource> = {};
+
   workspace: Workspace;
   private nextReqID = 0;
   private requests: Request<any>[] = [];
@@ -265,12 +272,27 @@ export class LSPClient extends EventTarget {
     this.workspace.connected();
   }
 
-  disconnect() {
-    this.active = false;
-    this.serverCapabilities = null;
-    this.transport.removeEventListener('data', this.receiveListener);
-    this.workspace.disconnected();
-    this.dispatchEvent(new CloseEvent('close'));
+  connect(uri: string, source: LspSource) {
+    if (this.sources[uri] && this.sources[uri] !== source) {
+      throw new Error(`Source for ${uri} already connected`);
+    }
+    this.sources[uri] = source;
+    this.active = true;
+    if (!this.transport.isConnected()) {
+      this.transport.connect();
+    }
+  }
+
+  disconnect(uri: string) {
+    delete this.sources[uri];
+    this.workspace.closeFile(uri);
+    if (Object.keys(this.sources).length === 0) {
+      this.active = false;
+      this.serverCapabilities = null;
+      this.transport.removeEventListener('data', this.receiveListener);
+      this.workspace.disconnected();
+      this.dispatchEvent(new CloseEvent('close'));
+    }
   }
 
   /// Send a `textDocument/didOpen` notification to the server.
