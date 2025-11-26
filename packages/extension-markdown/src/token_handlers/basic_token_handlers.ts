@@ -125,14 +125,18 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
 
     'fence': [
       (token: Token, ctx: ContextStash) => {
+        const content = token.content.endsWith('\n')
+          ? token.content
+          : token.content + '\n';
         if (token.info === 'latex') {
           ctx.current.log(
-            '$$' + '\n' + token.content + '\n$$\n\n',
+            '$$' + '\n' + content + '$$\n\n',
             token,
           );
         } else {
+          const lang = token.attrGet('lang') || undefined;
           ctx.current.log(
-            '```' + token.info + '\n' + token.content + '```\n\n',
+            '```' + lang + '\n' + content + '```\n\n',
             token,
           );
         }
@@ -142,6 +146,25 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
     'code_block': [
       (token: Token, ctx: ContextStash) => {
         const indent = +(token.attrGet('indent') || 0);
+        const lang = token.attrGet('lang') || undefined;
+
+        if (indent === 0) {
+          const content = token.content.endsWith('\n')
+            ? token.content
+            : token.content + '\n';
+          if (lang === 'latex') {
+            ctx.current.log(
+              '$$' + '\n' + content + '$$\n\n',
+              token,
+            );
+          } else {
+            ctx.current.log(
+              '```' + lang + '\n' + content + '```\n\n',
+              token,
+            );
+          }
+          return;
+        }
 
         ctx.current.log(
           token.content

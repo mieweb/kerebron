@@ -72,6 +72,7 @@ export class DocumentMarkdownTokenizer {
         token.map = [currentPos];
         this.tokens.push(token);
       }
+      return;
     }
 
     if (node.inlineContent) {

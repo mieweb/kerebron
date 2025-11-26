@@ -293,34 +293,19 @@ export function syncPmToMdConverter(
       };
     },
 
-    // code_block(node) {
-    //   return {
-    //     open: 'code_block_open',
-    //     close: 'code_block_close',
-    //   }
-
-    // }
-    // ordered_list(state, node) {
-    //   let start = node.attrs.start || 1;
-    //   let maxW = String(start + node.childCount - 1).length;
-    //   let space = state.repeat(' ', 4);
-
-    //   let numericString = (i: number) => String(i) + '. ';
-
-    //   if (['a'].includes(node.attrs?.type || '')) {
-    //     numericString = (i: number) =>
-    //       String.fromCharCode('a'.charCodeAt(0) + i - 1) + '.  ';
-    //   }
-    //   if (['A'].includes(node.attrs?.type || '')) {
-    //     numericString = (i: number) =>
-    //       String.fromCharCode('A'.charCodeAt(0) + i - 1) + '.  ';
-    //   }
-    //   if (['I'].includes(node.attrs?.type || '')) {
-    //     numericString = (i: number) => `${romanize(i)}. `;
-    //   }
-    //   if (['i'].includes(node.attrs?.type || '')) {
-    //     numericString = (i: number) => `${romanize(i).toLowerCase()}. `;
-    //   }
+    code_block(node) {
+      return {
+        selfClose: (node) => {
+          const token = new Token('code_block', 'code', 0);
+          token.attrSet('lang', node.attrs.lang);
+          token.content = '';
+          node.forEach((child, offset) => {
+            token.content += child.text || '';
+          });
+          return token;
+        },
+      };
+    },
 
     // html(state, node) {
     //   const domSerializer = DOMSerializer.fromSchema(schema);
@@ -334,28 +319,6 @@ export function syncPmToMdConverter(
     //   state.write(html);
     // },
     //
-    // code_block(state, node) {
-    //   // Make sure the front matter fences are longer than any dash sequence within it
-    //   const backticks = node.textContent.match(/`{3,}/gm);
-    //   const fence = backticks
-    //     ? (backticks.sort().slice(-1)[0] + '`')
-    //     : '```';
-
-    //   state.write(fence + (node.attrs.lang || '') + '\n');
-    //   state.text(node.textContent, false);
-    //   // Add a newline to the current content before adding closing marker
-    //   state.write('\n');
-    //   state.write(fence);
-    //   state.closeBlock(node);
-    // },
-
-    //   state.renderList(node, space, (i) => {
-    //     const number = start + i;
-
-    //     let nStr = numericString(number);
-    //     return state.repeat(' ', maxW - nStr.length) + nStr;
-    //   });
-    // },
 
     image(node) {
       return {

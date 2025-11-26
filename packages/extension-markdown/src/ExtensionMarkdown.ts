@@ -15,6 +15,7 @@ export interface MdConfig {
   dispatchSourceMap?: boolean;
   debugTokens?: boolean;
   serializerDebug?: (...args: any[]) => void;
+  cdnUrl?: string;
 }
 
 export type { Token };
@@ -33,9 +34,17 @@ export class ExtensionMarkdown extends Extension {
     return {
       'text/x-markdown': {
         fromDoc: (source: Node) =>
-          pmToMdConverter(source, this.config, schema, editor),
+          pmToMdConverter(
+            source,
+            { cdnUrl: this.editor.config.cdnUrl, ...this.config },
+            schema,
+            editor,
+          ),
         toDoc: (source: Uint8Array) =>
-          mdToPmConverter(source, this.config, schema),
+          mdToPmConverter(source, {
+            cdnUrl: this.editor.config.cdnUrl,
+            ...this.config,
+          }, schema),
       },
     };
   }
@@ -54,7 +63,7 @@ export class ExtensionMarkdown extends Extension {
   async fromMarkdown(source: string): Promise<Slice> {
     const doc = await mdToPmConverterText(
       source,
-      this.config,
+      { cdnUrl: this.editor.config.cdnUrl, ...this.config },
       this.editor.schema,
     );
 
