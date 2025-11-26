@@ -53,7 +53,7 @@ import {
   yRemoteSelections,
   yRemoteSelectionsTheme,
 } from './remote-selections.ts';
-import { languageServerExtensions } from './lsp/index.ts';
+import { languageServerExtensions, LSPPlugin } from './lsp/index.ts';
 import { LSPExtension } from './lsp/LSPExtension.ts';
 
 export const themeCallbacks: Array<(theme: string) => void> = [];
@@ -65,6 +65,9 @@ class CodeMirrorBlockNodeView implements NodeView {
   createCopyButtonCB: () => void;
   selectDeleteCB: undefined | (() => void);
   languageConf: Compartment;
+
+  uri: string = 'file:///' + Math.random() + '.ts';
+  diagListener?: (event: Event) => void;
 
   constructor(
     private node: Node,
@@ -181,12 +184,11 @@ class CodeMirrorBlockNodeView implements NodeView {
 
     const extensionLsp: ExtensionLsp | undefined = editor.getExtension('lsp');
     if (extensionLsp) {
-      const client = extensionLsp.getClient(node.attrs.lang);
       const extension = new LSPExtension({
         getPos: this.getPos,
         extensions: languageServerExtensions(),
       });
-      extensions.push(extension.plugin(client, editor));
+      extensions.push(extension.plugin(extensionLsp, editor));
     } else {
       // Define custom completions
       const myCompletions = [
@@ -237,6 +239,11 @@ class CodeMirrorBlockNodeView implements NodeView {
           const textUpdate = tr.state.toJSON().doc;
           valueChanged(textUpdate, this.node, getPos, view);
           forwardSelection(this.codeMirrorView, view, getPos);
+
+          const lspPlugin = LSPPlugin.get(this.codeMirrorView);
+          if (lspPlugin) {
+            lspPlugin.update();
+          }
         }
       },
     });

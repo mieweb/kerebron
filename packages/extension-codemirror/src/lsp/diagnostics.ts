@@ -9,8 +9,11 @@ export const autoSync = ViewPlugin.fromClass(
         if (this.pending > -1) clearTimeout(this.pending);
         this.pending = setTimeout(() => {
           this.pending = -1;
-          let plugin = LSPPlugin.get(update.view);
-          if (plugin) plugin.client.sync();
+          const plugin = LSPPlugin.get(update.view);
+          if (plugin) {
+            const client = plugin.getClient();
+            client?.sync();
+          }
         }, 500);
       }
     }

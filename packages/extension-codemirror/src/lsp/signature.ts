@@ -17,11 +17,12 @@ function getSignatureHelp(
   pos: number,
   context: lsp.SignatureHelpContext,
 ) {
-  if (plugin.client.hasCapability('signatureHelpProvider') === false) {
+  const client = plugin.getClient();
+  if (!client?.hasCapability('signatureHelpProvider')) {
     return Promise.resolve(null);
   }
-  plugin.client.sync();
-  return plugin.client.request<
+  client?.sync();
+  return client?.request<
     lsp.SignatureHelpParams,
     lsp.SignatureHelp | null
   >('textDocument/signatureHelp', {
@@ -49,14 +50,15 @@ const signaturePlugin = ViewPlugin.fromClass(
       }
 
       const plugin = LSPPlugin.get(update.view);
-      if (!plugin) return;
+      const client = plugin?.getClient();
+      if (!plugin || !client) return;
       const sigState = update.view.state.field(signatureState);
       let triggerCharacter = '';
       if (
         update.docChanged &&
         update.transactions.some((tr) => tr.isUserEvent('input.type'))
       ) {
-        const serverConf = plugin.client.serverCapabilities
+        const serverConf = client?.serverCapabilities
           ?.signatureHelpProvider;
         const triggers = (serverConf?.triggerCharacters || []).concat(
           sigState && serverConf?.retriggerCharacters || [],

@@ -34,7 +34,7 @@ class CodeJarBlockNodeView implements NodeView {
   languageDropDown: HTMLSelectElement;
   lineNumbers: HTMLElement;
 
-  source!: LspSource;
+  source: LspSource;
   extensionLsp: ExtensionLsp | undefined;
   lang: string = 'plaintext';
   uri: string = 'file:///' + Math.random() + '.ts';

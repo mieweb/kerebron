@@ -119,7 +119,6 @@ export class DefaultWorkspace extends Workspace {
         file.mapper = mapper;
         return;
       }
-      console.debug('changedFile', uri, file, content, mapper);
 
       if (
         await this.client.notification<lsp.DidChangeTextDocumentParams>(
