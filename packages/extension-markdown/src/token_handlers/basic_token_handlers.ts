@@ -134,7 +134,7 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
             token,
           );
         } else {
-          const lang = token.attrGet('lang') || undefined;
+          const lang = token.attrGet('lang') || '';
           ctx.current.log(
             '```' + lang + '\n' + content + '```\n\n',
             token,
@@ -146,7 +146,7 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
     'code_block': [
       (token: Token, ctx: ContextStash) => {
         const indent = +(token.attrGet('indent') || 0);
-        const lang = token.attrGet('lang') || undefined;
+        const lang = token.attrGet('lang') || '';
 
         if (indent === 0) {
           const content = token.content.endsWith('\n')
