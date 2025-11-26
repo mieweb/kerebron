@@ -1,5 +1,5 @@
 import { Server } from './app.ts';
-import { createServer as createViteServer } from 'npm:vite';
+import { createServer as createViteServer } from 'vite';
 
 const __dirname = import.meta.dirname;
 
@@ -11,6 +11,7 @@ for (
     'browser-vanilla-code-editor',
     'browser-vue',
     'browser-vue-custom-element',
+    'browser-vue-lsp',
   ]
 ) {
   const viteDevServer = await createViteServer({

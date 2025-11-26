@@ -20,10 +20,18 @@ export interface CommandFactories {
 export abstract class Node {
   readonly type = 'node';
   name: string = 'node';
+  protected editor!: CoreEditor;
 
   public readonly attributes: Record<string, Attribute<any>> = {};
 
   public constructor(protected config: Partial<NodeConfig> = {}) {}
+
+  setEditor(editor: CoreEditor) {
+    this.editor = editor;
+  }
+
+  created() {
+  }
 
   getNodeSpec(): NodeSpec {
     throw new Error('NodeSpec not defined: ' + this.name);
@@ -33,7 +41,7 @@ export abstract class Node {
     return [];
   }
 
-  getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
+  getProseMirrorPlugins(): Plugin[] {
     return [];
   }
 

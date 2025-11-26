@@ -1,89 +1,92 @@
-import type { Token } from '../types.ts';
+import { Token } from '../types.ts';
 
 import type {
   ContextStash,
   TokenHandler,
 } from '@kerebron/extension-markdown/MarkdownSerializer';
-import { getInlineTokensHandlers } from './inline_token_handlers.ts';
+import { getHtmlInlineTokensHandlers } from './inline_token_handlers.ts';
 import { TokenSource } from '../TokenSource.ts';
+
+export type TextAlign = 'left' | 'right';
 
 function getHtmlTableTokensHandlers(): Record<string, Array<TokenHandler>> {
   return {
     // ...getHtmlBasicTokensHandlers(), // TODO html
-    ...getInlineTokensHandlers(),
+    ...getHtmlInlineTokensHandlers(),
 
     'paragraph_open': [],
     'paragraph_close': [],
 
     'table_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.stash();
+        ctx.stash('getHtmlTableTokensHandlers.table_open');
         ctx.current.meta['html_mode'] = true;
-        ctx.current.log('<table>\n');
+        ctx.current.log('<table>\n', token);
       },
     ],
     'table_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('</table>\n');
-        ctx.unstash();
+        ctx.current.log('</table>\n', token);
+        ctx.unstash('getHtmlTableTokensHandlers.table_close');
       },
     ],
     'thead_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('<thead>\n');
+        ctx.current.log('<thead>\n', token);
       },
     ],
     'thead_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('</thead>\n');
+        ctx.current.log('</thead>\n', token);
       },
     ],
     'tr_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('<tr>\n');
+        ctx.current.log('<tr>\n', token);
       },
     ],
     'tr_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('</tr>\n');
+        ctx.current.log('</tr>\n', token);
       },
     ],
     'th_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('<th>');
+        ctx.current.log('<th>', token);
       },
     ],
     'th_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('</th>\n');
+        ctx.current.log('</th>\n', token);
       },
     ],
     'tbody_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('<tbody>\n');
+        ctx.current.log('<tbody>\n', token);
       },
     ],
     'tbody_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('</tbody>\n');
+        ctx.current.log('</tbody>\n', token);
       },
     ],
     'td_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('<td>');
+        ctx.current.log('<td>', token);
       },
     ],
     'td_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('</td>\n');
+        ctx.current.log('</td>\n', token);
       },
     ],
   };
 }
 
 interface TableCell {
-  text: string;
+  value: [string, Token][];
   align: 'left' | 'right';
+  startPos?: number;
 }
 
 interface TableRow {
@@ -107,24 +110,24 @@ class TableBuilder {
     });
   }
 
-  appendCell(align: 'left' | 'right') {
+  appendCell(align: 'left' | 'right', token: Token) {
     const lastRow = this.rows[this.rows.length - 1];
+    const startPos = token.map && token.map.length > 0 ? token.map[0] : 0;
     lastRow.cells.push({
-      text: '',
+      value: [],
+      startPos,
       align,
     });
   }
 
-  appendText(content: string) {
+  appendText(content: string, token: Token) {
     const lastRow = this.rows[this.rows.length - 1];
     if (lastRow.cells.length > 0) {
-      lastRow.cells[lastRow.cells.length - 1].text += content;
+      lastRow.cells[lastRow.cells.length - 1].value.push([content, token]);
     }
   }
 
-  render() {
-    let result = '';
-
+  render(log: (txt: string, token?: Token) => void) {
     let prevType = '';
 
     let lastHeader: Array<TableCell> = [];
@@ -134,12 +137,16 @@ class TableBuilder {
       const row = this.rows[rowNo];
       for (let cellNo = 0; cellNo < row.cells.length; cellNo++) {
         while (columnsWidth.length <= cellNo) {
-          columnsWidth.push(0);
+          columnsWidth.push(1);
         }
         const headCell = lastHeader[cellNo];
         const cell = row.cells[cellNo];
-        if (columnsWidth[cellNo] < cell.text.length) {
-          columnsWidth[cellNo] = cell.text.length;
+        const textLen: number = cell.value.reduce(
+          (prev, current) => prev + current[0].length,
+          0,
+        );
+        if (columnsWidth[cellNo] < textLen + 1) {
+          columnsWidth[cellNo] = textLen + 1;
         }
       }
     }
@@ -148,65 +155,96 @@ class TableBuilder {
       const row = this.rows[rowNo];
 
       if (prevType === 'header' && prevType !== row.type) {
-        result += '|';
+        log('|');
         for (let cellNo = 0; cellNo < lastHeader.length; cellNo++) {
           const cell = lastHeader[cellNo];
-          result += ' ';
-          result += '-'.repeat(columnsWidth[cellNo]);
+          log(' ');
 
           if (cell.align === 'right') {
-            result += ':|';
+            log('-'.repeat(columnsWidth[cellNo] - 2));
+            log(': |');
           } else {
-            result += ' |';
+            log('-'.repeat(columnsWidth[cellNo] - 1));
+            log(' |');
           }
         }
-        result += '\n';
+        log('\n');
       }
 
-      result += '|';
+      log('|');
 
       for (let cellNo = 0; cellNo < row.cells.length; cellNo++) {
         const cell = row.cells[cellNo];
-        result += ' ' + cell.text;
-        if (cell.text.length < columnsWidth[cellNo]) {
-          result += ' '.repeat(columnsWidth[cellNo] - cell.text.length);
+        const textLen: number = cell.value.reduce(
+          (prev, current) => prev + current[0].length,
+          0,
+        );
+
+        if (cell.align === 'right') {
+          if (textLen === 0 && cell.startPos) {
+            log(
+              ' '.repeat(columnsWidth[cellNo] - textLen),
+              { map: [cell.startPos + 2] } as Token,
+            );
+          } else {
+            log(' '.repeat(columnsWidth[cellNo] - textLen));
+          }
+        } else {
+          log(' '.repeat(1));
         }
-        result += ' |';
+        for (const pair of cell.value) {
+          log(pair[0], pair[1]);
+        }
+        if (textLen < columnsWidth[cellNo]) {
+          if (cell.align === 'right') {
+            log(' '.repeat(1));
+          } else {
+            if (textLen === 0 && cell.startPos) {
+              log(
+                ' '.repeat(columnsWidth[cellNo] - textLen),
+                { map: [cell.startPos + 2] } as Token,
+              );
+            } else {
+              log(' '.repeat(columnsWidth[cellNo] - textLen));
+            }
+          }
+        }
+        log('|');
       }
 
-      result += '\n';
+      log('\n');
 
       if (row.type === 'header') {
         lastHeader = row.cells;
       }
       prevType = row.type;
     }
-
-    return result;
   }
 }
 
+export interface RollbackData {
+  sourcePos: number;
+  outputPos: number;
+  ctxDepth: number;
+}
+
 function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
-  const rollbackTable = (
+  const rollbackMdTable = (
     token: Token,
     ctx: ContextStash,
     tokenSource: TokenSource<Token>,
   ) => {
-    const rollbackPos = ctx.current.meta['table_rollback'];
-    if (!ctx.current.meta['table_token_start']) {
-      throw new Error('No table_token_start');
-    }
-    const outputPos = ctx.current.meta['table_output_pos'];
-    if (!ctx.current.meta['table_output_pos']) {
-      throw new Error('No table_output_pos');
+    if (!ctx.current.meta['html_rollback']) {
+      throw new Error('No html_rollback');
     }
 
-    tokenSource.rewind(ctx.current.meta['table_token_start']);
+    const rollback: RollbackData = ctx.current.meta['html_rollback'];
 
-    ctx.rollback(rollbackPos);
-    ctx.output.rollback(outputPos);
+    tokenSource.rewind(rollback.sourcePos);
+    ctx.rollback(rollback.ctxDepth, 'rollbackMdTable, ' + token.type);
+    ctx.output.rollback(rollback.outputPos);
 
-    ctx.stash();
+    ctx.stash('getMdTableTokensHandler.rollbackTable');
     ctx.current.meta['html_mode'] = true;
     ctx.current.log('<table>\n', token);
     ctx.current.handlers = getHtmlTableTokensHandlers();
@@ -216,7 +254,7 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
     'text': [
       (token: Token, ctx: ContextStash) => {
         const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
-        tableBuilder.appendText(token.content);
+        tableBuilder.appendText(token.content, token);
       },
     ],
 
@@ -226,21 +264,27 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
         ctx.current.meta['table_cell_para_count'] =
           +ctx.current.meta['table_cell_para_count'] + 1;
         if (ctx.current.meta['table_cell_para_count'] > 1) { // Only 1 line in markdown pipe table
-          rollbackTable(token, ctx, tokenSource);
+          rollbackMdTable(token, ctx, tokenSource);
         }
       },
     ],
 
     'default': [
-      rollbackTable,
+      rollbackMdTable,
     ],
 
     'table_open': [
       (token: Token, ctx: ContextStash, tokenSource: TokenSource<Token>) => {
-        const rollbackPos = ctx.stash();
-        ctx.current.meta['table_rollback'] = rollbackPos;
-        ctx.current.meta['table_token_start'] = tokenSource.pos;
-        ctx.current.meta['table_output_pos'] = ctx.output.chunkPos;
+        const rollbackDepth = ctx.stash('getMdTableTokensHandler.table_open');
+        if (!ctx.current.meta['html_rollback']) {
+          const rollback: RollbackData = {
+            sourcePos: tokenSource.pos,
+            outputPos: ctx.output.chunkPos,
+            ctxDepth: rollbackDepth,
+          };
+          ctx.current.meta['html_rollback'] = rollback;
+        }
+
         ctx.current.metaObj['table_builder'] = new TableBuilder();
         ctx.current.handlers = getMdTableTokensHandler();
       },
@@ -249,8 +293,8 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
     'table_close': [
       (token: Token, ctx: ContextStash) => {
         const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
-        ctx.current.log(tableBuilder.render(), token);
-        ctx.unstash();
+        tableBuilder.render(ctx.current.log);
+        ctx.unstash('getMdTableTokensHandler.table_close');
       },
     ],
     'thead_open': [
@@ -277,11 +321,12 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
     ],
     'th_open': [
       (token: Token, ctx: ContextStash) => {
-        const style = token.attrGet('style');
-        const align = style === 'text-align:right' ? 'right' : 'left';
+        // const style = token.attrGet('style');
+        // const align = style === 'text-align:right' ? 'right' : 'left';
+        const align = token.attrGet('align') || 'left';
 
         const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
-        tableBuilder.appendCell(align);
+        tableBuilder.appendCell(align as TextAlign, token);
         ctx.current.meta['table_cell_para_count'] = 0;
       },
     ],
@@ -301,11 +346,10 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
     ],
     'td_open': [
       (token: Token, ctx: ContextStash) => {
-        const style = token.attrGet('style');
-        const align = style === 'text-align:right' ? 'right' : 'left';
+        const align = token.attrGet('align') || 'left';
 
         const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
-        tableBuilder.appendCell(align);
+        tableBuilder.appendCell(align as TextAlign, token);
         ctx.current.meta['table_cell_para_count'] = 0;
       },
     ],

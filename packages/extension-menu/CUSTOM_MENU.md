@@ -104,7 +104,7 @@ The main extension class.
 class ExtensionCustomMenu extends Extension {
   name: 'customMenu';
 
-  getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[];
+  getProseMirrorPlugins(): Plugin[];
 }
 ```
 

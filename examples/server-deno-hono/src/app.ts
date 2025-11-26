@@ -1,16 +1,19 @@
 import { Hono } from 'hono';
-import { proxy } from 'hono/proxy';
 import { serveStatic, upgradeWebSocket } from 'hono/deno';
 import { cors } from 'hono/cors';
 
 import { HonoYjsMemAdapter } from '@kerebron/extension-server-hono/HonoYjsMemAdapter';
 import { proxyWs } from './proxyWs.ts';
+import { LspWsAdapter } from './lsp-server.ts';
+import { proxyTcp } from './proxyTcp.ts';
+import { proxyProcess } from './proxyProcess.ts';
 
 const __dirname = import.meta.dirname;
 
 const app = new Hono();
 
 const yjsAdapter = new HonoYjsMemAdapter();
+const lspWsAdapter = new LspWsAdapter();
 
 export class Server {
   public app;
@@ -24,8 +27,8 @@ export class Server {
     this.app = app;
     this.fetch = app.fetch;
 
-    this.app.get('/api/rooms', async (c) => {
-      const retVal = await yjsAdapter.getRoomNames();
+    this.app.get('/api/rooms', (c) => {
+      const retVal = yjsAdapter.getRoomNames();
       return c.json(retVal);
     });
 
@@ -36,11 +39,76 @@ export class Server {
       }),
     );
 
+    this.app.get(
+      '/lsp/mine',
+      upgradeWebSocket((c) => {
+        return lspWsAdapter.upgradeWebSocket();
+      }),
+    );
+
+    this.app.get(
+      '/lsp/process',
+      upgradeWebSocket((c) => {
+        return proxyProcess(
+          'node',
+          ['../../../lsp-toy/server/out/server.js'],
+          c,
+        );
+      }),
+    );
+
+    this.app.get(
+      '/lsp/yaml',
+      upgradeWebSocket((c) => {
+        return proxyProcess(
+          'npm',
+          ['exec', '--', 'yaml-language-server', '--stdio'],
+          c,
+        );
+      }),
+    );
+
+    this.app.get(
+      '/lsp/typescript',
+      upgradeWebSocket((c) => {
+        return proxyProcess(
+          'npm',
+          [
+            'exec',
+            '--package=typescript',
+            '--package=typescript-language-server',
+            '--',
+            'typescript-language-server',
+            '--stdio',
+          ],
+          c,
+        );
+      }),
+    );
+
+    this.app.get(
+      '/lsp/tcp',
+      upgradeWebSocket((c) => {
+        return proxyTcp('127.0.0.1:2087', c);
+      }),
+    );
+
+    this.app.get(
+      '/lsp/deno',
+      upgradeWebSocket((c) => {
+        return proxyProcess(
+          'deno',
+          ['-L', 'debug', 'lsp'],
+          c,
+        );
+      }),
+    );
+
     for (const path in this.opts.devProxyUrls) {
       const devProxyUrl = this.opts.devProxyUrls[path];
       console.log(`Proxy: ${path} => ${devProxyUrl}`);
 
-      this.app.all(path + '/*', async (c) => {
+      this.app.all(path + '/*', (c) => {
         const queryString = c.req.url
           .split('?')
           .map((e: string, idx: number) => {

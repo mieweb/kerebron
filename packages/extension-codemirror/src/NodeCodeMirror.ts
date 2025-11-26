@@ -1,26 +1,35 @@
-import { EditorState, Plugin, PluginKey, Selection } from 'prosemirror-state';
-import type { NodeSpec, NodeType, Schema } from 'prosemirror-model';
+import { EditorView } from 'prosemirror-view';
+import {
+  EditorState,
+  Plugin,
+  PluginKey,
+  Selection,
+  Transaction,
+} from 'prosemirror-state';
+import type { NodeType } from 'prosemirror-model';
 
-import { Converter, type CoreEditor, Node } from '@kerebron/editor';
+import { type CoreEditor } from '@kerebron/editor';
+import { getShadowRoot } from '@kerebron/editor/utilities';
 import {
   type CommandFactories,
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
-import {
-  type InputRule,
-  textblockTypeInputRule,
-} from '@kerebron/editor/plugins/input-rules';
+import { NodeCodeBlock } from '@kerebron/extension-basic-editor/NodeCodeBlock';
+
 import { CodeBlockSettings } from './types.ts';
 import { codeMirrorBlockNodeView } from './codeMirrorBlockNodeView.ts';
 import { defaultSettings } from './defaults.ts';
 import languageLoaders, { legacyLanguageLoaders } from './languageLoaders.ts';
-import { createNodeFromObject } from '@kerebron/editor/utilities';
 
 export const codeMirrorBlockKey = new PluginKey('codemirror-block');
 
 function arrowHandler(dir: 'left' | 'right' | 'up' | 'down') {
-  return (state: EditorState, dispatch, view) => {
-    if (state.selection.empty && view.endOfTextblock(dir)) {
+  return (
+    state: EditorState,
+    dispatch: ((tr: Transaction) => void) | undefined,
+    view?: EditorView,
+  ) => {
+    if (state.selection.empty && view && view.endOfTextblock(dir)) {
       let side = dir == 'left' || dir == 'up' ? -1 : 1;
       let $head = state.selection.$head;
       let nextPos = Selection.near(
@@ -28,7 +37,9 @@ function arrowHandler(dir: 'left' | 'right' | 'up' | 'down') {
         side,
       );
       if (nextPos.$head && nextPos.$head.parent.type.name == 'code_block') {
-        dispatch(state.tr.setSelection(nextPos));
+        if (dispatch) {
+          dispatch(state.tr.setSelection(nextPos));
+        }
         return true;
       }
     }
@@ -57,110 +68,15 @@ const LANGS = [
   'html',
 ];
 
-export class NodeCodeMirror extends Node {
-  override name = 'code_block';
-  // requires = ['doc'];
+export interface NodeCodeMirrorConfig {
+  readOnly?: boolean;
+  languageWhitelist?: CodeBlockSettings['languageWhitelist'];
+  theme?: CodeBlockSettings['theme'];
+}
 
-  override getConverters(
-    editor: CoreEditor,
-    schema: Schema,
-  ): Record<string, Converter> {
-    return {
-      'text/code-only': {
-        fromDoc: async (document: Node): Promise<Uint8Array> => {
-          const retVal = [];
-          if (document.content) {
-            for (const node of document.content.toJSON()) {
-              if ('code_block' === node.type && Array.isArray(node.content)) {
-                for (const content of node.content) {
-                  retVal.push(content.text);
-                }
-              }
-            }
-          }
-          return new TextEncoder().encode(retVal.join(''));
-        },
-        toDoc: async (buffer: Uint8Array): Promise<Node> => {
-          const code = new TextDecoder().decode(buffer);
-          const content = {
-            'type': 'doc_code',
-            'content': [
-              {
-                'type': 'code_block',
-                'attrs': {
-                  'lang': schema.topNodeType.spec.defaultAttrs?.lang,
-                },
-                'content': [
-                  {
-                    'type': 'text',
-                    'text': code,
-                  },
-                ],
-              },
-            ],
-          };
-
-          return createNodeFromObject(
-            content,
-            schema,
-            {
-              slice: false,
-              errorOnInvalidContent: false,
-            },
-          );
-        },
-      },
-    };
-  }
-
-  override getNodeSpec(): NodeSpec {
-    const langs = this.config.languageWhitelist || LANGS;
-
-    return {
-      content: 'text*',
-      marks: '',
-      group: 'block',
-      code: true,
-      defining: true,
-      parseDOM: [
-        {
-          tag: 'pre',
-          preserveWhitespace: 'full',
-          getAttrs(dom: HTMLElement) {
-            let lang = dom.getAttribute('lang');
-
-            if (!lang) {
-              for (const className of dom.classList) {
-                if (
-                  className.startsWith('lang-') &&
-                  langs.indexOf(className.substring('lang-'.length)) > -1
-                ) {
-                  lang = className.substring('lang-'.length);
-                  break;
-                }
-              }
-            }
-
-            return {
-              lang,
-            };
-          },
-        },
-      ],
-      attrs: { lang: { default: null } },
-      toDOM(node) {
-        const { lang } = node.attrs;
-        return ['pre', { lang }, ['code', 0]];
-      },
-    };
-  }
-
-  override getInputRules(type: NodeType): InputRule[] {
-    /// Given a code block node type, returns an input rule that turns a
-    /// textblock starting with three backticks into a code block.
-    return [
-      textblockTypeInputRule(/^```$/, type),
-    ];
+export class NodeCodeMirror extends NodeCodeBlock {
+  constructor(override config: NodeCodeMirrorConfig) {
+    super(config);
   }
 
   override getCommandFactories(
@@ -187,34 +103,33 @@ export class NodeCodeMirror extends Node {
     };
   }
 
-  override getProseMirrorPlugins(editor: CoreEditor): Plugin[] {
-    const codeMirrorBlockPlugin = (settings: CodeBlockSettings) =>
+  override getProseMirrorPlugins(): Plugin[] {
+    const shadowRoot = getShadowRoot(this.editor.config.element);
+
+    const settings = {
+      languageWhitelist: this.config.languageWhitelist || LANGS,
+      shadowRoot,
+      ...defaultSettings,
+      readOnly: this.config.readOnly,
+      languageLoaders: { ...languageLoaders, ...legacyLanguageLoaders },
+      undo: () => {
+        this.editor.chain().undo().run();
+      },
+      redo: () => {
+        this.editor.chain().redo().run();
+      },
+      theme: [...(this.config.theme || [])],
+    };
+
+    return [
       new Plugin({
         key: codeMirrorBlockKey,
         props: {
           nodeViews: {
-            [this.name]: codeMirrorBlockNodeView(settings, editor),
+            [this.name]: codeMirrorBlockNodeView(settings, this.editor),
           },
         },
-      });
-
-    return [
-      codeMirrorBlockPlugin({
-        provider: this.config.provider,
-        languageWhitelist: this.config.languageWhitelist || LANGS,
-        shadowRoot: this.config.shadowRoot,
-        ...defaultSettings,
-        readOnly: this.config.readOnly,
-        languageLoaders: { ...languageLoaders, ...legacyLanguageLoaders },
-        undo: () => {
-          editor.chain().undo().run();
-        },
-        redo: () => {
-          editor.chain().redo().run();
-        },
-        theme: [...(this.config.theme || [])],
       }),
-      // keymap(codeBlockKeymap),
     ];
   }
 }

@@ -200,7 +200,7 @@ function handleMouseDown(
 ): boolean {
   if (!view.editable) return false;
 
-  const win = view.dom.ownerDocument.defaultView;
+  const win = view.dom.ownerDocument.defaultView || globalThis;
 
   const pluginState = columnResizingPluginKey.getState(view.state);
   if (!pluginState || pluginState.activeHandle == -1 || pluginState.dragging) {

@@ -2,7 +2,7 @@ import { EditorState, Plugin, TextSelection } from 'prosemirror-state';
 import * as Y from 'yjs';
 
 // import { DOMParser } from 'jsr:@b-fuze/deno-dom'; // No xml support (mathML) https://github.com/b-fuze/deno-dom/issues?q=is%3Aissue%20state%3Aopen%20xml
-import { DOMParser, Node, parseHTML } from 'npm:linkedom';
+import { DOMParser, Node, parseHTML } from 'npm:linkedom@latest';
 
 import { DummyEditorView } from '../../editor/src/DummyEditorView.ts';
 import { ProsemirrorBinding, ySyncPlugin } from '../src/ySyncPlugin.ts';
@@ -10,15 +10,14 @@ import { yUndoPlugin } from '../src/yUndoPlugin.ts';
 import { ySyncPluginKey } from '../src/keys.ts';
 import {
   absolutePositionToRelativePosition,
-  initProseMirrorDoc,
   relativePositionToAbsolutePosition,
 } from '../src/lib.ts';
 
 import { schema as codeSchema } from './codeSchema.ts';
+import { initProseMirrorDoc } from '../src/convertUtils.ts';
 
 const createNewProsemirrorViewWithSchema = (y, schema, undoManager = false) => {
   const view = new DummyEditorView({
-    // @ts-ignore
     state: EditorState.create({
       schema,
       plugins: [ySyncPlugin(y.get('prosemirror', Y.XmlFragment))].concat(

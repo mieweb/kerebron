@@ -1,0 +1,13 @@
+{
+  "name": "@kerebron/editor-kits",
+  "tasks": {},
+  "imports": {},
+  "exports": {
+    ".": "./src/mod.ts",
+    "./AdvancedEditorKit": "./src/AdvancedEditorKit.ts",
+    "./DevAdvancedEditorKit": "./src/DevAdvancedEditorKit.ts",
+    "./LspEditorKit": "./src/LspEditorKit.ts",
+    "./YjsEditorKit": "./src/YjsEditorKit.ts",
+    "./CodeEditorKit": "./src/CodeEditorKit.ts"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "browser-vue-lsp",
+  "tasks": {
+    "dev": "deno run -A npm:vite",
+    "build": "deno run -A npm:vite build",
+    "build-watch": "deno run -A npm:vite build --watch",
+    "preview": "deno run -A npm:vite preview",
+    "serve": "deno run --allow-net --allow-read main.ts"
+  },
+  "imports": {
+    "vite": "npm:vite@7.1.4",
+    "vue-router": "npm:vue-router@4.5.1",
+    "vue": "npm:vue@3.5.21",
+    "@vue/devtools-api": "npm:@vue/devtools-api@7.7.7",
+    "@vitejs/plugin-vue": "npm:@vitejs/plugin-vue@6.0.1",
+    "vite-plugin-wasm": "npm:vite-plugin-wasm@3.5.0"
+  },
+  "exports": {},
+  "license": "MIT"
+}

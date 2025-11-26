@@ -1,20 +1,15 @@
 import * as Y from 'yjs';
-import * as random from 'lib0/random';
-import { WebsocketProvider } from './y-websocket.ts';
 
 import { CoreEditor } from '@kerebron/editor';
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
-import { ExtensionMarkdown } from '@kerebron/extension-markdown';
-import { ExtensionYjs } from '@kerebron/extension-yjs';
-import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
+import { CodeEditorKit } from '@kerebron/editor-kits/CodeEditorKit';
+import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
+import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
+import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
+import type { ExtensionBasicCodeEditor } from '@kerebron/extension-basic-editor/ExtensionBasicCodeEditor';
+import type { LspTransportGetter, Transport } from '@kerebron/extension-lsp';
+import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
 
-import {
-  NodeCodeMirror,
-  NodeDocumentCode,
-} from '@kerebron/extension-codemirror';
-import { userColors } from '@kerebron/extension-yjs/userColors';
-
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
   const docUrl = globalThis.location.hash.slice(1);
   let roomId;
   if (docUrl.startsWith('room:')) {
@@ -25,41 +20,68 @@ window.addEventListener('load', () => {
   }
   const ydoc = new Y.Doc();
 
-  const protocol = globalThis.location.protocol === 'http:' ? 'ws:' : 'wss:';
-  const wsProvider = new WebsocketProvider(
-    protocol + '//' + globalThis.location.host + '/yjs',
-    roomId,
-    ydoc,
-  );
-  console.log('roomId', roomId);
-  wsProvider.on('status', (event) => {
-    console.log('wsProvider status', event.status); // logs "connected" or "disconnected"
-  });
+  const getLspTransport: LspTransportGetter = (
+    lang: string,
+  ): Transport | undefined => {
+    const protocol = globalThis.location.protocol === 'http:' ? 'ws:' : 'wss:';
+    const uri = protocol + '//' + globalThis.location.host + '/lsp';
 
-  const userColor = userColors[random.uint32() % userColors.length];
-  wsProvider.awareness.setLocalStateField('user', {
-    name: 'Anonymous ' + Math.floor(Math.random() * 100),
-    color: userColor.color,
-    colorLight: userColor.light,
-  });
+    switch (lang) {
+      case 'markdown':
+        return new LspWebSocketTransport(uri + '/mine');
+      case 'json':
+        return new LspWebSocketTransport(uri + '/deno');
+      case 'typescript':
+      case 'javascript':
+        return new LspWebSocketTransport(uri + '/typescript');
+      case 'yaml':
+        return new LspWebSocketTransport(uri + '/yaml');
+    }
+    return undefined;
+  };
 
   const editor = new CoreEditor({
+    uri: 'test.yaml',
     topNode: 'doc_code',
     element: document.getElementById('editor') || undefined,
     extensions: [
-      new ExtensionBasicEditor(),
-      new ExtensionMarkdown(),
-      new NodeDocumentCode({ lang: 'yaml' }),
-      new ExtensionYjs({ ydoc, provider: wsProvider }),
-      new ExtensionDevToolkit(),
-      new NodeCodeMirror({
-        ydoc,
-        provider: wsProvider,
-        languageWhitelist: ['yaml'],
-        readOnly: false,
-      }),
+      new CodeEditorKit('json'),
+      YjsEditorKit.createFrom(ydoc, roomId),
+      LspEditorKit.createFrom({ getLspTransport }),
+      // lsp-ws-proxy --listen 9991 -- npx yaml-language-server --stdio
+      // lsp-ws-proxy --listen 9991 -- npx vscode-json-languageserver --stdio
+      // ... https://www.npmjs.com/search?q=language-server
+      // ... https://www.npmjs.com/search?q=keywords:LSP
     ],
-    // content: pmDoc
+  });
+
+  editor.addEventListener('selection', (event: CustomEvent) => {
+    const selection = event.detail.selection;
+    const extensionMarkdown: ExtensionBasicCodeEditor | undefined = editor
+      .getExtension('basic-code-editor');
+    if (extensionMarkdown) {
+      const result = extensionMarkdown.toRawText(editor.state.doc);
+      const code = result.content;
+
+      const mapper = new PositionMapper(editor, result.rawTextMap);
+      const from = mapper.toRawTextPos(selection.from);
+      const to = mapper.toRawTextPos(selection.to);
+
+      if (from > -1 && to > -1) {
+        const parts = [
+          code.substring(0, from),
+          code.substring(from, to),
+          code.substring(to),
+        ];
+        const preHtml = '<span>' + parts[0] + '</span>' +
+          '<span class="md-selected">' + parts[1] + '</span>' +
+          '<span>' + parts[2] + '</span>';
+
+        document.getElementById('markdown').innerHTML = preHtml;
+      } else {
+        return code;
+      }
+    }
   });
 
   editor.addEventListener('transaction', async (ev: CustomEvent) => {

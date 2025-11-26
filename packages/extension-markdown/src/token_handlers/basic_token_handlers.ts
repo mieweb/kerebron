@@ -42,6 +42,7 @@ export function getHtmlBasicTokensHandlers(): Record<
 
     'code_block': [
       (token: Token, ctx: ContextStash) => {
+        ctx.current.log('<pre>' + token.content + '</pre>\n', token);
         // ctx.current.log(
         //   token.content
         //     .split('\n')
@@ -91,15 +92,21 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
     ],
     'heading_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.stash();
+        ctx.stash('getBasicTokensHandlers.heading_open');
         ctx.current.handlers = getHeaderTokensHandlers();
+        if (token.markup === '---') {
+          return;
+        }
         ctx.current.log('#'.repeat(+token.tag.substring(1)) + ' ', token);
       },
     ],
     'heading_close': [
       (token: Token, ctx: ContextStash) => {
+        if (token.markup === '---') {
+          ctx.current.log('\n' + token.markup + '\n', token);
+        }
         ctx.current.log('\n', token);
-        ctx.unstash();
+        ctx.unstash('getBasicTokensHandlers.heading_close');
       },
     ],
     'paragraph_open': [
@@ -118,14 +125,18 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
 
     'fence': [
       (token: Token, ctx: ContextStash) => {
+        const content = token.content.endsWith('\n')
+          ? token.content
+          : token.content + '\n';
         if (token.info === 'latex') {
           ctx.current.log(
-            '$$' + '\n' + token.content + '\n$$\n\n',
+            '$$' + '\n' + content + '$$\n\n',
             token,
           );
         } else {
+          const lang = token.attrGet('lang') || '';
           ctx.current.log(
-            '```' + token.info + '\n' + token.content + '```\n\n',
+            '```' + lang + '\n' + content + '```\n\n',
             token,
           );
         }
@@ -134,11 +145,32 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
 
     'code_block': [
       (token: Token, ctx: ContextStash) => {
+        const indent = +(token.attrGet('indent') || 0);
+        const lang = token.attrGet('lang') || '';
+
+        if (indent === 0) {
+          const content = token.content.endsWith('\n')
+            ? token.content
+            : token.content + '\n';
+          if (lang === 'latex') {
+            ctx.current.log(
+              '$$' + '\n' + content + '$$\n\n',
+              token,
+            );
+          } else {
+            ctx.current.log(
+              '```' + lang + '\n' + content + '```\n\n',
+              token,
+            );
+          }
+          return;
+        }
+
         ctx.current.log(
           token.content
             .split('\n')
-            .map((t) => t ? ('    ' + t) : '')
-            .join('\n') + '\n',
+            .map((t) => t ? (' '.repeat(indent) + t) : '')
+            .join('\n'),
           token,
         );
       },

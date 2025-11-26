@@ -1,7 +1,6 @@
 import { Plugin } from 'prosemirror-state';
-import { Schema } from 'prosemirror-model';
 
-import { type CoreEditor, Extension } from '@kerebron/editor';
+import { Extension } from '@kerebron/editor';
 
 import { type MenuElement } from './menu.ts';
 import { MenuPlugin } from './MenuPlugin.ts';
@@ -19,10 +18,10 @@ export class ExtensionMenuLegacy extends Extension {
     super(config);
   }
 
-  override getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
+  override getProseMirrorPlugins(): Plugin[] {
     const plugins: Plugin[] = [];
 
-    let content = buildMenu(editor, schema);
+    let content = buildMenu(this.editor, this.editor.schema);
     if (this.config.modifyMenu) {
       content = this.config.modifyMenu(content);
     }

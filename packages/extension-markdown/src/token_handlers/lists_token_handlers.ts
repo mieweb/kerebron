@@ -42,9 +42,9 @@ function getLongDefinitionTokensHandlers(): Record<
           ctx.current.log('\n');
         }
 
-        ctx.stash();
+        ctx.stash('getLongDefinitionTokensHandlers.code_block');
         ctx.current.log = (txt: string) => {
-          writeIndented(ctx.output, txt, ctx.current);
+          writeIndented(ctx.output, txt, ctx.current, token);
         };
 
         ctx.current.log(
@@ -54,7 +54,7 @@ function getLongDefinitionTokensHandlers(): Record<
             .join('\n') + '\n',
         );
 
-        ctx.unstash();
+        ctx.unstash('getLongDefinitionTokensHandlers.code_block');
 
         ctx.current.itemRow++;
       },
@@ -62,13 +62,13 @@ function getLongDefinitionTokensHandlers(): Record<
 
     'paragraph_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.stash();
+        ctx.stash('getLongDefinitionTokensHandlers.paragraph_open');
         ctx.current.meta['para_hidden'] = token.hidden;
       },
     ],
     'paragraph_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.unstash();
+        ctx.unstash('getLongDefinitionTokensHandlers.paragraph_close');
 
         if (ctx.output.colPos !== 0) {
           // ctx.current.log('\n');
@@ -109,14 +109,14 @@ function getLongDefinitionTokensHandlers(): Record<
 
     'dl_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.stash();
-        ctx.current.listLevel++;
+        ctx.stash('getLongDefinitionTokensHandlers.dl_open');
+        ctx.current.listPath.push('dl');
         ctx.current.listType = 'dl';
       },
     ],
     'dl_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.unstash();
+        ctx.unstash('getLongDefinitionTokensHandlers.dl_close');
       },
     ],
   };
@@ -142,11 +142,11 @@ function getShortDefinitionTokensHandlers(): Record<
 
     tokenSource.rewind(ctx.current.meta['def_token_start']);
 
-    ctx.rollback(rollbackPos);
+    ctx.rollback(rollbackPos, 'rollbackList, ' + token.type);
     ctx.output.rollback(outputPos);
 
-    ctx.stash();
-    ctx.current.listLevel++;
+    ctx.stash('getShortDefinitionTokensHandlers.rollbackList');
+    ctx.current.listPath.push('dl');
     ctx.current.listType = 'dl';
     ctx.current.handlers = getLongDefinitionTokensHandlers();
   };
@@ -154,11 +154,13 @@ function getShortDefinitionTokensHandlers(): Record<
   return {
     'dl_open': [
       (token: Token, ctx: ContextStash, tokenSource: TokenSource<Token>) => {
-        const rollbackPos = ctx.stash();
+        const rollbackPos = ctx.stash(
+          'getShortDefinitionTokensHandlers.dl_open',
+        );
         ctx.current.meta['def_rollback'] = rollbackPos;
         ctx.current.meta['def_token_start'] = tokenSource.pos;
         ctx.current.meta['def_output_pos'] = ctx.output.chunkPos;
-        ctx.current.listLevel++;
+        ctx.current.listPath.push('dl');
         ctx.current.listType = 'dl';
         ctx.current.handlers = getShortDefinitionTokensHandlers();
       },
@@ -166,7 +168,7 @@ function getShortDefinitionTokensHandlers(): Record<
 
     'dl_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.unstash();
+        ctx.unstash('getShortDefinitionTokensHandlers.dl_close');
       },
     ],
 
@@ -236,8 +238,8 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
 
     'task_list_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.stash();
-        ctx.current.listLevel++;
+        ctx.stash('getListsTokensHandlers.task_list_open');
+        ctx.current.listPath.push('tl');
         ctx.current.listType = 'tl';
         ctx.current.itemSymbol = '';
         ctx.current.itemNumber = 0;
@@ -245,7 +247,7 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
     ],
     'task_list_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.unstash();
+        ctx.unstash('getListsTokensHandlers.task_list_close');
         if (ctx.output.colPos !== 0) {
           ctx.current.log('\n');
         }
@@ -273,8 +275,8 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
 
     'bullet_list_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.stash();
-        ctx.current.listLevel++;
+        ctx.stash('getListsTokensHandlers.bullet_list_open');
+        ctx.current.listPath.push('ul');
         ctx.current.listType = 'ul';
         ctx.current.itemSymbol = '';
         ctx.current.itemNumber = 0;
@@ -282,7 +284,7 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
     ],
     'bullet_list_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.unstash();
+        ctx.unstash('getListsTokensHandlers.bullet_list_close');
         if (ctx.output.colPos !== 0) {
           ctx.current.log('\n');
         }
@@ -291,8 +293,8 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
     'ordered_list_open': [
       (token: Token, ctx: ContextStash) => {
         {
-          ctx.stash();
-          ctx.current.listLevel++;
+          ctx.stash('getListsTokensHandlers.ordered_list_open');
+          ctx.current.listPath.push('ol');
           ctx.current.listType = 'ol';
 
           const htmlInlineHandlers = Object.entries(
@@ -337,7 +339,7 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
     ],
     'ordered_list_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.unstash();
+        ctx.unstash('getListsTokensHandlers.ordered_list_close');
         if (ctx.output.colPos !== 0) {
           ctx.current.log('\n');
         }
@@ -371,7 +373,7 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
 
     'blockquote_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.stash();
+        ctx.stash('getListsTokensHandlers.blockquote_open');
         ctx.current.blockquoteCnt++;
         if (ctx.output.colPos !== 0) {
           ctx.current.log('\n');
@@ -380,7 +382,7 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
     ],
     'blockquote_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.unstash();
+        ctx.unstash('getListsTokensHandlers.blockquote_close');
       },
     ],
   };

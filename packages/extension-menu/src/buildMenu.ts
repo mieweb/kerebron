@@ -142,7 +142,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
         label: '_',
         run: () => editor.chain().toggleUnderline().run(),
         enable: (state) => editor.can().toggleUnderline().run(),
-        // icon: icons.underline
+        icon: icons.underline,
       }),
     );
   }

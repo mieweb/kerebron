@@ -1,4 +1,4 @@
-import type { Mark, MarkType, Node, Schema } from 'prosemirror-model';
+import { Mark, MarkType, Node, Schema } from 'prosemirror-model';
 import { Fragment } from 'prosemirror-model';
 import { Token } from './types.ts';
 
@@ -6,6 +6,9 @@ import {
   type CoreEditor,
   NodeAndPos,
   nodeToTreeStringOutput,
+  RawTextMapEntry,
+  RawTextResult,
+  SourceMap,
 } from '@kerebron/editor';
 
 import { MarkdownSerializer } from './MarkdownSerializer.ts';
@@ -35,28 +38,28 @@ function removeMarkedContent(node: Node, markType: MarkType) {
   return node.copy(Fragment.fromArray(newContent));
 }
 
-function convertDomToLowerCase(node: Node) {
-  // If the node is an element, change its tag name and attributes
-  if (node.nodeType === 1) { // Element node
-    // Convert tag name to lowercase
-    try {
-      node.nodeName = node.nodeName.toLowerCase();
-    } catch (ignore) {
-      /* HACK FOR: Uncaught TypeError: setting getter-only property "nodeName" */
-    }
+// function convertDomToLowerCase(node: Node) {
+//   // If the node is an element, change its tag name and attributes
+//   if (node.nodeType === 1) { // Element node
+//     // Convert tag name to lowercase
+//     try {
+//       node.nodeName = node.nodeName.toLowerCase();
+//     } catch (ignore) {
+//       /* HACK FOR: Uncaught TypeError: setting getter-only property "nodeName" */
+//     }
 
-    // Loop through attributes and convert them to lowercase
-    for (let i = 0; i < node.attributes.length; i++) {
-      const attr = node.attributes[i];
-      node.setAttribute(attr.name.toLowerCase(), attr.value);
-    }
-  }
+//     // Loop through attributes and convert them to lowercase
+//     for (let i = 0; i < node.attributes.length; i++) {
+//       const attr = node.attributes[i];
+//       node.setAttribute(attr.name.toLowerCase(), attr.value);
+//     }
+//   }
 
-  // Recursively convert children nodes
-  for (let i = 0; i < node.childNodes.length; i++) {
-    convertDomToLowerCase(node.childNodes[i]);
-  }
-}
+//   // Recursively convert children nodes
+//   for (let i = 0; i < node.childNodes.length; i++) {
+//     convertDomToLowerCase(node.childNodes[i]);
+//   }
+// }
 
 export interface MdContext {
   meta: Record<string, any>;
@@ -94,12 +97,27 @@ class MdStashContext {
   }
 }
 
-export default async function pmToMdConverter(
+export async function pmToMdConverter(
   document: Node,
   config: MdConfig,
   schema: Schema,
   editor: CoreEditor,
 ): Promise<Uint8Array> {
+  const result = syncPmToMdConverter(document, config, schema, editor);
+  return new TextEncoder().encode(result.content);
+}
+
+export interface MarkdownResult extends RawTextResult {
+  debugMap: Record<number, { targetRow: number; targetCol: number }>;
+  sourceMap?: SourceMap;
+}
+
+export function syncPmToMdConverter(
+  document: Node,
+  config: MdConfig,
+  schema: Schema,
+  editor: CoreEditor,
+): MarkdownResult {
   const ctx = new MdStashContext();
 
   // TODO: refactor to Tokenizer
@@ -275,34 +293,19 @@ export default async function pmToMdConverter(
       };
     },
 
-    // code_block(node) {
-    //   return {
-    //     open: 'code_block_open',
-    //     close: 'code_block_close',
-    //   }
-
-    // }
-    // ordered_list(state, node) {
-    //   let start = node.attrs.start || 1;
-    //   let maxW = String(start + node.childCount - 1).length;
-    //   let space = state.repeat(' ', 4);
-
-    //   let numericString = (i: number) => String(i) + '. ';
-
-    //   if (['a'].includes(node.attrs?.type || '')) {
-    //     numericString = (i: number) =>
-    //       String.fromCharCode('a'.charCodeAt(0) + i - 1) + '.  ';
-    //   }
-    //   if (['A'].includes(node.attrs?.type || '')) {
-    //     numericString = (i: number) =>
-    //       String.fromCharCode('A'.charCodeAt(0) + i - 1) + '.  ';
-    //   }
-    //   if (['I'].includes(node.attrs?.type || '')) {
-    //     numericString = (i: number) => `${romanize(i)}. `;
-    //   }
-    //   if (['i'].includes(node.attrs?.type || '')) {
-    //     numericString = (i: number) => `${romanize(i).toLowerCase()}. `;
-    //   }
+    code_block(node) {
+      return {
+        selfClose: (node) => {
+          const token = new Token('code_block', 'code', 0);
+          token.attrSet('lang', node.attrs.lang);
+          token.content = '';
+          node.forEach((child, offset) => {
+            token.content += child.text || '';
+          });
+          return token;
+        },
+      };
+    },
 
     // html(state, node) {
     //   const domSerializer = DOMSerializer.fromSchema(schema);
@@ -316,28 +319,6 @@ export default async function pmToMdConverter(
     //   state.write(html);
     // },
     //
-    // code_block(state, node) {
-    //   // Make sure the front matter fences are longer than any dash sequence within it
-    //   const backticks = node.textContent.match(/`{3,}/gm);
-    //   const fence = backticks
-    //     ? (backticks.sort().slice(-1)[0] + '`')
-    //     : '```';
-
-    //   state.write(fence + (node.attrs.lang || '') + '\n');
-    //   state.text(node.textContent, false);
-    //   // Add a newline to the current content before adding closing marker
-    //   state.write('\n');
-    //   state.write(fence);
-    //   state.closeBlock(node);
-    // },
-
-    //   state.renderList(node, space, (i) => {
-    //     const number = start + i;
-
-    //     let nStr = numericString(number);
-    //     return state.repeat(' ', maxW - nStr.length) + nStr;
-    //   });
-    // },
 
     image(node) {
       return {
@@ -408,7 +389,6 @@ export default async function pmToMdConverter(
       //   return token;
       // },
       // open: (mark: Mark) => {
-      //   //console.log('coooo', mark)
       // },
       // close: (mark: Mark) => {
       //   const token = new Token('code_inline', 'code', 0);
@@ -446,7 +426,7 @@ export default async function pmToMdConverter(
     // },
   });
 
-  document = removeMarkedContent(document, schema.marks.change);
+  document = removeMarkedContent(document, schema.marks.change)!;
   // deleteAllMarkedText('change', state, dispatch)
 
   const tokens = defaultMarkdownTokenizer.serialize(document);
@@ -460,8 +440,36 @@ export default async function pmToMdConverter(
     editor.dispatchEvent(event);
   }
 
-  const serializer = new MarkdownSerializer();
-  const output = await serializer.serialize(tokens);
+  const markdownSerializerConfig = {
+    debug: config.serializerDebug,
+  };
+
+  const serializer = new MarkdownSerializer(markdownSerializerConfig);
+  const output = serializer.serialize(tokens);
+
+  const event = new CustomEvent('md:output', {
+    detail: {
+      output,
+    },
+  });
+  editor.dispatchEvent(event);
+
+  const debugMap: Record<
+    number,
+    { targetRow: number; targetCol: number }
+  > = {};
+
+  const rawTextMap: Array<
+    {
+      nodeIdx: number;
+      targetRow: number;
+      targetCol: number;
+      sourceCol?: number;
+      targetPos: number;
+    }
+  > = [];
+
+  let sourceMap: SourceMap | undefined;
 
   if (config.sourceMap) {
     // https://sourcemaps.info/spec.html
@@ -471,13 +479,16 @@ export default async function pmToMdConverter(
     const debugOutput = new SmartOutput<NodeAndPos>();
     nodeToTreeStringOutput(debugOutput, document);
 
-    const debugMap: Record<
-      number,
-      { targetRow: number; targetCol: number }
-    > = {};
-
     debugOutput.getSourceMap(
-      (item: NodeAndPos, targetRow: number, targetCol: number) => {
+      (
+        targetRow: number,
+        targetCol: number,
+        pos: number,
+        item?: NodeAndPos,
+      ) => {
+        if (!item) {
+          return;
+        }
         debugMap[item.pos] = {
           targetRow,
           targetCol,
@@ -485,24 +496,24 @@ export default async function pmToMdConverter(
       },
     );
 
-    const markdownMap: Record<
-      number,
-      { targetRow: number; targetCol: number; sourceCol: number }
-    > = {};
-
-    const sourceMap = output.getSourceMap(
-      (item: Token, targetRow: number, targetCol: number) => {
-        // console.log('ossss', item, targetRow, targetCol);
-
+    sourceMap = output.getSourceMap(
+      (
+        targetRow: number,
+        targetCol: number,
+        targetPos: number,
+        item?: Token,
+      ) => {
         if (item?.map) {
           const pos = item.map[0];
-          const sourceCol = item.map[2] || 0;
+          const sourceCol = item.map[2];
 
-          markdownMap[pos] = {
+          rawTextMap.push({
+            nodeIdx: pos,
+            targetPos,
             targetRow,
             targetCol,
             sourceCol,
-          };
+          });
 
           if (debugMap[pos]) {
             return {
@@ -518,16 +529,23 @@ export default async function pmToMdConverter(
     sourceMap.file = 'target.md';
     sourceMap.sources = ['debug.txt'];
     sourceMap.sourcesContent = [debugOutput.toString()];
+  }
 
+  if (config.dispatchSourceMap) {
     const event = new CustomEvent('md:sourcemap', {
       detail: {
         sourceMap,
         debugMap,
-        markdownMap,
+        rawTextMap,
       },
     });
     editor.dispatchEvent(event);
   }
 
-  return new TextEncoder().encode(output.toString());
+  return {
+    content: output.toString(),
+    sourceMap,
+    debugMap,
+    rawTextMap,
+  };
 }

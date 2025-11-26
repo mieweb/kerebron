@@ -153,7 +153,7 @@ function tokenHandlers(schema: Schema, tokens: { [token: string]: ParseSpec }) {
   for (let type in tokens) {
     let spec = tokens[type];
     if (spec.block) {
-      let nodeType = schema.nodeType(spec.block);
+      let nodeType = schema.nodes[spec.block];
       if (noCloseToken(spec, type)) {
         handlers[type] = (state, tok, tokens, i) => {
           state.openNode(nodeType, attrs(spec, tok, tokens, i));
@@ -166,7 +166,7 @@ function tokenHandlers(schema: Schema, tokens: { [token: string]: ParseSpec }) {
         handlers[type + '_close'] = (state) => state.closeNode();
       }
     } else if (spec.node) {
-      let nodeType = schema.nodeType(spec.node);
+      let nodeType = schema.nodes[spec.node];
       handlers[type] = (state, tok, tokens, i) =>
         state.addNode(nodeType, attrs(spec, tok, tokens, i));
     } else if (spec.mark) {
@@ -304,19 +304,17 @@ export class MarkdownParser {
   /// [Markdown
   /// parser](https://markdown-it.github.io/markdown-it/#MarkdownIt.parse).
   parse(text: string, markdownEnv: Record<string, any> = {}) {
-    let state = new MarkdownParseState(this.schema, this.tokenHandlers), doc;
+    const state = new MarkdownParseState(this.schema, this.tokenHandlers);
 
     const tokens = this.tokenizer.parse(text, markdownEnv);
 
-    Deno.writeTextFileSync(
-      __dirname + '/../test/markdown-it.tokens.json',
-      JSON.stringify(tokens, null, 2),
-    );
-
     state.parseTokens(tokens);
+
+    let doc;
     do {
       doc = state.closeNode();
     } while (state.stack.length);
+
     return doc || this.schema.topNodeType.createAndFill()!;
   }
 }

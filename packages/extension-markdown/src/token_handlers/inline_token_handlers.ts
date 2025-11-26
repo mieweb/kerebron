@@ -5,7 +5,7 @@ import type {
   TokenHandler,
 } from '@kerebron/extension-markdown/MarkdownSerializer';
 
-export function escapeMarkdown(text: string): string {
+export function escapeMarkdown(token: Token): Array<[string, Token]> {
   const markdownChars = [
     { char: '\\', escape: '\\\\' },
     // { char: '*', escape: '\\*' },
@@ -31,12 +31,56 @@ export function escapeMarkdown(text: string): string {
     { char: '—', escape: '---' },
   ];
 
-  let escapedText = text;
-  for (const { char, escape } of markdownChars) {
-    escapedText = escapedText.replaceAll(char, escape);
+  const startPos = token.map && token.map.length > 0 ? token.map[0] : 0;
+  if (!startPos) {
+    let escapedText = token.content;
+    for (const { char, escape } of markdownChars) {
+      escapedText = escapedText.replaceAll(char, escape);
+    }
+
+    return [[escapedText, token]];
   }
 
-  return escapedText;
+  const charArr = token.content.split('');
+  const retVal: Array<[string, Token]> = [];
+
+  const markdownCharsMap: Record<string, string> = Object.fromEntries(
+    markdownChars.map((c) => [c.char, c.escape]),
+  );
+
+  let offset = 0;
+  let inStr = '';
+  let currentOutStr = '';
+
+  const flush = () => {
+    if (currentOutStr.length > 0) {
+      const tok = structuredClone(token);
+      tok.map = [startPos + offset];
+      retVal.push([
+        currentOutStr,
+        tok,
+      ]);
+      offset = inStr.length;
+    }
+    currentOutStr = '';
+  };
+
+  for (let idx = 0; idx < charArr.length; idx++) {
+    const char = charArr[idx];
+
+    inStr += char;
+    if (markdownCharsMap[char]) {
+      flush();
+    }
+    currentOutStr += markdownCharsMap[char] || char;
+    if (markdownCharsMap[char]) {
+      flush();
+    }
+  }
+
+  flush();
+
+  return retVal;
 }
 
 function getLinkTokensHandlers(): Record<string, Array<TokenHandler>> {
@@ -57,18 +101,29 @@ function getLinkTokensHandlers(): Record<string, Array<TokenHandler>> {
           const href: string = lastStackToken.attrGet('href') || '';
           const title: string = lastStackToken.attrGet('title') || '';
 
-          if (ctx.current.meta['link_text'] === href && !title) {
+          if (!title && ctx.current.meta['link_text'] === href) {
             ctx.current.log(href, token);
+          } else if (!title && !href) {
+            ctx.current.log('[', token);
+            ctx.current.log(
+              ctx.current.meta['link_text'],
+              ctx.current.meta['link_token_token'],
+            );
+            ctx.current.log(`]${title}`, token);
           } else {
             ctx.current.log('[', token);
             ctx.current.log(
               ctx.current.meta['link_text'],
               ctx.current.meta['link_token_token'],
             );
-            ctx.current.log(`](${href}${title})`, token);
+            if (title) {
+              ctx.current.log(`](${href} ${title})`, token);
+            } else {
+              ctx.current.log(`](${href})`, token);
+            }
           }
 
-          ctx.unstash();
+          ctx.unstash('getLinkTokensHandlers.link_close');
         }
       },
     ],
@@ -86,7 +141,15 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
   return {
     'text': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log(escapeMarkdown(token.content), token);
+        if (token.meta === 'noEscText') {
+          for (const pair of escapeMarkdown(token)) {
+            ctx.current.log(token.content);
+          }
+        } else {
+          for (const pair of escapeMarkdown(token)) {
+            ctx.current.log(pair[0], pair[1]);
+          }
+        }
       },
     ],
     'strong_open': [
@@ -121,18 +184,18 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
     ],
     'strike_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log(token.markup || '~~', token);
+        ctx.current.log(token.markup || '~', token);
       },
     ],
     'strike_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log(token.markup || '~~', token);
+        ctx.current.log(token.markup || '~', token);
       },
     ],
 
     'link_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.stash();
+        ctx.stash('getInlineTokensHandlers.link_open');
 
         ctx.current.handlers = getLinkTokensHandlers();
 
@@ -179,7 +242,9 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
       (token: Token, ctx: ContextStash) => {
         {
           const src = token.attrGet('src');
-          let alt = '';
+          const altAttr = token.attrGet('alt');
+
+          let alt = altAttr || '';
           if (token.children) {
             for (const child of token.children) {
               if (child.type === 'text') {
@@ -189,10 +254,15 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
           }
 
           ctx.current.log(`![${alt}]`, token);
+          // ctx.current.log(
+          //   `(${src})`,
+          //   token,
+          // );
+
+          const title = token.attrGet('title');
           if (src) {
-            const title = token.attrGet('title');
             ctx.current.log(
-              `(${src}${title ? ' "' + title + '"' : ''})`,
+              `(${src}${title ? ' ' + title : ''})`,
               token,
             );
           }
@@ -202,6 +272,7 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
 
     'html_block': [
       (token: Token, ctx: ContextStash) => {
+        ctx.current.log(token.content, token);
       },
     ],
 
@@ -270,7 +341,7 @@ export function getHtmlInlineTokensHandlers(): Record<
 
     'link_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.stash();
+        ctx.stash('getHtmlInlineTokensHandlers.link_open');
 
         const href = token.attrGet('href') || '';
         const titleValue = token.attrGet('title');
@@ -285,7 +356,7 @@ export function getHtmlInlineTokensHandlers(): Record<
       (token: Token, ctx: ContextStash) => {
         {
           ctx.current.log('</a>', token);
-          ctx.unstash();
+          ctx.unstash('getHtmlInlineTokensHandlers.link_close');
         }
       },
     ],
@@ -355,6 +426,7 @@ export function getHtmlInlineTokensHandlers(): Record<
     ],
     'html_block': [
       (token: Token, ctx: ContextStash) => {
+        ctx.current.log(token.content, token);
       },
     ],
 

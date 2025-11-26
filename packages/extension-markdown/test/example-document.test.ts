@@ -16,10 +16,11 @@ Deno.test('example-document.md', async () => {
 
   const serializer = new MarkdownSerializer();
   const output = await serializer.serialize(tokens);
+
   const serializedMarkdown = output.toString();
 
   Deno.writeTextFileSync(
-    __dirname + '/example-document.tokens.json',
+    __dirname + '/example-document2.tokens.json',
     JSON.stringify(tokens, null, 2),
   );
 

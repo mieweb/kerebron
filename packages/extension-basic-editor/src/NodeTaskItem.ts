@@ -12,6 +12,7 @@ import {
 } from '@kerebron/extension-basic-editor/NodeListItem';
 import { NodeViewConstructor } from '../../editor/src/DummyEditorView.ts';
 import { EditorView } from 'prosemirror-view';
+import { Transaction } from 'prosemirror-state';
 
 /**
  * Matches a task item to a - [ ] on input.
@@ -111,7 +112,7 @@ export class NodeTaskItem extends Node {
           editor
             .chain()
             .focus(undefined, { scrollIntoView: false })
-            .command(({ tr }) => {
+            .command(({ tr }: { tr: Transaction }) => {
               const position = getPos();
 
               if (typeof position !== 'number') {

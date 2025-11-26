@@ -20,17 +20,29 @@ export interface Converter {
 export abstract class Extension {
   readonly type = 'extension';
   abstract name: string;
+  protected editor!: CoreEditor;
 
   readonly conflicts?: Array<string>;
 
   public constructor(protected config: Partial<ExtensionConfig> = {}) {
   }
 
+  setEditor(editor: CoreEditor) {
+    this.editor = editor;
+  }
+
+  getEditor() {
+    return this.editor;
+  }
+
+  created() {
+  }
+
   getInputRules(): InputRule[] {
     return [];
   }
 
-  getProseMirrorPlugins(editor: CoreEditor, schema: Schema): Plugin[] {
+  getProseMirrorPlugins(): Plugin[] {
     return [];
   }
 

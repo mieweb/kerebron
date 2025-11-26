@@ -478,7 +478,7 @@ export function splitCell(
   dispatch?: (tr: Transaction) => void,
 ): boolean {
   const nodeTypes = tableNodeTypes(state.schema);
-  return splitCellWithType(({ node }) => {
+  return splitCellWithType(({ node }: { node: Node }) => {
     return nodeTypes[node.type.spec.tableRole as TableRole];
   })(state, dispatch);
 }

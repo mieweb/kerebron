@@ -115,7 +115,7 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
     this.rooms = rooms;
   }
 
-  async getRoomNames() {
+  getRoomNames() {
     return Array.from(rooms.keys());
   }
 
@@ -156,8 +156,20 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
         }
         // this.#forceReady();
       },
-      onError: (error, wsContext: WSContext<WebSocket>) => {
-        console.warn(new Error('HonoYjsMemAdapter.onError', { cause: error }));
+      onError: (evt: Event, wsContext: WSContext<WebSocket>) => {
+        if (evt instanceof ErrorEvent) {
+          if (evt.message.indexOf('Connection reset by peer') > -1) {
+            return;
+          }
+          if (evt.message.indexOf('No response from ping frame.') > -1) {
+            return;
+          }
+          console.warn(
+            new Error('HonoYjsMemAdapter.onError: ' + evt.message, {
+              cause: evt.error,
+            }),
+          );
+        }
       },
       onMessage: (message, wsContext: WSContext<WebSocket>) => {
         if (!wsContext.raw) {
@@ -222,8 +234,7 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
       }
     } catch (err) {
       console.error(err);
-      // @ts-ignore
-      doc.emit('error', [err]);
+      // room.doc.emit('error', [err]);
     }
   }
 

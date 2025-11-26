@@ -1,12 +1,13 @@
-import type { Node, Schema } from 'prosemirror-model';
+import { Node, Schema } from 'prosemirror-model';
 import { DOMParser } from 'prosemirror-model';
+
+import { MdConfig } from '@kerebron/extension-markdown';
+import { elementFromString } from '@kerebron/extension-basic-editor/ExtensionHtml';
 
 import type { Token } from './types.ts';
 
 import { MarkdownParser, type MarkdownParseState } from './MarkdownParser.ts';
-import { MdConfig } from '@kerebron/extension-markdown';
 import { sitterTokenizer } from './treeSitterTokenizer.ts';
-import { elementFromString } from '../../extension-basic-editor/src/ExtensionHtml.ts';
 
 function listIsTight(tokens: readonly Token[], i: number) {
   while (++i < tokens.length) {
@@ -15,15 +16,25 @@ function listIsTight(tokens: readonly Token[], i: number) {
   return false;
 }
 
-export default async function mdToPmConverter(
+export async function mdToPmConverter(
   buffer: Uint8Array,
   config: MdConfig,
   schema: Schema,
 ): Promise<Node> {
   const content = new TextDecoder().decode(buffer);
+  return mdToPmConverterText(content, config, schema);
+}
+
+export async function mdToPmConverterText(
+  content: string,
+  config: MdConfig,
+  schema: Schema,
+): Promise<Node> {
+  const tokenizer = await sitterTokenizer(config.cdnUrl);
+
   const defaultMarkdownParser = new MarkdownParser(
     schema,
-    await sitterTokenizer(),
+    tokenizer,
     {
       frontmatter: {
         node: 'frontmatter',
@@ -62,7 +73,7 @@ export default async function mdToPmConverter(
       code_block: { block: 'code_block', noCloseToken: true },
       fence: {
         block: 'code_block',
-        getAttrs: (tok) => ({ params: tok.info || '' }),
+        getAttrs: (tok) => ({ lang: tok.attrGet('lang') || undefined }),
         noCloseToken: true,
       },
       hr: { node: 'hr' },
@@ -100,7 +111,7 @@ export default async function mdToPmConverter(
           const parser = DOMParser.fromSchema(schema);
           const parsed = parser.parse(elementFromString(token.content));
 
-          state.importNodes(parsed.children);
+          // state.importNodes(parsed.children); // breaks lsptoy example
         },
       },
       footnote_ref: {
@@ -117,6 +128,9 @@ export default async function mdToPmConverter(
       },
       th: {
         block: 'table_header',
+      },
+      thead: {
+        ignore: true,
       },
     },
   );

@@ -1,15 +1,13 @@
 // import { DOMParser } from 'jsr:@b-fuze/deno-dom'; // No xml support (mathML) https://github.com/b-fuze/deno-dom/issues?q=is%3Aissue%20state%3Aopen%20xml
-import { DOMParser, parseHTML } from 'npm:linkedom';
-
-import { XMLSerializer } from 'npm:xmldom';
+import { DOMParser, parseHTML } from 'npm:linkedom@latest';
+import { XMLSerializer } from 'npm:xmldom@latest';
 
 import { CoreEditor } from '@kerebron/editor';
 import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionTables } from '@kerebron/extension-tables';
-import { NodeCodeMirror } from '@kerebron/extension-codemirror';
 
-globalThis.DOMParser = DOMParser;
+globalThis.DOMParser = DOMParser as any;
 globalThis.XMLSerializer = XMLSerializer;
 const doc = new DOMParser().parseFromString(
   '<html><body></body></html>',
@@ -17,7 +15,7 @@ const doc = new DOMParser().parseFromString(
 )!;
 // const doc = new DOMParser().parseFromString('<html><body></body></html>', "application/xhtml+xml")!;
 
-globalThis.document = doc;
+globalThis.document = doc as any;
 console.log('globalThis.document', globalThis.document);
 
 const editor = new CoreEditor({
@@ -25,7 +23,6 @@ const editor = new CoreEditor({
     new ExtensionBasicEditor(),
     new ExtensionMarkdown(),
     new ExtensionTables(),
-    new NodeCodeMirror(),
   ],
 });
 

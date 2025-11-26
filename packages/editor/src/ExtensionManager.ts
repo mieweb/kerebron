@@ -16,6 +16,7 @@ import { CommandShortcuts, firstCommand } from './commands/mod.ts';
 import { type Command } from 'prosemirror-state';
 import { addAttributesToSchema } from './utilities/getHtmlAttributes.ts';
 import { type CommandManager } from './commands/CommandManager.ts';
+import { TrackSelecionPlugin } from './plugins/TrackSelecionPlugin.ts';
 
 export function findDuplicates(items: any[]): any[] {
   const filtered = items.filter((el, index) => items.indexOf(el) !== index);
@@ -45,7 +46,7 @@ export class ExtensionManager {
   public readonly schema: Schema;
 
   private extensions: Set<AnyExtension> = new Set();
-  readonly plugins: Plugin[];
+  readonly plugins: Plugin[] = [];
   readonly nodeViews: Record<string, NodeViewConstructor> = {};
 
   public converters: Record<string, Converter> = {};
@@ -67,7 +68,6 @@ export class ExtensionManager {
       },
     });
     editor.dispatchEvent(event);
-    this.plugins = this.getPlugins();
   }
 
   getExtension<T extends Extension>(name: string): T | undefined {
@@ -82,9 +82,7 @@ export class ExtensionManager {
     }
   }
 
-  private getPlugins() {
-    const plugins: Plugin[] = [];
-
+  private initPlugins() {
     const inputRules: InputRule[] = [];
     const keyBindings: Map<string, Command> = new Map();
 
@@ -117,11 +115,13 @@ export class ExtensionManager {
     let converters = {};
 
     for (const extension of this.extensions) {
+      extension.setEditor(this.editor);
+
       if (extension.type === 'node') {
         const nodeType = this.schema.nodes[extension.name];
         inputRules.push(...extension.getInputRules(nodeType));
-        plugins.push(
-          ...extension.getProseMirrorPlugins(this.editor, this.schema),
+        this.plugins.push(
+          ...extension.getProseMirrorPlugins(),
         );
         this.commandManager.mergeCommandFactories(
           extension.getCommandFactories(this.editor, nodeType),
@@ -153,8 +153,8 @@ export class ExtensionManager {
         );
       }
       if (extension.type === 'extension') {
-        plugins.push(
-          ...extension.getProseMirrorPlugins(this.editor, this.schema),
+        this.plugins.push(
+          ...extension.getProseMirrorPlugins(),
         );
         this.commandManager.mergeCommandFactories(
           extension.getCommandFactories(this.editor),
@@ -191,10 +191,9 @@ export class ExtensionManager {
 
     this.converters = converters;
 
-    plugins.push(new InputRulesPlugin(inputRules));
-    plugins.push(new KeymapPlugin(Object.fromEntries(keyBindings)));
-
-    return plugins;
+    this.plugins.push(new InputRulesPlugin(inputRules));
+    this.plugins.push(new KeymapPlugin(Object.fromEntries(keyBindings)));
+    this.plugins.push(new TrackSelecionPlugin(this.editor));
   }
 
   private setupExtensions(extensions: Set<AnyExtensionOrReq>) {
@@ -238,7 +237,11 @@ export class ExtensionManager {
           if (!initialized.has(require)) {
             const requiredExtension = allExtensions.get(require);
             if (!requiredExtension) {
-              throw new Error('Required extension not found: ' + require);
+              throw new Error(
+                `Required extension for (${
+                  'name' in extension ? extension.name : extension
+                }) not found: ${require}`,
+              );
             }
             recursiveInitializeExtension(requiredExtension);
           }
@@ -293,7 +296,7 @@ export class ExtensionManager {
     }
 
     const spec = {
-      topNode: this.editor.options.topNode || 'doc',
+      topNode: this.editor.config.topNode || 'doc',
       nodes,
       marks,
     };
@@ -313,5 +316,13 @@ export class ExtensionManager {
     editor.dispatchEvent(event);
 
     return new Schema(spec);
+  }
+
+  created() {
+    this.initPlugins();
+
+    for (const extension of this.extensions) {
+      extension.created();
+    }
   }
 }

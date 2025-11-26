@@ -1,0 +1,35 @@
+@import './codejar-linenumbers.css';
+
+.codejar-root {
+  position: relative;
+}
+
+.codejar-root .codejar-select {
+  right: 5px;
+  top: 5px;
+  position: absolute;
+  opacity: 0;
+  z-index: 99999;
+}
+
+.codejar-root:hover .codejar-select {
+  opacity: 1;
+}
+
+.codejar {
+  font-family: monospace;
+}
+
+/* TreeSitter */
+
+.ts-keyword {
+  color: purple;
+  font-weight: bold;
+}
+.ts-string {
+  color: green;
+}
+.ts-comment {
+  color: gray;
+  font-style: italic;
+}

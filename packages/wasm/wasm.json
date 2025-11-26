@@ -1,0 +1,120 @@
+[
+  {
+    "repo": "tree-sitter-grammars/tree-sitter-markdown",
+    "version": "latest",
+    "files": ["tree-sitter-markdown.wasm", "tree-sitter-markdown_inline.wasm"],
+    "queries": {
+      "highlights.scm": "split_parser/tree-sitter-markdown/queries/highlights.scm",
+      "injections.scm": "split_parser/tree-sitter-markdown/queries/injections.scm",
+      "highlights-inline.scm": "split_parser/tree-sitter-markdown-inline/queries/highlights.scm",
+      "injections-inline.scm": "split_parser/tree-sitter-markdown-inline/queries/injections.scm"
+    }
+  },
+  {
+    "repo": "tree-sitter-grammars/tree-sitter-diff",
+    "version": "latest",
+    "files": ["tree-sitter-diff.wasm"],
+    "queries": {
+      "highlights.scm": "main/queries/highlights.scm"
+    }
+  },
+  {
+    "repo": "tree-sitter-grammars/tree-sitter-xml",
+    "version": "latest",
+    "files": ["tree-sitter-xml.wasm", "tree-sitter-dtd.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/xml/highlights.scm",
+      "highlights-dtd.scm": "master/queries/dtd/highlights.scm"
+    }
+  },
+  {
+    "repo": "tree-sitter/tree-sitter-html",
+    "version": "latest",
+    "files": ["tree-sitter-html.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm",
+      "injections.scm": "master/queries/injections.scm"
+    }
+  },
+  {
+    "repo": "tree-sitter/tree-sitter-css",
+    "version": "latest",
+    "files": ["tree-sitter-css.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm"
+    }
+  },
+  {
+    "repo": "tree-sitter-grammars/tree-sitter-toml",
+    "version": "latest",
+    "files": ["tree-sitter-toml.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm"
+    }
+  },
+  {
+    "repo": "tree-sitter/tree-sitter-json",
+    "version": "latest",
+    "files": ["tree-sitter-json.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm"
+    }
+  },
+  {
+    "repo": "tree-sitter/tree-sitter-regex",
+    "version": "latest",
+    "files": ["tree-sitter-regex.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm"
+    }
+  },
+  {
+    "repo": "tree-sitter/tree-sitter-rust",
+    "version": "latest",
+    "files": ["tree-sitter-rust.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm",
+      "injections.scm": "master/queries/injections.scm",
+      "tags.scm": "master/queries/tags.scm"
+    }
+  },
+  {
+    "repo": "tree-sitter/tree-sitter-typescript",
+    "version": "latest",
+    "files": ["tree-sitter-typescript.wasm", "tree-sitter-tsx.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm",
+      "locals.scm": "master/queries/locals.scm",
+      "tags.scm": "master/queries/tags.scm"
+    }
+  },
+  {
+    "repo": "tree-sitter/tree-sitter-java",
+    "version": "latest",
+    "files": ["tree-sitter-java.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm",
+      "tags.scm": "master/queries/tags.scm"
+    }
+  },
+  {
+    "repo": "tree-sitter/tree-sitter-javascript",
+    "version": "latest",
+    "files": ["tree-sitter-javascript.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm",
+      "highlights-jsx.scm": "master/queries/highlights-jsx.scm",
+      "highlights-params.scm": "master/queries/highlights-params.scm",
+      "injections.scm": "master/queries/injections.scm",
+      "locals.scm": "master/queries/locals.scm",
+      "tags.scm": "master/queries/tags.scm"
+    }
+  },
+  {
+    "repo": "tree-sitter-grammars/tree-sitter-yaml",
+    "files": ["tree-sitter-yaml.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm"
+    }
+  }
+]

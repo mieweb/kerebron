@@ -10,11 +10,14 @@ export type AnyExtensionOrReq = AnyExtension | {
 
 export type Content = JSONContent | JSONContent[] | null;
 
-export interface EditorOptions {
+export interface EditorConfig {
   element: HTMLElement;
   content: Content;
   parseOptions: ParseOptions;
   extensions: AnyExtensionOrReq[];
+  cdnUrl?: string;
+  uri?: string;
+  languageID?: string;
   topNode?: string;
 }
 
@@ -40,4 +43,17 @@ export type Attribute<T> = {
 export interface TextRange {
   from: number;
   to: number;
+}
+
+export interface RawTextMapEntry {
+  nodeIdx: number;
+  targetRow: number;
+  targetCol: number;
+  sourceCol?: number;
+  targetPos: number;
+}
+
+export interface RawTextResult {
+  content: string;
+  rawTextMap: Array<RawTextMapEntry>;
 }

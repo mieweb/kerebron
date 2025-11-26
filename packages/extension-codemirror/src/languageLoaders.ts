@@ -1,5 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
+// deno-lint-ignore-file
 
 import { StreamLanguage } from '@codemirror/language';
 import { CodeBlockLanguages, LegacyLanguages } from './languages.ts';

@@ -6,9 +6,9 @@
 import { CoreEditor } from '@kerebron/editor';
 import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
 import {
-  NodeCodeMirror,
-  NodeDocumentCode,
+  ExtensionCodeMirror,
 } from '@kerebron/extension-codemirror';
+import { NodeDocumentCode } from '@kerebron/extension-basic-editor/NodeDocumentCode';
 
 this.editor = new CoreEditor({
   topNode: 'doc_code',
@@ -16,7 +16,7 @@ this.editor = new CoreEditor({
   extensions: [
     new ExtensionBasicEditor(),
     new NodeDocumentCode({ lang: 'yaml' }),
-    new NodeCodeMirror({ languageWhitelist: ['yaml'] }),
+    new ExtensionCodeMirror({ languageWhitelist: ['yaml'] }),
   ],
 });
 ```

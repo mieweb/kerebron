@@ -31,7 +31,7 @@ export class DocumentMarkdownTokenizer {
     );
   }
 
-  iterateNode(node: Node, currentPos = 0, level = -1) {
+  iterateNode(node: Node, currentPos: number, level = -1) {
     const nodeSpec = this.nodes[node.type.name]
       ? this.nodes[node.type.name](node, currentPos)
       : blankNode;
@@ -72,6 +72,7 @@ export class DocumentMarkdownTokenizer {
         token.map = [currentPos];
         this.tokens.push(token);
       }
+      return;
     }
 
     if (node.inlineContent) {
@@ -109,7 +110,7 @@ export class DocumentMarkdownTokenizer {
   }
 
   serialize(content: Node, options: {} = {}): Token[] {
-    this.iterateNode(content);
+    this.iterateNode(content, -1); // doc does not have index, so I put -1 for correct calculation
     return this.tokens;
   }
 }

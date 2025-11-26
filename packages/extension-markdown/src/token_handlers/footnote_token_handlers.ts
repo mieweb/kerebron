@@ -26,14 +26,14 @@ export function getFootnoteTokensHandlers(): Record<
         } else {
           ctx.current.log(`[^footnote_${token.meta.id}]: `, token);
         }
-        ctx.stash();
+        ctx.stash('getFootnoteTokensHandlers.footnote_open');
         ctx.current.footnoteCnt++;
         ctx.current.itemRow = 0;
       },
     ],
     'footnote_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.unstash();
+        ctx.unstash('getFootnoteTokensHandlers.footnote_close');
       },
     ],
     'footnote_anchor': [
