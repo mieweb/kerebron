@@ -680,6 +680,9 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
 
           const lines = node.text.split('\n');
           for (const line of lines) {
+            if (line.trim().length === 0) {
+              continue;
+            }
             const m = line.match(/^ +/);
             if (!m) {
               indent = 0;
