@@ -4,7 +4,12 @@ import { Command, EditorView, KeyBinding } from '@codemirror/view';
 import { LSPPlugin } from './plugin.ts';
 
 function getDefinition(plugin: LSPPlugin, pos: number) {
-  return plugin.client.request<
+  const client = plugin.getClient();
+  if (!client) {
+    return;
+  }
+
+  return client.request<
     lsp.DefinitionParams,
     lsp.Location | lsp.Location[] | null
   >('textDocument/definition', {
@@ -14,7 +19,12 @@ function getDefinition(plugin: LSPPlugin, pos: number) {
 }
 
 function getDeclaration(plugin: LSPPlugin, pos: number) {
-  return plugin.client.request<
+  const client = plugin.getClient();
+  if (!client) {
+    return;
+  }
+
+  return client.request<
     lsp.DeclarationParams,
     lsp.Location | lsp.Location[] | null
   >('textDocument/declaration', {
@@ -24,7 +34,12 @@ function getDeclaration(plugin: LSPPlugin, pos: number) {
 }
 
 function getTypeDefinition(plugin: LSPPlugin, pos: number) {
-  return plugin.client.request<
+  const client = plugin.getClient();
+  if (!client) {
+    return;
+  }
+
+  return client.request<
     lsp.TypeDefinitionParams,
     lsp.Location | lsp.Location[] | null
   >('textDocument/typeDefinition', {
@@ -34,7 +49,12 @@ function getTypeDefinition(plugin: LSPPlugin, pos: number) {
 }
 
 function getImplementation(plugin: LSPPlugin, pos: number) {
-  return plugin.client.request<
+  const client = plugin.getClient();
+  if (!client) {
+    return;
+  }
+
+  return client.request<
     lsp.ImplementationParams,
     lsp.Location | lsp.Location[] | null
   >('textDocument/implementation', {
@@ -48,16 +68,25 @@ function jumpToOrigin(
   type: { get: typeof getDefinition; capability: keyof lsp.ServerCapabilities },
 ): boolean {
   const plugin = LSPPlugin.get(view);
-  if (!plugin || plugin.client.hasCapability(type.capability) === false) {
+  if (!plugin) {
     return false;
   }
-  plugin.client.sync();
-  plugin.client.withMapping(async (mapping) => {
+
+  const client = plugin.getClient();
+  if (!client) {
+    return false;
+  }
+
+  if (client.hasCapability(type.capability) === false) {
+    return false;
+  }
+  client.sync();
+  client.withMapping(async (mapping) => {
     try {
       const response = await type.get(plugin, view.state.selection.main.head);
       if (!response) return;
       let loc = Array.isArray(response) ? response[0] : response;
-      const ui = await plugin.client.workspace.getUi(loc.uri);
+      const ui = await client.workspace.getUi(loc.uri);
       if (!ui) return;
 
       const pos = mapping.getMapping(loc.uri)

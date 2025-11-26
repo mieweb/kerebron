@@ -14,6 +14,7 @@ import { Compartment } from '@codemirror/state';
 
 import type { CodeBlockSettings, ThemeItem } from './types.ts';
 import type { CoreEditor } from '@kerebron/editor';
+import { LSPPlugin } from './lsp/plugin.ts';
 
 export const CodeBlockNodeName = 'code_block';
 
@@ -150,6 +151,11 @@ export const setMode = async (
     cmView.dispatch({
       effects: languageConf.reconfigure(support),
     });
+  }
+
+  const lspPlugin = LSPPlugin.get(cmView);
+  if (lspPlugin) {
+    lspPlugin.setLang(lang);
   }
 };
 

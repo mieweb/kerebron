@@ -41,19 +41,24 @@ async function getCompletions(
   context: lsp.CompletionContext,
   abort?: CompletionContext,
 ) {
-  if (plugin.client.hasCapability('completionProvider') === false) {
+  const client = plugin.extensionLsp.getClient(plugin.lang);
+  if (!client) {
+    return [];
+  }
+
+  if (client.hasCapability('completionProvider') === false) {
     null;
   }
-  plugin.client.sync();
+  client.sync();
   const params: lsp.CompletionParams = {
     position: plugin.toPosition(pos),
     textDocument: { uri: plugin.uri },
     context,
   };
   if (abort) {
-    abort.addEventListener('abort', () => plugin.client.cancelRequest(params));
+    abort.addEventListener('abort', () => client.cancelRequest(params));
   }
-  const result = await plugin.client.request<
+  const result = await client.request<
     lsp.CompletionParams,
     lsp.CompletionItem[] | lsp.CompletionList | null
   >(
@@ -93,7 +98,13 @@ export const serverCompletionSource: CompletionSource = async (context) => {
   let triggerChar = '';
   if (!context.explicit) {
     triggerChar = context.view.state.sliceDoc(context.pos - 1, context.pos);
-    const triggers = plugin.client.serverCapabilities?.completionProvider
+
+    const client = plugin.extensionLsp.getClient(plugin.lang);
+    if (!client) {
+      return null;
+    }
+
+    const triggers = client.serverCapabilities?.completionProvider
       ?.triggerCharacters;
     if (
       !/[a-zA-Z_]/.test(triggerChar) &&

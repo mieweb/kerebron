@@ -1,7 +1,7 @@
 import { Extension } from '@codemirror/state';
 
 import type { CoreEditor } from '@kerebron/editor';
-import type { LSPClient } from '@kerebron/extension-lsp';
+import type { ExtensionLsp } from '@kerebron/extension-lsp';
 
 import { lspPlugin } from './plugin.ts';
 import { lspTheme } from './theme.ts';
@@ -24,12 +24,17 @@ export class LSPExtension {
     }
   }
 
-  plugin(client: LSPClient, editor: CoreEditor): Extension {
+  plugin(extensionLsp: ExtensionLsp, editor: CoreEditor): Extension {
     if (!editor.config.uri) {
       throw new Error('No editor.config.uri');
     }
     return [
-      lspPlugin.of({ extension: this, editor, client, uri: editor.config.uri }),
+      lspPlugin.of({
+        extension: this,
+        editor,
+        extensionLsp,
+        uri: editor.config.uri,
+      }),
       lspTheme,
       this.extensions,
     ];

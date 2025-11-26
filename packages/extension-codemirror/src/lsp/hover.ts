@@ -21,11 +21,12 @@ export function hoverTooltips(config: { hoverTime?: number } = {}): Extension {
 }
 
 function hoverRequest(plugin: LSPPlugin, pos: number) {
-  if (plugin.client.hasCapability('hoverProvider') === false) {
+  const client = plugin.getClient();
+  if (client?.hasCapability('hoverProvider') === false) {
     return Promise.resolve(null);
   }
-  plugin.client.sync();
-  return plugin.client.request<lsp.HoverParams, lsp.Hover | null>(
+  client?.sync();
+  return client?.request<lsp.HoverParams, lsp.Hover | null>(
     'textDocument/hover',
     {
       position: plugin.toPosition(pos),

@@ -12,7 +12,8 @@ import { WorkspaceFile } from '@kerebron/extension-lsp';
 import { LSPPlugin } from './plugin.ts';
 
 function getReferences(plugin: LSPPlugin, pos: number) {
-  return plugin.client.request<lsp.ReferenceParams, lsp.Location[] | null>(
+  const client = plugin.getClient();
+  return client?.request<lsp.ReferenceParams, lsp.Location[] | null>(
     'textDocument/references',
     {
       textDocument: { uri: plugin.uri },
@@ -29,11 +30,16 @@ type ReferenceLocation = { file: WorkspaceFile; range: lsp.Range };
 /// a list in a panel.
 export const findReferences: Command = (view) => {
   const plugin = LSPPlugin.get(view);
-  if (!plugin || plugin.client.hasCapability('referencesProvider') === false) {
+  const client = plugin?.getClient();
+  if (!plugin || !client) {
     return false;
   }
-  plugin.client.sync();
-  const mapping = plugin.client.workspaceMapping();
+
+  if (!client?.hasCapability('referencesProvider')) {
+    return false;
+  }
+  client?.sync();
+  const mapping = client?.workspaceMapping();
   let passedMapping = false;
 
   (async () => {
@@ -45,7 +51,7 @@ export const findReferences: Command = (view) => {
       if (!response) return;
       return Promise.all(
         response.map((loc) =>
-          plugin.client.workspace.requestFile(loc.uri).then((file) => {
+          client.workspace.requestFile(loc.uri).then((file) => {
             return file ? { file, range: loc.range } : null;
           })
         ),
@@ -132,7 +138,7 @@ function createReferencePanel(
       let from = mapping.mapPosition(file.uri, range.start, 1),
         to = mapping.mapPosition(file.uri, range.end, -1);
 
-      const editor = file.getEditor();
+      const editor = file.getUi();
       const line = (editor ? editor.state.doc : file.content).lineAt(from);
 
       let lineNumber = entry.appendChild(document.createElement('span'));
@@ -167,11 +173,12 @@ function createReferencePanel(
       }
     }
     async function showReference(index: number) {
-      let { file, range } = locs[index];
-      let plugin = LSPPlugin.get(view);
-      if (!plugin) return;
+      const { file, range } = locs[index];
+      const plugin = LSPPlugin.get(view);
+      const client = plugin?.getClient();
+      if (!plugin || !client) return;
 
-      const ui = await plugin.client.workspace.getUi(file.uri);
+      const ui = await client.workspace.getUi(file.uri);
       if (!ui) return;
       let pos = mapping.mapPosition(file.uri, range.start, 1);
       if (pos) {
