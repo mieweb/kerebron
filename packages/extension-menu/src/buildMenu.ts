@@ -6,7 +6,6 @@ import { type CoreEditor } from '@kerebron/editor';
 
 import {
   Dropdown,
-  DropdownSubmenu,
   type MenuElement,
   MenuItem,
   type MenuItemSpec,
@@ -231,17 +230,13 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     }));
   }
   if (schema.nodes.heading) {
-    const makeHeadMenu = [];
-
     for (let i = 1; i <= 6; i++) {
-      makeHeadMenu.push(blockTypeItem(schema.nodes.heading, {
+      typeMenu.push(blockTypeItem(schema.nodes.heading, {
         title: 'Change to heading ' + i,
         label: 'Heading ' + i,
         attrs: { level: i },
       }));
     }
-
-    typeMenu.push(new DropdownSubmenu(makeHeadMenu, { label: 'Headings' }));
   }
 
   blockMenu.push(
