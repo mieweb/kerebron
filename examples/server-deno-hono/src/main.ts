@@ -5,15 +5,16 @@ const __dirname = import.meta.dirname;
 
 const devProxyUrls: Record<string, string> = {};
 
+const examples = Array
+  .from(Deno.readDirSync(__dirname + '/../..'))
+  .filter((example) => example.isDirectory)
+  .map((example) => example.name);
+
 let port = undefined;
-for (
-  const exampleName of [
-    'browser-vanilla-code-editor',
-    'browser-vue',
-    'browser-vue-custom-element',
-    'browser-vue-lsp',
-  ]
-) {
+const broswerExamples = examples.filter((example) =>
+  example.startsWith('browser-')
+);
+for (const exampleName of broswerExamples) {
   const viteDevServer = await createViteServer({
     base: '/examples/' + exampleName,
     configFile: __dirname + '/../../' + exampleName + '/vite.config.ts',
