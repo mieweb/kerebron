@@ -21,6 +21,7 @@
     "packages/test-utils",
 
     "examples/browser-vanilla-code-editor",
+    "examples/browser-react",
     "examples/browser-vue",
     "examples/browser-vue-custom-element",
     "examples/browser-vue-lsp",
