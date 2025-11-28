@@ -51,16 +51,16 @@ test.describe('Kerebron React Editor', () => {
     await page.getByRole('button', { name: 'New Room' }).click();
     await expect(page).toHaveURL(/#room:/);
 
-    // Click in the editor area
-    const editor = page.locator('.kb-component');
-    await expect(editor).toBeVisible();
-    await editor.click();
+    // Click in the editor content area (not the toolbar)
+    const editorContent = page.locator('.kb-editor');
+    await expect(editorContent).toBeVisible();
+    await editorContent.click();
 
     // Type some text
     await page.keyboard.type('Hello Playwright!');
 
     // Check that the text appears in the editor
-    await expect(editor).toContainText('Hello Playwright!');
+    await expect(editorContent).toContainText('Hello Playwright!');
 
     // Check that markdown output updates
     const markdownOutput = page.locator('pre');
@@ -75,7 +75,7 @@ test.describe('Kerebron React Editor', () => {
     await expect(page).toHaveURL(/#room:/);
 
     // Click in the editor and type
-    const editor = page.locator('.kb-component');
+    const editor = page.locator('.kb-editor');
     await editor.click();
     await page.keyboard.type('Bold text');
 
@@ -98,7 +98,7 @@ test.describe('Kerebron React Editor', () => {
     await expect(page).toHaveURL(/#room:/);
 
     // Click in the editor and type
-    const editor = page.locator('.kb-component');
+    const editor = page.locator('.kb-editor');
     await editor.click();
     await page.keyboard.type('Italic text');
 
@@ -135,7 +135,7 @@ test.describe('Kerebron React Editor', () => {
     await expect(page).toHaveURL(/#room:/);
 
     // Click in the editor
-    const editor = page.locator('.kb-component');
+    const editor = page.locator('.kb-editor');
     await editor.click();
 
     // Type first paragraph
@@ -160,7 +160,7 @@ test.describe('Kerebron React Editor', () => {
     await expect(page).toHaveURL(/#room:/);
 
     // Click in the editor and type
-    const editor = page.locator('.kb-component');
+    const editor = page.locator('.kb-editor');
     await editor.click();
     await page.keyboard.type('Underlined text');
 
