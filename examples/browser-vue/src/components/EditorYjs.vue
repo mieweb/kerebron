@@ -1,5 +1,8 @@
 <template>
   <div>
+    <div class="connection-status" :class="connectionStatus">
+      {{ connectionStatus === 'connected' ? '🟢 Connected' : connectionStatus === 'connecting' ? '🟡 Connecting...' : '🔴 Disconnected' }}
+    </div>
     <div>
       <div ref="editor" class="kb-component"></div>
     </div>
@@ -33,7 +36,18 @@ import { dracula } from 'thememirror';
 
 export default {
   name: 'my-editor',
-  props: ['modelValue'],
+  props: {
+    modelValue: {},
+    roomId: {
+      type: String,
+      required: true,
+    },
+    userName: {
+      type: String,
+      default: '',
+    },
+  },
+  emits: ['connected', 'disconnected'],
   expose: ['loadDoc', 'loadDoc2'],
   data() {
     return {
@@ -45,18 +59,13 @@ export default {
       marks: [],
       md: '',
       editor: null,
+      connectionStatus: 'connecting',
+      wsProvider: null,
     };
   },
   async mounted() {
     this.$nextTick(() => {
-      const docUrl = globalThis.location.hash.slice(1);
-      let roomId;
-      if (docUrl.startsWith('room:')) {
-        roomId = docUrl.substring('room:'.length);
-      } else {
-        roomId = String(Math.random());
-        globalThis.location.hash = 'room:' + roomId;
-      }
+      const roomId = this.roomId;
 
       const userColor = userColors[random.uint32() % userColors.length];
 
@@ -71,13 +80,22 @@ export default {
         roomId,
         ydoc,
       );
+      this.wsProvider = wsProvider;
 
       wsProvider.on('status', (event) => {
-        console.log('wsProvider status', event.status); // logs "connected" or "disconnected"
+        console.log('wsProvider status', event.status);
+        this.connectionStatus = event.status;
+        if (event.status === 'connected') {
+          this.$emit('connected');
+        } else if (event.status === 'disconnected') {
+          this.$emit('disconnected');
+        }
       });
 
+      // Use provided userName or generate a random one
+      const displayName = this.userName || 'Anonymous ' + Math.floor(Math.random() * 100);
       wsProvider.awareness.setLocalStateField('user', {
-        name: 'Anonymous ' + Math.floor(Math.random() * 100),
+        name: displayName,
         color: userColor.color,
         colorLight: userColor.light,
       });
@@ -114,6 +132,18 @@ export default {
         // this.view.updateState(this.state);
       }
     },
+    userName(newName) {
+      // Update awareness when user name changes
+      if (this.wsProvider) {
+        const currentState = this.wsProvider.awareness.getLocalState();
+        if (currentState && currentState.user) {
+          this.wsProvider.awareness.setLocalStateField('user', {
+            ...currentState.user,
+            name: newName || 'Anonymous',
+          });
+        }
+      }
+    },
   },
   methods: {
     async loadDoc() {
@@ -140,4 +170,28 @@ export default {
 @import '@kerebron/extension-tables/assets/tables.css';
 @import '@kerebron/extension-menu/assets/custom-menu.css';
 @import '@kerebron/extension-codemirror/assets/codemirror.css';
+
+.connection-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.connection-status.connected {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.connection-status.connecting {
+  background: rgba(234, 179, 8, 0.15);
+  color: #eab308;
+}
+
+.connection-status.disconnected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
 </style>

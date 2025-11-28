@@ -4,6 +4,27 @@ import { build, emptyDir } from '@deno/dnt';
 
 const __dirname = import.meta.dirname;
 
+// Check if running directly without the build script
+if (!Deno.args[0]) {
+  console.error(`
+╔════════════════════════════════════════════════════════════════════╗
+║  ERROR: Version argument required                                  ║
+╠════════════════════════════════════════════════════════════════════╣
+║  This script should be run via the build script:                   ║
+║                                                                    ║
+║    ./scripts/build-and-publish-npm.sh <version>                    ║
+║                                                                    ║
+║  Example:                                                          ║
+║    ./scripts/build-and-publish-npm.sh 1.0.0                        ║
+║    ./scripts/build-and-publish-npm.sh 1.0.0 --publish              ║
+║                                                                    ║
+║  The build script ensures prerequisites (WASM, etc.) are built     ║
+║  before running this npm package transform.                        ║
+╚════════════════════════════════════════════════════════════════════╝
+`);
+  Deno.exit(1);
+}
+
 interface DenoJson {
   license: any;
   description: any;
@@ -49,7 +70,7 @@ if (Deno.args[0]?.replace(/^v/, '')) {
   // Also substitute deno_tree_sitter with local shims that wrap web-tree-sitter.
   tempConfigFile = Deno.makeTempFileSync({
     dir: __dirname + '/..',
-    suffix: '.json',
+    suffix: '.build.json',
   });
 
   // Create modified imports: remove the $deno_tree_sitter/ prefix mapping
@@ -169,8 +190,11 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
       entryPoints,
       outDir: path.resolve('./npm', json.name),
       shims: {
-        // see JS docs for overview and more options
-        deno: true,
+        // Use "dev" to only include Deno shims for testing, not in production.
+        // The @deno/shim-deno package contains Node.js-specific code (like os.platform())
+        // that doesn't work in browsers. Since the library code doesn't actually use
+        // Deno APIs (except in runtime-conditional checks), we only need the shim for tests.
+        deno: 'dev' as const,
       },
       importMap: importMapFile,
       package: {

@@ -3,7 +3,7 @@
  *
  * @example
  * ```tsx
- * import { useEditor, EditorContent } from '@kerebron/editor/react'
+ * import { useEditor, EditorContent } from '@kerebron/editor-react'
  * import { StarterKit } from '@kerebron/editor-kits/StarterKit'
  *
  * const MyEditor = () => {
@@ -27,4 +27,4 @@ export {
 } from './EditorContent.tsx';
 
 // Re-export CoreEditor for convenience
-export { CoreEditor } from '../CoreEditor.ts';
+export { CoreEditor } from '@kerebron/editor';

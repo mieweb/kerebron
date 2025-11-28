@@ -14,7 +14,7 @@ cd my-kerebron-project
 ## Install dependencies
 
 ```bash
-npm install @kerebron/editor @kerebron/editor-kits
+npm install @kerebron/editor @kerebron/editor-react @kerebron/editor-kits
 ```
 
 ## Create an editor component
@@ -23,7 +23,7 @@ Create a new component in `src/Kerebron.tsx`:
 
 ```tsx
 // src/Kerebron.tsx
-import { useEditor, EditorContent } from '@kerebron/editor/react'
+import { useEditor, EditorContent } from '@kerebron/editor-react'
 import { StarterKit } from '@kerebron/editor-kits/StarterKit'
 
 const Kerebron = () => {

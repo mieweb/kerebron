@@ -1,6 +1,6 @@
 import { type DependencyList, useEffect, useRef, useState } from 'react';
-import { CoreEditor } from '../CoreEditor.ts';
-import type { AnyExtensionOrReq, Content } from '../types.ts';
+import { CoreEditor } from '@kerebron/editor';
+import type { AnyExtensionOrReq, Content } from '@kerebron/editor';
 
 export interface UseEditorOptions {
   /** Array of extensions to use */
