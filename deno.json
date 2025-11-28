@@ -77,7 +77,7 @@
   },
   "fmt": {
     "singleQuote": true,
-    "exclude": ["**/*.md", "**/*.odt.xml", "**/*.xml"]
+    "exclude": ["**/*.md", "**/*.odt.xml", "**/*.xml", ".github/"]
   },
   "unstable": ["raw-imports"],
   "nodeModulesDir": "auto"
