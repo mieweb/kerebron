@@ -69,9 +69,9 @@ const inlineParser: Parser =
 function parseMarkdown(source: string, oldTree?: any) {
   let tree;
   if (false && oldTree) {
-    tree = BlockParser.parse(source, oldTree); // Incremental parse
+    tree = blockParser.parse(source, oldTree); // Incremental parse
   } else {
-    tree = BlockParser.parse(source); // Full parse
+    tree = blockParser.parse(source); // Full parse
   }
   const root = tree.rootNode;
 
@@ -80,7 +80,7 @@ function parseMarkdown(source: string, oldTree?: any) {
   function parseInlines(node: any): void {
     if (node.type === 'inline') {
       const inlineText = source.slice(node.startIndex, node.endIndex);
-      const inlineTree = InlineParser.parse(inlineText);
+      const inlineTree = inlineParser.parse(inlineText);
       // Replace the inline node's content with the parsed inline tree
       node.children = [inlineTree.rootNode];
     } else {
