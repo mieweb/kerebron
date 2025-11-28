@@ -4,9 +4,9 @@ import { cors } from 'hono/cors';
 
 import { HonoYjsMemAdapter } from '@kerebron/extension-server-hono/HonoYjsMemAdapter';
 import { proxyWs } from './proxyWs.ts';
-// import { LspWsAdapter } from './lsp-server.ts';
-// import { proxyTcp } from './proxyTcp.ts';
-// import { proxyProcess } from './proxyProcess.ts';
+import { LspWsAdapter } from './lsp-server.ts';
+import { proxyTcp } from './proxyTcp.ts';
+import { proxyProcess } from './proxyProcess.ts';
 import { ventoEnv } from './vento.ts';
 
 const __dirname = import.meta.dirname;
