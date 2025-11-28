@@ -17,7 +17,9 @@ This gives us a complete testing environment that matches production usage.
 
 ### Prerequisites
 
-1. Install Playwright browsers (only needs to be done once):
+#### Option 1: Install Playwright Browsers Locally (Quick Start)
+
+Install Playwright browsers directly on your system (only needs to be done once):
 
 ```bash
 deno task playwright:install
@@ -33,6 +35,30 @@ deno run -A npm:playwright@1.49.1 install
 deno run -A npm:playwright@1.49.1 install firefox
 deno run -A npm:playwright@1.49.1 install webkit
 ```
+
+#### Option 2: Use Docker (Recommended for CI Consistency)
+
+Run tests inside the same Docker container used by our CI pipeline. This ensures 100% environment consistency:
+
+```bash
+# Run all tests in Docker
+docker run --rm --network host -v $(pwd):/work -w /work \
+  mcr.microsoft.com/playwright:v1.49.0-jammy \
+  /bin/bash -c "cd /work && deno task test"
+
+# Run with UI mode (requires X11 forwarding on macOS/Linux)
+docker run --rm --network host -v $(pwd):/work -w /work \
+  -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
+  mcr.microsoft.com/playwright:v1.49.0-jammy \
+  /bin/bash -c "cd /work && deno task test:ui"
+```
+
+**Benefits of Docker approach:**
+- ✅ Matches CI environment exactly (same OS, dependencies, browser versions)
+- ✅ No local browser installation needed
+- ✅ Faster cold starts (browsers pre-installed)
+- ✅ Prevents "missing browser" errors
+- ✅ Consistent results between local and CI
 
 ### Running Tests
 

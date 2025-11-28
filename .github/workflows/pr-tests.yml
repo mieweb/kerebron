@@ -9,9 +9,19 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+
+    # Use official Playwright Docker image for faster, consistent browser testing
+    container:
+      image: mcr.microsoft.com/playwright:v1.49.0-jammy
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          apt-get update
+          apt-get install -y unzip curl build-essential
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
@@ -38,8 +48,7 @@ jobs:
         run: deno test -A --no-check packages/extension-markdown/test/
       #        run: deno test -A
 
-      - name: Install Playwright browsers
-        run: deno run -A npm:playwright@1.49.1 install --with-deps chromium
+      # Browsers are pre-installed in the Docker image, no need to install
 
       - name: Run Playwright tests
         run: deno task test
