@@ -7,6 +7,7 @@ import { proxyWs } from './proxyWs.ts';
 import { LspWsAdapter } from './lsp-server.ts';
 import { proxyTcp } from './proxyTcp.ts';
 import { proxyProcess } from './proxyProcess.ts';
+import { ventoEnv } from './vento.ts';
 
 const __dirname = import.meta.dirname;
 
@@ -14,6 +15,11 @@ const app = new Hono();
 
 const yjsAdapter = new HonoYjsMemAdapter();
 const lspWsAdapter = new LspWsAdapter();
+
+const examples = Array
+  .from(Deno.readDirSync(__dirname + '/../..'))
+  .filter((file) => file.isDirectory && file.name.startsWith('browser-'))
+  .map((file) => file.name);
 
 export class Server {
   public app;
@@ -26,6 +32,49 @@ export class Server {
   ) {
     this.app = app;
     this.fetch = app.fetch;
+
+    const docSites = Array
+      .from(Deno.readDirSync(__dirname + '/../../../docs'))
+      .filter((file) => file.isFile && file.name.endsWith('.md'))
+      .map((file) => file.name);
+
+    for (const docSite of docSites) {
+      let targetUri = docSite.replace('.md', '');
+      if (targetUri.endsWith('/index')) {
+        targetUri = targetUri.substring(0, targetUri.length - '/index'.length);
+      }
+      if (targetUri === 'index') {
+        targetUri = '';
+      }
+
+      this.app.get('/' + targetUri, async (c) => {
+        const buffer = await Deno.readFile(
+          __dirname + '/../../../docs/' + docSite,
+        );
+        const md = new TextDecoder().decode(buffer);
+
+        const template = await ventoEnv.load('static.vto');
+        const result = await template({ md: md, examples });
+
+        return c.html(result.content);
+      });
+    }
+
+    for (const example of examples) {
+      this.app.get('/examples/' + example + '/', async (c) => {
+        const template = await ventoEnv.load('example.vto');
+        const result = await template({
+          src: `/examples-frame/${example}`,
+          examples,
+        });
+        return c.html(result.content);
+      });
+    }
+
+    this.app.get('/examples/:example', (c) => {
+      const example = c.req.param('example');
+      return c.redirect(`/examples/${example}/`, 301);
+    });
 
     this.app.get('/api/rooms', (c) => {
       const retVal = yjsAdapter.getRoomNames();
@@ -133,17 +182,22 @@ export class Server {
       });
     }
 
-    this.app.notFound((c) => {
-      const file = Deno.readFileSync(
-        __dirname + '/../public/index.html',
-      );
-      return c.html(new TextDecoder().decode(file));
+    this.app.notFound(async (c) => {
+      const template = await ventoEnv.load('404.vto');
+      const result = await template({ examples });
+
+      // const file = Deno.readFileSync(
+      //   __dirname + '/../public/index.html',
+      // );
+      return c.html(result.content);
     });
     this.app.use(
       '*',
-      serveStatic({ root: __dirname + '/../public' }),
+      serveStatic({
+        root: __dirname + '/../public',
+        mimes: { 'wasm': 'application/wasm' },
+      }),
     );
-
     this.app.use('/*', cors());
   }
 }

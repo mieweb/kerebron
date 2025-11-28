@@ -24,6 +24,7 @@ import { DevAdvancedEditorKit } from '@kerebron/editor-kits/DevAdvancedEditorKit
 import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
 import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
 import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
+import { LspTransportGetter, Transport } from '@kerebron/extension-lsp';
 import { Dropdown, MenuElement, MenuItem } from '@kerebron/extension-menu';
 
 export default {

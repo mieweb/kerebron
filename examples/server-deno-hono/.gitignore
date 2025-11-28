@@ -1,2 +1,3 @@
 # zed symlinks ignore
 public/examples/*
+dist

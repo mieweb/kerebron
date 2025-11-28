@@ -37,6 +37,8 @@
     "npm:@codemirror/search@6.5.10": "6.5.10",
     "npm:@codemirror/state@6.5.2": "6.5.2",
     "npm:@codemirror/view@6.38.1": "6.38.1",
+    "npm:@hono/vite-ssg@0.3.0": "0.3.0_hono@4.10.7",
+    "npm:@picocss/pico@2.1.1": "2.1.1",
     "npm:@types/node@*": "24.2.0",
     "npm:@vitejs/plugin-react-swc@4.2.2": "4.2.2_vite@7.1.4__picomatch@4.0.3__@types+node@24.2.0_@types+node@24.2.0",
     "npm:@vitejs/plugin-vue@6.0.1": "6.0.1_vite@7.1.4__picomatch@4.0.3_vue@3.5.21_@types+node@24.2.0",
@@ -44,6 +46,7 @@
     "npm:debug@*": "4.4.1",
     "npm:esbuild@*": "0.25.10",
     "npm:fast-glob@*": "3.3.3",
+    "npm:hono@4.10.7": "4.10.7",
     "npm:lib0@0.2.109": "0.2.109",
     "npm:linkedom@*": "0.18.12",
     "npm:markdown-it-deflist@3.0.0": "3.0.0",
@@ -63,7 +66,7 @@
     "npm:react-dom@19.1.0": "19.1.0_react@19.1.0",
     "npm:react@19.1.0": "19.1.0",
     "npm:thememirror@2.0.1": "2.0.1_@codemirror+language@6.11.0_@codemirror+state@6.5.2_@codemirror+view@6.38.1",
-    "npm:tree-sitter@0.25.0": "0.25.0",
+    "npm:ventojs@latest": "2.2.0",
     "npm:vite-plugin-wasm@3.5.0": "3.5.0_vite@7.1.4__picomatch@4.0.3_@types+node@24.2.0",
     "npm:vite@*": "7.1.4_picomatch@4.0.3_@types+node@24.2.0",
     "npm:vite@7.1.4": "7.1.4_picomatch@4.0.3_@types+node@24.2.0",
@@ -493,6 +496,12 @@
       "os": ["win32"],
       "cpu": ["x64"]
     },
+    "@hono/vite-ssg@0.3.0_hono@4.10.7": {
+      "integrity": "sha512-JFqLVPOwKBIgDJo4+tWoVH+zkg6ftLdJSntQ67eJUaBVhxZtISpPQv9jQ0G91Tqm+8C5O46sMVIa6ygtHf4CEg==",
+      "dependencies": [
+        "hono"
+      ]
+    },
     "@jridgewell/gen-mapping@0.3.13": {
       "integrity": "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==",
       "dependencies": [
@@ -648,6 +657,9 @@
         "@nodelib/fs.scandir",
         "fastq"
       ]
+    },
+    "@picocss/pico@2.1.1": {
+      "integrity": "sha512-kIDugA7Ps4U+2BHxiNHmvgPIQDWPDU4IeU6TNRdvXQM1uZX+FibqDQT2xUOnnO2yq/LUHcwnGlu1hvf4KfXnMg=="
     },
     "@rolldown/pluginutils@1.0.0-beta.29": {
       "integrity": "sha512-NIJgOsMjbxAXvoGq/X0gD7VPMQ8j9g0BiDaNjVNVjvl+iKXxL3Jre0v31RmBYeLEmkbj2s02v8vFTbUXi5XS2Q=="
@@ -1222,6 +1234,9 @@
         "is-glob"
       ]
     },
+    "hono@4.10.7": {
+      "integrity": "sha512-icXIITfw/07Q88nLSkB9aiUrd8rYzSweK681Kjo/TSggaGbOX4RRyxxm71v+3PC8C/j+4rlxGeoTRxQDkaJkUw=="
+    },
     "hookable@5.5.3": {
       "integrity": "sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ=="
     },
@@ -1343,7 +1358,7 @@
       "dependencies": [
         "abstract-leveldown",
         "napi-macros",
-        "node-gyp-build@4.1.1"
+        "node-gyp-build"
       ],
       "deprecated": true,
       "scripts": true
@@ -1426,15 +1441,8 @@
     "napi-macros@2.0.0": {
       "integrity": "sha512-A0xLykHtARfueITVDernsAWdtIMbOJgKgcluwENp3AlsKN/PloyO10HtmoqnFAQAcxPkgZN7wdfPfEd0zNGxbg=="
     },
-    "node-addon-api@8.5.0": {
-      "integrity": "sha512-/bRZty2mXUIFY/xU5HLvveNHlswNJej+RnxBjOMkidWfwZzgTbPG1E3K5TOxRLOR+5hX7bSofy8yf1hZevMS8A=="
-    },
     "node-gyp-build@4.1.1": {
       "integrity": "sha512-dSq1xmcPDKPZ2EED2S6zw/b9NKsqzXRE6dVr8TVQnI3FJOTteUMuqF3Qqs6LZg+mLGYJWqQzMbIjMtJqTv87nQ==",
-      "bin": true
-    },
-    "node-gyp-build@4.8.4": {
-      "integrity": "sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==",
       "bin": true
     },
     "nth-check@2.1.1": {
@@ -1676,14 +1684,6 @@
         "is-number"
       ]
     },
-    "tree-sitter@0.25.0": {
-      "integrity": "sha512-PGZZzFW63eElZJDe/b/R/LbsjDDYJa5UEjLZJB59RQsMX+fo0j54fqBPn1MGKav/QNa0JR0zBiVaikYDWCj5KQ==",
-      "dependencies": [
-        "node-addon-api",
-        "node-gyp-build@4.8.4"
-      ],
-      "scripts": true
-    },
     "typedarray@0.0.6": {
       "integrity": "sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA=="
     },
@@ -1695,6 +1695,9 @@
     },
     "util-deprecate@1.0.2": {
       "integrity": "sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw=="
+    },
+    "ventojs@2.2.0": {
+      "integrity": "sha512-i3nGAgn+dc+mTfsEplGHCbgA9QNdGchSI3GRF55TWdHHjz2WcHIHH8pQtjpiVP74ZjmqdccO3bC71xpxuwBWgg=="
     },
     "vite-plugin-wasm@3.5.0_vite@7.1.4__picomatch@4.0.3": {
       "integrity": "sha512-X5VWgCnqiQEGb+omhlBVsvTfxikKtoOgAzQ95+BZ8gQ+VfMHIjSHr0wyvXFQCa0eKQ0fKyaL0kWcEnYqBac4lQ==",
@@ -1911,7 +1914,6 @@
       "npm:prosemirror-transform@1.10.4",
       "npm:prosemirror-view@1.40.0",
       "npm:thememirror@2.0.1",
-      "npm:tree-sitter@0.25.0",
       "npm:vite@7.1.4",
       "npm:vscode-languageserver-protocol@3.17.5",
       "npm:vscode-languageserver-textdocument@1.0.12",
@@ -1973,7 +1975,10 @@
       "examples/server-deno-hono": {
         "dependencies": [
           "jsr:@hono/hono@^4.7.4",
-          "jsr:@std/assert@1"
+          "jsr:@std/assert@1",
+          "npm:@hono/vite-ssg@0.3.0",
+          "npm:@vitejs/plugin-vue@6.0.1",
+          "npm:hono@4.10.7"
         ]
       },
       "packages/extension-codemirror": {
