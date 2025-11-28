@@ -4,14 +4,14 @@ import {
   NodeType,
   ResolvedPos,
   Slice,
-} from 'npm:prosemirror-model@latest';
+} from 'prosemirror-model';
 import {
   AllSelection,
   Command,
   EditorState,
   TextSelection,
   Transaction,
-} from 'npm:prosemirror-state@latest';
+} from 'prosemirror-state';
 
 import { type CoreEditor, Extension } from '@kerebron/editor';
 import type {

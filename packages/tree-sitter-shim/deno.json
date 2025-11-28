@@ -1,0 +1,15 @@
+{
+  "name": "@kerebron/tree-sitter-shim",
+  "description": "Compatibility shim for deno_tree_sitter -> web-tree-sitter",
+  "exports": {
+    "./main.js": "./src/main.ts",
+    "./tree_sitter/parser.ts": "./src/tree_sitter/parser.ts",
+    "./tree_sitter/parser.js": "./src/tree_sitter/parser.ts",
+    "./tree_sitter/tree.ts": "./src/tree_sitter/tree.ts",
+    "./tree_sitter/node.ts": "./src/tree_sitter/node.ts",
+    "./tree_sitter/language.js": "./src/tree_sitter/language.ts"
+  },
+  "imports": {
+    "web-tree-sitter": "npm:web-tree-sitter@0.24.7"
+  }
+}

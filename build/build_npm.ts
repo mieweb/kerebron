@@ -42,13 +42,21 @@ const buildResults: { name: string; success: boolean; error?: string }[] = [];
 // Create temp config file once (for substituting wasm package with npm path)
 let tempConfigFile: string | null = null;
 let configFile = import.meta.resolve('../deno.json');
+let importMapFile = 'deno.json';
 
 if (Deno.args[0]?.replace(/^v/, '')) {
   // Substitute wasm package with npm path. Currently, DNT does not support wasm.
+  // Also substitute deno_tree_sitter with local shims that wrap web-tree-sitter.
   tempConfigFile = Deno.makeTempFileSync({
     dir: __dirname + '/..',
     suffix: '.json',
   });
+
+  // Create modified imports: remove the $deno_tree_sitter/ prefix mapping
+  // and add individual path mappings to local shims
+  const modifiedImports = { ...mainJson.imports };
+  delete modifiedImports['$deno_tree_sitter/'];
+
   Deno.writeFileSync(
     tempConfigFile,
     new TextEncoder().encode(JSON.stringify(
@@ -58,8 +66,21 @@ if (Deno.args[0]?.replace(/^v/, '')) {
           item !== 'packages/odt-wasm'
         ),
         imports: {
-          ...mainJson.imports,
+          ...modifiedImports,
           '@kerebron/odt-wasm': 'npm:@kerebron/odt-wasm@latest',
+          // Map deno_tree_sitter to local shims that wrap web-tree-sitter
+          '$deno_tree_sitter/main.js':
+            './packages/tree-sitter-shim/src/main.ts',
+          '$deno_tree_sitter/tree_sitter/parser.ts':
+            './packages/tree-sitter-shim/src/tree_sitter/parser.ts',
+          '$deno_tree_sitter/tree_sitter/parser.js':
+            './packages/tree-sitter-shim/src/tree_sitter/parser.ts',
+          '$deno_tree_sitter/tree_sitter/tree.ts':
+            './packages/tree-sitter-shim/src/tree_sitter/tree.ts',
+          '$deno_tree_sitter/tree_sitter/node.ts':
+            './packages/tree-sitter-shim/src/tree_sitter/node.ts',
+          '$deno_tree_sitter/tree_sitter/language.js':
+            './packages/tree-sitter-shim/src/tree_sitter/language.ts',
         },
       },
       null,
@@ -67,6 +88,7 @@ if (Deno.args[0]?.replace(/^v/, '')) {
     )),
   );
   configFile = 'file:' + tempConfigFile;
+  importMapFile = tempConfigFile;
 }
 
 async function copyRecursive(src: string, dest: string) {
@@ -150,7 +172,7 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
         // see JS docs for overview and more options
         deno: true,
       },
-      importMap: 'deno.json',
+      importMap: importMapFile,
       package: {
         // package.json properties
         name: json.name,
