@@ -12,8 +12,23 @@ import type { MenuElement } from './menu.ts';
 const CSS_PREFIX = 'kb-custom-menu';
 const MAX_PINNED_ITEMS = 8;
 const STORAGE_KEY = 'kb-custom-menu-pinned';
+const DEBUG_STORAGE_KEY = 'kb-custom-menu-debug';
 // Bootstrap md breakpoint: 768px (mobile is < 768px, desktop is >= 768px)
 const MOBILE_BREAKPOINT = 768;
+
+// Debug helper function
+function debug(...args: any[]) {
+  try {
+    if (
+      typeof localStorage !== 'undefined' &&
+      localStorage.getItem(DEBUG_STORAGE_KEY) === 'true'
+    ) {
+      console.log('[kb-custom-menu]', ...args);
+    }
+  } catch (e) {
+    // Ignore localStorage errors
+  }
+}
 
 interface ToolItem {
   id: string;
@@ -44,11 +59,14 @@ export class CustomMenuView {
     readonly editor: CoreEditor,
     readonly content: readonly (readonly MenuElement[])[],
   ) {
+    debug('CustomMenuView constructor called');
+    debug('Content groups:', content.length);
     this.root = editorView.root;
 
     // Create wrapper
     this.wrapper = document.createElement('div');
     this.wrapper.classList.add(CSS_PREFIX + '__wrapper');
+    debug('Wrapper created:', this.wrapper);
 
     // Create toolbar
     this.toolbar = document.createElement('div');
@@ -104,8 +122,11 @@ export class CustomMenuView {
   }
 
   private initializeTools() {
-    this.content.forEach((group) => {
-      group.forEach((element) => {
+    debug('Initializing tools from content');
+    let toolCount = 0;
+    this.content.forEach((group, groupIndex) => {
+      debug(`Processing group ${groupIndex}, elements:`, group.length);
+      group.forEach((element, elementIndex) => {
         const { dom, update } = element.render(this.editorView);
 
         // For dropdowns, get the label from the element's options directly
@@ -125,8 +146,11 @@ export class CustomMenuView {
           element,
           isPinned: false,
         });
+        toolCount++;
+        debug(`Tool ${toolCount}: id="${id}", label="${label}"`);
       });
     });
+    debug(`Total tools initialized: ${this.tools.length}`);
   }
 
   /**
@@ -197,21 +221,36 @@ export class CustomMenuView {
   }
 
   private loadPinnedState() {
+    debug('Loading pinned state from localStorage');
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
+      debug('Saved pinned state:', saved);
       if (saved) {
         const pinnedIds = JSON.parse(saved) as string[];
-        this.tools.forEach((tool) => {
-          tool.isPinned = pinnedIds.includes(tool.id);
-        });
+        debug('Pinned tool IDs:', pinnedIds);
+
+        // If the saved array is empty, treat it as no saved state (use defaults)
+        if (pinnedIds.length === 0) {
+          debug('Saved state is empty array, using default (first 8 tools)');
+          this.tools.slice(0, MAX_PINNED_ITEMS).forEach((tool) => {
+            tool.isPinned = true;
+          });
+        } else {
+          this.tools.forEach((tool) => {
+            tool.isPinned = pinnedIds.includes(tool.id);
+          });
+        }
       } else {
         // Default pinned items (first 8)
+        debug('No saved state, using default (first 8 tools)');
         this.tools.slice(0, MAX_PINNED_ITEMS).forEach((tool) => {
           tool.isPinned = true;
         });
       }
+      const pinnedCount = this.tools.filter((t) => t.isPinned).length;
+      debug(`Loaded pinned state: ${pinnedCount} tools pinned`);
     } catch (e) {
-      console.error('Failed to load pinned state:', e);
+      console.error('[kb-custom-menu] Failed to load pinned state:', e);
       // Default to first 8 items
       this.tools.slice(0, MAX_PINNED_ITEMS).forEach((tool) => {
         tool.isPinned = true;
@@ -820,6 +859,7 @@ export class CustomMenuView {
   }
 
   private render() {
+    debug('render() called');
     // Clear toolbar and overflow menu
     this.toolbar.innerHTML = '';
     this.overflowMenu.innerHTML = '';
@@ -827,10 +867,20 @@ export class CustomMenuView {
     const pinnedTools = this.tools.filter((t) => t.isPinned);
     const overflowTools = this.tools.filter((t) => !t.isPinned);
 
+    debug(
+      `Rendering: ${pinnedTools.length} pinned, ${overflowTools.length} unpinned`,
+    );
+
     // Check if we're in mobile view (Bootstrap md breakpoint: < 768px)
     const isMobile = typeof window !== 'undefined' &&
       window.innerWidth < MOBILE_BREAKPOINT;
     const mobileLimit = 4;
+
+    debug(
+      `isMobile: ${isMobile}, window width: ${
+        typeof window !== 'undefined' ? window.innerWidth : 'N/A'
+      }`,
+    );
 
     // In mobile, only show first 4 pinned tools in toolbar
     const visibleTools = isMobile
@@ -838,8 +888,16 @@ export class CustomMenuView {
       : pinnedTools;
     const mobileOverflowPinned = isMobile ? pinnedTools.slice(mobileLimit) : [];
 
+    debug(`Visible tools in toolbar: ${visibleTools.length}`);
+    debug('Visible tool IDs:', visibleTools.map((t) => t.id).join(', '));
+
     // Render visible pinned tools in toolbar
-    visibleTools.forEach((tool) => {
+    visibleTools.forEach((tool, index) => {
+      debug(
+        `Rendering tool ${
+          index + 1
+        }/${visibleTools.length}: "${tool.label}" (${tool.id})`,
+      );
       const wrapper = document.createElement('span');
       wrapper.classList.add(CSS_PREFIX + '__item');
       wrapper.setAttribute('data-tool-id', tool.id);
@@ -974,6 +1032,15 @@ export class CustomMenuView {
 
     // Render overflow menu content
     this.renderOverflowMenu();
+
+    console.log(
+      '[kb-custom-menu] render() complete. Toolbar children:',
+      this.toolbar.children.length,
+    );
+    console.log(
+      '[kb-custom-menu] Toolbar HTML:',
+      this.toolbar.innerHTML.substring(0, 200),
+    );
   }
 
   private openManageModal() {
