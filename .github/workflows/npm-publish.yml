@@ -1,4 +1,4 @@
-name: Build anb publish NPM packages
+name: Build and publish NPM packages
 
 on:
   release:
@@ -22,15 +22,9 @@ jobs:
           node-version: '18.x'
           registry-url: 'https://registry.npmjs.org'
       - uses: actions-rust-lang/setup-rust-toolchain@v1
-      #      - name: Build packages
-      #        run: deno task --recursive build
-      - run: deno task -f @kerebron/odt-wasm build
-      - run: deno task -f example-vue build
-      - name: Build npm
-        run: deno run -A ./build/build_npm.ts ${{steps.get_tag_version.outputs.TAG_VERSION}}
-      - name: Publish npm
+
+      - name: Build and publish NPM packages
         if: startsWith(github.ref, 'refs/tags/')
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          for DIR in npm/*/* ; do cd $DIR && npm publish --access=public; cd - ; done
+        run: ./scripts/build-and-publish-npm.sh ${{steps.get_tag_version.outputs.TAG_VERSION}} --publish

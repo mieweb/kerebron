@@ -36,6 +36,39 @@ const mainJson = await readDenoJson(workspaceRoot);
 
 await emptyDir('./npm');
 
+// Track build results
+const buildResults: { name: string; success: boolean; error?: string }[] = [];
+
+// Create temp config file once (for substituting wasm package with npm path)
+let tempConfigFile: string | null = null;
+let configFile = import.meta.resolve('../deno.json');
+
+if (Deno.args[0]?.replace(/^v/, '')) {
+  // Substitute wasm package with npm path. Currently, DNT does not support wasm.
+  tempConfigFile = Deno.makeTempFileSync({
+    dir: __dirname + '/..',
+    suffix: '.json',
+  });
+  Deno.writeFileSync(
+    tempConfigFile,
+    new TextEncoder().encode(JSON.stringify(
+      {
+        ...mainJson,
+        workspace: mainJson.workspace.filter((item: string) =>
+          item !== 'packages/odt-wasm'
+        ),
+        imports: {
+          ...mainJson.imports,
+          '@kerebron/odt-wasm': 'npm:@kerebron/odt-wasm@latest',
+        },
+      },
+      null,
+      2,
+    )),
+  );
+  configFile = 'file:' + tempConfigFile;
+}
+
 async function copyRecursive(src: string, dest: string) {
   const stat = await Deno.lstat(src);
 
@@ -109,34 +142,6 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
     });
   }
 
-  let configFile = import.meta.resolve('../deno.json');
-
-  if (Deno.args[0]?.replace(/^v/, '')) {
-    // Substitute wasm package with npm path. Currently, DNT do not support wasm.
-    configFile = await Deno.makeTempFileSync({
-      dir: __dirname + '/..',
-      suffix: '.json',
-    });
-    Deno.writeFileSync(
-      configFile,
-      new TextEncoder().encode(JSON.stringify(
-        {
-          ...mainJson,
-          workspace: mainJson.workspace.filter((item) =>
-            item !== 'packages/odt-wasm'
-          ),
-          imports: {
-            ...mainJson.imports,
-            '@kerebron/odt-wasm': 'npm:@kerebron/odt-wasm@latest',
-          },
-        },
-        null,
-        2,
-      )),
-    );
-    configFile = 'file:' + configFile;
-  }
-
   try {
     const opts = {
       entryPoints,
@@ -188,7 +193,55 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
     }
 
     await build(opts);
+    buildResults.push({ name: json.name, success: true });
   } catch (err) {
     console.error(err);
+    buildResults.push({ name: json.name, success: false, error: String(err) });
   }
 });
+
+// Report build results
+console.log('\n========================================');
+console.log('  Build Summary');
+console.log('========================================');
+
+const successful = buildResults.filter((r) => r.success);
+const failed = buildResults.filter((r) => !r.success);
+
+if (successful.length > 0) {
+  console.log(`\n✓ Successfully built (${successful.length}):`);
+  for (const result of successful) {
+    console.log(`  - ${result.name}`);
+  }
+}
+
+if (failed.length > 0) {
+  console.log(`\n✗ Failed to build (${failed.length}):`);
+  for (const result of failed) {
+    console.log(`  - ${result.name}`);
+  }
+  console.log('\n========================================');
+  console.error(`\nBuild failed: ${failed.length} package(s) failed to build`);
+
+  // Cleanup temp config file before exit
+  if (tempConfigFile) {
+    try {
+      Deno.removeSync(tempConfigFile);
+    } catch {
+      // Ignore cleanup errors
+    }
+  }
+  Deno.exit(1);
+}
+
+console.log('\n========================================');
+console.log(`\nAll ${successful.length} packages built successfully!`);
+
+// Cleanup temp config file
+if (tempConfigFile) {
+  try {
+    Deno.removeSync(tempConfigFile);
+  } catch {
+    // Ignore cleanup errors
+  }
+}
