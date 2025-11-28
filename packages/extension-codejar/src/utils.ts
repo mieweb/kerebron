@@ -1,6 +1,6 @@
 import { Node } from 'prosemirror-model';
 import { EditorView } from 'prosemirror-view';
-import { CodeJar } from './codejar.ts';
+import { CodeJar } from './CodeJar.ts';
 import { TextSelection } from 'prosemirror-state';
 import { off } from 'node:process';
 

@@ -19,6 +19,7 @@
     "packages/odt-wasm",
     "packages/wasm",
     "packages/test-utils",
+    "packages/tree-sitter",
 
     "examples/browser-vanilla-code-editor",
     "examples/browser-react",
@@ -38,13 +39,11 @@
     "build:ext-wasm": "cd packages/wasm && deno task build"
   },
   "imports": {
-    "@deno/dnt": "jsr:@deno/dnt@^0.42.1",
+    "@deno/dnt": "jsr:@deno/dnt@^0.42.3",
     "@std/assert": "jsr:@std/assert@1",
     "@std/fs": "jsr:@std/fs@1.0.19",
     "@std/path": "jsr:@std/path@1.1.2",
     "asserts": "https://deno.land/std@0.178.0/testing/asserts.ts",
-
-    "$deno_tree_sitter/": "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/",
 
     "prosemirror-state": "npm:prosemirror-state@1.4.3",
     "prosemirror-view": "npm:prosemirror-view@1.40.0",
@@ -75,7 +74,12 @@
   },
   "fmt": {
     "singleQuote": true,
-    "exclude": ["**/*.md", "**/*.odt.xml", "**/*.xml"]
+    "exclude": [
+      "**/*.md",
+      "**/*.odt.xml",
+      "**/*.xml",
+      "packages/tree-sitter/deno-tree-sitter"
+    ]
   },
   "unstable": ["raw-imports"],
   "nodeModulesDir": "auto"

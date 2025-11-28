@@ -1,6 +1,4 @@
-import { createParser } from '$deno_tree_sitter/main.js';
-import { Parser } from '$deno_tree_sitter/tree_sitter/parser.js';
-import { Language } from '$deno_tree_sitter/tree_sitter/language.js';
+import { createParser, type Parser } from '@kerebron/tree-sitter';
 
 import {
   fetchTextResource,
@@ -22,13 +20,8 @@ export class TreeSitterHighlighter {
 
     try {
       const wasm = await fetchWasm(wasmUrl);
+      this.parser = await createParser(wasm);
 
-      await Parser.init();
-      const Lang = await Language.load(wasm);
-      this.parser = new Parser();
-      this.parser.setLanguage(Lang);
-
-      // this.parser = await createParser(wasm);
       this.hightligtScm = await fetchTextResource(highlightUrl);
     } catch (err) {
       console.error('Error init highlight for: ' + lang, err);

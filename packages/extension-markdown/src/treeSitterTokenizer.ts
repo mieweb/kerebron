@@ -1,7 +1,9 @@
-import { createParser } from '$deno_tree_sitter/main.js';
-import type { Parser } from '$deno_tree_sitter/tree_sitter/parser.ts';
-import type { Tree } from '$deno_tree_sitter/tree_sitter/tree.ts';
-import type { Node as TreeSitterNode } from '$deno_tree_sitter/tree_sitter/node.ts';
+import {
+  createParser,
+  type Node as TreeSitterNode,
+  Parser,
+  type Tree,
+} from '@kerebron/tree-sitter';
 
 import {
   NESTING_CLOSING,
@@ -16,9 +18,20 @@ interface HasStartPosition {
   endPosition: { row: number; column: number };
 }
 
-function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
+function treeToTokens(
+  tree: Tree,
+  inlineParser: Parser,
+  source: string,
+): Array<Token> {
   const retVal: Array<Token> = [];
   let blockLevel = 0;
+
+  const nodeText = (node?: TreeSitterNode | null) => {
+    if (!node) {
+      return undefined;
+    }
+    return source.substring(node.startIndex, node.endIndex);
+  };
 
   const pushInlineNode = (someInlineToken: Token, debug: string) => {
     const lastBlockToken: Token | undefined = retVal[retVal.length - 1];
@@ -45,8 +58,16 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
 
   const walkInline = (
     children: TreeSitterNode[],
+    inlineContent: string,
     startPosition = { row: 0, column: 0 },
   ) => {
+    const nodeText = (node?: TreeSitterNode | null) => {
+      if (!node) {
+        return undefined;
+      }
+      return inlineContent.substring(node.startIndex, node.endIndex);
+    };
+
     for (const node of children) {
       const map: [number, number, number, number] = [
         startPosition.row + node.startPosition?.row,
@@ -60,7 +81,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
         const token = new Token('text', '', NESTING_SELF_CLOSING);
         token.map = map;
         token.meta = 'noEscText';
-        token.content = node.text ?? '';
+        token.content = nodeText(node) || '';
         pushInlineNode(token, 'walkInline');
         continue;
       }
@@ -76,7 +97,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             const token = new Token('text', '', NESTING_SELF_CLOSING);
             token.map = map;
             token.meta = 'noEscText';
-            token.content = node.text ?? '';
+            token.content = nodeText(node) ?? '';
             pushInlineNode(token, 'text');
             break;
           }
@@ -85,14 +106,14 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
         case 'latex_block':
           {
             const delimiter = node.children
-              .find((c) => c.type === 'latex_span_delimiter');
+              .find((c) => c?.type === 'latex_span_delimiter');
 
             const content = node.children
-              .filter((c) => c.type !== 'latex_span_delimiter')
-              .map((c) => c.text)
+              .filter((c) => c?.type !== 'latex_span_delimiter')
+              .map((c) => nodeText(c))
               .join('');
 
-            if (delimiter?.text === '$$') {
+            if (nodeText(delimiter) === '$$') {
               const token = new Token(
                 'fence',
                 'pre',
@@ -116,28 +137,31 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           break;
 
         case 'whitespace':
-          if (node.text === '\n') {
-            const token = new Token('hardbreak', 'br', NESTING_SELF_CLOSING);
-            token.map = map;
-            token.content = node.text ?? '';
-            pushInlineNode(token, 'whitespace \n');
-            break;
-          }
-          if (node.text && node.text.match(/^\s+$/)) {
-            const token = new Token('text', 'br', NESTING_SELF_CLOSING);
-            token.map = map;
-            token.meta = 'noEscText';
-            token.content = node.text ?? '';
-            pushInlineNode(token, 'whitespace space');
-            break;
-          }
-          if (node.text.trim().length > 0) {
-            const token = new Token('text', '', NESTING_SELF_CLOSING);
-            token.map = map;
-            token.meta = 'noEscText';
-            token.content = node.text ?? '';
-            pushInlineNode(token, 'whitespace other');
-            break;
+          {
+            const text = nodeText(node) || '';
+            if (text === '\n') {
+              const token = new Token('hardbreak', 'br', NESTING_SELF_CLOSING);
+              token.map = map;
+              token.content = text ?? '';
+              pushInlineNode(token, 'whitespace \n');
+              break;
+            }
+            if (text && text.match(/^\s+$/)) {
+              const token = new Token('text', 'br', NESTING_SELF_CLOSING);
+              token.map = map;
+              token.meta = 'noEscText';
+              token.content = text ?? '';
+              pushInlineNode(token, 'whitespace space');
+              break;
+            }
+            if (text?.trim().length > 0) {
+              const token = new Token('text', '', NESTING_SELF_CLOSING);
+              token.map = map;
+              token.meta = 'noEscText';
+              token.content = text ?? '';
+              pushInlineNode(token, 'whitespace other');
+              break;
+            }
           }
 
           break;
@@ -153,13 +177,13 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             );
 
             const destination = node.children
-              .find((c) => c.type === 'link_destination');
-            openToken.attrSet('href', destination?.text || '');
+              .find((c) => c?.type === 'link_destination');
+            openToken.attrSet('href', nodeText(destination) || '');
 
             const title = node.children
-              .find((c) => c.type === 'link_title');
+              .find((c) => c?.type === 'link_title');
             if (title) {
-              openToken.attrSet('title', title.text || '');
+              openToken.attrSet('title', nodeText(title) || '');
             }
 
             pushInlineNode(openToken, 'shortcut_link');
@@ -170,11 +194,11 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
                 const token = new Token('text', '', NESTING_SELF_CLOSING);
                 token.map = map;
                 token.meta = 'noEscText';
-                token.content = c.text ?? '';
+                token.content = nodeText(c) ?? '';
                 pushInlineNode(token, 'link_text');
               });
 
-            // walkInline(node.children);
+            // walkInline(node.children, inlineContent);
 
             const closeToken = new Token(
               tokenName + '_close',
@@ -213,7 +237,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
                 const token = new Token('text', '', NESTING_SELF_CLOSING);
                 token.map = map;
                 token.meta = 'noEscText';
-                token.content = c.text ?? '';
+                token.content = nodeText(c) ?? '';
                 pushInlineNode(token, 'inline_link_txt');
               });
 
@@ -272,14 +296,14 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             }
             pushInlineNode(openToken, 'strongem');
 
-            walkInline(node.children);
+            walkInline(node.children, inlineContent);
 
             const closeToken = new Token(
               tokenName + '_close',
               tagName,
               NESTING_CLOSING,
             );
-            if (delimiter?.text === '_') {
+            if (nodeText(delimiter) === '_') {
               closeToken.markup = '__';
             }
             pushInlineNode(closeToken, '/strongem');
@@ -302,7 +326,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             );
             pushInlineNode(openToken, 'em');
 
-            walkInline(children);
+            walkInline(children.filter((c) => !!c), inlineContent);
 
             const closeToken = new Token(
               tokenName + '_close',
@@ -323,7 +347,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             );
             pushInlineNode(openToken, 's');
 
-            walkInline(node.children);
+            walkInline(node.children.filter((c) => !!c), inlineContent);
 
             const closeToken = new Token(
               tokenName + '_close',
@@ -344,7 +368,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             );
             pushInlineNode(openToken, 'code');
 
-            walkInline(node.children);
+            walkInline(node.children.filter((c) => !!c), inlineContent);
 
             const closeToken = new Token(
               tokenName + '_close',
@@ -364,7 +388,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
               NESTING_SELF_CLOSING,
             );
 
-            token.content = node.text;
+            token.content = nodeText(node) || '';
 
             pushInlineNode(token, 'html_block');
           }
@@ -389,19 +413,23 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
     }
 
     if (node.type === 'inline') {
-      const inlineText = node.text;
+      const inlineText = nodeText(node);
       if (!inlineText) {
         throw new Error('!inlineText');
       }
 
       if (node.children.length > 0) {
-        walkInline(node.children, node.startPosition);
+        walkInline(node.children, source, node.startPosition);
       } else {
         const inlineTree = inlineParser.parse(inlineText);
         if (!inlineTree) {
           throw new Error('!inlineTree');
         }
-        walkInline(inlineTree?.rootNode.children, node.startPosition);
+        walkInline(
+          inlineTree?.rootNode.children,
+          inlineText,
+          node.startPosition,
+        );
       }
 
       return;
@@ -417,7 +445,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           +node.endPosition?.column,
         ];
         token.meta = 'noEscText';
-        token.content = node.text ?? '';
+        token.content = nodeText(node) ?? '';
         pushInlineNode(token, 'txt2');
         return;
       }
@@ -425,15 +453,16 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
         if (blockLevel === 0) {
           return;
         }
-        if (node.text.match(/^\n+$/)) {
+        if ((nodeText(node) || '').match(/^\n+$/)) {
           //   const token = new Token('hardbreak', 'br', NESTING_SELF_CLOSING);
           // token.map = [ +node.startPosition?.row, +node.endPosition?.row, +node.startPosition?.column, +node.endPosition?.column ];
-          //   token.content = node.text ?? '';
+          //   token.content = nodeText(node) ?? '';
           //   retVal.push(token);
           return;
         }
 
-        if (node.text && node.text.match(/^\s+$/)) {
+        const text = nodeText(node) || '';
+        if (text && text.match(/^\s+$/)) {
           const token = new Token('text', 'br', NESTING_SELF_CLOSING);
           token.map = [
             +node.startPosition?.row,
@@ -442,11 +471,11 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             +node.endPosition?.column,
           ];
           token.meta = 'noEscText';
-          token.content = node.text ?? '';
+          token.content = nodeText(node) ?? '';
           pushInlineNode(token, 'txt3');
           return;
         }
-        if (node.text.trim().length > 0) {
+        if (text.trim().length > 0) {
           const token = new Token('text', '', NESTING_SELF_CLOSING);
           token.map = [
             +node.startPosition?.row,
@@ -455,7 +484,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             +node.endPosition?.column,
           ];
           token.meta = 'noEscText';
-          token.content = node.text ?? '';
+          token.content = text ?? '';
           pushInlineNode(token, 'txt4');
           return;
         }
@@ -467,7 +496,9 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
         break;
       case 'document':
       case 'section':
-        node.children?.forEach((child) => walkRecursive(child, ctx));
+        node.children
+          .filter((c) => !!c)
+          .forEach((child) => walkRecursive(child, ctx));
         break;
 
       case 'thematic_break':
@@ -480,7 +511,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             +node.startPosition?.column,
             +node.endPosition?.column,
           ];
-          token.markup = node.text;
+          token.markup = nodeText(node) || '';
           retVal.push(token);
         }
         break;
@@ -493,10 +524,11 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
         {
           const tokenName = 'heading';
 
-          const underline = node.children.find((child) =>
-            child.type.startsWith('setext_') &&
-            child.type.endsWith('_underline')
-          );
+          const underline = node.children
+            .filter((c) => !!c).find((child) =>
+              child.type.startsWith('setext_') &&
+              child.type.endsWith('_underline')
+            );
 
           // const marker = node.children.find((child) =>
           //   child.type.startsWith('atx_') && child.type.endsWith('_marker')
@@ -511,12 +543,11 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             NESTING_OPENING,
           );
           openToken.level = blockLevel;
-          openToken.markup = underline?.text || '#';
+          openToken.markup = nodeText(underline) || '#';
           retVal.push(openToken);
 
-          const children = node.children.filter((c) =>
-            !c.type.startsWith('setext_')
-          );
+          const children = node.children
+            .filter((c) => !!c).filter((c) => !c.type.startsWith('setext_'));
 
           blockLevel++;
           children.forEach((child) => walkRecursive(child, ctx));
@@ -528,7 +559,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             NESTING_CLOSING,
           );
           closeToken.level = blockLevel;
-          closeToken.markup = underline?.text || '';
+          closeToken.markup = nodeText(underline) || '';
 
           retVal.push(closeToken);
         }
@@ -538,7 +569,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
         {
           const tokenName = 'heading';
 
-          const marker = node.children.find((child) =>
+          const marker = node.children.filter((c) => !!c).find((child) =>
             child.type.startsWith('atx_') && child.type.endsWith('_marker')
           );
           const tagName =
@@ -550,10 +581,10 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             NESTING_OPENING,
           );
           openToken.level = blockLevel;
-          openToken.markup = marker?.text || '#';
+          openToken.markup = nodeText(marker) || '#';
           retVal.push(openToken);
 
-          const children = [...node.children];
+          const children = [...node.children.filter((c) => !!c)];
           if (children.length > 0 && children[0].type.endsWith('_marker')) {
             children.splice(0, 1);
           }
@@ -592,7 +623,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           );
           token.level = blockLevel;
 
-          token.content = node.text || '';
+          token.content = nodeText(node) || '';
 
           retVal.push(token);
         }
@@ -603,7 +634,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           const tokenName = 'fence';
           const tagName = 'pre';
 
-          const info = node.children.find((child) =>
+          const info = node.children.filter((c) => !!c).find((child) =>
             child.type === 'info_string'
           );
 
@@ -615,17 +646,17 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           token.level = blockLevel;
           token.markup = '```';
           if (info) {
-            token.attrSet('lang', info.text);
+            token.attrSet('lang', nodeText(info) || '');
           }
 
-          const children = [...node.children
-            .filter((item) => item.type === 'code_fence_content')];
+          const children = [
+            ...node.children.filter((c) => !!c)
+              .filter((item) => item?.type === 'code_fence_content'),
+          ];
 
-          const content = children.map((item) =>
-            item.children
-              .map((inline) => inline.text || '')
-              .join('')
-          ).join('');
+          const content = children
+            .map((inline) => nodeText(inline) || '')
+            .join('');
 
           token.content = content;
 
@@ -673,7 +704,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           );
           token.level = blockLevel;
 
-          let indent = 0;
+          let indent = 80;
           if ('indent' in node) {
             indent = (node.indent as string).length;
           }
@@ -821,7 +852,8 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
 
           blockLevel++;
           node.children
-            ?.filter((c) => c.type === 'pipe_table_cell')
+            .filter((c) => !!c)
+            .filter((c) => c.type === 'pipe_table_cell')
             .forEach((child) => walkRecursive(child, ctx));
           blockLevel--;
 
@@ -850,18 +882,22 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           blockLevel++;
 
           const delimiterRows = node.children
-            ?.filter((c) => c.type === 'pipe_table_delimiter_row');
+            .filter((c) => !!c)
+            .filter((c) => c.type === 'pipe_table_delimiter_row');
 
           const cellAlign: Array<'left' | 'right'> = [];
           if (delimiterRows.length > 0) {
             const delimiterRow = delimiterRows[0];
             const delimiterCells = delimiterRow.children
-              ?.filter((c) => c.type === 'pipe_table_delimiter_cell');
+              .filter((c) => !!c)
+              .filter((c) => c.type === 'pipe_table_delimiter_cell');
 
             for (let cellNo = 0; cellNo < delimiterCells.length; cellNo++) {
               const cell = delimiterCells[cellNo];
               if (
-                cell.children.find((c) => c.type === 'pipe_table_align_right')
+                cell.children
+                  .filter((c) => !!c)
+                  .find((c) => c.type === 'pipe_table_align_right')
               ) {
                 cellAlign.push('right');
               } else {
@@ -871,7 +907,8 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           }
 
           const headRows = node.children
-            ?.filter((c) => c.type === 'pipe_table_header');
+            .filter((c) => !!c)
+            .filter((c) => c.type === 'pipe_table_header');
           if (headRows.length > 0) {
             const tokenName = 'thead';
             const tagName = 'thead';
@@ -904,7 +941,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           }
 
           const bodyRows = node.children
-            ?.filter((c) => c.type === 'pipe_table_row');
+            ?.filter((c) => c?.type === 'pipe_table_row');
 
           if (bodyRows.length > 0) {
             // const tokenName = 'tbody';
@@ -918,13 +955,15 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             // retVal.push(openToken);
 
             blockLevel++;
-            bodyRows.forEach((child) =>
-              walkRecursive(child, {
-                ...ctx,
-                tableRowType: 'tbody',
-                cellAlign: cellAlign,
-              })
-            );
+            bodyRows
+              .filter((c) => !!c)
+              .forEach((child) =>
+                walkRecursive(child, {
+                  ...ctx,
+                  tableRowType: 'tbody',
+                  cellAlign: cellAlign,
+                })
+              );
             blockLevel--;
 
             // const closeToken = new Token(
@@ -954,23 +993,23 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           let tagName = 'ul';
 
           let start = '';
-          const firstItem = node.children.find((item) =>
+          const firstItem = node.children.filter((c) => !!c).find((item) =>
             item.type === 'list_item'
           );
           if (firstItem) {
-            const taskListMarker = firstItem.children.find((item) =>
-              item.type.startsWith('task_list_marker')
-            );
-            const listMarker = firstItem.children.find((item) =>
-              item.type.startsWith('list_marker_dot')
-            );
+            const taskListMarker = firstItem.children.filter((c) => !!c).find((
+              item,
+            ) => item.type.startsWith('task_list_marker'));
+            const listMarker = firstItem.children.filter((c) => !!c).find((
+              item,
+            ) => item.type.startsWith('list_marker_dot'));
             if (taskListMarker) {
               tokenName = 'task_list';
               tagName = 'ul';
             } else if (listMarker) {
               tokenName = 'ordered_list';
               tagName = 'ol';
-              start = listMarker.text.trim().replace('.', '');
+              start = (nodeText(listMarker) || '').trim().replace('.', '');
             }
           }
 
@@ -988,7 +1027,9 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           retVal.push(openToken);
 
           blockLevel++;
-          node.children?.forEach((child) => walkRecursive(child, ctx));
+          node.children.filter((c) => !!c).forEach((child) =>
+            walkRecursive(child, ctx)
+          );
           blockLevel--;
 
           const closeToken = new Token(
@@ -1003,10 +1044,10 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
 
       case 'list_item':
         {
-          const taskListMarker = node.children.find((item) =>
+          const taskListMarker = node.children.filter((c) => !!c).find((item) =>
             item.type.startsWith('task_list_marker_')
           );
-          const listMarker = node.children.find((item) =>
+          const listMarker = node.children.filter((c) => !!c).find((item) =>
             item.type.startsWith('list_marker_')
           );
           if (!listMarker) {
@@ -1021,10 +1062,10 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
             NESTING_OPENING,
           );
           openToken.level = blockLevel;
-          openToken.markup = listMarker.text.trim();
+          openToken.markup = (nodeText(listMarker) || '').trim();
 
           if (listMarker.type === 'list_marker_dot') {
-            // openToken.info = listMarker.text.trim().replace('.', '');
+            // openToken.info = (nodeText(listMarker) || '').trim().replace('.', '');
             // openToken.markup = '.';
             openToken.info = '';
             openToken.markup = '';
@@ -1047,11 +1088,15 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
           // node.children?.forEach((child) => walkRecursive(child, ctx));
           blockLevel++;
           walkRecursive(
-            node.children.find((item) => item.type === 'paragraph'),
+            node.children
+              .filter((c) => !!c)
+              .find((item) => item.type === 'paragraph'),
             ctx,
           );
 
-          const lists = node.children.filter((item) => item.type === 'list');
+          const lists = node.children
+            .filter((c) => !!c)
+            .filter((item) => item.type === 'list');
           for (const list of lists) {
             walkRecursive(list, ctx);
           }
@@ -1072,7 +1117,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
         {
           const token = new Token('html_block', '', NESTING_SELF_CLOSING);
           token.level = blockLevel;
-          token.content = node.text ?? '';
+          token.content = nodeText(node) ?? '';
           retVal.push(token);
         }
         break;
@@ -1081,7 +1126,7 @@ function treeToTokens(tree: Tree, inlineParser: Parser): Array<Token> {
         {
           const token = new Token('text', '', NESTING_SELF_CLOSING);
           token.level = blockLevel;
-          token.content = node.text ?? '';
+          token.content = nodeText(node) ?? '';
           retVal.push(token);
         }
         break;
@@ -1132,7 +1177,7 @@ export async function sitterTokenizer(cdnUrl = '') {
         throw new Error('Tree is null');
       }
 
-      return treeToTokens(tree, inlineParser);
+      return treeToTokens(tree, inlineParser, source);
     },
   };
 }
