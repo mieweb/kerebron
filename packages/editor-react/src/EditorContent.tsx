@@ -4,7 +4,7 @@ import React, {
   useImperativeHandle,
   useRef,
 } from 'react';
-import type { CoreEditor } from '../CoreEditor.ts';
+import type { CoreEditor } from '@kerebron/editor';
 
 export interface EditorContentProps {
   /** The editor instance from useEditor */
@@ -31,7 +31,10 @@ export interface EditorContentRef {
  * ```
  */
 export const EditorContent = forwardRef<EditorContentRef, EditorContentProps>(
-  ({ editor, className = '', style }, ref) => {
+  function EditorContent(
+    { editor, className = '', style }: EditorContentProps,
+    ref: React.ForwardedRef<EditorContentRef>,
+  ) {
     const containerRef = useRef<HTMLDivElement>(null);
 
     useImperativeHandle(ref, () => ({
@@ -62,5 +65,3 @@ export const EditorContent = forwardRef<EditorContentRef, EditorContentProps>(
     );
   },
 );
-
-EditorContent.displayName = 'EditorContent';

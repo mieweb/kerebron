@@ -11,7 +11,7 @@ import { ExtensionCustomMenu } from '@kerebron/extension-menu';
  *
  * @example
  * ```tsx
- * import { useEditor, EditorContent } from '@kerebron/editor/react'
+ * import { useEditor, EditorContent } from '@kerebron/editor-react'
  * import { StarterKit } from '@kerebron/editor-kits/StarterKit'
  *
  * const MyEditor = () => {

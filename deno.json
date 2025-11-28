@@ -2,6 +2,7 @@
   "license": "MIT",
   "workspace": [
     "packages/editor",
+    "packages/editor-react",
     "packages/editor-kits",
     "packages/extension-basic-editor",
     "packages/extension-tables",
@@ -56,7 +57,7 @@
 
     "yjs": "npm:yjs@13.6.24",
     "y-protocols": "npm:y-protocols@1.0.6",
-    "y-websocket": "npm:y-websocket@2.1.0",
+    "y-websocket": "npm:y-websocket@3.0.0",
     "lib0": "npm:lib0@0.2.109",
     "orderedmap": "npm:orderedmap@latest",
 
