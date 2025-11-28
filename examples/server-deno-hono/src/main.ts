@@ -1,7 +1,15 @@
 import { Server } from './app.ts';
 import { createServer as createViteServer } from 'vite';
+import { parseArgs } from 'jsr:@std/cli/parse-args';
 
 const __dirname = import.meta.dirname;
+
+const args = parseArgs(Deno.args, {
+  boolean: ['without-lsp'],
+  default: { 'without-lsp': false },
+});
+
+const lspEnabled = !args['without-lsp'];
 
 const devProxyUrls: Record<string, string> = {};
 
@@ -35,5 +43,5 @@ for (const exampleName of broswerExamples) {
   }
 }
 
-const server = new Server({ devProxyUrls });
+const server = new Server({ devProxyUrls, lspEnabled });
 Deno.serve(server.fetch);

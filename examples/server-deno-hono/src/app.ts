@@ -4,9 +4,9 @@ import { cors } from 'hono/cors';
 
 import { HonoYjsMemAdapter } from '@kerebron/extension-server-hono/HonoYjsMemAdapter';
 import { proxyWs } from './proxyWs.ts';
-import { LspWsAdapter } from './lsp-server.ts';
-import { proxyTcp } from './proxyTcp.ts';
-import { proxyProcess } from './proxyProcess.ts';
+// import { LspWsAdapter } from './lsp-server.ts';
+// import { proxyTcp } from './proxyTcp.ts';
+// import { proxyProcess } from './proxyProcess.ts';
 import { ventoEnv } from './vento.ts';
 
 const __dirname = import.meta.dirname;
@@ -14,7 +14,7 @@ const __dirname = import.meta.dirname;
 const app = new Hono();
 
 const yjsAdapter = new HonoYjsMemAdapter();
-const lspWsAdapter = new LspWsAdapter();
+// const lspWsAdapter = new LspWsAdapter();
 
 const examples = Array
   .from(Deno.readDirSync(__dirname + '/../..'))
@@ -26,8 +26,12 @@ export class Server {
   public fetch;
 
   constructor(
-    private opts: { devProxyUrls: Record<string, string> } = {
+    private opts: {
+      devProxyUrls: Record<string, string>;
+      lspEnabled?: boolean;
+    } = {
       devProxyUrls: {},
+      lspEnabled: false,
     },
   ) {
     this.app = app;
@@ -88,70 +92,76 @@ export class Server {
       }),
     );
 
-    this.app.get(
-      '/lsp/mine',
-      upgradeWebSocket((c) => {
-        return lspWsAdapter.upgradeWebSocket();
-      }),
-    );
+    if (this.opts.lspEnabled) {
+      this.app.get(
+        '/lsp/mine',
+        upgradeWebSocket((c) => {
+          return lspWsAdapter.upgradeWebSocket();
+        }),
+      );
 
-    this.app.get(
-      '/lsp/process',
-      upgradeWebSocket((c) => {
-        return proxyProcess(
-          'node',
-          ['../../../lsp-toy/server/out/server.js'],
-          c,
-        );
-      }),
-    );
+      this.app.get(
+        '/lsp/process',
+        upgradeWebSocket((c) => {
+          return proxyProcess(
+            'node',
+            ['../../../lsp-toy/server/out/server.js'],
+            c,
+          );
+        }),
+      );
 
-    this.app.get(
-      '/lsp/yaml',
-      upgradeWebSocket((c) => {
-        return proxyProcess(
-          'npm',
-          ['exec', '--', 'yaml-language-server', '--stdio'],
-          c,
-        );
-      }),
-    );
+      this.app.get(
+        '/lsp/yaml',
+        upgradeWebSocket((c) => {
+          return proxyProcess(
+            'npm',
+            ['exec', '--', 'yaml-language-server', '--stdio'],
+            c,
+          );
+        }),
+      );
 
-    this.app.get(
-      '/lsp/typescript',
-      upgradeWebSocket((c) => {
-        return proxyProcess(
-          'npm',
-          [
-            'exec',
-            '--package=typescript',
-            '--package=typescript-language-server',
-            '--',
-            'typescript-language-server',
-            '--stdio',
-          ],
-          c,
-        );
-      }),
-    );
+      this.app.get(
+        '/lsp/typescript',
+        upgradeWebSocket((c) => {
+          return proxyProcess(
+            'npm',
+            [
+              'exec',
+              '--package=typescript',
+              '--package=typescript-language-server',
+              '--',
+              'typescript-language-server',
+              '--stdio',
+            ],
+            c,
+          );
+        }),
+      );
 
-    this.app.get(
-      '/lsp/tcp',
-      upgradeWebSocket((c) => {
-        return proxyTcp('127.0.0.1:2087', c);
-      }),
-    );
+      this.app.get(
+        '/lsp/tcp',
+        upgradeWebSocket((c) => {
+          return proxyTcp('127.0.0.1:2087', c);
+        }),
+      );
 
-    this.app.get(
-      '/lsp/deno',
-      upgradeWebSocket((c) => {
-        return proxyProcess(
-          'deno',
-          ['-L', 'debug', 'lsp'],
-          c,
-        );
-      }),
-    );
+      this.app.get(
+        '/lsp/deno',
+        upgradeWebSocket((c) => {
+          return proxyProcess(
+            'deno',
+            ['-L', 'debug', 'lsp'],
+            c,
+          );
+        }),
+      );
+
+      console.log('LSP: enabled');
+    } else {
+      console.log('LSP: disabled');
+    }
 
     for (const path in this.opts.devProxyUrls) {
       const devProxyUrl = this.opts.devProxyUrls[path];
