@@ -157,7 +157,10 @@ examples/          # Example implementations
 - **Build all**: `deno task build`
 - **Build WASM extensions**: `deno task build:ext-wasm`
 - **Build ODT**: `deno task build:ext-odt`
-- **Build NPM packages**: `deno -A ./build/build_npm.ts`
+- **Build NPM packages**: Use `./scripts/build-and-publish-npm.sh <version>` (NOT `deno run -A build/build_npm.ts` directly)
+  - This script builds WASM dependencies first, which are required before the npm build
+  - Example: `./scripts/build-and-publish-npm.sh 1.0.0` for dry run
+  - Example: `./scripts/build-and-publish-npm.sh 1.0.0 --publish` to publish to npm
 
 ### Running Examples
 - **Dev server**: `deno task -f server-deno-hono start`

@@ -4,6 +4,7 @@
   "imports": {},
   "exports": {
     ".": "./src/mod.ts",
+    "./StarterKit": "./src/StarterKit.ts",
     "./AdvancedEditorKit": "./src/AdvancedEditorKit.ts",
     "./DevAdvancedEditorKit": "./src/DevAdvancedEditorKit.ts",
     "./LspEditorKit": "./src/LspEditorKit.ts",

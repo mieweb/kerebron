@@ -1985,6 +1985,11 @@
           "npm:hono@4.10.7"
         ]
       },
+      "packages/editor": {
+        "dependencies": [
+          "npm:react@19"
+        ]
+      },
       "packages/extension-codemirror": {
         "dependencies": [
           "npm:@codemirror/autocomplete@6.18.6",
