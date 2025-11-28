@@ -29,24 +29,23 @@ export default {
   },
   created() {
     this.fetch();
-    const docUrl = globalThis.location.hash.slice(1);
-    if (docUrl.startsWith('room:')) {
-      this.roomId = docUrl.substring('room:'.length);
-    } else {
-      this.roomId = null;
-    }
+    this.updateRoomFromHash();
+    
+    // Listen for hash changes
+    window.addEventListener('hashchange', this.updateRoomFromHash);
   },
-  watch: {
-    $route() {
+  beforeUnmount() {
+    window.removeEventListener('hashchange', this.updateRoomFromHash);
+  },
+  methods: {
+    updateRoomFromHash() {
       const docUrl = globalThis.location.hash.slice(1);
       if (docUrl.startsWith('room:')) {
         this.roomId = docUrl.substring('room:'.length);
       } else {
         this.roomId = null;
       }
-    }
-  },
-  methods: {
+    },
     async fetch() {
       const response = await fetch('/api/rooms');
       this.roomIDs = await response.json();
