@@ -63,8 +63,8 @@ const blockParser: Parser =
 const inlineParser: Parser =
   (await createParser(inlineWasm)) as unknown as Parser;
 
-// const BlockParser = await createParser(markdownWasm);
-// const InlineParser = await createParser(inlineWasm);
+// const blockParser = await createParser(markdownWasm);
+// const inlineParser = await createParser(inlineWasm);
 
 function parseMarkdown(source: string, oldTree?: any) {
   let tree;
@@ -403,7 +403,7 @@ export class LspWsAdapter {
   ): Promise<CompletionList> {
     const doc = this.documents.get(params.textDocument.uri);
     if (!doc) {
-      throw new Error('Document not open');
+      throw new Error('Document not open ' + params.textDocument.uri);
     }
 
     const items = this.computeCompletions(doc, params.position);
@@ -416,7 +416,7 @@ export class LspWsAdapter {
   private async handleHover(params: HoverParams): Promise<HoverResult | null> {
     const doc = this.documents.get(params.textDocument.uri);
     if (!doc) {
-      throw new Error('Document not open');
+      throw new Error('Document not open ' + params.textDocument.uri);
     }
 
     const hover = this.computeHover(doc, params.position);
