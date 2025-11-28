@@ -163,8 +163,16 @@ examples/          # Example implementations
   - Example: `./scripts/build-and-publish-npm.sh 1.0.0 --publish` to publish to npm
 
 ### Running Examples
-- **Dev server**: `deno task -f server-deno-hono start`
-- Each example has its own `deno.json` with specific tasks
+- **Dev server**: `deno task -f server-deno-hono start` - **ALWAYS start this first!**
+  - Runs on `http://localhost:8000`
+  - Serves all examples (Vue, React, vanilla) at their respective paths
+  - Provides backend services: Yjs WebSocket, LSP, WASM files, API endpoints
+  - **Never run individual example dev servers separately** - they depend on the Hono backend
+- Each example has its own `deno.json` but should be accessed via the Hono server
+- Example URLs after starting the server:
+  - Vue: `http://localhost:8000/examples/browser-vue/`
+  - React: `http://localhost:8000/examples/browser-react/`
+  - Vanilla: `http://localhost:8000/examples/browser-vanilla-code-editor/`
 
 ## Extension Development
 
