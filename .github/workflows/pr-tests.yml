@@ -53,3 +53,5 @@ jobs:
       - name: Run Playwright tests
         run: deno task test
         working-directory: examples/browser-react
+        env:
+          HOME: /root
