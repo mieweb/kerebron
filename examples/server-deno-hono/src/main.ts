@@ -16,7 +16,7 @@ const broswerExamples = examples.filter((example) =>
 );
 for (const exampleName of broswerExamples) {
   const viteDevServer = await createViteServer({
-    base: '/examples/' + exampleName,
+    base: '/examples-frame/' + exampleName,
     configFile: __dirname + '/../../' + exampleName + '/vite.config.ts',
     root: __dirname + '/../../' + exampleName,
     server: {
@@ -29,7 +29,7 @@ for (const exampleName of broswerExamples) {
   const proxyServer = await viteDevServer.listen();
   const addr = proxyServer.httpServer?.address();
   if (addr && 'object' === typeof addr) {
-    devProxyUrls['/examples/' + exampleName] =
+    devProxyUrls['/examples-frame/' + exampleName] =
       `http://${addr.address}:${addr.port}`;
     port = addr.port + 1;
   }

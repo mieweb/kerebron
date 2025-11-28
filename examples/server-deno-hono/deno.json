@@ -2,12 +2,17 @@
   "name": "server-deno-hono",
   "tasks": {
     "dev": "deno test --allow-net --allow-ffi --allow-read --watch ./src/*.ts",
-    "start": "deno run --allow-net --allow-ffi --allow-read --allow-env --allow-sys --allow-write --allow-run --unstable-detect-cjs --node-modules-dir ./src/main.ts"
+    "build": "deno run --allow-net --allow-ffi --allow-read --allow-env --allow-sys --allow-write --allow-run ./src/viteSSG.ts",
+    "build2": "deno run -A npm:vite build",
+    "start": "deno run --allow-net --allow-ffi --allow-read --allow-env --allow-sys --allow-write --allow-run --node-modules-dir ./src/main.ts"
   },
   "license": "MIT",
   "imports": {
     "@std/assert": "jsr:@std/assert@1",
-    "hono": "jsr:@hono/hono@^4.7.4"
+    "@vitejs/plugin-vue": "npm:@vitejs/plugin-vue@6.0.1",
+    "hono2": "jsr:@hono/hono@^4.7.4",
+    "hono": "npm:hono@4.10.7",
+    "@hono/vite-ssg": "npm:@hono/vite-ssg@0.3.0"
   },
   "exports": {}
 }

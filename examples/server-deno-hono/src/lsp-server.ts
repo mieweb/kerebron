@@ -1,13 +1,17 @@
 import * as path from '@std/path';
-import { xmlStylePreview } from 'https://deno.land/x/deno_tree_sitter@0.2.8.6/main.js';
+
+import { createParser } from '$deno_tree_sitter/main.js';
+import type { Parser } from '$deno_tree_sitter/tree_sitter/parser.ts';
+import type { Tree } from '$deno_tree_sitter/tree_sitter/tree.ts';
+// import { xmlStylePreview } from 'https://deno.land/x/deno_tree_sitter@0.2.8.6/main.js';
 
 // import { parseMarkdown } from '../../../tree-sitter/md-to-html-incremental.ts';
-import { type Point as TsPoint, type SyntaxNode, type Tree } from 'tree-sitter';
+
 import { WSContext, WSEvents, WSMessageReceive } from 'hono/ws';
 
 // md-to-html-incremental.ts
-import { createParser } from 'https://deno.land/x/deno_tree_sitter@1.0.1.2/main/main.js';
-
+// import { createParser } from 'https://deno.land/x/deno_tree_sitter@1.0.1.2/main/main.js';
+//
 import type {
   Diagnostic,
   LspPosition,
@@ -51,8 +55,16 @@ const inlineWasm = await Deno.readFile(
   ),
 );
 
-const BlockParser = await createParser(markdownWasm);
-const InlineParser = await createParser(inlineWasm);
+// const markdownWasm = await fetchWasm(blockUrl);
+// const inlineWasm = await fetchWasm(inlineUrl);
+
+const blockParser: Parser =
+  (await createParser(markdownWasm)) as unknown as Parser;
+const inlineParser: Parser =
+  (await createParser(inlineWasm)) as unknown as Parser;
+
+// const BlockParser = await createParser(markdownWasm);
+// const InlineParser = await createParser(inlineWasm);
 
 function parseMarkdown(source: string, oldTree?: any) {
   let tree;

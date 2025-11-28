@@ -1,0 +1,37 @@
+<div class="flex-shrink-0 p-3" style="width: 280px">
+  <a
+    class="nav-link"
+    href="/"
+    class="d-flex align-items-center pb-3 mb-3 link-body-emphasis text-decoration-none border-bottom"
+  >
+    <span class="fs-5 fw-semibold">Collapsible</span>
+  </a>
+
+  <nav>
+    <details>
+      <summary aria-current="true">Getting started</summary>
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            aria-current="page"
+            class="secondary"
+            data-discover="true"
+            href="/01-quick-start"
+          >Quick start</a>
+        </li>
+      </ul>
+    </details>
+    <details open="">
+      <summary>Examples</summary>
+      <ul class="nav flex-column">
+        {{ for example of examples }}
+        <li class="nav-item">
+          <a class="nav-link" class="secondary" href="/examples/{{example}}/"
+          >{{example}}</a>
+        </li>
+        {{ /for }}
+      </ul>
+    </details>
+  </nav>
+</div>
