@@ -5,7 +5,12 @@
     "build": "deno run -A npm:vite build",
     "build-watch": "deno run -A npm:vite build --watch",
     "preview": "deno run -A npm:vite preview",
-    "serve": "deno run --allow-net --allow-read main.ts"
+    "serve": "deno run --allow-net --allow-read main.ts",
+    "test": "deno run -A npm:playwright@1.49.1 test",
+    "test:ui": "deno run -A npm:playwright@1.49.1 test --ui",
+    "test:headed": "deno run -A npm:playwright@1.49.1 test --headed",
+    "test:debug": "deno run -A npm:playwright@1.49.1 test --debug",
+    "playwright:install": "deno run -A npm:playwright@1.49.1 install chromium"
   },
   "imports": {
     "vite": "npm:vite@7.1.4",
@@ -17,7 +22,9 @@
     "react-dom/client": "npm:react-dom@19.1.0/client",
 
     "react/jsx-runtime": "npm:react@19.1.0/jsx-runtime",
-    "react/jsx-dev-runtime": "npm:react@19.1.0/jsx-dev-runtime"
+    "react/jsx-dev-runtime": "npm:react@19.1.0/jsx-dev-runtime",
+
+    "@playwright/test": "npm:@playwright/test@1.49.1"
   },
   "exports": {},
   "license": "MIT"

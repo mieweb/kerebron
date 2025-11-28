@@ -37,3 +37,10 @@ jobs:
       - name: Run tests
         run: deno test -A --no-check packages/extension-markdown/test/
 #        run: deno test -A
+
+      - name: Install Playwright browsers
+        run: deno run -A npm:playwright@1.49.1 install --with-deps chromium
+
+      - name: Run Playwright tests
+        run: deno task test
+        working-directory: examples/browser-react
