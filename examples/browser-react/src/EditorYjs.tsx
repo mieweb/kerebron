@@ -16,6 +16,7 @@ import '@kerebron/editor/assets/index.css';
 import '@kerebron/extension-tables/assets/tables.css';
 import '@kerebron/extension-menu/assets/custom-menu.css';
 import '@kerebron/extension-codemirror/assets/codemirror.css';
+import '@kerebron/extension-autocomplete/assets/autocomplete.css';
 
 const MyEditor: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -91,6 +92,8 @@ console.log("TEST")
 
     // Initialize the editor
     const editor = new CoreEditor({
+      cdnUrl: 'http://localhost:8000/wasm/',
+      uri: 'file:///test.md',
       element: editorRef.current,
       extensions: [
         new AdvancedEditorKit(),

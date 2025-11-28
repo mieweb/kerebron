@@ -30,7 +30,7 @@ export class DefaultRenderer<Item> extends EventTarget
 
     this.wrapper = document.createElement('ul');
     this.wrapper.classList.add(CSS_PREFIX + '__wrapper');
-    root.appendChild(this.wrapper);
+    (root.body || root).appendChild(this.wrapper);
 
     this.items.splice(0, this.items.length, ...props.items);
     this.recreateList(props);
