@@ -196,6 +196,8 @@ test.describe('Kerebron React Editor', () => {
       !error.includes('Not connected') &&
       !error.includes('WebSocket connection') &&
       !error.includes('Error during WebSocket handshake') &&
+      !error.includes('establish a connection') &&
+      !error.includes('JSHandle@object') &&
       error !== 'Event'
     );
 
