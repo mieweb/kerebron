@@ -1,6 +1,4 @@
-import { createParser } from '$deno_tree_sitter/main.js';
-import type { Parser } from '$deno_tree_sitter/tree_sitter/parser.ts';
-import type { Tree } from '$deno_tree_sitter/tree_sitter/tree.ts';
+import { createParser, type Parser, type Tree } from '@kerebron/tree-sitter';
 
 import { assertEquals } from '@kerebron/test-utils';
 import { MarkdownSerializer } from '@kerebron/extension-markdown/MarkdownSerializer';

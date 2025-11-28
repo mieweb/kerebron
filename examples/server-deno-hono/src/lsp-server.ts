@@ -1,9 +1,11 @@
 import * as path from '@std/path';
 
-import { createParser } from '$deno_tree_sitter/main.js';
-import type { Parser } from '$deno_tree_sitter/tree_sitter/parser.ts';
-import type { Tree } from '$deno_tree_sitter/tree_sitter/tree.ts';
-// import { xmlStylePreview } from 'https://deno.land/x/deno_tree_sitter@0.2.8.6/main.js';
+import {
+  createParser,
+  type Node as TreeSitterNode,
+  type Parser,
+  type Tree,
+} from '@kerebron/tree-sitter';
 
 // import { parseMarkdown } from '../../../tree-sitter/md-to-html-incremental.ts';
 

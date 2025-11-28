@@ -6,6 +6,7 @@ import denoPrefixPlugin from '../../build/vite-plugins/prefixPlugin.ts';
 import { type DenoResolveResult } from '../../build/vite-plugins/resolver.ts';
 import { denoCssPlugin } from '../../build/vite-plugins/denoCssPlugin.ts';
 import { generateAlias } from '../../build/vite-plugins/generateAlias.ts';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 const __dirname = import.meta.dirname!;
 
@@ -14,6 +15,15 @@ export default defineConfig({
   base: '',
   // plugins: [vue(), wasm(), denoPlugin(cache), denoPrefixPlugin(cache), denoCssPlugin(__dirname + '/../../')
   plugins: [
+    viteStaticCopy({
+      targets: [
+        {
+          src: __dirname +
+            '/../../node_modules/web-tree-sitter/tree-sitter.wasm',
+          dest: './.vite/deps',
+        },
+      ],
+    }),
     vue({
       template: {
         compilerOptions: {

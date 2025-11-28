@@ -1,0 +1,8 @@
+{
+  "name": "@kerebron/tree-sitter",
+  "tasks": {},
+  "imports": {},
+  "exports": {
+    ".": "./src/mod.ts"
+  }
+}

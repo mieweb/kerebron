@@ -1,6 +1,10 @@
-import { createParser } from '$deno_tree_sitter/main.js';
-import { Parser } from '$deno_tree_sitter/tree_sitter/parser.js';
-import { Language } from '$deno_tree_sitter/tree_sitter/language.js';
+import {
+  createParserLanguage,
+  type Language,
+  type Parser,
+  Query,
+  type Tree,
+} from '@kerebron/tree-sitter';
 
 import {
   fetchTextResource,
@@ -12,6 +16,7 @@ import { DecorationInline, Decorator } from './Decorator.ts';
 
 export class TreeSitterHighlighter {
   parser: Parser | undefined;
+  language: Language | undefined;
   hightligtScm: string | undefined;
   cdnUrl? = 'http://localhost:8000/wasm/';
 
@@ -22,13 +27,10 @@ export class TreeSitterHighlighter {
 
     try {
       const wasm = await fetchWasm(wasmUrl);
+      const [parser, language] = await createParserLanguage(wasm);
+      this.parser = parser;
+      this.language = language;
 
-      await Parser.init();
-      const Lang = await Language.load(wasm);
-      this.parser = new Parser();
-      this.parser.setLanguage(Lang);
-
-      // this.parser = await createParser(wasm);
       this.hightligtScm = await fetchTextResource(highlightUrl);
     } catch (err) {
       console.error('Error init highlight for: ' + lang, err);
@@ -47,18 +49,21 @@ export class TreeSitterHighlighter {
   }
 
   highlight(code: string, decorator: Decorator) {
-    if (!this.parser || !this.hightligtScm) {
+    return decorator.highlight(code);
+    if (!this.parser || !this.language || !this.hightligtScm) {
       return decorator.highlight(code);
     }
 
     const tree = this.parser.parse(code)!;
     const root = tree.rootNode;
 
-    const highlightsQuery = root.query(this.hightligtScm);
+    const highlightsQuery = new Query(this.language, this.hightligtScm);
+    const highlightsResult = highlightsQuery.matches(root);
 
     const captures = [];
 
-    for (const item of highlightsQuery) {
+    for (const item of highlightsResult) {
+      console.log('item', item.captures.map((c) => c.node));
       captures.push(...item.captures);
     }
 

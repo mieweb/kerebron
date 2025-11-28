@@ -142,9 +142,7 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
     'text': [
       (token: Token, ctx: ContextStash) => {
         if (token.meta === 'noEscText') {
-          for (const pair of escapeMarkdown(token)) {
-            ctx.current.log(token.content);
-          }
+          ctx.current.log(token.content);
         } else {
           for (const pair of escapeMarkdown(token)) {
             ctx.current.log(pair[0], pair[1]);

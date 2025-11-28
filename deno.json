@@ -19,6 +19,7 @@
     "packages/odt-wasm",
     "packages/wasm",
     "packages/test-utils",
+    "packages/tree-sitter",
 
     "examples/browser-vanilla-code-editor",
     "examples/browser-react",
@@ -45,7 +46,7 @@
     "asserts": "https://deno.land/std@0.178.0/testing/asserts.ts",
 
     "$deno_tree_sitter/": "https://deno.land/x/deno_tree_sitter@1.0.1.2/main/",
-    "web-tree-sitter": "npm:web-tree-sitter@0.24.7",
+    "web-tree-sitter": "npm:web-tree-sitter@0.25.10",
 
     "prosemirror-state": "npm:prosemirror-state@1.4.3",
     "prosemirror-view": "npm:prosemirror-view@1.40.0",
