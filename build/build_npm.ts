@@ -1,24 +1,66 @@
 import * as path from '@std/path';
 import { copy, exists } from '@std/fs';
-import { build, emptyDir } from '@deno/dnt';
+import { build, BuildOptions, emptyDir } from '@deno/dnt';
+import { SpecifierMappings } from '@deno/dnt/transform';
 
-const __dirname = import.meta.dirname;
+const __dirname = import.meta.dirname!;
+
+const allModules: string[] = [];
+
+interface DenoInfoModule {
+  kind: 'esm';
+  dependencies: Array<{
+    specifier: string; // "prosemirror-view"
+    code?: {
+      error?: string;
+      specifier: string; // "npm:prosemirror-view@1.40.0"
+      // span unused by me
+    };
+    type?: {
+      error?: string;
+      specifier: string; // "npm:prosemirror-view@1.40.0"
+      resolutionMode: 'import';
+      // span unused by me
+    };
+  }>;
+  local: string; // "/home/packages/editor/src/CoreEditor.ts",
+  size: number;
+  mediaType: string; // "TypeScript"
+  specifier: string; // "file:///home/packages/editor/src/CoreEditor.ts"
+}
+
+interface DenoInfo {
+  version: number;
+  roots: string[];
+  modules: Array<DenoInfoModule>;
+}
 
 interface DenoJson {
   license: any;
   description: any;
   name: string;
   exports: string | Map<string, string>;
+  workspace?: Array<string>;
 }
 
-async function readDenoJson(workspaceRoot: string) {
+async function getInfo(name: string): Promise<DenoInfo> {
+  const cmd = new Deno.Command(Deno.execPath(), {
+    args: ['info', '--no-npm', '--no-remote', '--json', name],
+    stdout: 'piped',
+  });
+
+  const out = new TextDecoder().decode(cmd.outputSync().stdout);
+  return JSON.parse(out);
+}
+
+async function readDenoJson(workspaceRoot: string): Promise<DenoJson> {
   const content = Deno.readFileSync(path.resolve(workspaceRoot, 'deno.json'));
   return JSON.parse(new TextDecoder().decode(content));
 }
 
 async function iterateWorkspaces(
   workspaceRoot: string,
-  callback: (workspaceRoot: string, json: DenoJson) => Promise<void>,
+  callback: (moduleRoot: string, json: DenoJson) => Promise<void>,
 ): Promise<void> {
   const json = await readDenoJson(workspaceRoot);
   if (json.workspace) {
@@ -30,11 +72,6 @@ async function iterateWorkspaces(
     await callback(workspaceRoot, json);
   }
 }
-
-const workspaceRoot = path.resolve(__dirname, '..');
-const mainJson = await readDenoJson(workspaceRoot);
-
-await emptyDir('./npm');
 
 async function copyRecursive(src: string, dest: string) {
   const stat = await Deno.lstat(src);
@@ -57,7 +94,9 @@ async function copyRecursive(src: string, dest: string) {
   }
 }
 
-await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
+async function processModule(moduleRoot: string, json: DenoJson) {
+  const version = Deno.args[0]?.replace(/^v/, '');
+
   const exports = 'string' === typeof json.exports
     ? { '.': json.exports }
     : json.exports;
@@ -66,16 +105,16 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
     return;
   }
 
-  if (await exists(path.resolve(workspaceRoot, 'package.json'))) {
+  if (await exists(path.resolve(moduleRoot, 'package.json'))) {
     // Support for WASM which is currently not supported by DNT
     const content = Deno.readFileSync(
-      path.resolve(workspaceRoot, 'package.json'),
+      path.resolve(moduleRoot, 'package.json'),
     );
     const packageJson = JSON.parse(new TextDecoder().decode(content));
 
-    console.info(`Copying: ${workspaceRoot} (probably wasm)`);
+    console.info(`Copying: ${moduleRoot} (probably wasm)`);
 
-    packageJson.version = Deno.args[0]?.replace(/^v/, '');
+    packageJson.version = version;
     packageJson.description = packageJson.description || mainJson.description;
     packageJson.license = packageJson.license || mainJson.license;
 
@@ -91,7 +130,7 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
     if (Array.isArray(packageJson.files)) {
       for (const file of packageJson.files) {
         await copyRecursive(
-          path.resolve(workspaceRoot, file),
+          path.resolve(moduleRoot, file),
           path.resolve(outDir, file),
         );
       }
@@ -99,96 +138,148 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
     return;
   }
 
-  console.info(`Building: ${workspaceRoot}`);
+  console.info(`Building: ${moduleRoot}`);
 
   const entryPoints = [];
   for (const [name, file] of Object.entries(exports)) {
     entryPoints.push({
       name,
-      path: path.resolve(workspaceRoot, file),
+      path: path.resolve(moduleRoot, file),
     });
   }
 
-  let configFile = import.meta.resolve('../deno.json');
+  const configFile = import.meta.resolve('../deno.json');
 
-  if (Deno.args[0]?.replace(/^v/, '')) {
-    // Substitute wasm package with npm path. Currently, DNT do not support wasm.
-    configFile = await Deno.makeTempFileSync({
-      dir: __dirname + '/..',
-      suffix: '.json',
-    });
-    Deno.writeFileSync(
-      configFile,
-      new TextEncoder().encode(JSON.stringify(
-        {
-          ...mainJson,
-          workspace: mainJson.workspace.filter((item) =>
-            item !== 'packages/odt-wasm'
-          ),
-          imports: {
-            ...mainJson.imports,
-            '@kerebron/odt-wasm': 'npm:@kerebron/odt-wasm@latest',
-          },
-        },
-        null,
-        2,
-      )),
-    );
-    configFile = 'file:' + configFile;
+  const mappings: SpecifierMappings = {};
+
+  const depsMap: Record<string, string> = {};
+
+  const info: DenoInfo = await getInfo(json.name);
+  for (const module of info.modules) {
+    if (!module.dependencies) {
+      continue;
+    }
+    if (!module.local.startsWith(moduleRoot)) {
+      continue;
+    }
+    for (const dep of module.dependencies) {
+      if (dep.specifier.startsWith('@kerebron')) {
+        if (dep.code?.error) {
+          throw new Error(dep.code.error);
+        }
+        if (dep.type?.error) {
+          throw new Error(dep.type.error);
+        }
+        if (dep.code?.specifier) {
+          depsMap[dep.specifier] = dep.code.specifier.replace('file:///', '/');
+        }
+        if (dep.type?.specifier) {
+          depsMap[dep.specifier] = dep.type.specifier.replace('file:///', '/');
+        }
+      }
+    }
+  }
+
+  for (const [subName, localPath] of Object.entries(depsMap)) {
+    const name = allModules.find((m) => subName.startsWith(m));
+    if (!name) {
+      continue;
+    }
+    if (name === json.name) {
+      continue;
+    }
+    const subPath = subName.substring(name.length + 1) || undefined;
+
+    mappings[localPath] = {
+      name,
+      subPath,
+      version: version,
+    };
+  }
+
+  const opts: BuildOptions = {
+    importMap: './import_map.npm.json',
+    entryPoints,
+    outDir: path.resolve('./npm', json.name),
+    shims: {
+      // see JS docs for overview and more options
+      deno: 'dev',
+    },
+    skipNpmInstall: true,
+    // importMap: path.resolve(workspaceRoot, 'deno.json'),
+    package: {
+      // package.json properties
+      name: json.name,
+      version,
+      description: json.description || mainJson.description,
+      license: json.license || mainJson.license,
+    },
+    configFile,
+    async postBuild() {
+      Deno.copyFileSync('LICENSE', path.resolve('npm', json.name, 'LICENSE'));
+      Deno.copyFileSync(
+        'README.md',
+        path.resolve('npm', json.name, 'README.md'),
+      );
+      if (await exists(path.resolve(moduleRoot, 'README.md'))) {
+        Deno.copyFileSync(
+          path.resolve(moduleRoot, 'README.md'),
+          path.resolve('npm', json.name, 'README.md'),
+        );
+      }
+      if (await exists(path.resolve(moduleRoot, 'assets'))) {
+        await copy(
+          path.resolve(moduleRoot, 'assets'),
+          path.resolve('npm', json.name, 'assets'),
+          { overwrite: true, preserveTimestamps: true },
+        );
+      }
+    },
+    mappings,
+    compilerOptions: {
+      lib: ['ES2021'],
+    },
+    typeCheck: false,
+    test: false,
+    scriptModule: false,
+  };
+
+  if (await exists(path.resolve(moduleRoot, 'assets', 'index.css'))) {
+    opts.package.style = 'assets/index.css';
   }
 
   try {
-    const opts = {
-      entryPoints,
-      outDir: path.resolve('./npm', json.name),
-      shims: {
-        // see JS docs for overview and more options
-        deno: true,
-      },
-      importMap: 'deno.json',
-      package: {
-        // package.json properties
-        name: json.name,
-        version: Deno.args[0]?.replace(/^v/, ''),
-        description: json.description || mainJson.description,
-        license: json.license || mainJson.license,
-      },
-      configFile: configFile,
-      async postBuild() {
-        Deno.copyFileSync('LICENSE', path.resolve('npm', json.name, 'LICENSE'));
-        Deno.copyFileSync(
-          'README.md',
-          path.resolve('npm', json.name, 'README.md'),
-        );
-        if (await exists(path.resolve(workspaceRoot, 'README.md'))) {
-          Deno.copyFileSync(
-            path.resolve(workspaceRoot, 'README.md'),
-            path.resolve('npm', json.name, 'README.md'),
-          );
-        }
-        if (await exists(path.resolve(workspaceRoot, 'assets'))) {
-          await copy(
-            path.resolve(workspaceRoot, 'assets'),
-            path.resolve('npm', json.name, 'assets'),
-            { overwrite: true, preserveTimestamps: true },
-          );
-        }
-      },
-      mappings: {},
-      compilerOptions: {
-        lib: ['ES2021'],
-      },
-      typeCheck: false,
-      test: false,
-      scriptModule: false,
-    };
-
-    if (await exists(path.resolve(workspaceRoot, 'assets', 'index.css'))) {
-      opts['style'] = 'assets/index.css';
-    }
-
     await build(opts);
   } catch (err) {
+    if (
+      'string' === typeof err &&
+      err.indexOf('Not implemented support for Wasm modules') > -1
+    ) {
+      console.warn(err);
+      return;
+    }
     console.error(err);
+    Deno.exit(1);
   }
+}
+
+const workspaceRoot = path.resolve(__dirname, '..');
+const mainJson = await readDenoJson(workspaceRoot);
+
+const allModuleSet: Set<string> = new Set();
+await iterateWorkspaces(workspaceRoot, async (moduleRoot, json) => {
+  if (!json.name.startsWith('@kerebron')) {
+    return;
+  }
+  allModuleSet.add(json.name);
+});
+
+allModules.push(
+  ...Array.from(allModuleSet).sort((a, b) => b.length - a.length),
+);
+
+await emptyDir('./npm');
+
+await iterateWorkspaces(workspaceRoot, async (moduleRoot, json) => {
+  await processModule(moduleRoot, json);
 });

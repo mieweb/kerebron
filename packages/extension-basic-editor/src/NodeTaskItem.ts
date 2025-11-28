@@ -10,7 +10,7 @@ import {
   sinkListItem,
   splitListItem,
 } from '@kerebron/extension-basic-editor/NodeListItem';
-import { NodeViewConstructor } from '../../editor/src/DummyEditorView.ts';
+import { NodeViewConstructor } from '@kerebron/editor/DummyEditorView';
 import { EditorView } from 'prosemirror-view';
 import { Transaction } from 'prosemirror-state';
 
