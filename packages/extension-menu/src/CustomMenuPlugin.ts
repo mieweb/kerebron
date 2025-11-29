@@ -1092,15 +1092,6 @@ export class CustomMenuView {
 
     // Render overflow menu content
     this.renderOverflowMenu();
-
-    console.log(
-      '[kb-custom-menu] render() complete. Toolbar children:',
-      this.toolbar.children.length,
-    );
-    console.log(
-      '[kb-custom-menu] Toolbar HTML:',
-      this.toolbar.innerHTML.substring(0, 200),
-    );
   }
 
   private openManageModal() {

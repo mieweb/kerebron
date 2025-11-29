@@ -14,6 +14,12 @@ import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
 import { ExtensionCustomMenu } from '@kerebron/extension-menu/ExtensionCustomMenu';
 import { ExtensionYjs } from '@kerebron/extension-yjs';
 import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
+import {
+  ExtensionLsp,
+  type LspTransportGetter,
+  type Transport,
+} from '@kerebron/extension-lsp';
+import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
 
 import '@kerebron/editor/assets/index.css';
 import '@kerebron/extension-tables/assets/tables.css';
@@ -21,6 +27,7 @@ import '@kerebron/extension-menu/assets/custom-menu.css';
 import '@kerebron/extension-codemirror/assets/codemirror.css';
 import '@kerebron/extension-autocomplete/assets/autocomplete.css';
 import '@kerebron/extension-yjs/assets/collaboration-status.css';
+import '@kerebron/extension-lsp/assets/lsp-status.css';
 
 interface EditorYjsProps {
   roomId: string;
@@ -57,6 +64,27 @@ const MyEditor: React.FC<EditorYjsProps> = (
       colorLight: userColor.light,
     });
 
+    // LSP transport getter for markdown language server
+    const getLspTransport: LspTransportGetter = (
+      lang: string,
+    ): Transport | undefined => {
+      const protocol = globalThis.location.protocol === 'http:'
+        ? 'ws:'
+        : 'wss:';
+      const uri = protocol + '//' + globalThis.location.host + '/lsp';
+
+      switch (lang) {
+        case 'markdown':
+          return new LspWebSocketTransport(uri + '/mine');
+        case 'json':
+          return new LspWebSocketTransport(uri + '/deno');
+        case 'typescript':
+        case 'javascript':
+          return new LspWebSocketTransport(uri + '/typescript');
+      }
+      return undefined;
+    };
+
     // Initialize the editor with Yjs extension
     const editor = new CoreEditor({
       cdnUrl: 'http://localhost:8000/wasm/',
@@ -64,11 +92,12 @@ const MyEditor: React.FC<EditorYjsProps> = (
       element: editorRef.current,
       extensions: [
         new ExtensionBasicEditor(),
-        new ExtensionCustomMenu(),
         new ExtensionMarkdown(),
         new ExtensionOdt(),
         new ExtensionTables(),
         new ExtensionYjs({ ydoc, provider: wsProvider }),
+        new ExtensionLsp({ getLspTransport }),
+        new ExtensionCustomMenu(), // Must come after YJS and LSP for auto-detection
         new ExtensionDevToolkit(),
         new ExtensionCodeMirror({}),
       ],

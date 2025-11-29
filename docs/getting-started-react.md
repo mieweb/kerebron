@@ -161,6 +161,153 @@ To disable the automatic collaboration status:
 new ExtensionCustomMenu({ autoAddCollaborationStatus: false })
 ```
 
+## Adding Language Server Protocol (LSP) Support
+
+Kerebron supports Language Server Protocol integration for features like autocomplete, diagnostics, and more. When you add the LSP extension alongside the custom menu, an LSP status indicator is automatically added to the toolbar.
+
+### Install LSP dependencies
+
+```bash
+npm install @kerebron/extension-lsp @kerebron/extension-menu
+```
+
+### Create an editor with LSP support
+
+```tsx
+// src/LspEditor.tsx
+import { useEffect, useRef } from 'react';
+import { CoreEditor } from '@kerebron/editor';
+import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
+import { ExtensionCustomMenu } from '@kerebron/extension-menu';
+import { ExtensionLsp, type LspTransportGetter, type Transport } from '@kerebron/extension-lsp';
+import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
+
+// Import styles
+import '@kerebron/editor/assets/index.css';
+import '@kerebron/extension-menu/assets/custom-menu.css';
+import '@kerebron/extension-lsp/assets/lsp-status.css';
+
+interface Props {
+  lspServerUrl?: string;
+}
+
+const LspEditor = ({ lspServerUrl = 'ws://localhost:8000/lsp' }: Props) => {
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!editorRef.current) return;
+
+    // Configure LSP transport for different languages
+    const getLspTransport: LspTransportGetter = (lang: string): Transport | undefined => {
+      switch (lang) {
+        case 'markdown':
+          return new LspWebSocketTransport(`${lspServerUrl}/markdown`);
+        case 'typescript':
+        case 'javascript':
+          return new LspWebSocketTransport(`${lspServerUrl}/typescript`);
+        case 'json':
+          return new LspWebSocketTransport(`${lspServerUrl}/json`);
+        default:
+          return undefined;
+      }
+    };
+
+    // Create editor with LSP support
+    // Note: ExtensionLsp must be registered BEFORE ExtensionCustomMenu for auto-detection
+    const editor = new CoreEditor({
+      element: editorRef.current,
+      uri: 'file:///document.md', // Required for LSP to identify the file
+      extensions: [
+        new AdvancedEditorKit(),
+        new ExtensionLsp({ getLspTransport }),
+        new ExtensionCustomMenu(), // Auto-adds LSP status indicator!
+      ],
+    });
+
+    return () => {
+      editor.destroy();
+    };
+  }, [lspServerUrl]);
+
+  return <div ref={editorRef} className="kb-component" />;
+};
+
+export default LspEditor;
+```
+
+### LSP status indicator features
+
+When using `ExtensionCustomMenu` with `ExtensionLsp`, an LSP status indicator automatically appears in the toolbar showing:
+
+- **Green dot**: LSP server is connected
+- **Yellow pulsing dot**: Connecting to LSP server
+- **Red dot**: LSP server is disconnected
+
+To disable the automatic LSP status indicator:
+
+```tsx
+new ExtensionCustomMenu({ autoAddLspStatus: false })
+```
+
+### Extension order matters
+
+For auto-detection to work, extensions must be registered in the correct order:
+
+```tsx
+extensions: [
+  // ... other extensions
+  new ExtensionYjs({ ... }),     // Register YJS first (if using collaboration)
+  new ExtensionLsp({ ... }),     // Register LSP second (if using LSP)
+  new ExtensionCustomMenu(),     // Register CustomMenu LAST for auto-detection
+]
+```
+
+## Combining Collaboration and LSP
+
+You can use both YJS collaboration and LSP together. Both status indicators will appear in the toolbar:
+
+```tsx
+// src/FullFeaturedEditor.tsx
+import { CoreEditor } from '@kerebron/editor';
+import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
+import { ExtensionCustomMenu } from '@kerebron/extension-menu';
+import { ExtensionYjs } from '@kerebron/extension-yjs';
+import { ExtensionLsp } from '@kerebron/extension-lsp';
+import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
+import { WebsocketProvider } from 'y-websocket';
+import * as Y from 'yjs';
+
+// Import all styles
+import '@kerebron/editor/assets/index.css';
+import '@kerebron/extension-menu/assets/custom-menu.css';
+import '@kerebron/extension-yjs/assets/collaboration-status.css';
+import '@kerebron/extension-lsp/assets/lsp-status.css';
+
+// ... setup code ...
+
+const editor = new CoreEditor({
+  element: editorRef.current,
+  uri: 'file:///document.md',
+  extensions: [
+    new AdvancedEditorKit(),
+    new ExtensionYjs({ ydoc, provider }),
+    new ExtensionLsp({ getLspTransport }),
+    new ExtensionCustomMenu(), // Shows both collab AND LSP status!
+  ],
+});
+```
+
+### Customizing toolbar status indicators
+
+You can selectively enable/disable auto-added status indicators:
+
+```tsx
+new ExtensionCustomMenu({
+  autoAddCollaborationStatus: true,  // Show collaboration status (default: true)
+  autoAddLspStatus: false,           // Hide LSP status
+})
+```
+
 ## Next steps
 
 - [Configure your editor](./configure.md)
