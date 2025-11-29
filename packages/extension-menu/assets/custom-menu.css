@@ -74,7 +74,7 @@
   padding: 6px var(--kb-space-sm);
   background: var(--kb-color-surface-elevated);
   border-bottom: 1px solid var(--kb-color-border-strong);
-  z-index: 1000;
+  z-index: var(--kb-z-dropdown, 100);
   overflow: visible;
 }
 
@@ -244,7 +244,7 @@
   border: 1px solid var(--kb-color-border-strong);
   border-radius: var(--kb-radius-lg);
   box-shadow: var(--kb-shadow-lg);
-  z-index: 1001;
+  z-index: calc(var(--kb-z-dropdown, 100) + 1);
   max-height: 80vh;
   display: flex;
   flex-direction: column;
@@ -503,7 +503,7 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 10000;
+  z-index: var(--kb-z-modal, 300);
   display: flex;
   align-items: center;
   justify-content: center;

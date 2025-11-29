@@ -3,6 +3,13 @@ import EditorYjs from './EditorYjs';
 import '@kerebron/editor/assets/vars.css';
 import './App.css';
 
+// Get current example name from URL path
+function getCurrentExample(): string {
+  const path = globalThis.location.pathname;
+  const match = path.match(/examples-frame\/(browser-[^/]+)/);
+  return match ? match[1] : 'browser-react';
+}
+
 // Generate human-readable room names
 const adjectives = [
   'red',
@@ -80,6 +87,10 @@ const App: React.FC = () => {
   const [themeOverride, setThemeOverride] = useState<string | null>(null);
   const [roomsDropdownOpen, setRoomsDropdownOpen] = useState(false);
   const roomsDropdownRef = useRef<HTMLDivElement>(null);
+  const [navMenuOpen, setNavMenuOpen] = useState(false);
+  const navMenuRef = useRef<HTMLDivElement>(null);
+  const [examples, setExamples] = useState<string[]>([]);
+  const currentExample = getCurrentExample();
 
   // Fetch list of existing rooms from backend
   const fetchRooms = useCallback(async () => {
@@ -94,15 +105,28 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Fetch list of available examples from backend
+  const fetchExamples = useCallback(async () => {
+    try {
+      const response = await fetch('/api/examples');
+      if (response.ok) {
+        const examplesList: string[] = await response.json();
+        setExamples(examplesList);
+      }
+    } catch (err) {
+      console.error('Failed to fetch examples:', err);
+    }
+  }, []);
+
   // Parse room from hash
   const parseRoomFromHash = useCallback(() => {
-    const docUrl = window.location.hash.slice(1);
+    const docUrl = globalThis.location.hash.slice(1);
     if (docUrl.startsWith('room:')) {
       setRoomId(docUrl.substring('room:'.length));
     } else {
       // Auto-create a room with a friendly name
       const newRoomId = generateRoomName();
-      window.location.hash = 'room:' + newRoomId;
+      globalThis.location.hash = 'room:' + newRoomId;
       setRoomId(newRoomId);
     }
   }, []);
@@ -115,7 +139,8 @@ const App: React.FC = () => {
       setThemeOverride(saved);
     } else {
       setIsLightMode(
-        window.matchMedia?.('(prefers-color-scheme: light)').matches ?? false,
+        globalThis.matchMedia?.('(prefers-color-scheme: light)').matches ??
+          false,
       );
       setThemeOverride(null);
     }
@@ -125,10 +150,11 @@ const App: React.FC = () => {
   useEffect(() => {
     loadTheme();
     fetchRooms();
+    fetchExamples();
     parseRoomFromHash();
 
     const onHashChange = () => {
-      const docUrl = window.location.hash.slice(1);
+      const docUrl = globalThis.location.hash.slice(1);
       if (docUrl.startsWith('room:')) {
         const newRoomId = docUrl.substring('room:'.length);
         setRoomId(newRoomId);
@@ -142,18 +168,18 @@ const App: React.FC = () => {
       }
     };
 
-    window.addEventListener('hashchange', onHashChange);
-    window.matchMedia?.('(prefers-color-scheme: light)')
+    globalThis.addEventListener('hashchange', onHashChange);
+    globalThis.matchMedia?.('(prefers-color-scheme: light)')
       .addEventListener('change', onSystemThemeChange);
 
     return () => {
-      window.removeEventListener('hashchange', onHashChange);
-      window.matchMedia?.('(prefers-color-scheme: light)')
+      globalThis.removeEventListener('hashchange', onHashChange);
+      globalThis.matchMedia?.('(prefers-color-scheme: light)')
         .removeEventListener('change', onSystemThemeChange);
     };
-  }, [fetchRooms, loadTheme, parseRoomFromHash, themeOverride]);
+  }, [fetchExamples, fetchRooms, loadTheme, parseRoomFromHash, themeOverride]);
 
-  // Close rooms dropdown on outside click
+  // Close rooms dropdown and nav menu on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -161,6 +187,12 @@ const App: React.FC = () => {
         !roomsDropdownRef.current.contains(e.target as Node)
       ) {
         setRoomsDropdownOpen(false);
+      }
+      if (
+        navMenuRef.current &&
+        !navMenuRef.current.contains(e.target as Node)
+      ) {
+        setNavMenuOpen(false);
       }
     };
 
@@ -170,25 +202,25 @@ const App: React.FC = () => {
 
   const newRoom = () => {
     const newRoomId = generateRoomName();
-    window.location.hash = 'room:' + newRoomId;
+    globalThis.location.hash = 'room:' + newRoomId;
   };
 
   const joinRoom = () => {
     const trimmed = joinRoomInput.trim();
     if (trimmed) {
-      window.location.hash = 'room:' + trimmed;
+      globalThis.location.hash = 'room:' + trimmed;
       setJoinRoomInput('');
     }
   };
 
   const switchRoom = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
-    window.location.hash = 'room:' + id;
+    globalThis.location.hash = 'room:' + id;
     setRoomsDropdownOpen(false);
   };
 
   const copyRoomLink = async () => {
-    const url = window.location.href;
+    const url = globalThis.location.href;
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
@@ -214,14 +246,48 @@ const App: React.FC = () => {
     localStorage.removeItem(THEME_KEY);
     setThemeOverride(null);
     setIsLightMode(
-      window.matchMedia?.('(prefers-color-scheme: light)').matches ?? false,
+      globalThis.matchMedia?.('(prefers-color-scheme: light)').matches ?? false,
     );
+  };
+
+  const navigateToExample = (example: string) => {
+    globalThis.location.href = `/examples-frame/${example}/`;
   };
 
   return (
     <div className={`app-container ${isLightMode ? 'light-mode' : ''}`}>
       {/* Compact toolbar */}
       <div className='toolbar-row'>
+        {/* Hamburger menu for navigation */}
+        <div className='nav-menu' ref={navMenuRef}>
+          <button
+            type='button'
+            onClick={() => setNavMenuOpen(!navMenuOpen)}
+            className='icon-btn hamburger-btn'
+            title='Examples'
+            aria-label='Toggle navigation menu'
+          >
+            ☰
+          </button>
+          {navMenuOpen && (
+            <ul className='nav-menu-list'>
+              {examples.map((example) => (
+                <li
+                  key={example}
+                  className={example === currentExample ? 'active' : ''}
+                >
+                  <button
+                    type='button'
+                    onClick={() => navigateToExample(example)}
+                  >
+                    {example}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         <span className='app-title'>YJS + React</span>
 
         {/* User name input */}
@@ -234,6 +300,7 @@ const App: React.FC = () => {
             className='compact-input name-input'
           />
           <button
+            type='button'
             onClick={randomizeName}
             className='icon-btn'
             title='Random name'
@@ -247,6 +314,7 @@ const App: React.FC = () => {
           <span className='label'>Room:</span>
           <code className='room-id'>{roomId}</code>
           <button
+            type='button'
             onClick={copyRoomLink}
             className='icon-btn'
             title={copied ? 'Copied!' : 'Copy link'}
@@ -257,7 +325,7 @@ const App: React.FC = () => {
 
         {/* New/Join room */}
         <div className='toolbar-group'>
-          <button onClick={newRoom} className='compact-btn'>
+          <button type='button' onClick={newRoom} className='compact-btn'>
             New
           </button>
           <input
@@ -269,6 +337,7 @@ const App: React.FC = () => {
             className='compact-input room-input'
           />
           <button
+            type='button'
             onClick={joinRoom}
             disabled={!joinRoomInput.trim()}
             className='compact-btn'
@@ -282,6 +351,7 @@ const App: React.FC = () => {
           {/* Rooms dropdown */}
           <div className='rooms-dropdown' ref={roomsDropdownRef}>
             <button
+              type='button'
               onClick={() => setRoomsDropdownOpen(!roomsDropdownOpen)}
               className='icon-btn rooms-dropdown-toggle'
               title='Recent rooms'
@@ -307,6 +377,7 @@ const App: React.FC = () => {
 
           {/* Theme toggle */}
           <button
+            type='button'
             onClick={toggleTheme}
             onDoubleClick={resetThemeToSystem}
             className={`icon-btn theme-btn ${

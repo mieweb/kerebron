@@ -15,7 +15,7 @@
   padding: 4px 8px;
   background: #f9f9f9;
   border-bottom: 1px solid #dadce0;
-  z-index: var(--kb-z-dropdown, 1000);
+  z-index: var(--kb-z-dropdown, 100);
   overflow: visible;
 }
 
@@ -122,7 +122,7 @@
 
 .kb-menu {
   background-color: var(--kb-color-surface);
-  z-index: 10000;
+  z-index: var(--kb-z-dropdown, 100);
 }
 
 /* Toolbar items */
