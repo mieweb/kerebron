@@ -262,6 +262,31 @@ export default {
   color: var(--kb-text);
 }
 
+/* Override kerebron CSS variables for light mode */
+.app-container.light-mode {
+  --kb-color-text: #1f2937;
+  --kb-color-text-muted: #6b7280;
+  --kb-color-surface: #ffffff;
+  --kb-color-surface-elevated: #f9fafb;
+  --kb-color-surface-hover: rgba(60, 64, 67, 0.08);
+  --kb-color-border: #e5e7eb;
+  --kb-color-border-strong: #d1d5db;
+  --kb-color-hover: rgba(59, 130, 246, 0.05);
+  --kb-color-active: rgba(59, 130, 246, 0.1);
+}
+
+/* Override kerebron CSS variables for dark mode */
+.app-container:not(.light-mode) {
+  --kb-color-text: #f9fafb;
+  --kb-color-text-muted: #9ca3af;
+  --kb-color-surface: #1f2937;
+  --kb-color-surface-elevated: #374151;
+  --kb-color-border: #374151;
+  --kb-color-border-strong: #4b5563;
+  --kb-color-hover: rgba(59, 130, 246, 0.1);
+  --kb-color-active: rgba(59, 130, 246, 0.2);
+}
+
 .app-container.light-mode .connection-status.connected {
   background: rgba(34, 197, 94, 0.2);
   color: #16a34a;
