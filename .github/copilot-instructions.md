@@ -137,7 +137,12 @@ examples/          # Example implementations
 - Excluded directories: `examples/server-cloudflare-worker`
 
 ### ✅ Testing
-- Run `deno test` (currently: `deno test --no-check` as WIP)
+- **Unit tests**: `deno task test` - Runs unit tests for packages (currently markdown extension)
+- **Playwright tests**: `deno task test:playwright` - Runs browser E2E tests (headless)
+- **All tests**: `deno task test:all` - Runs both unit and Playwright tests
+- **Playwright UI mode**: `deno task test:playwright:ui` - Interactive test debugging
+- **Playwright headed**: `deno task test:playwright:headed` - Watch tests run in browser
+- **Install browsers**: `cd examples/browser-react && deno task playwright:install` for Chromium, or `deno run -A npm:playwright@1.49.1 install webkit` for WebKit
 - Tests should pass before PR submission
 
 ## Development Guidelines

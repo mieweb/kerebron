@@ -36,7 +36,12 @@
   "tasks": {
     "build": "deno task build:ext-wasm && deno task build:ext-odt",
     "build:ext-odt": "cd packages/odt-wasm && deno task build",
-    "build:ext-wasm": "cd packages/wasm && deno task build"
+    "build:ext-wasm": "cd packages/wasm && deno task build",
+    "test": "deno test -A --no-check packages/extension-markdown/test/",
+    "test:playwright": "cd examples/browser-react && deno task test",
+    "test:playwright:ui": "cd examples/browser-react && deno task test:ui",
+    "test:playwright:headed": "cd examples/browser-react && deno task test:headed",
+    "test:all": "deno task test && deno task test:playwright"
   },
   "imports": {
     "@deno/dnt": "jsr:@deno/dnt@^0.42.1",
