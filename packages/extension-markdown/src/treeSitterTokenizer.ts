@@ -30,6 +30,12 @@ function treeToTokens(
     if (!node) {
       return undefined;
     }
+    console.trace(
+      'aaa',
+      node.startIndex,
+      node.endIndex,
+      source.substring(node.startIndex, node.endIndex),
+    );
     return source.substring(node.startIndex, node.endIndex);
   };
 
@@ -705,7 +711,7 @@ function treeToTokens(
           );
           token.level = blockLevel;
 
-          let indent = 0;
+          let indent = 80;
           if ('indent' in node) {
             indent = (node.indent as string).length;
           }
@@ -790,6 +796,16 @@ function treeToTokens(
             );
             openToken.level = blockLevel;
             retVal.push(openToken);
+
+            // pipe_table_cell content incorrectly parsed
+            // https://github.com/tree-sitter-grammars/tree-sitter-markdown/pull/207
+            console.log('N', node.type, node.startPosition, node.endPosition);
+            console.log(
+              node.children.map(
+                (c) => [c.type, c.startPosition, c.endPosition],
+              ),
+              node.children.length,
+            );
 
             const children = [...node.children.filter((c) => !!c)];
             while (children.length > 0) {
