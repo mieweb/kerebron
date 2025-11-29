@@ -7,3 +7,4 @@ node_modules
 
 # Temp build config files
 *.build.json
+.playwright-mcp
