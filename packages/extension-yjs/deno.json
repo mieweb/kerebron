@@ -4,6 +4,8 @@
   "imports": {},
   "exports": {
     ".": "./src/ExtensionYjs.ts",
-    "./userColors": "./src/userColors.ts"
+    "./userColors": "./src/userColors.ts",
+    "./CollaborationStatus": "./src/CollaborationStatus.ts",
+    "./assets/collaboration-status.css": "./assets/collaboration-status.css"
   }
 }

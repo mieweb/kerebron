@@ -8,6 +8,54 @@ Custom menu system for ProseMirror editors with pinnable tools and overflow mana
 - **Overflow Menu**: Tools that don't fit in the toolbar appear in an overflow menu
 - **Mobile Responsive**: Automatically limits toolbar to 4 tools on narrow screens (< 768px)
 - **State Persistence**: Pinned tool configuration saved to localStorage
+- **Trailing Elements**: Support for fixed elements on the right side of the toolbar (e.g., collaboration status)
+- **Auto YJS Integration**: Automatically adds collaboration status when YJS extension is detected
+
+## Usage
+
+```typescript
+import { ExtensionCustomMenu } from '@kerebron/extension-menu';
+
+// Basic usage - auto-detects YJS and adds collaboration status
+new Editor({
+  extensions: [
+    ExtensionCustomMenu(),
+    // ... other extensions
+  ],
+});
+
+// Disable auto collaboration status
+new Editor({
+  extensions: [
+    ExtensionCustomMenu({ autoAddCollaborationStatus: false }),
+    // ... other extensions
+  ],
+});
+
+// Custom trailing elements
+import { CollaborationStatusElement } from '@kerebron/extension-yjs/CollaborationStatus';
+
+new Editor({
+  extensions: [
+    ExtensionCustomMenu({
+      autoAddCollaborationStatus: false,
+      trailingElements: [
+        new CollaborationStatusElement({ awareness, provider }),
+        // ... other trailing elements
+      ],
+    }),
+    // ... other extensions
+  ],
+});
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `content` | `MenuElement[][]` | Auto-generated | Custom menu content (pinnable tools) |
+| `trailingElements` | `MenuElement[]` | `[]` | Fixed elements on the right side of toolbar |
+| `autoAddCollaborationStatus` | `boolean` | `true` | Auto-add collaboration status when YJS is detected |
 
 ## Debug Mode
 

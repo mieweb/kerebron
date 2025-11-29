@@ -80,13 +80,12 @@ export default {
       roomIDs: [],
       joinRoomInput: '',
       copied: false,
-      userName: '',
+      userName: generateUserName(), // Always start with a random name
       isLightMode: false,
       themeOverride: null, // null = follow system, 'light' or 'dark' = user override
     };
   },
   created() {
-    this.loadUserName();
     this.loadTheme();
     this.fetch();
     this.parseRoomFromHash();
@@ -154,15 +153,6 @@ export default {
     },
     onDisconnected() {
       console.log('Editor disconnected from room:', this.roomId);
-    },
-    loadUserName() {
-      const saved = localStorage.getItem(USER_NAME_KEY);
-      if (saved) {
-        this.userName = saved;
-      } else {
-        this.userName = generateUserName();
-        this.saveUserName();
-      }
     },
     saveUserName() {
       if (this.userName.trim()) {
