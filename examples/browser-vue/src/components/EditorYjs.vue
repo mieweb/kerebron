@@ -1,8 +1,5 @@
 <template>
   <div>
-    <div class="connection-status" :class="connectionStatus">
-      {{ connectionStatus === 'connected' ? '🟢 Connected' : connectionStatus === 'connecting' ? '🟡 Connecting...' : '🔴 Disconnected' }}
-    </div>
     <div>
       <div ref="editor" class="kb-component"></div>
     </div>
@@ -170,28 +167,5 @@ export default {
 @import '@kerebron/extension-tables/assets/tables.css';
 @import '@kerebron/extension-menu/assets/custom-menu.css';
 @import '@kerebron/extension-codemirror/assets/codemirror.css';
-
-.connection-status {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-}
-
-.connection-status.connected {
-  background: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
-}
-
-.connection-status.connecting {
-  background: rgba(234, 179, 8, 0.15);
-  color: #eab308;
-}
-
-.connection-status.disconnected {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-}
+@import '@kerebron/extension-yjs/assets/collaboration-status.css';
 </style>

@@ -188,6 +188,24 @@
   margin-left: auto;
 }
 
+/* Trailing separator (before trailing elements) */
+.kb-custom-menu__separator--trailing {
+  margin-left: 0;
+}
+
+/* Trailing elements group (always visible, not pinnable) */
+.kb-custom-menu__trailing-group {
+  display: flex;
+  align-items: center;
+  gap: var(--kb-space-xs);
+  flex-shrink: 0;
+}
+
+.kb-custom-menu__trailing-item {
+  display: inline-flex;
+  align-items: center;
+}
+
 /* Overflow toggle button (3-dot menu) */
 .kb-custom-menu__overflow-toggle {
   display: inline-flex;

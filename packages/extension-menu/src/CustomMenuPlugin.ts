@@ -44,6 +44,7 @@ export class CustomMenuView {
   pinnedDropdownMenu: HTMLElement | null = null;
   modal: HTMLElement | null = null;
   tools: ToolItem[] = [];
+  trailingElements: MenuElement[] = [];
   root: Document | ShadowRoot;
   resizeHandle: HTMLElement;
   editorContainer: HTMLElement;
@@ -58,10 +59,14 @@ export class CustomMenuView {
     readonly editorView: EditorView,
     readonly editor: CoreEditor,
     readonly content: readonly (readonly MenuElement[])[],
+    trailingElements?: readonly MenuElement[],
   ) {
     debug('CustomMenuView constructor called');
     debug('Content groups:', content.length);
     this.root = editorView.root;
+
+    // Store trailing elements
+    this.trailingElements = trailingElements ? [...trailingElements] : [];
 
     // Create wrapper
     this.wrapper = document.createElement('div');
@@ -1030,6 +1035,29 @@ export class CustomMenuView {
       this.toolbar.appendChild(overflowToggle);
     }
 
+    // Render trailing elements (always visible, not pinnable)
+    if (this.trailingElements.length > 0) {
+      // Add separator before trailing elements
+      const separator = document.createElement('div');
+      separator.classList.add(CSS_PREFIX + '__separator');
+      separator.classList.add(CSS_PREFIX + '__separator--trailing');
+      this.toolbar.appendChild(separator);
+
+      // Create a trailing group container
+      const trailingGroup = document.createElement('div');
+      trailingGroup.classList.add(CSS_PREFIX + '__trailing-group');
+
+      this.trailingElements.forEach((element) => {
+        const { dom, update } = element.render(this.editorView);
+        const wrapper = document.createElement('span');
+        wrapper.classList.add(CSS_PREFIX + '__trailing-item');
+        wrapper.appendChild(dom);
+        trailingGroup.appendChild(wrapper);
+      });
+
+      this.toolbar.appendChild(trailingGroup);
+    }
+
     // Render overflow menu content
     this.renderOverflowMenu();
 
@@ -1272,11 +1300,21 @@ export class CustomMenuView {
   }
 }
 
+export interface CustomMenuPluginOptions {
+  content: readonly (readonly MenuElement[])[];
+  trailingElements?: readonly MenuElement[];
+}
+
 export class CustomMenuPlugin extends Plugin {
-  constructor(editor: CoreEditor, options: CustomMenuOptions) {
+  constructor(editor: CoreEditor, options: CustomMenuPluginOptions) {
     super({
       view(editorView) {
-        return new CustomMenuView(editorView, editor, options.content);
+        return new CustomMenuView(
+          editorView,
+          editor,
+          options.content,
+          options.trailingElements,
+        );
       },
     });
   }

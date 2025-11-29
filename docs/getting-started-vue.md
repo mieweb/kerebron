@@ -544,6 +544,155 @@ Then use it without importing:
 </template>
 ```
 
+## Adding Real-time Collaboration
+
+Kerebron supports real-time collaborative editing using [Yjs](https://yjs.dev/). When you add the YJS extension alongside the custom menu, a collaboration status indicator is automatically added to the toolbar.
+
+### Install collaboration dependencies
+
+```bash
+npm install @kerebron/extension-yjs yjs y-websocket
+```
+
+### Create a collaborative editor component
+
+```vue
+<!-- components/CollaborativeEditor.vue -->
+<template>
+  <div>
+    <div class="status">
+      Status: <strong>{{ connectionStatus }}</strong>
+    </div>
+    <div ref="editorRef" class="kb-component"></div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue';
+import { CoreEditor } from '@kerebron/editor';
+import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
+import { ExtensionCustomMenu } from '@kerebron/extension-menu';
+import { ExtensionYjs } from '@kerebron/extension-yjs';
+import { WebsocketProvider } from 'y-websocket';
+import * as Y from 'yjs';
+
+interface Props {
+  roomName: string;
+  userName: string;
+  websocketUrl?: string;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  websocketUrl: 'ws://localhost:1234',
+});
+
+const editorRef = ref<HTMLElement>();
+const connectionStatus = ref<'connecting' | 'connected' | 'disconnected'>('connecting');
+
+let editor: CoreEditor | null = null;
+let provider: WebsocketProvider | null = null;
+let ydoc: Y.Doc | null = null;
+
+onMounted(() => {
+  if (!editorRef.value) return;
+
+  // Create Yjs document
+  ydoc = new Y.Doc();
+
+  // Create WebSocket provider
+  provider = new WebsocketProvider(props.websocketUrl, props.roomName, ydoc);
+
+  // Set user information for awareness
+  provider.awareness.setLocalStateField('user', {
+    name: props.userName,
+    color: `hsl(${Math.random() * 360}, 70%, 50%)`,
+  });
+
+  // Track connection status
+  provider.on('status', ({ status }: { status: string }) => {
+    connectionStatus.value = status as 'connecting' | 'connected' | 'disconnected';
+  });
+
+  // Create editor with collaboration
+  editor = new CoreEditor({
+    element: editorRef.value,
+    extensions: [
+      new AdvancedEditorKit(),
+      new ExtensionCustomMenu(), // Auto-adds collaboration status!
+      new ExtensionYjs({
+        ydoc,
+        provider,
+        type: ydoc.getXmlFragment('prosemirror'),
+      }),
+    ],
+  });
+});
+
+onUnmounted(() => {
+  editor?.destroy();
+  provider?.destroy();
+  ydoc?.destroy();
+});
+</script>
+
+<style scoped>
+@import '@kerebron/editor/assets/index.css';
+@import '@kerebron/extension-menu/assets/custom-menu.css';
+@import '@kerebron/extension-yjs/assets/collaboration-status.css';
+
+.status {
+  margin-bottom: 10px;
+  padding: 8px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+</style>
+```
+
+### Using the collaborative editor
+
+```vue
+<!-- App.vue -->
+<template>
+  <div class="container">
+    <h1>Collaborative Editor</h1>
+    
+    <div class="user-setup">
+      <input v-model="userName" placeholder="Your name" />
+      <input v-model="roomName" placeholder="Room name" />
+    </div>
+
+    <CollaborativeEditor
+      :room-name="roomName"
+      :user-name="userName"
+      websocket-url="ws://localhost:1234"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import CollaborativeEditor from './components/CollaborativeEditor.vue';
+
+const userName = ref('Anonymous');
+const roomName = ref('my-document');
+</script>
+```
+
+### Collaboration status features
+
+When using `ExtensionCustomMenu` with `ExtensionYjs`, a collaboration status button automatically appears in the toolbar showing:
+
+- **Connection status**: Green dot (connected) or red dot (disconnected)
+- **User count**: Badge showing number of active collaborators  
+- **User list**: Click to see all collaborators in the room
+
+To disable the automatic collaboration status:
+
+```typescript
+new ExtensionCustomMenu({ autoAddCollaborationStatus: false })
+```
+
 ## Next Steps
 
 - **[Add Collaboration](./getting-started-collaboration.md)** - Enable real-time multi-user editing

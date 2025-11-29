@@ -20,6 +20,7 @@ import '@kerebron/extension-tables/assets/tables.css';
 import '@kerebron/extension-menu/assets/custom-menu.css';
 import '@kerebron/extension-codemirror/assets/codemirror.css';
 import '@kerebron/extension-autocomplete/assets/autocomplete.css';
+import '@kerebron/extension-yjs/assets/collaboration-status.css';
 
 const MyEditor: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
