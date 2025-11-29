@@ -179,6 +179,10 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
 
   const entryPoints = [];
   for (const [name, file] of Object.entries(exports)) {
+    // Skip CSS files - they are copied separately in postBuild
+    if (file.endsWith('.css')) {
+      continue;
+    }
     entryPoints.push({
       name,
       path: path.resolve(workspaceRoot, file),

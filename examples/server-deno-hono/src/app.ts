@@ -14,7 +14,7 @@ const __dirname = import.meta.dirname;
 const app = new Hono();
 
 const yjsAdapter = new HonoYjsMemAdapter();
-// const lspWsAdapter = new LspWsAdapter();
+const lspWsAdapter = new LspWsAdapter();
 
 const examples = Array
   .from(Deno.readDirSync(__dirname + '/../..'))

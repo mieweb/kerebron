@@ -5,6 +5,7 @@ import { type MenuElement } from './menu.ts';
 import { buildMenu } from './buildMenu.ts';
 import { CustomMenuPlugin } from './CustomMenuPlugin.ts';
 import { CollaborationStatusElement } from '@kerebron/extension-yjs/CollaborationStatus';
+import { LspStatusElement } from '@kerebron/extension-lsp/LspStatus';
 
 export interface CustomMenuOptions {
   /// Provides the content of the menu (pinnable tools)
@@ -15,6 +16,9 @@ export interface CustomMenuOptions {
   /// Whether to automatically add the collaboration status element when YJS is detected
   /// Defaults to true
   autoAddCollaborationStatus?: boolean;
+  /// Whether to automatically add the LSP status element when LSP is detected
+  /// Defaults to true
+  autoAddLspStatus?: boolean;
 }
 
 /// Extension for a customizable menu with pinned items
@@ -41,6 +45,19 @@ export class ExtensionCustomMenu extends Extension<CustomMenuOptions> {
           });
           trailingElements.push(collabStatus);
         }
+      }
+    }
+
+    // Auto-add LSP status if LSP extension is present
+    const autoAddLsp = this.config?.autoAddLspStatus ?? true;
+    if (autoAddLsp) {
+      const lspExtension = this.editor.getExtension('lsp');
+      if (lspExtension) {
+        const lspStatus = new LspStatusElement({
+          lspExtension: lspExtension as any,
+          label: 'LSP',
+        });
+        trailingElements.push(lspStatus);
       }
     }
 
