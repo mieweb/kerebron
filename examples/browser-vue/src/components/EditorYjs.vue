@@ -1,7 +1,7 @@
 <template>
   <div>
     <div>
-      <div ref="editor" class="kb-component"></div>
+      <div ref="editor" class="kb-component" :class="themeClass"></div>
     </div>
     <div>
       <h5>Markdown</h5>
@@ -43,6 +43,10 @@ export default {
       type: String,
       default: '',
     },
+    isLightMode: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ['connected', 'disconnected'],
   expose: ['loadDoc', 'loadDoc2'],
@@ -59,6 +63,11 @@ export default {
       connectionStatus: 'connecting',
       wsProvider: null,
     };
+  },
+  computed: {
+    themeClass() {
+      return this.isLightMode ? 'kb-component--light' : 'kb-component--dark';
+    },
   },
   async mounted() {
     this.$nextTick(() => {

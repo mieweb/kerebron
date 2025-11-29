@@ -38,7 +38,7 @@
       </div>
     </div>
 
-    <EditorYjs :key="roomId" :roomId="roomId" :userName="userName" @connected="onConnected" @disconnected="onDisconnected" />
+    <EditorYjs :key="roomId" :roomId="roomId" :userName="userName" :isLightMode="isLightMode" @connected="onConnected" @disconnected="onDisconnected" />
   </div>
 </template>
 

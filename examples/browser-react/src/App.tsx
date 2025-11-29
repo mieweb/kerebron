@@ -328,7 +328,14 @@ const App: React.FC = () => {
 
       {/* Editor */}
       {roomId
-        ? <EditorYjs key={roomId} roomId={roomId} userName={userName} />
+        ? (
+          <EditorYjs
+            key={roomId}
+            roomId={roomId}
+            userName={userName}
+            isLightMode={isLightMode}
+          />
+        )
         : (
           <div className='no-room-message'>
             Select a room or create a new one to start editing collaboratively

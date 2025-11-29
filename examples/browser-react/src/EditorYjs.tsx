@@ -25,9 +25,12 @@ import '@kerebron/extension-yjs/assets/collaboration-status.css';
 interface EditorYjsProps {
   roomId: string;
   userName: string;
+  isLightMode?: boolean;
 }
 
-const MyEditor: React.FC<EditorYjsProps> = ({ roomId, userName }) => {
+const MyEditor: React.FC<EditorYjsProps> = (
+  { roomId, userName, isLightMode },
+) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const editorInstance = useRef<CoreEditor | null>(null);
   const wsProviderRef = useRef<WebsocketProvider | null>(null);
@@ -115,7 +118,12 @@ const MyEditor: React.FC<EditorYjsProps> = ({ roomId, userName }) => {
   return (
     <div>
       <div>
-        <div ref={editorRef} className='kb-component' />
+        <div
+          ref={editorRef}
+          className={`kb-component ${
+            isLightMode ? 'kb-component--light' : 'kb-component--dark'
+          }`}
+        />
       </div>
 
       <div>

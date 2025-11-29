@@ -48,10 +48,15 @@
   --kb-color-border: #e5e7eb;
   --kb-color-border-strong: #d1d5db;
 
-  /* Menu specific colors (Google Docs style) */
-  --kb-menu-dropdown-dark-bg: #344154;
-  --kb-menu-dropdown-dark-border: #5f6368;
-  --kb-menu-dropdown-dark-text: #e8eaed;
+  /* Menu specific colors */
+  /* Light theme defaults (used for dropdown menus) */
+  --kb-menu-dropdown-bg: #ffffff;
+  --kb-menu-dropdown-border: #d1d5db;
+  --kb-menu-dropdown-text: #1f2937;
+  /* Legacy naming - kept for backwards compatibility */
+  --kb-menu-dropdown-dark-bg: #ffffff;
+  --kb-menu-dropdown-dark-border: #d1d5db;
+  --kb-menu-dropdown-dark-text: #1f2937;
   --kb-menu-info-bg: #e8f0fe;
   --kb-menu-info-text: #1967d2;
 }
@@ -67,6 +72,14 @@
     --kb-color-border-strong: #4b5563;
     --kb-color-hover: rgba(59, 130, 246, 0.1);
     --kb-color-active: rgba(59, 130, 246, 0.2);
+    /* Menu dropdown colors for dark mode */
+    --kb-menu-dropdown-bg: #344154;
+    --kb-menu-dropdown-border: #5f6368;
+    --kb-menu-dropdown-text: #e8eaed;
+    /* Legacy naming */
+    --kb-menu-dropdown-dark-bg: #344154;
+    --kb-menu-dropdown-dark-border: #5f6368;
+    --kb-menu-dropdown-dark-text: #e8eaed;
   }
 }
 
@@ -92,4 +105,33 @@
   --kb-color-border-strong: #4b5563;
   --kb-color-hover: rgba(59, 130, 246, 0.1);
   --kb-color-active: rgba(59, 130, 246, 0.2);
+  /* Menu dropdown colors for dark mode */
+  --kb-menu-dropdown-bg: #344154;
+  --kb-menu-dropdown-border: #5f6368;
+  --kb-menu-dropdown-text: #e8eaed;
+  /* Legacy naming */
+  --kb-menu-dropdown-dark-bg: #344154;
+  --kb-menu-dropdown-dark-border: #5f6368;
+  --kb-menu-dropdown-dark-text: #e8eaed;
+}
+
+/* Explicit light theme class (overrides system dark mode preference) */
+.kb-component--light {
+  --kb-color-text: #1f2937;
+  --kb-color-text-muted: #6b7280;
+  --kb-color-surface: #ffffff;
+  --kb-color-surface-elevated: #f9fafb;
+  --kb-color-surface-hover: rgba(60, 64, 67, 0.08);
+  --kb-color-border: #e5e7eb;
+  --kb-color-border-strong: #d1d5db;
+  --kb-color-hover: rgba(59, 130, 246, 0.05);
+  --kb-color-active: rgba(59, 130, 246, 0.1);
+  /* Menu dropdown colors for light mode */
+  --kb-menu-dropdown-bg: #ffffff;
+  --kb-menu-dropdown-border: #d1d5db;
+  --kb-menu-dropdown-text: #1f2937;
+  /* Legacy naming */
+  --kb-menu-dropdown-dark-bg: #ffffff;
+  --kb-menu-dropdown-dark-border: #d1d5db;
+  --kb-menu-dropdown-dark-text: #1f2937;
 }

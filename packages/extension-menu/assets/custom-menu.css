@@ -294,7 +294,7 @@
   padding: var(--kb-space-sm) 0;
   border: none;
   background: transparent;
-  color: var(--kb-color-text);
+  color: var(--kb-menu-dropdown-dark-text);
   cursor: pointer;
   border-radius: 0;
   transition: none;
@@ -379,7 +379,7 @@
 /* Overflow item label */
 .kb-custom-menu__overflow-item-label {
   flex: 1;
-  color: var(--kb-color-text);
+  color: var(--kb-menu-dropdown-dark-text);
   font-size: var(--kb-text-sm);
   white-space: nowrap;
   overflow: hidden;
@@ -392,7 +392,8 @@
   align-items: center;
   margin-left: auto;
   padding-left: var(--kb-space-sm);
-  color: var(--kb-color-text-muted);
+  color: var(--kb-menu-dropdown-dark-text);
+  opacity: 0.7;
 }
 
 .kb-custom-menu__overflow-item-chevron svg {
@@ -848,6 +849,7 @@
   min-width: 200px;
   max-width: 300px;
   background: var(--kb-menu-dropdown-dark-bg) !important;
+  color: var(--kb-menu-dropdown-dark-text);
   border: 1px solid var(--kb-color-border-strong);
   border-radius: var(--kb-radius-lg);
   box-shadow: var(--kb-shadow-lg);

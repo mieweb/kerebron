@@ -434,6 +434,38 @@ export class CustomMenuView {
     this.pinnedDropdownMenu = document.createElement('div');
     this.pinnedDropdownMenu.classList.add(CSS_PREFIX + '__pinned-dropdown');
 
+    // Inherit theme CSS variables from editor container
+    // This ensures dropdowns match the editor's theme even when appended to body
+    const editorContainer = this.editorView.dom.closest('.kb-component') ||
+      this.editorView.dom.parentElement;
+    if (editorContainer) {
+      const computedStyle = getComputedStyle(editorContainer);
+      const themeVars = [
+        // New unified naming
+        '--kb-menu-dropdown-bg',
+        '--kb-menu-dropdown-border',
+        '--kb-menu-dropdown-text',
+        // Legacy naming (for backwards compatibility)
+        '--kb-menu-dropdown-dark-bg',
+        '--kb-menu-dropdown-dark-border',
+        '--kb-menu-dropdown-dark-text',
+        // General theme colors
+        '--kb-color-surface',
+        '--kb-color-surface-elevated',
+        '--kb-color-surface-hover',
+        '--kb-color-border',
+        '--kb-color-border-strong',
+        '--kb-color-text',
+        '--kb-color-text-muted',
+      ];
+      themeVars.forEach((varName) => {
+        const value = computedStyle.getPropertyValue(varName).trim();
+        if (value) {
+          this.pinnedDropdownMenu!.style.setProperty(varName, value);
+        }
+      });
+    }
+
     // Position it below the trigger element
     const rect = triggerElement.getBoundingClientRect();
     this.pinnedDropdownMenu.style.position = 'absolute';
