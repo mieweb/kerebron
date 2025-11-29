@@ -22,28 +22,20 @@ import '@kerebron/extension-codemirror/assets/codemirror.css';
 import '@kerebron/extension-autocomplete/assets/autocomplete.css';
 import '@kerebron/extension-yjs/assets/collaboration-status.css';
 
-const MyEditor: React.FC = () => {
+interface EditorYjsProps {
+  roomId: string;
+  userName: string;
+}
+
+const MyEditor: React.FC<EditorYjsProps> = ({ roomId, userName }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const editorInstance = useRef<CoreEditor | null>(null);
   const wsProviderRef = useRef<WebsocketProvider | null>(null);
 
   const [md, setMd] = useState<string>('');
-  const [connectionStatus, setConnectionStatus] = useState<string>(
-    'connecting...',
-  );
 
   useEffect(() => {
     if (!editorRef.current) return;
-
-    // Get room ID from URL hash
-    const docUrl = globalThis.location.hash.slice(1);
-    let roomId: string;
-    if (docUrl.startsWith('room:')) {
-      roomId = docUrl.substring('room:'.length);
-    } else {
-      roomId = String(Math.random()).substring(2, 12);
-      globalThis.location.hash = 'room:' + roomId;
-    }
 
     // Set up Yjs document and WebSocket provider
     const userColor = userColors[random.uint32() % userColors.length];
@@ -55,14 +47,9 @@ const MyEditor: React.FC = () => {
     const wsProvider = new WebsocketProvider(wsUrl, roomId, ydoc);
     wsProviderRef.current = wsProvider;
 
-    wsProvider.on('status', (event: { status: string }) => {
-      console.log('WebSocket status:', event.status);
-      setConnectionStatus(event.status);
-    });
-
     // Set user awareness (for showing cursors of other users)
     wsProvider.awareness.setLocalStateField('user', {
-      name: 'User ' + Math.floor(Math.random() * 100),
+      name: userName,
       color: userColor.color,
       colorLight: userColor.light,
     });
@@ -110,24 +97,23 @@ const MyEditor: React.FC = () => {
       wsProvider.destroy();
       editor.destroy();
     };
-  }, []);
+  }, [roomId, userName]);
+
+  // Update user name in awareness when it changes
+  useEffect(() => {
+    if (wsProviderRef.current) {
+      const currentState = wsProviderRef.current.awareness.getLocalState();
+      if (currentState?.user) {
+        wsProviderRef.current.awareness.setLocalStateField('user', {
+          ...currentState.user,
+          name: userName,
+        });
+      }
+    }
+  }, [userName]);
 
   return (
     <div>
-      <div
-        style={{
-          marginBottom: '10px',
-          padding: '5px',
-          background: connectionStatus === 'connected' ? '#2d5a2d' : '#5a2d2d',
-          borderRadius: '4px',
-        }}
-      >
-        <small>
-          Collaboration: <strong>{connectionStatus}</strong> | Room:{' '}
-          <strong>{globalThis.location.hash.replace('#room:', '')}</strong>{' '}
-          | Share this URL to collaborate!
-        </small>
-      </div>
       <div>
         <div ref={editorRef} className='kb-component' />
       </div>
@@ -135,7 +121,7 @@ const MyEditor: React.FC = () => {
       <div>
         <div>
           <h5>Markdown Output</h5>
-          <pre>{md || "Loading..."}</pre>
+          <pre>{md || 'Loading...'}</pre>
         </div>
       </div>
     </div>
