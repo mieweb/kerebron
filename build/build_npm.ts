@@ -207,6 +207,13 @@ await iterateWorkspaces(workspaceRoot, async (workspaceRoot, json) => {
         version: Deno.args[0]?.replace(/^v/, ''),
         description: json.description || mainJson.description,
         license: json.license || mainJson.license,
+        // Add peer dependencies for React packages
+        ...(json.name === '@kerebron/editor-react' && {
+          peerDependencies: {
+            'react': '>=18.0.0',
+            'react-dom': '>=18.0.0',
+          },
+        }),
       },
       configFile: configFile,
       async postBuild() {
