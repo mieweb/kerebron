@@ -5,33 +5,27 @@ test.describe('Kerebron React Editor', () => {
     // Navigate to the React example served by server-deno-hono
     await page.goto('/examples-frame/browser-react/');
 
-    // Check for the main heading
-    await expect(page.getByRole('heading', { name: 'Yjs + React Demo' }))
-      .toBeVisible();
+    // Check for the app title in toolbar
+    await expect(page.locator('.app-title')).toContainText('YJS + React');
 
-    // Check for the "New Room" button
-    await expect(page.getByRole('button', { name: 'New Room' })).toBeVisible();
+    // Check that the editor is visible (room auto-created)
+    await expect(page.locator('.kb-editor')).toBeVisible();
 
-    // Check for either empty state OR room list (rooms may exist from previous runs)
-    const emptyMessage = page.getByText('No rooms yet. Create one above!');
-    const roomList = page.locator('ul');
+    // Room is auto-created on load, so URL should have room hash
+    await expect(page).toHaveURL(/#room:/);
 
-    // Wait for either the empty message or room list to appear
-    await expect(emptyMessage.or(roomList)).toBeVisible();
-
-    // Check for the instruction text when no room is selected
-    await expect(
-      page.getByText(
-        'Select a room or create a new one to start editing collaboratively',
-      ),
-    ).toBeVisible();
+    // Check for the hamburger menu button
+    await expect(page.locator('.hamburger-btn')).toBeVisible();
   });
 
   test('should create a new room and load the editor', async ({ page }) => {
     await page.goto('/examples-frame/browser-react/');
 
-    // Click the "New Room" button
-    await page.getByRole('button', { name: 'New Room' }).click();
+    // Wait for editor to load first
+    await expect(page.locator('.kb-editor')).toBeVisible();
+
+    // Click the "New" button to create a new room
+    await page.getByRole('button', { name: 'New' }).click();
 
     // Wait for the URL to change to include a room hash
     await expect(page).toHaveURL(/#room:/);
@@ -52,13 +46,11 @@ test.describe('Kerebron React Editor', () => {
   test('should allow typing text in the editor', async ({ page }) => {
     await page.goto('/examples-frame/browser-react/');
 
-    // Create a new room
-    await page.getByRole('button', { name: 'New Room' }).click();
-    await expect(page).toHaveURL(/#room:/);
-
-    // Click in the editor content area (not the toolbar)
+    // Wait for editor to load (room is auto-created)
     const editorContent = page.locator('.kb-editor');
     await expect(editorContent).toBeVisible();
+
+    // Click in the editor content area
     await editorContent.click();
 
     // Type some text
@@ -75,12 +67,11 @@ test.describe('Kerebron React Editor', () => {
   test('should apply bold formatting', async ({ page }) => {
     await page.goto('/examples-frame/browser-react/');
 
-    // Create a new room
-    await page.getByRole('button', { name: 'New Room' }).click();
-    await expect(page).toHaveURL(/#room:/);
+    // Wait for editor to load (room is auto-created)
+    const editor = page.locator('.kb-editor');
+    await expect(editor).toBeVisible();
 
     // Click in the editor and type
-    const editor = page.locator('.kb-editor');
     await editor.click();
     await page.keyboard.type('Bold text');
 
@@ -98,12 +89,11 @@ test.describe('Kerebron React Editor', () => {
   test('should apply italic formatting', async ({ page }) => {
     await page.goto('/examples-frame/browser-react/');
 
-    // Create a new room
-    await page.getByRole('button', { name: 'New Room' }).click();
-    await expect(page).toHaveURL(/#room:/);
+    // Wait for editor to load (room is auto-created)
+    const editor = page.locator('.kb-editor');
+    await expect(editor).toBeVisible();
 
     // Click in the editor and type
-    const editor = page.locator('.kb-editor');
     await editor.click();
     await page.keyboard.type('Italic text');
 
@@ -121,9 +111,8 @@ test.describe('Kerebron React Editor', () => {
   test('should have working menu dropdowns', async ({ page }) => {
     await page.goto('/examples-frame/browser-react/');
 
-    // Create a new room
-    await page.getByRole('button', { name: 'New Room' }).click();
-    await expect(page).toHaveURL(/#room:/);
+    // Wait for editor to load (room is auto-created)
+    await expect(page.locator('.kb-editor')).toBeVisible();
 
     // Check that menu buttons are present
     await expect(page.getByRole('button', { name: 'Insert ▼' })).toBeVisible();
@@ -135,12 +124,11 @@ test.describe('Kerebron React Editor', () => {
   test('should handle multiple paragraphs', async ({ page }) => {
     await page.goto('/examples-frame/browser-react/');
 
-    // Create a new room
-    await page.getByRole('button', { name: 'New Room' }).click();
-    await expect(page).toHaveURL(/#room:/);
+    // Wait for editor to load (room is auto-created)
+    const editor = page.locator('.kb-editor');
+    await expect(editor).toBeVisible();
 
     // Click in the editor
-    const editor = page.locator('.kb-editor');
     await editor.click();
 
     // Type first paragraph
@@ -160,12 +148,11 @@ test.describe('Kerebron React Editor', () => {
   test('should underline text', async ({ page }) => {
     await page.goto('/examples-frame/browser-react/');
 
-    // Create a new room
-    await page.getByRole('button', { name: 'New Room' }).click();
-    await expect(page).toHaveURL(/#room:/);
+    // Wait for editor to load (room is auto-created)
+    const editor = page.locator('.kb-editor');
+    await expect(editor).toBeVisible();
 
     // Click in the editor and type
-    const editor = page.locator('.kb-editor');
     await editor.click();
     await page.keyboard.type('Underlined text');
 
@@ -191,8 +178,8 @@ test.describe('Kerebron React Editor', () => {
 
     await page.goto('/examples-frame/browser-react/');
 
-    // Create a new room
-    await page.getByRole('button', { name: 'New Room' }).click();
+    // Wait for editor to load (room is auto-created)
+    await expect(page.locator('.kb-editor')).toBeVisible();
     await page.waitForTimeout(2000);
 
     // With server-deno-hono, we shouldn't have backend errors

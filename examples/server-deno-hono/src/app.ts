@@ -85,6 +85,10 @@ export class Server {
       return c.json(retVal);
     });
 
+    this.app.get('/api/examples', (c) => {
+      return c.json(examples);
+    });
+
     this.app.get(
       '/yjs/:room',
       upgradeWebSocket((c) => {

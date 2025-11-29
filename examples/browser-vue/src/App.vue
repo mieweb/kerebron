@@ -2,20 +2,38 @@
   <div class="app-container" :class="{ 'light-mode': isLightMode }">
     <!-- Compact toolbar - Line 1: Title, Name, Theme toggle -->
     <div class="toolbar-row">
+      <!-- Hamburger menu for navigation -->
+      <div class="nav-menu" ref="navMenuRef">
+        <button
+          type="button"
+          @click="navMenuOpen = !navMenuOpen"
+          class="icon-btn hamburger-btn"
+          title="Examples"
+          aria-label="Toggle navigation menu"
+        >
+          ☰
+        </button>
+        <ul v-if="navMenuOpen" class="nav-menu-list">
+          <li v-for="example in examples" :key="example" :class="{ active: example === currentExample }">
+            <button type="button" @click="navigateToExample(example)">{{ example }}</button>
+          </li>
+        </ul>
+      </div>
+
       <span class="app-title">YJS + Vue</span>
       <div class="toolbar-group">
         <input v-model="userName" placeholder="Your name" class="compact-input name-input" @blur="saveUserName" @keyup.enter="$event.target.blur()" />
-        <button @click="randomizeName" class="icon-btn" title="Random name">🎲</button>
+        <button type="button" @click="randomizeName" class="icon-btn" title="Random name">🎲</button>
       </div>
       <div class="toolbar-group">
         <span class="label">Room:</span>
         <code class="room-id">{{ roomId }}</code>
-        <button @click="copyRoomLink" class="icon-btn" :title="copied ? 'Copied!' : 'Copy link'">{{ copied ? '✓' : '📋' }}</button>
+        <button type="button" @click="copyRoomLink" class="icon-btn" :title="copied ? 'Copied!' : 'Copy link'">{{ copied ? '✓' : '📋' }}</button>
       </div>
       <div class="toolbar-group">
-        <button @click="newRoom" class="compact-btn">New</button>
+        <button type="button" @click="newRoom" class="compact-btn">New</button>
         <input v-model="joinRoomInput" placeholder="Join room..." class="compact-input room-input" @keyup.enter="joinRoom" />
-        <button @click="joinRoom" :disabled="!joinRoomInput.trim()" class="compact-btn">Join</button>
+        <button type="button" @click="joinRoom" :disabled="!joinRoomInput.trim()" class="compact-btn">Join</button>
       </div>
       <div class="toolbar-group toolbar-right">
         <details class="rooms-dropdown">
@@ -27,6 +45,7 @@
           </ul>
         </details>
         <button 
+          type="button"
           @click="toggleTheme" 
           @dblclick="resetThemeToSystem"
           class="icon-btn theme-btn" 
@@ -66,6 +85,13 @@ function generateUserName() {
   return `${adj} ${noun}`;
 }
 
+// Get current example name from URL path
+function getCurrentExample() {
+  const path = globalThis.location.pathname;
+  const match = path.match(/examples-frame\/(browser-[^/]+)/);
+  return match ? match[1] : 'browser-vue';
+}
+
 const USER_NAME_KEY = 'kerebron-user-name';
 const THEME_KEY = 'kerebron-theme';
 
@@ -83,20 +109,28 @@ export default {
       userName: generateUserName(), // Always start with a random name
       isLightMode: false,
       themeOverride: null, // null = follow system, 'light' or 'dark' = user override
+      navMenuOpen: false,
+      examples: [],
+      currentExample: getCurrentExample(),
     };
   },
   created() {
     this.loadTheme();
     this.fetch();
+    this.fetchExamples();
     this.parseRoomFromHash();
     
     // Listen for hash changes to switch rooms
     globalThis.addEventListener('hashchange', this.onHashChange);
+    
+    // Close nav menu on outside click
+    document.addEventListener('click', this.handleClickOutside);
   },
   beforeUnmount() {
     globalThis.removeEventListener('hashchange', this.onHashChange);
     globalThis.matchMedia?.('(prefers-color-scheme: light)')
       .removeEventListener('change', this.onSystemThemeChange);
+    document.removeEventListener('click', this.handleClickOutside);
   },
   methods: {
     parseRoomFromHash() {
@@ -122,6 +156,24 @@ export default {
     async fetch() {
       const response = await fetch('/api/rooms');
       this.roomIDs = await response.json();
+    },
+    async fetchExamples() {
+      try {
+        const response = await fetch('/api/examples');
+        if (response.ok) {
+          this.examples = await response.json();
+        }
+      } catch (err) {
+        console.error('Failed to fetch examples:', err);
+      }
+    },
+    handleClickOutside(e) {
+      if (this.$refs.navMenuRef && !this.$refs.navMenuRef.contains(e.target)) {
+        this.navMenuOpen = false;
+      }
+    },
+    navigateToExample(example) {
+      globalThis.location.href = `/examples-frame/${example}/`;
     },
     newRoom() {
       const roomId = generateRoomName();
@@ -311,6 +363,66 @@ export default {
   background: var(--kb-surface);
   border-bottom: 1px solid var(--kb-border);
   flex-wrap: wrap;
+  position: relative;
+}
+
+/* Navigation hamburger menu */
+.nav-menu {
+  position: relative;
+  z-index: calc(var(--kb-z-dropdown, 100) + 10);
+}
+
+.hamburger-btn {
+  font-size: 1.2rem;
+  padding: 0.3rem 0.5rem;
+}
+
+.nav-menu-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--kb-surface);
+  border: 1px solid var(--kb-border);
+  border-radius: 4px;
+  padding: 0.25rem;
+  margin-top: 0.25rem;
+  list-style: none;
+  min-width: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: var(--kb-z-tooltip, 200);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.app-container.light-mode .nav-menu-list {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.nav-menu-list li {
+  list-style: none;
+}
+
+.nav-menu-list li button {
+  display: block;
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  text-decoration: none;
+  text-align: left;
+  color: var(--kb-text);
+  font-size: 0.85rem;
+  border-radius: 3px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.nav-menu-list li button:hover {
+  background: var(--kb-bg);
+}
+
+.nav-menu-list li.active button {
+  background: var(--kb-accent);
+  color: var(--kb-bg);
 }
 
 .app-title {
