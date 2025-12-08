@@ -198,7 +198,6 @@ async function processModule(moduleRoot: string, json: DenoJson) {
   }
 
   const opts: BuildOptions = {
-    importMap: './import_map.npm.json',
     entryPoints,
     outDir: path.resolve('./npm', json.name),
     shims: {
