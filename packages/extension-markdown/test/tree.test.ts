@@ -5,6 +5,7 @@ import { MarkdownSerializer } from '@kerebron/extension-markdown/MarkdownSeriali
 import { fetchWasm, getLangTreeSitter } from '@kerebron/wasm';
 
 import { sitterTokenizer } from '../src/treeSitterTokenizer.ts';
+import { denoCdn } from '@kerebron/wasm/deno';
 
 const __dirname = import.meta.dirname;
 const source = new TextDecoder().decode(
@@ -12,7 +13,7 @@ const source = new TextDecoder().decode(
 );
 
 Deno.test('tree test', async () => {
-  const jsonManifest = getLangTreeSitter('markdown', '');
+  const jsonManifest = getLangTreeSitter('markdown', denoCdn());
   const blockUrl: string = jsonManifest.files.find((url) =>
     url.indexOf('_inline') === -1
   )!;
@@ -35,7 +36,7 @@ Deno.test('tree test', async () => {
     JSON.stringify(tree?.rootNode, null, 2),
   );
 
-  const tokenizer = await sitterTokenizer();
+  const tokenizer = await sitterTokenizer(denoCdn());
   const tokens = tokenizer.parse(source);
 
   Deno.writeTextFileSync(

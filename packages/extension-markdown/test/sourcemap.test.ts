@@ -8,6 +8,7 @@ import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionTables } from '@kerebron/extension-tables';
 import { NodeDocumentCode } from '@kerebron/extension-basic-editor/NodeDocumentCode';
 import { NodeCodeBlock } from '@kerebron/extension-basic-editor/NodeCodeBlock';
+import { denoCdn } from '@kerebron/wasm/deno';
 
 globalThis.DOMParser = DOMParser as any;
 globalThis.XMLSerializer = XMLSerializer;
@@ -27,6 +28,7 @@ Deno.test('sourcemap test', async () => {
   const markdownExtension = new ExtensionMarkdown({
     sourceMap: true,
     debugTokens: true,
+    cdnUrl: denoCdn(),
   });
 
   const editor = new CoreEditor({

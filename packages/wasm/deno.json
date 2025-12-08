@@ -6,6 +6,7 @@
   },
   "imports": {},
   "exports": {
-    ".": "./src/mod.ts"
+    ".": "./src/mod.ts",
+    "./deno": "./src/deno.ts"
   }
 }

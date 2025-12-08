@@ -8,8 +8,6 @@ import {
   Schema,
 } from 'prosemirror-model';
 
-const __dirname = import.meta.dirname;
-
 function maybeMerge(a: Node, b: Node): Node | undefined {
   if (a.isText && b.isText && Mark.sameSet(a.marks, b.marks)) {
     return (a as any).withText(a.text! + b.text!);

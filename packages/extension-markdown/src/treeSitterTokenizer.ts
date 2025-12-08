@@ -1153,7 +1153,7 @@ function treeToTokens(
   return retVal;
 }
 
-export async function sitterTokenizer(cdnUrl = '') {
+export async function sitterTokenizer(cdnUrl: string) {
   const jsonManifest = getLangTreeSitter('markdown', cdnUrl);
   const blockUrl: string = jsonManifest.files.find((url) =>
     url.indexOf('_inline') === -1

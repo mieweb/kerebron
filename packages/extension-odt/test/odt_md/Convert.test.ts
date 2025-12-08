@@ -10,6 +10,7 @@ import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionOdt } from '@kerebron/extension-odt';
 import { ExtensionTables } from '@kerebron/extension-tables';
 import { NodeCodeBlock } from '@kerebron/extension-basic-editor/NodeCodeBlock';
+import { denoCdn } from '@kerebron/wasm/deno';
 
 globalThis.DOMParser = DOMParser as any;
 globalThis.XMLSerializer = XMLSerializer;
@@ -25,7 +26,11 @@ const __dirname = import.meta.dirname;
 Deno.test('convert odt to md', async () => {
   // const serializerDebug = console.debug;
   const serializerDebug = undefined;
-  const extMd = new ExtensionMarkdown({ debugTokens: true, serializerDebug });
+  const extMd = new ExtensionMarkdown({
+    debugTokens: true,
+    serializerDebug,
+    cdnUrl: denoCdn(),
+  });
   const extOdt = new ExtensionOdt();
 
   const extensions = [
