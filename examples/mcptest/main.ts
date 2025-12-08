@@ -1,5 +1,5 @@
 import { CoreEditor } from '@kerebron/editor';
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
+import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionTables } from '@kerebron/extension-tables';
 import { ExtensionYjs } from '@kerebron/extension-yjs';

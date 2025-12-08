@@ -9,6 +9,7 @@ const allModules: string[] = [];
 
 interface DenoInfoModule {
   kind: 'esm';
+  error?: string;
   dependencies: Array<{
     specifier: string; // "prosemirror-view"
     code?: {
@@ -45,7 +46,7 @@ interface DenoJson {
 
 async function getInfo(name: string): Promise<DenoInfo> {
   const cmd = new Deno.Command(Deno.execPath(), {
-    args: ['info', '--no-npm', '--no-remote', '--json', name],
+    args: ['info', '--json', name],
     stdout: 'piped',
   });
 
@@ -154,27 +155,38 @@ async function processModule(moduleRoot: string, json: DenoJson) {
 
   const depsMap: Record<string, string> = {};
 
-  const info: DenoInfo = await getInfo(json.name);
-  for (const module of info.modules) {
-    if (!module.dependencies) {
-      continue;
-    }
-    if (!module.local.startsWith(moduleRoot)) {
-      continue;
-    }
-    for (const dep of module.dependencies) {
-      if (dep.specifier.startsWith('@kerebron')) {
-        if (dep.code?.error) {
-          throw new Error(dep.code.error);
-        }
-        if (dep.type?.error) {
-          throw new Error(dep.type.error);
-        }
-        if (dep.code?.specifier) {
-          depsMap[dep.specifier] = dep.code.specifier.replace('file:///', '/');
-        }
-        if (dep.type?.specifier) {
-          depsMap[dep.specifier] = dep.type.specifier.replace('file:///', '/');
+  for (const entryPoint of entryPoints) {
+    const info: DenoInfo = await getInfo(entryPoint.path);
+    for (const module of info.modules) {
+      if (module.error) {
+        throw new Error(module.error);
+      }
+      if (!module.dependencies) {
+        continue;
+      }
+      if (!module.local.startsWith(moduleRoot)) {
+        continue;
+      }
+      for (const dep of module.dependencies) {
+        if (dep.specifier.startsWith('@kerebron')) {
+          if (dep.code?.error) {
+            throw new Error(dep.code.error);
+          }
+          if (dep.type?.error) {
+            throw new Error(dep.type.error);
+          }
+          if (dep.code?.specifier) {
+            depsMap[dep.specifier] = dep.code.specifier.replace(
+              'file:///',
+              '/',
+            );
+          }
+          if (dep.type?.specifier) {
+            depsMap[dep.specifier] = dep.type.specifier.replace(
+              'file:///',
+              '/',
+            );
+          }
         }
       }
     }
@@ -197,6 +209,14 @@ async function processModule(moduleRoot: string, json: DenoJson) {
     };
   }
 
+  const hasAssets = await exists(path.resolve(moduleRoot, 'assets'));
+  const exportsObj: Record<string, Record<string, string>> = {};
+  if (hasAssets) {
+    exportsObj['./assets/*.css'] = {
+      'import': './assets/*.css',
+    };
+  }
+
   const opts: BuildOptions = {
     entryPoints,
     outDir: path.resolve('./npm', json.name),
@@ -212,6 +232,7 @@ async function processModule(moduleRoot: string, json: DenoJson) {
       version,
       description: json.description || mainJson.description,
       license: json.license || mainJson.license,
+      exports: exportsObj,
     },
     configFile,
     async postBuild() {
@@ -226,17 +247,35 @@ async function processModule(moduleRoot: string, json: DenoJson) {
           path.resolve('npm', json.name, 'README.md'),
         );
       }
-      if (await exists(path.resolve(moduleRoot, 'assets'))) {
+      if (hasAssets) {
         await copy(
           path.resolve(moduleRoot, 'assets'),
           path.resolve('npm', json.name, 'assets'),
           { overwrite: true, preserveTimestamps: true },
         );
       }
+
+      if (json.name !== '@kerebron/editor') {
+        const esmFiles = Array
+          .from(Deno.readDirSync(path.resolve('npm', json.name, 'esm')))
+          .filter((o) => o.isDirectory)
+          .map((o) => o.name)
+          .filter((name) => ['editor'].includes(name));
+
+        if (esmFiles.length > 0) {
+          console.debug(`mappings for ${json.name}`, mappings);
+          throw new Error(
+            `Probably broken esm dirs (${
+              esmFiles.join(', ')
+            }) in npm/${json.name}/esm`,
+          );
+        }
+      }
     },
     mappings,
     compilerOptions: {
       lib: ['ES2021'],
+      target: 'Latest',
     },
     typeCheck: false,
     test: false,

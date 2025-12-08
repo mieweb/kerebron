@@ -3,7 +3,7 @@ import { DOMParser, parseHTML } from 'npm:linkedom@latest';
 import { XMLSerializer } from 'npm:xmldom@latest';
 
 import { CoreEditor } from '@kerebron/editor';
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
+import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionTables } from '@kerebron/extension-tables';
 import { NodeDocumentCode } from '@kerebron/extension-basic-editor/NodeDocumentCode';

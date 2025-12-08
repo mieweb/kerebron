@@ -1,4 +1,4 @@
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
+import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
 import { CoreEditor, JSONContent } from '@kerebron/editor';
 import { assertEquals } from '@std/assert';
 

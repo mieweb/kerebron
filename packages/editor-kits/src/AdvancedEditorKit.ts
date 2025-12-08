@@ -1,7 +1,7 @@
 import { dracula } from 'thememirror';
 
 import { AnyExtensionOrReq, Extension } from '@kerebron/editor';
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
+import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionOdt } from '@kerebron/extension-odt';
 import { ExtensionTables } from '@kerebron/extension-tables';

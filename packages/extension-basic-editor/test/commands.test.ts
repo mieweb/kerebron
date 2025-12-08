@@ -1,4 +1,4 @@
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
+import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
 import { AnyExtension, CoreEditor } from '@kerebron/editor';
 import { type JSONContent } from '@kerebron/editor';
 
