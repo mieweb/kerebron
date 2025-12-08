@@ -15,7 +15,7 @@ import * as promise from 'lib0/promise';
 
 import { ySyncPlugin } from '../src/ySyncPlugin.ts';
 import { redo, undo, yUndoPlugin } from '../src/yUndoPlugin.ts';
-import { DummyEditorView } from '../../editor/src/DummyEditorView.ts';
+import { DummyEditorView } from '@kerebron/editor/DummyEditorView';
 import {
   prosemirrorJSONToYDoc,
   prosemirrorJSONToYXmlFragment,

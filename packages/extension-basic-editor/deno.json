@@ -3,7 +3,6 @@
   "tasks": {},
   "imports": {},
   "exports": {
-    ".": "./src/ExtensionBasicEditor.ts",
     "./ExtensionBasicEditor": "./src/ExtensionBasicEditor.ts",
     "./ExtensionBasicCodeEditor": "./src/ExtensionBasicCodeEditor.ts",
     "./ExtensionSelection": "./src/ExtensionSelection.ts",
@@ -24,6 +23,8 @@
     "./NodeOrderedList": "./src/NodeOrderedList.ts",
     "./NodeBulletList": "./src/NodeBulletList.ts",
     "./NodeListItem": "./src/NodeListItem.ts",
+    "./NodeTaskList": "./src/NodeTaskList.ts",
+    "./NodeTaskItem": "./src/NodeTaskItem.ts",
     "./NodeImage": "./src/NodeImage.ts",
     "./NodeVideo": "./src/NodeVideo.ts",
     "./NodeBlockquote": "./src/NodeBlockquote.ts",
