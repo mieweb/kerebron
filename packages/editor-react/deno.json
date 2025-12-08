@@ -1,0 +1,16 @@
+{
+  "name": "@kerebron/editor-react",
+  "tasks": {},
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "types": ["npm:@types/react@^19"]
+  },
+  "imports": {
+    "react": "npm:react@^19",
+    "react/jsx-runtime": "npm:react@^19/jsx-runtime"
+  },
+  "exports": {
+    ".": "./src/mod.ts"
+  }
+}

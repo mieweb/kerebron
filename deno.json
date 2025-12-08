@@ -3,6 +3,7 @@
   "workspace": [
     "packages/editor",
     "packages/editor-kits",
+    "packages/editor-react",
     "packages/extension-basic-editor",
     "packages/extension-tables",
     "packages/extension-menu",
