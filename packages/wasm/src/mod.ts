@@ -1,7 +1,5 @@
 import manifest from '../wasm.json' with { type: 'json' };
 
-const __dirname = import.meta.dirname;
-
 export function getLangsList(): string[] {
   return manifest
     .map(
@@ -38,10 +36,6 @@ export function getLangTreeSitter(
 }
 
 export async function fetchWasm(wasmUrl: string): Promise<Uint8Array> {
-  if ('Deno' in globalThis) { // Test or server-side
-    return globalThis.Deno.readFileSync(__dirname + '/../files' + wasmUrl);
-  }
-
   const response = await fetch(wasmUrl);
   if (response.status >= 400) {
     throw new Error(`Error fetching ${response.status}`);
@@ -51,12 +45,6 @@ export async function fetchWasm(wasmUrl: string): Promise<Uint8Array> {
 }
 
 export async function fetchTextResource(url: string): Promise<string> {
-  if ('Deno' in globalThis) {
-    return new TextDecoder().decode(
-      globalThis.Deno.readFileSync(__dirname + '/../files' + url),
-    );
-  }
-
   const responseScm = await fetch(url);
   if (responseScm.status >= 400) {
     throw new Error(`Error fetching ${responseScm.status}`);
