@@ -12,12 +12,12 @@
     "@vitejs/plugin-react-swc": "npm:@vitejs/plugin-react-swc@4.2.2",
     "vite-plugin-wasm": "npm:vite-plugin-wasm@3.5.0",
 
-    "react": "npm:react@19.1.0",
-    "react-dom": "npm:react-dom@19.1.0",
-    "react-dom/client": "npm:react-dom@19.1.0/client",
+    "react": "npm:react@^19",
+    "react-dom": "npm:react-dom@^19",
+    "react-dom/client": "npm:react-dom@^19/client",
 
-    "react/jsx-runtime": "npm:react@19.1.0/jsx-runtime",
-    "react/jsx-dev-runtime": "npm:react@19.1.0/jsx-dev-runtime"
+    "react/jsx-runtime": "npm:react@^19/jsx-runtime",
+    "react/jsx-dev-runtime": "npm:react@^19/jsx-dev-runtime"
   },
   "exports": {},
   "license": "MIT"
