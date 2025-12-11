@@ -1,3 +1,3 @@
 export function denoCdn() {
-  return import.meta.resolve('../files');
+  return import.meta.resolve('../assets');
 }
