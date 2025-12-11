@@ -22,13 +22,11 @@ jobs:
           deno-version: v2.x
       - uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version: '22.x'
           registry-url: 'https://registry.npmjs.org'
       - uses: actions-rust-lang/setup-rust-toolchain@v1
-      #      - name: Build packages
-      #        run: deno task --recursive build
-      - run: deno task -f @kerebron/odt-wasm build
-      - run: deno task -f example-vue build
+      - run: deno task -f @kerebron build
+      #      - run: deno task -f browser- build
       - name: Build npm
         run: deno run -A ./build/build_npm.ts ${{steps.get_tag_version.outputs.TAG_VERSION}}
       - name: Publish npm

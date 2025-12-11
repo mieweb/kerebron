@@ -33,8 +33,8 @@ jobs:
       #      - name: Lint code
       #        run: deno lint
       #
-      - name: Build wasm
-        run: deno task build
+      - run: deno task -f @kerebron build
+      #      - run: deno task -f browser- build
 
       - name: Run tests
         run: deno test -A --no-check packages/extension-markdown/test/

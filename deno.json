@@ -35,9 +35,8 @@
     "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
   },
   "tasks": {
-    "build": "deno task build:ext-wasm && deno task build:ext-odt",
-    "build:ext-odt": "cd packages/odt-wasm && deno task build",
-    "build:ext-wasm": "cd packages/wasm && deno task build"
+    "build:ext-odt": "deno task -f @kerebron/odt-wasm build",
+    "build:ext-wasm": "deno task -f @kerebron/wasm build"
   },
   "imports": {
     "@deno/dnt": "jsr:@deno/dnt@^0.42.3",

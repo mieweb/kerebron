@@ -23,7 +23,7 @@ async function getLatestRelease(repo: string) {
   const release = await response.json();
   return {
     version: release.tag_name,
-    assets: release.assets.map((a) => ({
+    assets: (release.assets || []).map((a) => ({
       name: a.name,
       url: a.browser_download_url,
       size: a.size,
