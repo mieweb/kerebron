@@ -433,7 +433,7 @@ export class CodeJar extends EventTarget {
     this.onUpdateCbk = callback;
   }
 
-  save(): Position {
+  save(): Position | undefined {
     const s = this.getSelection();
 
     const pos: Position = { start: 0, end: 0, dir: undefined };
@@ -442,8 +442,14 @@ export class CodeJar extends EventTarget {
     }
 
     let { anchorNode, anchorOffset, focusNode, focusOffset } = s;
-    if (!anchorNode) throw new Error('No anchorNode');
-    if (!focusNode) throw new Error('No focusNode');
+    if (!anchorNode) {
+      console.warn('No anchorNode');
+      return undefined;
+    }
+    if (!focusNode) {
+      console.warn('No focusNode');
+      return undefined;
+    }
 
     // If the anchor and focus are the editor element, return either a full
     // highlight or a start/end cursor position depending on the selection

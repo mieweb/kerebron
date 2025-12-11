@@ -301,7 +301,9 @@ class CodeJarBlockNodeView implements NodeView {
 
       // TODO fix for yjs collab
       // change.from, change.to, change.text.length
-      this.codeJar.restore(pos);
+      if (pos) {
+        this.codeJar.restore(pos);
+      }
     }
 
     this.node = updateNode;
