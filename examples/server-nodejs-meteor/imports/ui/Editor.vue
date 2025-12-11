@@ -8,7 +8,7 @@ import * as random from 'lib0/random';
 import * as Y from 'yjs';
 
 import { CoreEditor } from '@kerebron/editor';
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
+import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionTables } from '@kerebron/extension-tables';
 import { ExtensionMenu } from '@kerebron/extension-menu';

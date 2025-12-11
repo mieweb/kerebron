@@ -17,7 +17,7 @@
 </template>
 <script lang="ts">
 import { CoreEditor, type TextRange } from '@kerebron/editor';
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
+import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionOdt } from '@kerebron/extension-odt';
 import { ExtensionTables } from '@kerebron/extension-tables';
@@ -28,9 +28,6 @@ import {
   Dropdown,
   type MenuElement,
   MenuItem,
-} from '@kerebron/extension-menu-legacy';
-
-import {
   ExtensionMenuLegacy,
 } from '@kerebron/extension-menu-legacy';
 
@@ -184,10 +181,7 @@ export default {
 </script>
 <style>
 @import '@kerebron/editor/assets/index.css';
-@import '@kerebron/extension-tables/assets/tables.css';
-@import '@kerebron/extension-menu-legacy/assets/menu.css';
-@import '@kerebron/extension-codemirror/assets/codemirror.css';
-@import '@kerebron/extension-autocomplete/assets/autocomplete.css';
+@import '@kerebron/editor-kits/assets/AdvancedEditorKit.css';
 
 :host {
   position: relative;

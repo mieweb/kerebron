@@ -4,6 +4,8 @@ export function generateAlias() {
   return {
     '@kerebron/editor/assets': __dirname + '/../../' +
       'packages/editor/assets',
+    '@kerebron/editor-kits/assets': __dirname + '/../../' +
+      'packages/editor-kits/assets',
     '@kerebron/extension-tables/assets': __dirname + '/../../' +
       'packages/extension-tables/assets',
     '@kerebron/extension-menu/assets': __dirname + '/../../' +

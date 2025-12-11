@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import EditorYjs from './EditorYjs';
-import '@kerebron/editor/assets/vars.css';
+
+import '@kerebron/editor/assets/index.css';
+import '@kerebron/editor-kits/assets/AdvancedEditorKit.css';
 
 const App: React.FC = () => {
   const [roomIDs, setRoomIDs] = useState<string[]>([]);

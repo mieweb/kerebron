@@ -180,12 +180,7 @@ export default {
 </script>
 <style>
 @import '@kerebron/editor/assets/index.css';
-@import '@kerebron/extension-tables/assets/tables.css';
-/*@import '@kerebron/extension-menu/assets/custom-menu.css';*/
-@import '@kerebron/extension-menu-legacy/assets/menu.css';
-@import '@kerebron/extension-codemirror/assets/codemirror.css';
-@import '@kerebron/extension-codejar/assets/codejar.css';
-@import '@kerebron/extension-autocomplete/assets/autocomplete.css';
+@import '@kerebron/editor-kits/assets/DevAdvancedEditorKit.css';
 
 .md-selected {
   background: #FF000066;

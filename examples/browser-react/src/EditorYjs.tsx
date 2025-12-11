@@ -12,11 +12,6 @@ import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
 import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
 import { LspTransportGetter, Transport } from '@kerebron/extension-lsp';
 
-import '@kerebron/editor/assets/index.css';
-import '@kerebron/extension-tables/assets/tables.css';
-import '@kerebron/extension-menu/assets/custom-menu.css';
-import '@kerebron/extension-codemirror/assets/codemirror.css';
-
 const MyEditor: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
   const editorInstance = useRef<CoreEditor | null>(null);

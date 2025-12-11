@@ -1,4 +1,5 @@
-:root {
+:root,
+:host {
   /* Spacing System */
   --kb-space-xs: 0.25rem; /* 4px */
   --kb-space-sm: 0.5rem; /* 8px */
@@ -58,7 +59,8 @@
 
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root,
+  :host {
     --kb-color-text: #f9fafb;
     --kb-color-text-muted: #9ca3af;
     --kb-color-surface: #1f2937;
