@@ -19,6 +19,7 @@ export interface EditorConfig {
   uri?: string;
   languageID?: string;
   topNode?: string;
+  readOnly?: boolean;
 }
 
 export type JSONContent = {

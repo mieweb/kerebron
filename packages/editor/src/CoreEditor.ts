@@ -102,6 +102,7 @@ export class CoreEditor extends EventTarget {
           class: 'kb-editor',
         },
         dispatchTransaction: (tx: Transaction) => this.dispatchTransaction(tx),
+        editable: () => !this.config.readOnly,
       });
       this.view = view;
 
