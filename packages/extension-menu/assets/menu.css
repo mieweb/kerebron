@@ -233,9 +233,9 @@
   border-right: 4px solid transparent;
   border-top: 4px solid currentColor;
   opacity: 0.6;
-  position: absolute;
-  right: var(--kb-space-sm);
-  top: calc(50% - 2px);
+  position: relative;
+  top: 0px;
+  left: 0px;
 }
 
 .kb-dropdown__menu {
