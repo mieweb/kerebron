@@ -110,7 +110,7 @@ export class NodeCodeMirror extends NodeCodeBlock {
       languageWhitelist: this.config.languageWhitelist || LANGS,
       shadowRoot,
       ...defaultSettings,
-      readOnly: this.config.readOnly,
+      readOnly: this.editror.config.readOnly || this.config.readOnly,
       languageLoaders: { ...languageLoaders, ...legacyLanguageLoaders },
       undo: () => {
         this.editor.chain().undo().run();

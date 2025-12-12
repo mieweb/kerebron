@@ -69,6 +69,7 @@ class CodeJarBlockNodeView implements NodeView {
         indentOn: new RegExp('^(?!)'),
         moveToNewLine: new RegExp('^(?!)'),
         history: false,
+        readOnly: this.config.readOnly,
       },
     );
 

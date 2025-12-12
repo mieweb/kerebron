@@ -45,7 +45,7 @@ function arrowHandler(dir: 'left' | 'right' | 'up' | 'down') {
 }
 
 export interface NodeCodeJarConfig {
-  readOnly?: any;
+  readOnly?: boolean;
   languageWhitelist?: string[];
 }
 
@@ -84,16 +84,13 @@ export class NodeCodeJar extends NodeCodeBlock {
     const settings = {
       languageWhitelist: this.config.languageWhitelist || getLangsList(),
       shadowRoot,
-      // ...defaultSettings,
-      readOnly: this.config.readOnly,
-      // languageLoaders: { ...languageLoaders, ...legacyLanguageLoaders },
+      readOnly: this.editor.config.readOnly || this.config.readOnly,
       undo: () => {
         this.editor.chain().undo().run();
       },
       redo: () => {
         this.editor.chain().redo().run();
       },
-      // theme: [...(this.config.theme || [])],
     };
 
     return [
