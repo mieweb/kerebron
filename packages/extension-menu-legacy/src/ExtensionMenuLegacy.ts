@@ -19,6 +19,9 @@ export class ExtensionMenuLegacy extends Extension {
   }
 
   override getProseMirrorPlugins(): Plugin[] {
+    if (!this.editor.config.element) {
+      return [];
+    }
     const plugins: Plugin[] = [];
 
     let content = buildMenu(this.editor, this.editor.schema);
