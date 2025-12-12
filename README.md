@@ -77,6 +77,9 @@ npm install -g deno
 
 Install rust
 
-```
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o /tmp/rustup-init.sh
+chmod +x /tmp/rustup-init.sh
+/tmp/rustup-init.sh -y
+source "$HOME/.cargo/env"
 ```
