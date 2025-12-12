@@ -15,6 +15,7 @@ import type {
   LspRange,
   PublishDiagnosticsParams,
 } from '@kerebron/extension-lsp/types';
+import { denoCdn } from '@kerebron/wasm/deno';
 
 const __dirname = import.meta.dirname!;
 
@@ -27,26 +28,14 @@ async function loadWasm(url: string): Promise<Uint8Array> {
 // Load Markdown grammars (block and inline)
 const markdownWasm = await Deno.readFile(
   path.resolve(
-    __dirname,
-    '..',
-    '..',
-    '..',
-    'packages',
-    'wasm',
-    'files',
+    denoCdn().replace(/^file:/, ''),
     'tree-sitter-markdown',
     'tree-sitter-markdown.wasm',
   ),
 );
 const inlineWasm = await Deno.readFile(
   path.resolve(
-    __dirname,
-    '..',
-    '..',
-    '..',
-    'packages',
-    'wasm',
-    'files',
+    denoCdn().replace(/^file:/, ''),
     'tree-sitter-markdown',
     'tree-sitter-markdown_inline.wasm',
   ),
@@ -66,9 +55,9 @@ const inlineParser: Parser =
 function parseMarkdown(source: string, oldTree?: any) {
   let tree;
   if (false && oldTree) {
-    tree = BlockParser.parse(source, oldTree); // Incremental parse
+    tree = blockParser.parse(source, oldTree); // Incremental parse
   } else {
-    tree = BlockParser.parse(source); // Full parse
+    tree = blockParser.parse(source); // Full parse
   }
   const root = tree.rootNode;
 
@@ -77,7 +66,7 @@ function parseMarkdown(source: string, oldTree?: any) {
   function parseInlines(node: any): void {
     if (node.type === 'inline') {
       const inlineText = source.slice(node.startIndex, node.endIndex);
-      const inlineTree = InlineParser.parse(inlineText);
+      const inlineTree = inlineParser.parse(inlineText);
       // Replace the inline node's content with the parsed inline tree
       node.children = [inlineTree.rootNode];
     } else {
