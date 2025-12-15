@@ -1,10 +1,6 @@
 import { CoreEditor } from '@kerebron/editor';
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
-import { ExtensionMarkdown } from '@kerebron/extension-markdown';
-import { ExtensionTables } from '@kerebron/extension-tables';
+import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
 import { ExtensionYjs } from '@kerebron/extension-yjs';
-import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
-import { dracula } from 'thememirror';
 import { WebsocketProvider } from 'y-websocket';
 
 import { userColors } from '@kerebron/extension-yjs/userColors';
@@ -30,11 +26,8 @@ wsProvider.awareness.setLocalStateField('user', {
 
 const editor = new CoreEditor({
   extensions: [
-    new ExtensionBasicEditor(),
-    new ExtensionMarkdown(),
-    new ExtensionTables(),
+    new BrowserLessEditorKit(),
     new ExtensionYjs({ ydoc, provider: wsProvider }),
-    new ExtensionCodeMirror({ theme: [dracula] }),
   ],
 });
 
@@ -68,10 +61,7 @@ ydoc.on('update', async () => {
 
   const editor2 = new CoreEditor({
     extensions: [
-      new ExtensionBasicEditor(),
-      new ExtensionMarkdown(),
-      new ExtensionTables(),
-      new ExtensionCodeMirror(),
+      new BrowserLessEditorKit(),
     ],
   });
 

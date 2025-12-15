@@ -1,0 +1,13 @@
+{
+  "name": "@kerebron/editor-browserless",
+  "tasks": {},
+  "imports": {
+    "linkedom": "npm:linkedom@0.18.12",
+    "xmldom": "npm:xmldom@0.6.0"
+  },
+  "exports": {
+    ".": "./src/mod.ts",
+    "./BrowserLessEditorKit": "./src/BrowserLessEditorKit.ts",
+    "./window": "./src/window.ts"
+  }
+}

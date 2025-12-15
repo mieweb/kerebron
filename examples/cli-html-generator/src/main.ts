@@ -1,28 +1,9 @@
-// import { DOMParser } from 'jsr:@b-fuze/deno-dom'; // No xml support (mathML) https://github.com/b-fuze/deno-dom/issues?q=is%3Aissue%20state%3Aopen%20xml
-import { DOMParser, parseHTML } from 'npm:linkedom@latest';
-import { XMLSerializer } from 'npm:xmldom@latest';
-
 import { CoreEditor } from '@kerebron/editor';
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
-import { ExtensionMarkdown } from '@kerebron/extension-markdown';
-import { ExtensionTables } from '@kerebron/extension-tables';
-
-globalThis.DOMParser = DOMParser as any;
-globalThis.XMLSerializer = XMLSerializer;
-const doc = new DOMParser().parseFromString(
-  '<html><body></body></html>',
-  'text/html',
-)!;
-// const doc = new DOMParser().parseFromString('<html><body></body></html>', "application/xhtml+xml")!;
-
-globalThis.document = doc as any;
-console.log('globalThis.document', globalThis.document);
+import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
 
 const editor = new CoreEditor({
   extensions: [
-    new ExtensionBasicEditor(),
-    new ExtensionMarkdown(),
-    new ExtensionTables(),
+    new BrowserLessEditorKit(),
   ],
 });
 

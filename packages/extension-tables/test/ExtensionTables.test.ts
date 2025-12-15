@@ -1,5 +1,5 @@
-import { ExtensionTables } from '../src/ExtensionTables.ts';
 import { CoreEditor } from '@kerebron/editor';
+import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
 import { type JSONContent } from '@kerebron/editor';
 
 Deno.test('test command addColumnAfter', () => {
@@ -34,7 +34,7 @@ Deno.test('test command addColumnAfter', () => {
   };
 
   const extensions: any[] = [
-    new ExtensionTables(),
+    new BrowserLessEditorKit(),
   ];
 
   const editor = new CoreEditor({
@@ -80,7 +80,7 @@ Deno.test('test command addColumnBefore', () => {
   };
 
   const extensions: any[] = [
-    new ExtensionTables(),
+    new BrowserLessEditorKit(),
   ];
 
   const editor = new CoreEditor({
@@ -126,7 +126,7 @@ Deno.test('test command addRowAfter', () => {
   };
 
   const extensions: any[] = [
-    new ExtensionTables(),
+    new BrowserLessEditorKit(),
   ];
 
   const editor = new CoreEditor({
@@ -172,7 +172,7 @@ Deno.test('test command addRowBefore', () => {
   };
 
   const extensions: any[] = [
-    new ExtensionTables(),
+    new BrowserLessEditorKit(),
   ];
 
   const editor = new CoreEditor({
@@ -232,7 +232,7 @@ Deno.test('test command deleteColumn', () => {
   };
 
   const extensions: any[] = [
-    new ExtensionTables(),
+    new BrowserLessEditorKit(),
   ];
 
   const editor = new CoreEditor({
@@ -297,7 +297,7 @@ Deno.test('test command deleteRow', () => {
   };
 
   const extensions: any[] = [
-    new ExtensionTables(),
+    new BrowserLessEditorKit(),
   ];
 
   const editor = new CoreEditor({
@@ -343,7 +343,7 @@ Deno.test('test command deleteTable', () => {
   };
 
   const extensions: any[] = [
-    new ExtensionTables(),
+    new BrowserLessEditorKit(),
   ];
 
   const editor = new CoreEditor({
@@ -403,7 +403,7 @@ Deno.test('test command goToNextCell', () => {
   };
 
   const extensions: any[] = [
-    new ExtensionTables(),
+    new BrowserLessEditorKit(),
   ];
 
   const editor = new CoreEditor({
@@ -463,7 +463,7 @@ Deno.test('test command mergeCells', () => {
   };
 
   const extensions: any[] = [
-    new ExtensionTables(),
+    new BrowserLessEditorKit(),
   ];
 
   const editor = new CoreEditor({
@@ -509,7 +509,7 @@ Deno.test('test command setCellAttr', () => {
   };
 
   const extensions: any[] = [
-    new ExtensionTables(),
+    new BrowserLessEditorKit(),
   ];
 
   const editor = new CoreEditor({
@@ -558,7 +558,7 @@ Deno.test('test command splitCell', () => {
   };
 
   const extensions: any[] = [
-    new ExtensionTables(),
+    new BrowserLessEditorKit(),
   ];
 
   const editor = new CoreEditor({
@@ -604,7 +604,7 @@ Deno.test('test command toggleHeader', () => {
   };
 
   const extensions: any[] = [
-    new ExtensionTables(),
+    new BrowserLessEditorKit(),
   ];
 
   const editor = new CoreEditor({
@@ -650,7 +650,7 @@ Deno.test('test command toggleHeaderCell', () => {
   };
 
   const extensions: any[] = [
-    new ExtensionTables(),
+    new BrowserLessEditorKit(),
   ];
 
   const editor = new CoreEditor({
@@ -696,7 +696,7 @@ Deno.test('test command toggleHeaderColumn', () => {
   };
 
   const extensions: any[] = [
-    new ExtensionTables(),
+    new BrowserLessEditorKit(),
   ];
 
   const editor = new CoreEditor({
@@ -742,7 +742,7 @@ Deno.test('test command toggleHeaderRow', () => {
   };
 
   const extensions: any[] = [
-    new ExtensionTables(),
+    new BrowserLessEditorKit(),
   ];
 
   const editor = new CoreEditor({
