@@ -1,9 +1,9 @@
-import { ExtensionBaseKeymap } from '../src/ExtensionBaseKeymap.ts';
 import { CoreEditor } from '@kerebron/editor';
+import { ExtensionBasicEditor } from '../src/ExtensionBasicEditor.ts';
 
 Deno.test('ExtensionBaseKeymap should handle commands', () => {
   const editor = new CoreEditor({
-    extensions: [new ExtensionBaseKeymap()],
+    extensions: [new ExtensionBasicEditor()],
   });
 
   // Test joinUp command
@@ -19,10 +19,15 @@ Deno.test('ExtensionBaseKeymap should handle commands', () => {
   // Test selectNodeForward command
   editor.chain().selectNodeForward().run();
   // Test commands for each key in baseKeymap
-  const baseKeymap = editor.extensionManager.getExtension('base-keymap');
+  const baseKeymap = editor.getExtension('base-keymap');
   if (baseKeymap) {
-    Object.keys(baseKeymap.options.baseKeymap).forEach((key) => {
-      editor.chain()[baseKeymap.name + '_' + key]().run();
-    });
+    Object.values(baseKeymap.getKeyboardShortcuts()).forEach(
+      (action?: string) => {
+        if (!action) {
+          return;
+        }
+        editor.chain()[action]().run();
+      },
+    );
   }
 });

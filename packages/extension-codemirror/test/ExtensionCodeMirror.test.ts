@@ -1,6 +1,8 @@
-import { ExtensionCodeMirror } from '../src/ExtensionCodeMirror.ts';
-import { CoreEditor } from '@kerebron/editor';
+import { AnyExtensionOrReq, CoreEditor } from '@kerebron/editor';
 import { type JSONContent } from '@kerebron/editor';
+import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
+
+import { ExtensionCodeMirror } from '../src/ExtensionCodeMirror.ts';
 
 Deno.test('test command setCodeBlock', () => {
   const content: JSONContent = {
@@ -18,8 +20,9 @@ Deno.test('test command setCodeBlock', () => {
     ],
   };
 
-  const extensions: any[] = [
-    new ExtensionCodeMirror(),
+  const extensions: AnyExtensionOrReq[] = [
+    new ExtensionBasicEditor(),
+    new ExtensionCodeMirror({}),
   ];
 
   const editor = new CoreEditor({
@@ -49,8 +52,9 @@ Deno.test('test command ArrowLeft', () => {
     ],
   };
 
-  const extensions: any[] = [
-    new ExtensionCodeMirror(),
+  const extensions: AnyExtensionOrReq[] = [
+    new ExtensionBasicEditor(),
+    new ExtensionCodeMirror({}),
   ];
 
   const editor = new CoreEditor({
@@ -80,8 +84,9 @@ Deno.test('test command ArrowRight', () => {
     ],
   };
 
-  const extensions: any[] = [
-    new ExtensionCodeMirror(),
+  const extensions: AnyExtensionOrReq[] = [
+    new ExtensionBasicEditor(),
+    new ExtensionCodeMirror({}),
   ];
 
   const editor = new CoreEditor({
@@ -111,8 +116,9 @@ Deno.test('test command ArrowUp', () => {
     ],
   };
 
-  const extensions: any[] = [
-    new ExtensionCodeMirror(),
+  const extensions: AnyExtensionOrReq[] = [
+    new ExtensionBasicEditor(),
+    new ExtensionCodeMirror({}),
   ];
 
   const editor = new CoreEditor({
@@ -142,8 +148,9 @@ Deno.test('test command ArrowDown', () => {
     ],
   };
 
-  const extensions: any[] = [
-    new ExtensionCodeMirror(),
+  const extensions: AnyExtensionOrReq[] = [
+    new ExtensionBasicEditor(),
+    new ExtensionCodeMirror({}),
   ];
 
   const editor = new CoreEditor({

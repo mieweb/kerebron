@@ -53,12 +53,12 @@ const removeWhitespaces = (node: HTMLElement) => {
 
 export function elementFromString(value: string): HTMLElement {
   // add a wrapper to preserve leading and trailing whitespace
-  const wrappedValue = `<body>${value}</body>`;
+  const wrappedValue = `<html lang="en"><body>${value}</body></html>`;
 
-  const html =
+  const body =
     new globalThis.DOMParser().parseFromString(wrappedValue, 'text/html').body;
 
-  return removeWhitespaces(html);
+  return removeWhitespaces(body);
 }
 
 function prepareContentCheckSchema(schema: Schema): Schema {
@@ -142,7 +142,6 @@ export class ExtensionHtml extends Extension {
     editor: CoreEditor,
     schema: Schema,
   ): Record<string, Converter> {
-    const config = this.config;
     return {
       'text/html': {
         fromDoc: async (document: Node): Promise<Uint8Array> => {

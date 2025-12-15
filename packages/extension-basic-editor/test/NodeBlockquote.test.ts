@@ -1,9 +1,9 @@
-import { NodeBlockquote } from '../src/NodeBlockquote.ts';
 import { CoreEditor } from '@kerebron/editor';
+import { ExtensionBasicEditor } from '../src/ExtensionBasicEditor.ts';
 
 Deno.test('NodeBlockquote should handle commands', () => {
   const editor = new CoreEditor({
-    extensions: [new NodeBlockquote()],
+    extensions: [new ExtensionBasicEditor()],
   });
 
   // Test toggleBlockquote command

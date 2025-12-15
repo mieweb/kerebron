@@ -39,41 +39,45 @@ export class CommandManager {
       if (!commandFactory) {
         continue;
       }
+      this.overwriteCommandFactory(extName, key, commandFactory);
+    }
+  }
 
-      if (this.debug) {
-        const wrappedFactory = (...args: unknown[]) => {
-          const realCommand = commandFactory(...args);
+  private overwriteCommandFactory(
+    extName: string,
+    name: string,
+    commandFactory: CommandFactory,
+  ) {
+    if (this.debug) {
+      const wrappedFactory = (...args: unknown[]) => {
+        const realCommand = commandFactory(...args);
 
-          const command: Command = (state, dispatch, view) => {
-            if (dispatch) {
-              console.debug(`Command: ${extName}.${key}`);
-            }
-            return realCommand(state, dispatch, view);
-          };
-
-          return command;
+        const command: Command = (state, dispatch, view) => {
+          if (dispatch) {
+            console.debug(`Command: ${extName}.${name}`);
+          }
+          return realCommand(state, dispatch, view);
         };
 
-        this.commandFactories[key] = wrappedFactory;
-      } else {
-        this.commandFactories[key] = commandFactory;
-      }
-    }
-
-    for (const key in this.commandFactories) {
-      const factory = this.commandFactories[key];
-
-      this.run[key] = (...args) => {
-        const command: Command = factory(...args);
-        const state = this.editor.state;
-        const view = this.editor.view;
-        if (view instanceof EditorView) {
-          return command(state, view.dispatch, view);
-        } else {
-          return command(state, view.dispatch);
-        }
+        return command;
       };
+
+      this.commandFactories[name] = wrappedFactory;
+    } else {
+      this.commandFactories[name] = commandFactory;
     }
+
+    this.run[name] = (...args) => {
+      const factory = this.commandFactories[name];
+      const command: Command = factory(...args);
+      const state = this.editor.state;
+      const view = this.editor.view;
+      if (view instanceof EditorView) {
+        return command(state, view.dispatch, view);
+      } else {
+        return command(state, view.dispatch);
+      }
+    };
   }
 
   get state(): EditorState {

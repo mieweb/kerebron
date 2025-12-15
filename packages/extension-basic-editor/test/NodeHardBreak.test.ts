@@ -1,9 +1,9 @@
-import { NodeHardBreak } from '../src/NodeHardBreak.ts';
 import { CoreEditor } from '@kerebron/editor';
+import { ExtensionBasicEditor } from '../src/ExtensionBasicEditor.ts';
 
 Deno.test('NodeHardBreak should handle commands', () => {
   const editor = new CoreEditor({
-    extensions: [new NodeHardBreak()],
+    extensions: [new ExtensionBasicEditor()],
   });
 
   // Test setHardBreak command

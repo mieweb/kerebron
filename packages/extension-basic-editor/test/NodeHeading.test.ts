@@ -1,9 +1,9 @@
-import { NodeHeading } from '../src/NodeHeading.ts';
 import { CoreEditor } from '@kerebron/editor';
+import { ExtensionBasicEditor } from '../src/ExtensionBasicEditor.ts';
 
 Deno.test('NodeHeading should handle commands', () => {
   const editor = new CoreEditor({
-    extensions: [new NodeHeading()],
+    extensions: [new ExtensionBasicEditor()],
   });
 
   // Test setHeading commands

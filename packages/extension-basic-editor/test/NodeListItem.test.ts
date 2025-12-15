@@ -1,9 +1,9 @@
-import { NodeListItem } from '../src/NodeListItem.ts';
 import { CoreEditor } from '@kerebron/editor';
+import { ExtensionBasicEditor } from '../src/ExtensionBasicEditor.ts';
 
 Deno.test('NodeListItem should handle commands', () => {
   const editor = new CoreEditor({
-    extensions: [new NodeListItem()],
+    extensions: [new ExtensionBasicEditor()],
   });
 
   // Test splitListItem command

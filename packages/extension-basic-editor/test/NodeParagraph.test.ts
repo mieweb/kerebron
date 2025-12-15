@@ -1,9 +1,9 @@
-import { NodeParagraph } from '../src/NodeParagraph.ts';
 import { CoreEditor } from '@kerebron/editor';
+import { ExtensionBasicEditor } from '../src/ExtensionBasicEditor.ts';
 
 Deno.test('NodeParagraph should handle commands', () => {
   const editor = new CoreEditor({
-    extensions: [new NodeParagraph()],
+    extensions: [new ExtensionBasicEditor()],
   });
 
   // Test setParagraph command

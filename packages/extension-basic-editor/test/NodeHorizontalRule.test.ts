@@ -1,9 +1,9 @@
-import { NodeHorizontalRule } from '../src/NodeHorizontalRule.ts';
 import { CoreEditor } from '@kerebron/editor';
+import { ExtensionBasicEditor } from '../src/ExtensionBasicEditor.ts';
 
 Deno.test('NodeHorizontalRule should handle commands', () => {
   const editor = new CoreEditor({
-    extensions: [new NodeHorizontalRule()],
+    extensions: [new ExtensionBasicEditor()],
   });
 
   // Test setHorizontalRule command

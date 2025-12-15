@@ -1,5 +1,5 @@
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
 import { CoreEditor, JSONContent } from '@kerebron/editor';
+import { ExtensionBasicEditor } from '../src/ExtensionBasicEditor.ts';
 import { assertEquals } from '@std/assert';
 
 Deno.test('MarkStrong should handle commands', () => {
@@ -29,8 +29,6 @@ Deno.test('MarkStrong should handle commands', () => {
 
   {
     const modified = editor.getJSON();
-    console.log('modified', modified);
-
     assertEquals(modified.content[0].content?.length, 3);
     assertEquals(modified.content[0].content[1].marks, [
       {
@@ -43,8 +41,6 @@ Deno.test('MarkStrong should handle commands', () => {
 
   {
     const modified = editor.getJSON();
-    console.log('modified2', modified);
-
     assertEquals(modified.content[0].content?.length, 1);
   }
 });
@@ -77,7 +73,6 @@ Deno.test('MarkStrong and MarkItalic should handle commands', () => {
 
   {
     const modified = editor.getJSON();
-    console.log('modified', modified);
 
     assertEquals(modified.content[0].content?.length, 3);
     assertEquals(modified.content[0].content[1].marks, [
@@ -94,7 +89,6 @@ Deno.test('MarkStrong and MarkItalic should handle commands', () => {
 
   {
     const modified = editor.getJSON();
-    console.log('modified2', modified);
 
     assertEquals(modified.content[0].content?.length, 3);
     assertEquals(modified.content[0].content[1].marks, [
@@ -109,9 +103,8 @@ Deno.test('MarkStrong and MarkItalic should handle commands', () => {
 
   {
     const modified = editor.getJSON();
-    console.log('modified2', modified);
 
-    assertEquals(modified.content[0].content?.length, 4);
+    assertEquals(modified.content[0].content?.length, 5);
     assertEquals(modified.content[0].content[1].marks, [
       {
         type: 'em',
@@ -121,6 +114,11 @@ Deno.test('MarkStrong and MarkItalic should handle commands', () => {
       {
         type: 'em',
       },
+      {
+        type: 'strong',
+      },
+    ]);
+    assertEquals(modified.content[0].content[3].marks, [
       {
         type: 'strong',
       },
