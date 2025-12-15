@@ -33,3 +33,103 @@
   color: gray;
   font-style: italic;
 }
+
+/* Common captures */
+.ts-property {
+  color: #905;
+} /* Property names (e.g., in objects/CSS) */
+.ts-function,
+.ts-function_call {
+  color: #07a;
+} /* Functions */
+.ts-keyword {
+  color: #d73;
+  font-weight: bold;
+} /* Keywords like if, return */
+.ts-string {
+  color: #690;
+} /* Strings */
+.ts-number {
+  color: #099;
+} /* Numbers */
+.ts-comment {
+  color: #998;
+  font-style: italic;
+} /* Comments */
+.ts-perator {
+  color: #9a6;
+} /* Operators like + - = */
+.ts-type {
+  color: #458;
+  font-weight: bold;
+} /* Types */
+.ts-variable {
+  color: #333;
+} /* Variables */
+.ts-constant,
+.ts-constant_builtin {
+  color: #0086b3;
+} /* Constants */
+.ts-punctuation,
+.ts-punctuation_bracket {
+  color: #999;
+} /* Brackets, commas */
+.ts-namespace {
+  color: #000;
+  font-weight: bold;
+}
+
+/* More specific ones */
+.ts-function_builtin {
+  color: #d73;
+}
+.ts-keyword_operator {
+  color: #d73;
+}
+.ts-string_special {
+  color: #d44;
+} /* e.g., regex */
+.ts-tag {
+  color: #008080;
+} /* HTML/XML tags */
+.ts-attribute {
+  color: #e90;
+} /* Attributes */
+
+@media (prefers-color-scheme: dark) {
+  /* Dark mode adjustments */
+  .ts-property {
+    color: #9cdcfe;
+  }
+  .ts-function {
+    color: #dcdcaa;
+  }
+  .ts-keyword {
+    color: #c586c0;
+  }
+  .ts-string {
+    color: #ce9178;
+  }
+  .ts-number {
+    color: #b5cea8;
+  }
+  .ts-comment {
+    color: #6a9955;
+  }
+  .ts-operator {
+    color: #d4d4d4;
+  }
+  .ts-type {
+    color: #4ec9b0;
+  }
+  .ts-constant {
+    color: #4fc1ff;
+  }
+}
+
+.ts-diff_plus {
+  color: green;
+}
+.ts-diff_minus {
+  color: red;
+}

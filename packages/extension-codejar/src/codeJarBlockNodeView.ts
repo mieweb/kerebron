@@ -132,7 +132,7 @@ class CodeJarBlockNodeView implements NodeView {
         const file = client.workspace.getFile(this.uri);
         if (file) {
           const { mapper } = file;
-          console.log({
+          console.debug({
             diagnostics: detail.params.diagnostics,
             mapper,
           });
@@ -193,8 +193,8 @@ class CodeJarBlockNodeView implements NodeView {
   }
 
   async setLang(lang: string) {
-    await this.highlighter.init(this.node.attrs.lang);
-    this.languageDropDown.value = this.node.attrs.lang || '';
+    this.languageDropDown.value = lang || '';
+    await this.highlighter.init(lang);
     this.highlight(this.element);
     this.lang = lang;
 
@@ -308,7 +308,6 @@ class CodeJarBlockNodeView implements NodeView {
     }
 
     this.node = updateNode;
-
     if (updateNode.attrs.lang !== oldNode.attrs.lang) {
       this.setLang(updateNode.attrs.lang);
     }

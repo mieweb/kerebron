@@ -12,8 +12,15 @@ export class TreeSitterHighlighter {
   parser: Parser | undefined;
   hightligtScm: string | undefined;
   cdnUrl? = 'http://localhost:8000/wasm/';
+  lang?: string;
 
-  async init(lang: string) {
+  async init(lang: string): Promise<boolean> {
+    this.lang = lang;
+    if (!lang) {
+      this.parser = undefined;
+      this.hightligtScm = undefined;
+      return true;
+    }
     const treeSitterConfig = getLangTreeSitter(lang, this.cdnUrl);
     const wasmUrl = treeSitterConfig.files[0]; // TODO add support for split parsers like markdown
     const highlightUrl = treeSitterConfig.queries['highlights.scm'];
@@ -40,7 +47,8 @@ export class TreeSitterHighlighter {
   }
 
   highlight(code: string, decorator: Decorator) {
-    if (!this.parser || !this.hightligtScm) {
+    if (!this.lang || !this.parser || !this.hightligtScm) {
+      decorator.decorationGroups['highlight'] = [];
       return decorator.highlight(code);
     }
 
@@ -66,7 +74,7 @@ export class TreeSitterHighlighter {
       decorations.push({
         startIndex,
         endIndex,
-        className: 'ts-' + name,
+        className: 'ts-' + name.replaceAll('.', '_'),
       });
     }
 

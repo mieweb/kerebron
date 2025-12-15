@@ -142,19 +142,21 @@ export class CodeJar extends EventTarget {
     const firefoxVersion = matchFirefoxVersion
       ? parseInt(matchFirefoxVersion[1])
       : 0;
+
+    let isLegacy = false; // true if plaintext-only is not supported
+    if (
+      editor.contentEditable !== 'plaintext-only' || firefoxVersion >= 136
+    ) {
+      isLegacy = true;
+    }
+    if (isLegacy) editor.setAttribute('contenteditable', 'true');
+
     if (!opt.readOnly) {
       editor.setAttribute('contenteditable', 'plaintext-only');
       editor.setAttribute(
         'spellcheck',
         this.options.spellcheck ? 'true' : 'false',
       );
-      let isLegacy = false; // true if plaintext-only is not supported
-      if (
-        editor.contentEditable !== 'plaintext-only' || firefoxVersion >= 136
-      ) {
-        isLegacy = true;
-      }
-      if (isLegacy) editor.setAttribute('contenteditable', 'true');
     }
 
     const debounceHighlight = debounce(() => {
