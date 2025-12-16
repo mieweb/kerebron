@@ -1,12 +1,12 @@
 import { ListNumbering } from '../lists.ts';
 import {
   iterateChildren,
+  NodeHandler,
   OdtStashContext,
-  ParseSpec,
   resolveStyle,
 } from '../OdtParser.ts';
 
-export function getListNodesHandlers(): Record<string, ParseSpec> {
+export function getListNodesHandlers(): Record<string, NodeHandler> {
   return {
     'list': (ctx: OdtStashContext, odtElement: any) => {
       const listTracker = ctx.listTracker;

@@ -10,7 +10,7 @@ export function getInlineNodesHandlers(): Record<string, NodeHandler> {
     },
     's': (ctx: OdtStashContext, odtElement: any) => {
       const chars = odtElement['@c'] || 1;
-      const text = '               '.substring(0, chars);
+      const text = ' '.repeat(chars);
       const node = ctx.createText(text);
       if (node) {
         ctx.current.content.push(node);
@@ -22,7 +22,12 @@ export function getInlineNodesHandlers(): Record<string, NodeHandler> {
         ctx.current.content.push(node);
       }
     },
-
+    'rect': (ctx: OdtStashContext, odtElement: any) => {
+      // if (odtElement['@rel-width'] === '100%') {
+      //   ctx.openNode();
+      //   ctx.closeNode('hr');
+      // }
+    },
     'line-break': (ctx: OdtStashContext, odtElement: any) => {
       ctx.openNode();
       ctx.closeNode('br');
@@ -32,38 +37,28 @@ export function getInlineNodesHandlers(): Record<string, NodeHandler> {
       ctx.closeNode('br');
     },
 
-    'bookmark': (ctx: OdtStashContext, value: any) => { // bookmark for parent para
-      // ctx.current.marks = [ ...ctx.current.marks, ...marks ];
+    'bookmark': (ctx: OdtStashContext, element: any) => { // bookmark for parent para
+      ctx.openNode();
+      ctx.closeNode('bookmark-node', {
+        id: element['@name'],
+      });
     },
-    //   custom(state, element) {
-    //     state.nextTextMarks.add({
-    //       markName: 'bookmark',
-    //       markAttributes: {
-    //         id: element['@name'],
-    //       },
-    //     });
-    //   },
-    // },
-    // 'bookmark-start': {
-    //   custom(state, element) {
-    //     state.textMarks.add({
-    //       markName: 'bookmark',
-    //       markAttributes: {
-    //         id: element['@name'],
-    //       },
-    //     });
-    //   },
-    // },
-    // 'bookmark-end': {
-    //   custom(state, element) {
-    //     state.textMarks.forEach((x) =>
-    //       x.markName === 'bookmark' &&
-    //         x.markAttributes.id === element['@name']
-    //         ? state.textMarks.delete(x)
-    //         : x
-    //     );
-    //   },
-    // },
+    'bookmark-start': (ctx: OdtStashContext, element: any) => {
+      // state.textMarks.add({
+      //   markName: 'bookmark',
+      //   markAttributes: {
+      //     id: element['@name'],
+      //   },
+      // });
+    },
+    'bookmark-end': (ctx: OdtStashContext, element: any) => {
+      // state.textMarks.forEach((x) =>
+      //   x.markName === 'bookmark' &&
+      //     x.markAttributes.id === element['@name']
+      //     ? state.textMarks.delete(x)
+      //     : x
+      // );
+    },
   };
 }
 

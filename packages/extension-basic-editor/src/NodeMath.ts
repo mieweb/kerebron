@@ -13,7 +13,7 @@ export class NodeMath extends Node {
     return {
       inline: true,
       attrs: {
-        type: { default: 'mathml' },
+        lang: { default: 'mathml' },
         content: {},
       },
       group: 'inline',
@@ -31,7 +31,7 @@ export class NodeMath extends Node {
       parseDOM: [{
         tag: 'math',
         getAttrs: (dom) => ({
-          type: 'mathml',
+          lang: 'mathml',
           content: new XMLSerializer().serializeToString(dom),
         }),
       }],

@@ -164,16 +164,12 @@ export function syncPmToMdConverter(
 
     math() {
       return {
-        open: 'math_block_open',
-        close: 'math_block_close',
-        // math_inline
-        // selfClose: (node) => {
-        //   const token = new Token('math', 'math', 0);
-        //   token.attrSet('content', node.attrs.content);
-        //   if (node.attrs.type) {
-        //   }
-        //   return token;
-        // },
+        selfClose: (node) => {
+          const token = new Token('math', 'math', 0);
+          token.content = node.attrs.content;
+          token.attrSet('lang', node.attrs.lang);
+          return token;
+        },
       };
     },
 

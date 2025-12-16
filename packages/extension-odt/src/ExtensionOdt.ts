@@ -3,17 +3,17 @@ import type { Node, Schema } from 'prosemirror-model';
 import { type Converter, type CoreEditor, Extension } from '@kerebron/editor';
 import { parse_content, parse_styles, unzip } from '@kerebron/odt-wasm';
 
-import { OdtParser } from './OdtParser.ts';
+import { OdtParser, OdtParserConfig } from './OdtParser.ts';
 import { getDefaultsPostProcessFilters } from './postprocess/postProcess.ts';
 
-export interface OdtConfig {
-  linkFromRewriter?(href: string): string;
+export interface OdtConfig extends OdtParserConfig {
+  debug?: boolean;
 }
 
 export class ExtensionOdt extends Extension {
   name = 'odt';
 
-  constructor(config: OdtConfig = {}) {
+  constructor(public override config: OdtConfig = {}) {
     super(config);
   }
 
@@ -58,7 +58,18 @@ export class ExtensionOdt extends Extension {
         const stylesTree = parse_styles(files.get('styles.xml'));
         const contentTree = parse_content(files.get('content.xml'));
 
-        const parser = new OdtParser(editor.schema, config);
+        if (this.config.debug) {
+          const event = new CustomEvent('odt:parsed', {
+            detail: {
+              stylesTree,
+              contentTree,
+              filesMap,
+            },
+          });
+          this.editor.dispatchEvent(event);
+        }
+
+        const parser = new OdtParser(editor.schema, this.config);
 
         const doc = parser.parse({ ...filesMap, contentTree, stylesTree });
         return doc;

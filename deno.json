@@ -53,6 +53,8 @@
     "prosemirror-history": "npm:prosemirror-history@1.4.1",
     "prosemirror-dev-toolkit": "npm:prosemirror-dev-toolkit@1.1.8",
 
+    "mathml-to-latex": "npm:mathml-to-latex@1.5.0",
+
     "yjs": "npm:yjs@13.6.24",
     "y-protocols": "npm:y-protocols@1.0.6",
     "y-websocket": "npm:y-websocket@3.0.0",

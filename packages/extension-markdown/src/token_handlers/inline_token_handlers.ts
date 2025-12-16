@@ -1,3 +1,5 @@
+import { MathMLToLaTeX } from 'mathml-to-latex';
+
 import type { Token } from '../types.ts';
 
 import type {
@@ -222,7 +224,11 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
 
     'math': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('$' + token.content + '$', token);
+        let content = token.content;
+        if (token.attrGet('lang') === 'mathml') {
+          content = MathMLToLaTeX.convert(content);
+        }
+        ctx.current.log('$' + content + '$', token);
       },
     ],
     'hardbreak': [
@@ -380,6 +386,16 @@ export function getHtmlInlineTokensHandlers(): Record<
     //     ctx.current.log(`</${tag}>`, token);
     //   },
     // ],
+    'math': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log(
+          '<math xmlns="http://www.w3.org/1998/Math/MathML">',
+          token,
+        );
+        ctx.current.log(token.content, token);
+        ctx.current.log('</math>', token);
+      },
+    ],
     'hardbreak': [
       (token: Token, ctx: ContextStash) => {
         const tag = token.tag || 'br';
@@ -388,7 +404,7 @@ export function getHtmlInlineTokensHandlers(): Record<
     ],
     'softbreak': [
       (token: Token, ctx: ContextStash) => {
-        const tag = token.tag || 'br';
+        const tag = token.tag || 'wbr';
         ctx.current.log(`<${tag} />`, token);
       },
     ],

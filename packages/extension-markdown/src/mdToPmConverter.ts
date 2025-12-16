@@ -30,6 +30,10 @@ export async function mdToPmConverterText(
   config: MdConfig,
   schema: Schema,
 ): Promise<Node> {
+  if (!config.cdnUrl) {
+    throw new Error('No config.cdnUrl');
+  }
+
   const tokenizer = await sitterTokenizer(config.cdnUrl);
 
   const defaultMarkdownParser = new MarkdownParser(
@@ -111,7 +115,7 @@ export async function mdToPmConverterText(
           const parser = DOMParser.fromSchema(schema);
           const parsed = parser.parse(elementFromString(token.content));
 
-          // state.importNodes(parsed.children); // breaks lsptoy example
+          state.importNodes(parsed.children);
         },
       },
       footnote_ref: {

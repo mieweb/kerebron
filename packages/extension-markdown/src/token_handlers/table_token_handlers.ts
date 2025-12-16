@@ -15,7 +15,14 @@ function getHtmlTableTokensHandlers(): Record<string, Array<TokenHandler>> {
     ...getHtmlInlineTokensHandlers(),
 
     'paragraph_open': [],
-    'paragraph_close': [],
+    'paragraph_close': [
+      (token: Token, ctx: ContextStash) => {
+        // TODO only if not at the end of TD
+        // if (ctx.output.colPos !== 0) {
+        //   ctx.current.log('<br/ >\n', token);
+        // }
+      },
+    ],
 
     'table_open': [
       (token: Token, ctx: ContextStash) => {

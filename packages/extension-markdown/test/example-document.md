@@ -130,7 +130,7 @@ This is after the horizontal line.
 
 ## Formatting
 
-Some **bold** ***boldanditalic**** italic*  text
+Some **bold** ***boldanditalic**** italic* text
 
 ## Equations
 

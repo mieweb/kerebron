@@ -133,7 +133,7 @@ export function iterateEnum($value: unknown[]): Array<TaggedEnum> {
   return $value.map(tagEnum);
 }
 
-interface Config {
+export interface OdtParserConfig {
   linkFromRewriter?(href: string): string;
 }
 
@@ -277,7 +277,7 @@ export class OdtStashContext {
 export class OdtParser {
   constructor(
     private readonly schema: Schema,
-    private readonly config: Config = {},
+    private readonly config: OdtParserConfig = {},
   ) {}
 
   parse(files: any) {
@@ -313,7 +313,7 @@ export class OdtParser {
             const content = new TextDecoder().decode(files[fullPath]);
             ctx.openNode();
             ctx.closeNode('math', {
-              type: 'mathml',
+              lang: 'mathml',
               content,
             });
             return;
@@ -329,9 +329,7 @@ export class OdtParser {
           });
         }
       },
-      'rect': () => {
-        // ignore: true,
-      },
+
       'annotation': () => {
         // ignore: true,
       },

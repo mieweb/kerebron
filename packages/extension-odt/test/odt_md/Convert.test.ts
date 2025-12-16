@@ -31,7 +31,13 @@ Deno.test('convert odt to md', async () => {
     serializerDebug,
     cdnUrl: denoCdn(),
   });
-  const extOdt = new ExtensionOdt();
+  const extOdt = new ExtensionOdt({
+    debug: true,
+    linkFromRewriter: (href) => {
+      console.log('hhh', href);
+      return href;
+    },
+  });
 
   const extensions = [
     new ExtensionBasicEditor(),
@@ -48,11 +54,22 @@ Deno.test('convert odt to md', async () => {
   const input = Deno.readFileSync(__dirname + '/example-document.odt');
 
   editor.addEventListener(
+    'odt:parsed',
+    ((event: CustomEvent) => {
+      const { stylesTree, contentTree, filesMap } = event.detail;
+      Deno.writeTextFileSync(
+        __dirname + '/example-document.debug.odt.content.json',
+        JSON.stringify(contentTree, null, 2),
+      );
+    }) as EventListener,
+  );
+
+  editor.addEventListener(
     'md:tokens',
     ((event: CustomEvent) => {
       const { tokens } = event.detail;
       Deno.writeTextFileSync(
-        __dirname + '/example-document.debug.tokens.json',
+        __dirname + '/example-document.debug.md.tokens.json',
         JSON.stringify(tokens, null, 2),
       );
     }) as EventListener,
@@ -61,6 +78,10 @@ Deno.test('convert odt to md', async () => {
   await editor.loadDocument('application/vnd.oasis.opendocument.text', input);
 
   const json = editor.getDocument().toJSON();
+  Deno.writeTextFileSync(
+    __dirname + '/example-document.debug.pmdoc.json',
+    JSON.stringify(json, null, 2),
+  );
 
   const buffer = await editor.saveDocument('text/x-markdown');
   const md = new TextDecoder().decode(buffer);

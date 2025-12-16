@@ -1,3 +1,5 @@
+import { MathMLToLaTeX } from 'mathml-to-latex';
+
 import { Token } from '../types.ts';
 
 import type {
@@ -125,16 +127,24 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
 
     'fence': [
       (token: Token, ctx: ContextStash) => {
-        const content = token.content.endsWith('\n')
-          ? token.content
-          : token.content + '\n';
-        if (token.info === 'latex') {
+        let content = token.content;
+        let lang = token.attrGet('lang') || '';
+
+        if (lang === 'mathml') {
+          lang = 'math';
+          content = MathMLToLaTeX.convert(content);
+        }
+
+        if (!content.endsWith('\n')) {
+          content += '\n';
+        }
+
+        if (lang === 'latex') {
           ctx.current.log(
             '$$' + '\n' + content + '$$\n\n',
             token,
           );
         } else {
-          const lang = token.attrGet('lang') || '';
           ctx.current.log(
             '```' + lang + '\n' + content + '```\n\n',
             token,
@@ -146,12 +156,19 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
     'code_block': [
       (token: Token, ctx: ContextStash) => {
         const indent = +(token.attrGet('indent') || 0);
-        const lang = token.attrGet('lang') || '';
+        let content = token.content;
+        let lang = token.attrGet('lang') || '';
 
         if (indent === 0) {
-          const content = token.content.endsWith('\n')
-            ? token.content
-            : token.content + '\n';
+          if (lang === 'mathml') {
+            lang = 'math';
+            content = MathMLToLaTeX.convert(content);
+          }
+
+          if (!content.endsWith('\n')) {
+            content += '\n';
+          }
+
           if (lang === 'latex') {
             ctx.current.log(
               '$$' + '\n' + content + '$$\n\n',

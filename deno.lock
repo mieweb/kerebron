@@ -48,6 +48,7 @@
     "npm:lib0@0.2.109": "0.2.109",
     "npm:linkedom@0.18.12": "0.18.12",
     "npm:linkedom@latest": "0.18.12",
+    "npm:mathml-to-latex@1.5.0": "1.5.0",
     "npm:orderedmap@latest": "2.1.1",
     "npm:prosemirror-dev-toolkit@1.1.8": "1.1.8",
     "npm:prosemirror-history@1.4.1": "1.4.1",
@@ -973,6 +974,9 @@
     "@vue/shared@3.5.21": {
       "integrity": "sha512-+2k1EQpnYuVuu3N7atWyG3/xoFWIVJZq4Mz8XNOdScFI0etES75fbny/oU4lKWk/577P1zmg0ioYvpGEDZ3DLw=="
     },
+    "@xmldom/xmldom@0.8.11": {
+      "integrity": "sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw=="
+    },
     "acorn@8.15.0": {
       "integrity": "sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg==",
       "bin": true
@@ -1195,6 +1199,12 @@
       "integrity": "sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==",
       "dependencies": [
         "@jridgewell/sourcemap-codec"
+      ]
+    },
+    "mathml-to-latex@1.5.0": {
+      "integrity": "sha512-rrWn0eEvcEcdMM4xfHcSGIy+i01DX9byOdXTLWg+w1iJ6O6ohP5UXY1dVzNUZLhzfl3EGcRekWLhY7JT5Omaew==",
+      "dependencies": [
+        "@xmldom/xmldom"
       ]
     },
     "mitt@3.0.1": {
@@ -1550,6 +1560,7 @@
       "jsr:@std/fs@1.0.19",
       "jsr:@std/path@1.1.2",
       "npm:lib0@0.2.109",
+      "npm:mathml-to-latex@1.5.0",
       "npm:orderedmap@latest",
       "npm:prosemirror-dev-toolkit@1.1.8",
       "npm:prosemirror-history@1.4.1",

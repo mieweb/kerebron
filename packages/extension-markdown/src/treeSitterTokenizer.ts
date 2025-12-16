@@ -121,12 +121,13 @@ function treeToTokens(
               );
               token.level = blockLevel;
               token.markup = '$$';
-              token.info = 'latex';
+              token.attrSet('lang', 'latex');
 
               token.content = content.trim();
               retVal.push(token);
             } else {
               const token = new Token('math', '', NESTING_SELF_CLOSING);
+              token.attrSet('lang', 'mathml');
               token.map = map;
               token.meta = 'noEscText';
 
@@ -1144,7 +1145,7 @@ function treeToTokens(
             tree: undefined,
           },
         );
-        throw new Error('aaa');
+        throw new Error(`Unhandled node type: ${node.type}`);
     }
   };
 
