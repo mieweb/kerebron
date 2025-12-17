@@ -43,7 +43,7 @@ export function createLspAutocomplete(extensionLsp: ExtensionLsp) {
     renderer,
     matchers: [createRegexMatcher([/\w+/, /(^|\s)@\w*/, /^#\w*/])],
     getItems: async (query: string, props: AutocompleteProps) => {
-      const { mapper } = extensionLsp.source.getMappedContent();
+      const { mapper } = await extensionLsp.source.getMappedContent();
 
       const lspPos = mapper.toRawTextLspPos(props.range.from);
 

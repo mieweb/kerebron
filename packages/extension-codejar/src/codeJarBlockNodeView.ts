@@ -100,7 +100,7 @@ class CodeJarBlockNodeView implements NodeView {
 
     this.source = {
       ui: this.editor.ui,
-      getMappedContent: () => {
+      getMappedContent: async () => {
         const editor = this.editor;
         const result: RawTextResult = toRawTextResult(
           this.codeJar.toString(),

@@ -49,7 +49,7 @@ Deno.test('convert odt to md', async () => {
     extensions,
   });
 
-  extOdt.urlFromRewriter = (href, ctx) => {
+  extOdt.urlFromRewriter = async (href, ctx) => {
     if (ctx.type === 'A') {
       const id = urlToFolderId(href);
       if (id) {

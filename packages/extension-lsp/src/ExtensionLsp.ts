@@ -46,9 +46,11 @@ export class ExtensionLsp extends Extension {
 
     this.source = {
       ui: this.editor.ui,
-      getMappedContent: () => {
+      getMappedContent: async () => {
         const editor = this.editor;
-        const result = this.extensionMarkdown.toMarkdown(editor.state.doc);
+        const result = await this.extensionMarkdown.toMarkdown(
+          editor.state.doc,
+        );
         const mapper = new PositionMapper(editor, result.rawTextMap);
         return {
           ...result,

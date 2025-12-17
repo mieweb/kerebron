@@ -42,7 +42,7 @@ export class LSPPlugin {
 
     this.source = {
       ui: this.editor.ui,
-      getMappedContent: () => {
+      getMappedContent: async () => {
         const editor = this.editor;
         const result: RawTextResult = toRawTextResult(
           this.view.state.doc.toString().toString(),

@@ -31,7 +31,7 @@ export class DocumentMarkdownTokenizer {
     );
   }
 
-  iterateNode(node: Node, currentPos: number, level = -1) {
+  async iterateNode(node: Node, currentPos: number, level = -1) {
     const nodeSpec = this.nodes[node.type.name]
       ? this.nodes[node.type.name](node, currentPos)
       : blankNode;
@@ -52,7 +52,7 @@ export class DocumentMarkdownTokenizer {
         token.map = [currentPos];
         this.tokens.push(token);
       } else {
-        const token = nodeSpec.open(node);
+        const token = await nodeSpec.open(node);
         token.level = level;
         token.meta = 'nodeSpec.open()';
         token.map = [currentPos];
@@ -67,7 +67,7 @@ export class DocumentMarkdownTokenizer {
         token.map = [currentPos];
         this.tokens.push(token);
       } else {
-        const token = nodeSpec.selfClose(node);
+        const token = await nodeSpec.selfClose(node);
         token.level = level;
         token.map = [currentPos];
         this.tokens.push(token);
@@ -81,15 +81,18 @@ export class DocumentMarkdownTokenizer {
       token.map = [currentPos];
       this.tokens.push(token);
 
-      token.children = this.inlineTokenizer.renderInline(
+      token.children = await this.inlineTokenizer.renderInline(
         node,
         currentPos + 1,
         level + 1,
       );
     } else if (node.childCount > 0) {
-      node.forEach((child, offset) => {
-        this.iterateNode(child, currentPos + offset + 1, level + 1);
-      });
+      let offset = 0;
+      for (let idx = 0; idx < node.childCount; idx++) {
+        const child = node.child(idx);
+        await this.iterateNode(child, currentPos + offset + 1, level + 1);
+        offset += child.nodeSize;
+      }
     }
 
     if (nodeSpec.close) {
@@ -100,7 +103,7 @@ export class DocumentMarkdownTokenizer {
         // token.map = [currentPos];
         this.tokens.push(token);
       } else {
-        const token = nodeSpec.close(node);
+        const token = await nodeSpec.close(node);
         token.meta = 'nodeSpec.close()';
         token.level = level;
         // token.map = [currentPos];
@@ -109,8 +112,8 @@ export class DocumentMarkdownTokenizer {
     }
   }
 
-  serialize(content: Node, options: {} = {}): Token[] {
-    this.iterateNode(content, -1); // doc does not have index, so I put -1 for correct calculation
+  async serialize(content: Node, options: {} = {}): Promise<Token[]> {
+    await this.iterateNode(content, -1); // doc does not have index, so I put -1 for correct calculation
     return this.tokens;
   }
 }

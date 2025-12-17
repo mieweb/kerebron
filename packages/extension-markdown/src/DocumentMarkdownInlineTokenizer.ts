@@ -2,17 +2,17 @@ import type { Mark, Node } from 'prosemirror-model';
 import { Token } from './types.ts';
 
 export type MarkTokenizerSpec = {
-  open?: string | ((mark: Mark) => Token);
-  close?: string | ((mark: Mark) => Token);
+  open?: string | ((mark: Mark) => Promise<Token>);
+  close?: string | ((mark: Mark) => Promise<Token>);
   mixable?: boolean;
   expelEnclosingWhitespace?: boolean;
   escape?: boolean;
 };
 
 export type DocumentMarkdownTokenizerSpec = {
-  open?: string | ((node: Node) => Token);
-  close?: string | ((node: Node) => Token);
-  selfClose?: string | ((node: Node) => Token);
+  open?: string | ((node: Node) => Promise<Token>);
+  close?: string | ((node: Node) => Promise<Token>);
+  selfClose?: string | ((node: Node) => Promise<Token>);
 };
 
 const blankMark: MarkTokenizerSpec = { open: '', close: '', mixable: true };
@@ -78,13 +78,17 @@ export class DocumentMarkdownInlineTokenizer {
     return info;
   }
 
-  renderInline(parent: Node, currentPos: number, level: number): Array<Token> {
+  async renderInline(
+    parent: Node,
+    currentPos: number,
+    level: number,
+  ): Promise<Token[]> {
     const active: Mark[] = [];
     const trailing: Array<[string, number]> = [];
 
     const inlineTokens: Array<Token> = [];
 
-    const progress = (node: Node, offset: number, index: number) => {
+    const progress = async (node: Node, offset: number, index: number) => {
       const inlinePos = currentPos + offset;
       let marks = node ? node.marks : [];
 
@@ -172,7 +176,7 @@ export class DocumentMarkdownInlineTokenizer {
       // Close the marks that need to be closed
       while (keep < active.length) {
         const x = active.pop()!;
-        this.markString(x, false, inlineTokens);
+        await this.markString(x, false, inlineTokens);
       }
 
       // Output any previously expelled trailing whitespace outside the marks
@@ -184,13 +188,13 @@ export class DocumentMarkdownInlineTokenizer {
       while (active.length < len) {
         let add = marks[active.length];
         active.push(add);
-        this.markString(add, true, inlineTokens);
+        await this.markString(add, true, inlineTokens);
       }
 
       // Render the node. Special case code marks, since their content
       // may not be escaped.
       if (noEsc && node.isText) {
-        this.markString(inner!, true, inlineTokens);
+        await this.markString(inner!, true, inlineTokens);
         if (node.text) {
           const token = new Token('text', '', 0);
           token.meta = 'noEscText';
@@ -198,7 +202,7 @@ export class DocumentMarkdownInlineTokenizer {
           token.content = node.text;
           inlineTokens.push(token);
         }
-        this.markString(inner!, false, inlineTokens);
+        await this.markString(inner!, false, inlineTokens);
       } else {
         const nodeSpec = this.nodes[node.type.name]
           ? this.nodes[node.type.name](node, currentPos)
@@ -220,7 +224,7 @@ export class DocumentMarkdownInlineTokenizer {
             token.map = [inlinePos];
             inlineTokens.push(token);
           } else {
-            const token = nodeSpec.selfClose(node);
+            const token = await nodeSpec.selfClose(node);
             token.meta = '!nodeSpec.selfClose';
             token.level = level;
             token.map = [inlinePos];
@@ -230,12 +234,17 @@ export class DocumentMarkdownInlineTokenizer {
       }
     };
 
-    parent.forEach((child, offset, index) => progress(child, offset, index));
+    let offset = 0;
+    for (let idx = 0; idx < parent.childCount; idx++) {
+      const child = parent.child(idx);
+      await progress(child, offset, idx);
+      offset += child.nodeSize;
+    }
 
     // Close the marks that need to be closed
     while (active.length > 0) {
       const x = active.pop()!;
-      this.markString(x, false, inlineTokens);
+      await this.markString(x, false, inlineTokens);
     }
 
     // Output any previously expelled trailing whitespace outside the marks
@@ -246,7 +255,7 @@ export class DocumentMarkdownInlineTokenizer {
     return inlineTokens;
   }
 
-  markString(mark: Mark, open: boolean, tokens: Token[]) {
+  async markString(mark: Mark, open: boolean, tokens: Token[]) {
     let info = this.getMark(mark.type.name);
     let value = open ? info.open : info.close;
 
@@ -275,7 +284,7 @@ export class DocumentMarkdownInlineTokenizer {
       token.meta = 'markString';
       tokens.push(token);
     } else {
-      const token = value(mark);
+      const token = await value(mark);
       if (token) {
         token.meta = token.meta || 'markString()';
         tokens.push(token);

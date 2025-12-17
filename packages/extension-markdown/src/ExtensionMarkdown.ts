@@ -8,9 +8,9 @@ import {
 } from '@kerebron/editor';
 
 import {
+  extPmToMdConverter,
   MarkdownResult,
   pmToMdConverter,
-  syncPmToMdConverter,
 } from './pmToMdConverter.ts';
 import { mdToPmConverter, mdToPmConverterText } from './mdToPmConverter.ts';
 import type { Token } from './types.ts';
@@ -62,8 +62,8 @@ export class ExtensionMarkdown extends Extension {
     };
   }
 
-  toMarkdown(source: Node): MarkdownResult {
-    return syncPmToMdConverter(
+  toMarkdown(source: Node): Promise<MarkdownResult> {
+    return extPmToMdConverter(
       source,
       {
         sourceMap: true,

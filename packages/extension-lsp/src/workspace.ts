@@ -9,7 +9,7 @@ import { computeIncrementalChanges } from './computeIncrementalChanges.ts';
 
 export interface LspSource {
   ui: EditorUi;
-  getMappedContent(): { content: string; mapper: PositionMapper };
+  getMappedContent(): Promise<{ content: string; mapper: PositionMapper }>;
 }
 
 export interface WorkspaceFile {
@@ -112,7 +112,7 @@ export class DefaultWorkspace extends Workspace {
     const file = this.files.find((f) => f.uri == uri) || null;
 
     if (file) {
-      const { content, mapper } = file.source.getMappedContent();
+      const { content, mapper } = await file.source.getMappedContent();
 
       if (!this.isConnected) {
         file.content = content;
@@ -142,14 +142,14 @@ export class DefaultWorkspace extends Workspace {
     }
   }
 
-  openFile(uri: string, languageId: string, source: LspSource) {
+  async openFile(uri: string, languageId: string, source: LspSource) {
     // if (uri) {}
 
     if (this.getFile(uri)) {
       this.closeFile(uri);
     }
 
-    const mappedContent = source.getMappedContent();
+    const mappedContent = await source.getMappedContent();
     const { content, mapper } = mappedContent;
     const file = new DefaultWorkspaceFile(
       uri,

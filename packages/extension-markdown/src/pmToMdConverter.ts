@@ -103,7 +103,7 @@ export async function pmToMdConverter(
   schema: Schema,
   editor: CoreEditor,
 ): Promise<Uint8Array> {
-  const result = syncPmToMdConverter(document, config, schema, editor);
+  const result = await extPmToMdConverter(document, config, schema, editor);
   return new TextEncoder().encode(result.content);
 }
 
@@ -112,12 +112,12 @@ export interface MarkdownResult extends RawTextResult {
   sourceMap?: SourceMap;
 }
 
-export function syncPmToMdConverter(
+export async function extPmToMdConverter(
   document: Node,
   config: MdConfig,
   schema: Schema,
   editor: CoreEditor,
-): MarkdownResult {
+): Promise<MarkdownResult> {
   const ctx = new MdStashContext();
 
   // TODO: refactor to Tokenizer
@@ -136,7 +136,7 @@ export function syncPmToMdConverter(
 
     heading(node) {
       return {
-        open: (node) => {
+        open: async (node) => {
           if (!node.attrs.level) {
             throw new Error('No heading level');
           }
@@ -164,7 +164,7 @@ export function syncPmToMdConverter(
 
     math() {
       return {
-        selfClose: (node) => {
+        selfClose: async (node) => {
           const token = new Token('math', 'math', 0);
           token.content = node.attrs.content;
           token.attrSet('lang', node.attrs.lang);
@@ -175,7 +175,7 @@ export function syncPmToMdConverter(
 
     task_list(node) {
       return {
-        open: (node) => {
+        open: async (node) => {
           ctx.stash();
           ctx.current.meta['list_type'] = 'tl';
           ctx.current.meta['list_type_symbol'] = '';
@@ -183,7 +183,7 @@ export function syncPmToMdConverter(
           token.attrSet('symbol', '*');
           return token;
         },
-        close: (node) => {
+        close: async (node) => {
           ctx.unstash();
           return new Token('task_list_close', 'ul', -1);
         },
@@ -191,7 +191,7 @@ export function syncPmToMdConverter(
     },
     bullet_list(node) {
       return {
-        open: (node) => {
+        open: async (node) => {
           ctx.stash();
           ctx.current.meta['list_type'] = 'ul';
           ctx.current.meta['list_type_symbol'] = '*';
@@ -199,7 +199,7 @@ export function syncPmToMdConverter(
           token.attrSet('symbol', '*');
           return token;
         },
-        close: (node) => {
+        close: async (node) => {
           ctx.unstash();
           return new Token('bullet_list_close', 'ul', -1);
         },
@@ -207,7 +207,7 @@ export function syncPmToMdConverter(
     },
     ordered_list(node) {
       return {
-        open: (node) => {
+        open: async (node) => {
           ctx.stash();
           ctx.current.meta['list_type'] = 'ol';
           ctx.current.meta['list_type_symbol'] = node.attrs['type'] ||
@@ -216,7 +216,7 @@ export function syncPmToMdConverter(
           token.attrSet('symbol', node.attrs['type'] || '1');
           return token;
         },
-        close: (node) => {
+        close: async (node) => {
           ctx.unstash();
           return new Token('ordered_list_close', 'ol', -1);
         },
@@ -224,7 +224,7 @@ export function syncPmToMdConverter(
     },
     list_item(node) {
       return {
-        open: (node) => {
+        open: async (node) => {
           const token = new Token('list_item_open', 'li', 1);
           if (ctx.current.meta['list_type'] === 'ul') {
             token.markup = ctx.current.meta['list_type_symbol'] || '-';
@@ -236,7 +236,7 @@ export function syncPmToMdConverter(
     },
     task_item(node) {
       return {
-        open: (node) => {
+        open: async (node) => {
           const token = new Token('task_item_open', 'li', 1);
           token.attrSet('checked', node.attrs.checked ? 'checked' : '');
           return token;
@@ -281,24 +281,24 @@ export function syncPmToMdConverter(
 
     text(node) {
       return {
-        selfClose: (node) => {
+        selfClose: (node: Node) => {
           const token = new Token('text', '', 0);
           token.content = node.text || '';
-          return token;
+          return Promise.resolve(token);
         },
       };
     },
 
     code_block(node) {
       return {
-        selfClose: (node) => {
+        selfClose: (node: Node) => {
           const token = new Token('code_block', 'code', 0);
           token.attrSet('lang', node.attrs.lang);
           token.content = '';
           node.forEach((child, offset) => {
             token.content += child.text || '';
           });
-          return token;
+          return Promise.resolve(token);
         },
       };
     },
@@ -318,7 +318,7 @@ export function syncPmToMdConverter(
 
     image(node) {
       return {
-        selfClose: (node) => {
+        selfClose: (node: Node) => {
           let src = node.attrs.src;
           if (config.urlRewriter) {
             // src = await config.urlRewriter(src, { type: 'IMG', dest: 'md' });
@@ -328,7 +328,7 @@ export function syncPmToMdConverter(
           if (node.attrs.title) {
             token.attrSet('title', node.attrs.title);
           }
-          return token;
+          return Promise.resolve(token);
         },
       };
     },
@@ -361,7 +361,7 @@ export function syncPmToMdConverter(
       open: 'math_inline_open',
       close: 'math_inline_close',
       // math_inline
-      // selfClose: (node) => {
+      // selfclose: async (node) => {
       //   const token = new Token('math', 'math', 0);
       //   token.attrSet('content', node.attrs.content);
       //   if (node.attrs.type) {
@@ -371,7 +371,7 @@ export function syncPmToMdConverter(
     },
 
     link: {
-      open: (mark: Mark) => {
+      open: async (mark: Mark) => {
         const token = new Token('link_open', 'a', 1);
 
         let href = mark.attrs.href;
@@ -386,7 +386,7 @@ export function syncPmToMdConverter(
       mixable: true,
     },
     code: {
-      // selfClose: (node) => {
+      // selfclose: async (node) => {
       //   const token = new Token('code_inline', 'code', 0);
       //   token.content = 'TODO_INLINE_CODE';
       //   // token.attrSet('content', node.attrs.content);
@@ -394,9 +394,9 @@ export function syncPmToMdConverter(
       //   // }
       //   return token;
       // },
-      // open: (mark: Mark) => {
+      // open: async (mark: Mark) => {
       // },
-      // close: (mark: Mark) => {
+      // close: async (mark: Mark) => {
       //   const token = new Token('code_inline', 'code', 0);
       //   token.content = 'TODO_INLINE_CODE';
       //   // token.attrSet('content', node.attrs.content);
@@ -435,7 +435,7 @@ export function syncPmToMdConverter(
   document = removeMarkedContent(document, schema.marks.change)!;
   // deleteAllMarkedText('change', state, dispatch)
 
-  const tokens = defaultMarkdownTokenizer.serialize(document);
+  const tokens = await defaultMarkdownTokenizer.serialize(document);
 
   if (config.debugTokens) {
     const event = new CustomEvent('md:tokens', {
@@ -451,7 +451,7 @@ export function syncPmToMdConverter(
   };
 
   const serializer = new MarkdownSerializer(markdownSerializerConfig);
-  const output = serializer.serialize(tokens);
+  const output = await serializer.serialize(tokens);
 
   const event = new CustomEvent('md:output', {
     detail: {
