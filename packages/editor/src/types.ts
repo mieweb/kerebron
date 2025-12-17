@@ -65,4 +65,7 @@ export interface UrlRewriteContext {
   filesMap?: Record<string, Uint8Array>;
 }
 
-export type UrlRewriter = (url: string, ctx: UrlRewriteContext) => string;
+export type UrlRewriter = (
+  url: string,
+  ctx: UrlRewriteContext,
+) => Promise<string>;

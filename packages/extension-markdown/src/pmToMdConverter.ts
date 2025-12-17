@@ -321,7 +321,7 @@ export function syncPmToMdConverter(
         selfClose: (node) => {
           let src = node.attrs.src;
           if (config.urlRewriter) {
-            src = config.urlRewriter(src, { type: 'IMG', dest: 'md' });
+            // src = await config.urlRewriter(src, { type: 'IMG', dest: 'md' });
           }
           const token = new Token('image', 'img', 0);
           token.attrSet('src', src);
@@ -376,7 +376,7 @@ export function syncPmToMdConverter(
 
         let href = mark.attrs.href;
         if (config.urlRewriter) {
-          href = config.urlRewriter(href, { type: 'A', dest: 'md' });
+          // href = config.urlRewriter(href, { type: 'A', dest: 'md' });
         }
 
         token.attrSet('href', href);

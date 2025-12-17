@@ -83,10 +83,50 @@ export class ExtensionOdt extends Extension {
         }
 
         const parser = new OdtParser(editor.schema, this.config);
-        parser.urlRewriter = this.urlFromRewriter;
         parser.filesMap = filesMap;
 
         const doc = parser.parse({ ...filesMap, contentTree, stylesTree });
+
+        if (this.urlFromRewriter) {
+          const nodesToProcess: Array<{ node: Node; pos: number }> = [];
+          doc.descendants((node, pos) => {
+            if (node.type.name === 'image') {
+              nodesToProcess.push({ node, pos });
+            }
+          });
+
+          // TODO
+          //       if (ctx.urlRewriter) {
+          // href = ctx.urlRewriter(href, { type: 'A', dest: 'kerebron' });
+          // }
+
+          const tr = this.editor.state.tr;
+          for (const { node, pos } of nodesToProcess) {
+            let src = node.attrs.src || '';
+
+            src = await this.urlFromRewriter(src, {
+              type: 'IMG',
+              dest: 'kerebron',
+              filesMap,
+            });
+
+            if (src !== node.attrs.src) {
+              const nodeType = this.editor.schema.nodes[node.type.name];
+              const replaceNode = nodeType.create(
+                { ...node.attrs, src },
+                node.content,
+                node.marks,
+              );
+              tr.replaceWith(
+                tr.mapping.map(pos),
+                tr.mapping.map(pos + node.nodeSize),
+                replaceNode,
+              );
+            }
+          }
+          editor.view.dispatch(tr);
+        }
+
         return { doc, stylesTree, contentTree, filesMap };
       },
     };

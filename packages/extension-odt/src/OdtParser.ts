@@ -148,8 +148,6 @@ export class OdtStashContext {
   private ctxStash: Array<OdtContext> = [];
   private currentCtx: OdtContext;
   public listTracker = new ListTracker();
-  public urlRewriter?: UrlRewriter;
-
   constructor(
     readonly schema: Schema,
     handlers: Record<string, NodeHandler>,
@@ -282,7 +280,6 @@ export class OdtParser {
   ) {}
 
   public filesMap?: Record<string, Uint8Array<ArrayBufferLike>>;
-  public urlRewriter?: UrlRewriter;
 
   parse(files: any) {
     const contentTree = files.contentTree;
@@ -325,16 +322,7 @@ export class OdtParser {
         }
         if (odtElement.image && odtElement.image['@href']) { // TODO links rewrite
           const alt = odtElement.description?.value || '';
-
-          let src = odtElement.image['@href'];
-          if (ctx.urlRewriter) {
-            src = ctx.urlRewriter(src, {
-              type: 'IMG',
-              dest: 'kerebron',
-              filesMap: this.filesMap,
-            });
-          }
-
+          const src = odtElement.image['@href'];
           ctx.openNode();
           ctx.closeNode('image', {
             src,
@@ -354,8 +342,6 @@ export class OdtParser {
       stylesTree,
       contentTree['automatic-styles'],
     );
-
-    ctx.urlRewriter = this.urlRewriter;
 
     ctx.openNode();
     ctx.handle('body', contentTree.body);
