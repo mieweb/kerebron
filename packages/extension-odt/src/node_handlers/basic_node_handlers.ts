@@ -131,6 +131,10 @@ export function getBasicNodesHandlers(): Record<string, NodeHandler> {
     },
     'a': (ctx: OdtStashContext, value: any) => {
       let href = value['@href'];
+      if (ctx.urlRewriter) {
+        href = ctx.urlRewriter(href, { type: 'A', dest: 'kerebron' });
+      }
+
       const attrs = {
         href,
         // title: tok.attrGet('title') || null,

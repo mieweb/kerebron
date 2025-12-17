@@ -6,6 +6,7 @@ import {
 import { getListNodesHandlers } from './node_handlers/list_node_handlers.ts';
 import { getTableNodesHandlers } from './node_handlers/table_node_handlers.ts';
 import { ListTracker } from './lists.ts';
+import { type UrlRewriter } from '@kerebron/editor';
 
 const COURIER_FONTS = ['Courier New', 'Courier', 'Roboto Mono'];
 
@@ -134,7 +135,6 @@ export function iterateEnum($value: unknown[]): Array<TaggedEnum> {
 }
 
 export interface OdtParserConfig {
-  linkFromRewriter?(href: string): string;
 }
 
 export interface OdtContext {
@@ -148,6 +148,7 @@ export class OdtStashContext {
   private ctxStash: Array<OdtContext> = [];
   private currentCtx: OdtContext;
   public listTracker = new ListTracker();
+  public urlRewriter?: UrlRewriter;
 
   constructor(
     readonly schema: Schema,
@@ -280,6 +281,9 @@ export class OdtParser {
     private readonly config: OdtParserConfig = {},
   ) {}
 
+  public filesMap?: Record<string, Uint8Array<ArrayBufferLike>>;
+  public urlRewriter?: UrlRewriter;
+
   parse(files: any) {
     const contentTree = files.contentTree;
     const stylesTree = files.stylesTree;
@@ -322,9 +326,18 @@ export class OdtParser {
         if (odtElement.image && odtElement.image['@href']) { // TODO links rewrite
           const alt = odtElement.description?.value || '';
 
+          let src = odtElement.image['@href'];
+          if (ctx.urlRewriter) {
+            src = ctx.urlRewriter(src, {
+              type: 'IMG',
+              dest: 'kerebron',
+              filesMap: this.filesMap,
+            });
+          }
+
           ctx.openNode();
           ctx.closeNode('image', {
-            src: odtElement.image['@href'],
+            src,
             alt,
           });
         }
@@ -341,6 +354,8 @@ export class OdtParser {
       stylesTree,
       contentTree['automatic-styles'],
     );
+
+    ctx.urlRewriter = this.urlRewriter;
 
     ctx.openNode();
     ctx.handle('body', contentTree.body);

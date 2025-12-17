@@ -1,6 +1,11 @@
 import type { Node, Schema } from 'prosemirror-model';
 import { Slice } from 'prosemirror-model';
-import { type Converter, type CoreEditor, Extension } from '@kerebron/editor';
+import {
+  type Converter,
+  type CoreEditor,
+  Extension,
+  type UrlRewriter,
+} from '@kerebron/editor';
 
 import {
   MarkdownResult,
@@ -16,12 +21,15 @@ export interface MdConfig {
   debugTokens?: boolean;
   serializerDebug?: (...args: any[]) => void;
   cdnUrl?: string;
+  urlRewriter?: UrlRewriter;
 }
 
 export type { Token };
 
 export class ExtensionMarkdown extends Extension {
   name = 'markdown';
+  urlFromRewriter?: UrlRewriter;
+  urlToRewriter?: UrlRewriter;
 
   public constructor(protected override config: Partial<MdConfig> = {}) {
     super(config);
@@ -36,7 +44,11 @@ export class ExtensionMarkdown extends Extension {
         fromDoc: (source: Node) =>
           pmToMdConverter(
             source,
-            { cdnUrl: this.editor.config.cdnUrl, ...this.config },
+            {
+              cdnUrl: this.editor.config.cdnUrl,
+              ...this.config,
+              urlRewriter: this.urlToRewriter,
+            },
             schema,
             editor,
           ),
@@ -44,6 +56,7 @@ export class ExtensionMarkdown extends Extension {
           mdToPmConverter(source, {
             cdnUrl: this.editor.config.cdnUrl,
             ...this.config,
+            urlRewriter: this.urlFromRewriter,
           }, schema),
       },
     };

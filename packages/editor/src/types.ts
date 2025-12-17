@@ -58,3 +58,11 @@ export interface RawTextResult {
   content: string;
   rawTextMap: Array<RawTextMapEntry>;
 }
+
+export interface UrlRewriteContext {
+  type: 'IMG' | 'A';
+  dest: string; // Dest format, eg: kerebron, md, odt
+  filesMap?: Record<string, Uint8Array>;
+}
+
+export type UrlRewriter = (url: string, ctx: UrlRewriteContext) => string;

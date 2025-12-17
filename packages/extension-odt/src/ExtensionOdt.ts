@@ -1,17 +1,25 @@
 import type { Node, Schema } from 'prosemirror-model';
 
-import { type Converter, type CoreEditor, Extension } from '@kerebron/editor';
+import {
+  type Converter,
+  type CoreEditor,
+  Extension,
+  type UrlRewriter,
+} from '@kerebron/editor';
 import { parse_content, parse_styles, unzip } from '@kerebron/odt-wasm';
 
 import { OdtParser, OdtParserConfig } from './OdtParser.ts';
 import { getDefaultsPostProcessFilters } from './postprocess/postProcess.ts';
+import { Command } from '@kerebron/editor/commands';
 
 export interface OdtConfig extends OdtParserConfig {
   debug?: boolean;
+  postProcessCommands?: Command[];
 }
 
 export class ExtensionOdt extends Extension {
   name = 'odt';
+  public urlFromRewriter?: UrlRewriter;
 
   constructor(public override config: OdtConfig = {}) {
     super(config);
@@ -28,9 +36,14 @@ export class ExtensionOdt extends Extension {
         throw new Error('Not implemented');
       },
       toDoc: async (buffer: Uint8Array): Promise<Node> => {
-        const doc = await odtConverter.odtToJson(buffer);
+        const { doc, filesMap } = await odtConverter.odtToJson(buffer);
 
-        const filterCommands = getDefaultsPostProcessFilters();
+        const filterCommands = getDefaultsPostProcessFilters({
+          doc,
+          filesMap,
+        }).concat(
+          this.config.postProcessCommands || [],
+        );
 
         if (filterCommands.length > 0) {
           const subEditor = editor.clone();
@@ -70,9 +83,11 @@ export class ExtensionOdt extends Extension {
         }
 
         const parser = new OdtParser(editor.schema, this.config);
+        parser.urlRewriter = this.urlFromRewriter;
+        parser.filesMap = filesMap;
 
         const doc = parser.parse({ ...filesMap, contentTree, stylesTree });
-        return doc;
+        return { doc, stylesTree, contentTree, filesMap };
       },
     };
 

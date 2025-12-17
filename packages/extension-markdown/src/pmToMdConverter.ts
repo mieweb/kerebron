@@ -319,8 +319,12 @@ export function syncPmToMdConverter(
     image(node) {
       return {
         selfClose: (node) => {
+          let src = node.attrs.src;
+          if (config.urlRewriter) {
+            src = config.urlRewriter(src, { type: 'IMG', dest: 'md' });
+          }
           const token = new Token('image', 'img', 0);
-          token.attrSet('src', node.attrs.src);
+          token.attrSet('src', src);
           if (node.attrs.title) {
             token.attrSet('title', node.attrs.title);
           }
@@ -369,7 +373,13 @@ export function syncPmToMdConverter(
     link: {
       open: (mark: Mark) => {
         const token = new Token('link_open', 'a', 1);
-        token.attrSet('href', mark.attrs.href);
+
+        let href = mark.attrs.href;
+        if (config.urlRewriter) {
+          href = config.urlRewriter(href, { type: 'A', dest: 'md' });
+        }
+
+        token.attrSet('href', href);
         return token;
       },
       close: 'link_close',

@@ -11,6 +11,7 @@ import { ExtensionOdt } from '@kerebron/extension-odt';
 import { ExtensionTables } from '@kerebron/extension-tables';
 import { NodeCodeBlock } from '@kerebron/extension-basic-editor/NodeCodeBlock';
 import { denoCdn } from '@kerebron/wasm/deno';
+import { urlToFolderId } from './idParsers.ts';
 
 globalThis.DOMParser = DOMParser as any;
 globalThis.XMLSerializer = XMLSerializer;
@@ -33,10 +34,7 @@ Deno.test('convert odt to md', async () => {
   });
   const extOdt = new ExtensionOdt({
     debug: true,
-    linkFromRewriter: (href) => {
-      console.log('hhh', href);
-      return href;
-    },
+    postProcessCommands: [],
   });
 
   const extensions = [
@@ -50,6 +48,29 @@ Deno.test('convert odt to md', async () => {
   const editor = new CoreEditor({
     extensions,
   });
+
+  extOdt.urlFromRewriter = (href, ctx) => {
+    if (ctx.type === 'A') {
+      const id = urlToFolderId(href);
+      if (id) {
+        href = 'gdoc:' + id;
+      }
+    }
+    if (ctx.type === 'IMG') {
+      href = href.replace(/^Pictures\//, '');
+    }
+    return href;
+  };
+
+  // extMd.urlToRewriter = (href, ctx) => {
+  //   if (ctx.type === 'A') {
+  //     href='test1';
+  //   }
+  //   if (ctx.type === 'IMG') {
+  //     href='test2';
+  //   }
+  //   return href;
+  // };
 
   const input = Deno.readFileSync(__dirname + '/example-document.odt');
 
