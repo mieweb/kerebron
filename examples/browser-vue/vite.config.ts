@@ -12,6 +12,7 @@ const __dirname = import.meta.dirname!;
 const cache = new Map<string, DenoResolveResult>();
 export default defineConfig({
   base: '',
+  appType: 'mpa',
   // plugins: [vue(), wasm(), denoPlugin(cache), denoPrefixPlugin(cache), denoCssPlugin(__dirname + '/../../')
   plugins: [
     vue({

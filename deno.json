@@ -78,6 +78,7 @@
   "fmt": {
     "singleQuote": true,
     "exclude": [
+      ".github/**/*.md",
       "**/*.md",
       "**/*.odt.xml",
       "**/*.xml",
