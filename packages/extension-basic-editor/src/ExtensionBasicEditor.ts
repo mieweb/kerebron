@@ -5,6 +5,8 @@ import { ExtensionDropcursor } from './ExtensionDropcursor.ts';
 import { ExtensionGapcursor } from './ExtensionGapcursor.ts';
 import { ExtensionHtml } from './ExtensionHtml.ts';
 import { ExtensionMediaUpload } from './ExtensionMediaUpload.ts';
+import { ExtensionRemoteSelection } from './remote-selection/ExtensionRemoteSelection.ts';
+
 import { MarkLink } from './MarkLink.ts';
 import { MarkStrong } from './MarkStrong.ts';
 import { MarkItalic } from './MarkItalic.ts';
@@ -15,8 +17,11 @@ import { MarkChange } from './MarkChange.ts';
 import { MarkBookmark } from './MarkBookmark.ts';
 import { MarkTextColor } from './MarkTextColor.ts';
 import { MarkHighlight } from './MarkHighlight.ts';
+
 import { NodeDocument } from './NodeDocument.ts';
 import { NodeText } from './NodeText.ts';
+import { NodeCodeBlock } from './NodeCodeBlock.ts';
+import { NodeBookmark } from './NodeBookmark.ts';
 import { NodeParagraph } from './NodeParagraph.ts';
 import { NodeHardBreak } from './NodeHardBreak.ts';
 import { NodeHorizontalRule } from './NodeHorizontalRule.ts';
@@ -35,7 +40,7 @@ import { NodeDefinitionDesc } from './NodeDefinitionDesc.ts';
 import { NodeFrontmatter } from './NodeFrontmatter.ts';
 import { NodeTaskList } from './NodeTaskList.ts';
 import { NodeTaskItem } from './NodeTaskItem.ts';
-import { ExtensionRemoteSelection } from './remote-selection/ExtensionRemoteSelection.ts';
+import { NodeInlineShortCode } from './NodeInlineShortCode.ts';
 
 export class ExtensionBasicEditor extends Extension {
   name = 'basic-editor';
@@ -49,6 +54,8 @@ export class ExtensionBasicEditor extends Extension {
     new ExtensionSelection(),
     new NodeDocument(),
     new NodeText(),
+    new NodeCodeBlock(),
+    new NodeBookmark(),
     new NodeParagraph(),
     new NodeHardBreak(),
     new NodeHorizontalRule(),
@@ -69,6 +76,7 @@ export class ExtensionBasicEditor extends Extension {
     new NodeAside(),
     new NodeHeading(),
     new NodeMath(),
+    new NodeInlineShortCode(),
     new MarkLink(),
     new MarkItalic(),
     new MarkStrong(),

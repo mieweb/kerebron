@@ -12,8 +12,8 @@ export class MarkBookmark extends Mark {
         id: {},
       },
       parseDOM: [],
-      toDOM() {
-        return ['a', 0];
+      toDOM(mark) {
+        return ['a', { id: mark.attrs.id }, 0];
       },
     };
   }

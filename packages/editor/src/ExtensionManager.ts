@@ -45,7 +45,7 @@ export function splitExtensions(extensions: Iterable<AnyExtension>) {
 export class ExtensionManager {
   public readonly schema: Schema;
 
-  private extensions: Set<AnyExtension> = new Set();
+  public readonly extensions: Set<AnyExtension> = new Set();
   readonly plugins: Plugin[] = [];
   readonly nodeViews: Record<string, NodeViewConstructor> = {};
 

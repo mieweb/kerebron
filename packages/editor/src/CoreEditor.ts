@@ -256,7 +256,7 @@ export class CoreEditor extends EventTarget {
   public clone(options: Partial<EditorConfig> = {}): CoreEditor {
     return new CoreEditor({
       ...options,
-      extensions: [...(this.config.extensions || [])],
+      extensions: [...(Array.from(this.extensionManager.extensions) || [])],
     });
   }
 
