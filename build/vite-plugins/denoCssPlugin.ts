@@ -1,8 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { type Plugin, type UserConfig } from 'vite';
 
-export function denoCssPlugin(workspaceRoot: string) {
-  function addCssAliasesFromDenoDir(denoDirPath: string, config) {
+export function denoCssPlugin(workspaceRoot: string): Plugin {
+  function addCssAliasesFromDenoDir(denoDirPath: string, config: UserConfig) {
     const content = fs.readFileSync(path.resolve(denoDirPath, 'deno.json'));
     const json = JSON.parse(new TextDecoder().decode(content));
     if (json.workspace) {
@@ -11,7 +12,7 @@ export function denoCssPlugin(workspaceRoot: string) {
       }
     }
     if (json.name && json.exports) {
-      const exports = 'string' === typeof json.exports
+      const exports: Record<string, string> = 'string' === typeof json.exports
         ? { '.': json.exports }
         : json.exports;
       for (const [alias, file] of Object.entries(exports)) {

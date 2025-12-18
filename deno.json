@@ -22,6 +22,7 @@
     "packages/wasm",
     "packages/test-utils",
     "packages/tree-sitter",
+    "packages/lib-cdn",
 
     "examples/browser-vanilla-code-editor",
     "examples/browser-react",
@@ -36,6 +37,7 @@
     "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
   },
   "tasks": {
+    "build:cdn": "deno task -f lib-cdn build",
     "build:ext-odt": "deno task -f @kerebron/odt-wasm build",
     "build:ext-wasm": "deno task -f @kerebron/wasm build"
   },

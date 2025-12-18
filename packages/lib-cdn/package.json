@@ -1,0 +1,11 @@
+{
+  "name": "@kerebron/lib-cdn",
+  "type": "module",
+  "main": "./dist/kerebron.mjs",
+  "files": ["dist/"],
+  "exports": {
+    "./assets/*.css": {
+      "import": "./dist/*.css"
+    }
+  }
+}

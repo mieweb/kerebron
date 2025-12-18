@@ -1,15 +1,9 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import wasm from 'vite-plugin-wasm';
-import denoPlugin from '../../build/vite-plugins/resolvePlugin.ts';
-import denoPrefixPlugin from '../../build/vite-plugins/prefixPlugin.ts';
-import { DenoResolveResult } from '../../build/vite-plugins/resolver.ts';
-import { denoCssPlugin } from '../../build/vite-plugins/denoCssPlugin.ts';
+import { deno } from '../../build/vite-plugins/denoPlugin.ts';
 import { generateAlias } from '../../build/vite-plugins/generateAlias.ts';
 
-const __dirname = import.meta.dirname!;
-
-const cache = new Map<string, DenoResolveResult>();
 export default defineConfig({
   base: '',
   appType: 'mpa',
@@ -23,10 +17,7 @@ export default defineConfig({
       },
     }),
     wasm(),
-    // deno(),
-    denoPrefixPlugin(cache),
-    denoPlugin(cache, __dirname + '/../../'),
-    denoCssPlugin(__dirname + '/../../'),
+    deno(),
   ],
   resolve: {
     alias: generateAlias(),

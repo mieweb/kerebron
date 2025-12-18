@@ -10,7 +10,7 @@ import {
   resolveViteSpecifier,
 } from './resolver.ts';
 
-export default function denoPlugin(
+export default function resolvePlugin(
   cache: Map<string, DenoResolveResult>,
   root: string,
 ): Plugin {

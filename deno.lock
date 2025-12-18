@@ -1673,6 +1673,12 @@
         "dependencies": [
           "jsr:@hono/hono@^4.7.4"
         ]
+      },
+      "packages/lib-cdn": {
+        "dependencies": [
+          "npm:vite-plugin-wasm@3.5.0",
+          "npm:vite@7.1.4"
+        ]
       }
     }
   }
