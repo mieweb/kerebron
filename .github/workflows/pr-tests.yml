@@ -33,6 +33,7 @@ jobs:
       #      - name: Lint code
       #        run: deno lint
       #
+      - run: deno task -f @kerebron/odt-wasm build # Future Deno versions may add cross-package task dependencies
       - run: deno task -f @kerebron build
       #      - run: deno task -f browser- build
 
