@@ -164,8 +164,31 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     }),
   );
 
-  // Group 2: Structure tools (Heading, Lift, Join, Blockquote)
+  // Group 2: Structure tools (Type, Heading, Lift, Join, Blockquote)
   const structureGroup: MenuElement[] = [];
+
+  // === Type dropdown (Plain, Code Block) ===
+  const typeMenu: MenuElement[] = [];
+  if (schema.nodes.paragraph) {
+    typeMenu.push(blockTypeItem(schema.nodes.paragraph, {
+      title: 'Change to paragraph',
+      label: 'Plain',
+    }));
+  }
+  if (schema.nodes.code_block) {
+    typeMenu.push(blockTypeItem(schema.nodes.code_block, {
+      title: 'Change to code block',
+      label: 'Code',
+    }));
+  }
+  if (typeMenu.length > 0) {
+    structureGroup.push(
+      new Dropdown(typeMenu, {
+        label: 'Type',
+        icon: icons.type,
+      }),
+    );
+  }
 
   // === 3. Heading / Text style selector (the "H" dropdown) ===
   if (schema.nodes.heading) {
@@ -181,6 +204,44 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
       new Dropdown(headingMenu, {
         label: 'Heading',
         icon: icons.heading,
+      }),
+    );
+  }
+
+  // === Lists dropdown (moved here after Heading) ===
+  const listMenu: MenuElement[] = [];
+  if (schema.nodes.bullet_list) {
+    listMenu.push(
+      wrapListItem(schema.nodes.bullet_list, {
+        title: 'Wrap in bullet list',
+        label: 'Bullet List',
+        icon: icons.bulletList,
+      }),
+    );
+  }
+  if (schema.nodes.ordered_list) {
+    listMenu.push(
+      wrapListItem(schema.nodes.ordered_list, {
+        title: 'Wrap in ordered list',
+        label: 'Ordered List',
+        icon: icons.orderedList,
+      }),
+    );
+  }
+  if (schema.nodes.task_list) {
+    listMenu.push(
+      wrapListItem(schema.nodes.task_list, {
+        title: 'Wrap in task list',
+        label: 'Task List',
+        icon: icons.taskList,
+      }),
+    );
+  }
+  if (listMenu.length > 0) {
+    structureGroup.push(
+      new Dropdown(listMenu, {
+        label: 'Lists',
+        icon: icons.bulletList,
       }),
     );
   }
@@ -429,44 +490,6 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     );
   }
 
-  // === 21. Lists dropdown (top-level) ===
-  const listMenu = [];
-  if (schema.nodes.bullet_list) {
-    listMenu.push(
-      wrapListItem(schema.nodes.bullet_list, {
-        title: 'Wrap in bullet list',
-        label: 'Bullet List',
-        icon: icons.bulletList,
-      }),
-    );
-  }
-  if (schema.nodes.ordered_list) {
-    listMenu.push(
-      wrapListItem(schema.nodes.ordered_list, {
-        title: 'Wrap in ordered list',
-        label: 'Ordered List',
-        icon: icons.orderedList,
-      }),
-    );
-  }
-  if (schema.nodes.task_list) {
-    listMenu.push(
-      wrapListItem(schema.nodes.task_list, {
-        title: 'Wrap in task list',
-        label: 'Task List',
-        icon: icons.taskList,
-      }),
-    );
-  }
-  if (listMenu.length > 0) {
-    insertGroup.push(
-      new Dropdown(listMenu, {
-        label: 'Lists',
-        icon: icons.bulletList,
-      }),
-    );
-  }
-
   // === 22. Horizontal rule ===
   if (schema.nodes.hr) {
     insertGroup.push(
@@ -508,28 +531,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     );
   }
 
-  // === 24. Type dropdown (top-level) ===
-  const typeMenu = [];
-  if (schema.nodes.paragraph) {
-    typeMenu.push(blockTypeItem(schema.nodes.paragraph, {
-      title: 'Change to paragraph',
-      label: 'Plain',
-    }));
-  }
-  if (schema.nodes.code_block) {
-    typeMenu.push(blockTypeItem(schema.nodes.code_block, {
-      title: 'Change to code block',
-      label: 'Code',
-    }));
-  }
-  if (typeMenu.length > 0) {
-    insertGroup.push(
-      new Dropdown(typeMenu, {
-        label: 'Type',
-        icon: icons.type,
-      }),
-    );
-  }
+  // Type dropdown moved to structureGroup (before Heading)
 
   // Group 7: Block menu (Select parent node)
   const blockGroup: MenuElement[] = [];
