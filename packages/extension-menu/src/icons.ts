@@ -174,9 +174,9 @@ export const icons: { [name: string]: IconSpec } = {
     path: 'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z',
   },
   type: {
-    width: 24,
-    height: 24,
-    path: 'M5 4v3h5.5v12h3V7H19V4H5z',
+    width: 20,
+    height: 22,
+    path: 'M2.5 3v3h5.5v13h4V6H17.5V3H2.5z',
   },
   table: {
     width: 24,
@@ -196,9 +196,9 @@ export const icons: { [name: string]: IconSpec } = {
     path: 'M4 11h16v2H4z',
   },
   heading: {
-    width: 24,
-    height: 24,
-    path: 'M6 4v16h3v-6h6v6h3V4h-3v7H9V4H6z',
+    width: 18,
+    height: 23,
+    path: 'M2.5 3v17h3v-7h7v7h3V3h-3v8h-7V3h-3z',
   },
   strike: {
     width: 24,

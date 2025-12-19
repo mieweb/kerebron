@@ -86,9 +86,9 @@
 
 .kb-custom-menu__item .kb-menu__button,
 .kb-custom-menu__item .kb-dropdown__label {
-  min-width: 32px;
-  min-height: 32px;
-  padding: var(--kb-space-xs) var(--kb-space-sm);
+  min-width: 28px;
+  min-height: 28px;
+  padding: var(--kb-space-xs);
   border: none;
   background: transparent;
   color: var(--kb-color-text);
@@ -146,7 +146,7 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  padding-right: 14px; /* Space for dropdown arrow */
+  padding-right: 10px; /* Space for dropdown arrow */
 }
 
 /* Ensure dropdown icons are visible and sized correctly */
@@ -162,13 +162,21 @@
   fill: currentColor;
 }
 
-/* Smaller dropdown arrow for icon-only dropdowns */
+/* Dropdown arrow for icon-only dropdowns */
 .kb-custom-menu__item .kb-dropdown__label:after {
+  content: '';
   border-left: 3px solid transparent;
   border-right: 3px solid transparent;
   border-top: 3px solid currentColor;
-  right: 4px;
+  opacity: 0.7;
+  position: absolute;
+  right: 16px;
   top: calc(50% - 1.5px);
+}
+
+/* Remove left padding from dropdown wrapper in custom menu */
+.kb-custom-menu__item .kb-dropdown {
+  padding: 1px 0;
 }
 
 /* Dropdown menus within custom menu - match toolbar dark background */
@@ -477,17 +485,20 @@
 .kb-custom-menu__item[data-tool-id='tool-insert'] > div > button,
 .kb-custom-menu__item[data-tool-id='tool-type'] > div > button,
 .kb-custom-menu__item[data-tool-id='tool-table'] > div > button {
-  padding-right: 20px;
+  padding-right: 10px;
 }
 
 .kb-custom-menu__item[data-tool-id='tool-insert'] > div > button:after,
 .kb-custom-menu__item[data-tool-id='tool-type'] > div > button:after,
 .kb-custom-menu__item[data-tool-id='tool-table'] > div > button:after {
-  content: '▼';
-  font-size: 4px;
-  color: var(--kb-color-text-muted);
+  content: '';
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 3px solid currentColor;
+  opacity: 0.7;
   position: absolute;
-  right: 4px;
+  right: 16px;
+  top: calc(50% - 1.5px);
 }
 
 .kb-custom-menu__item[data-tool-id='tool-toggle-code-font'] button > span,
