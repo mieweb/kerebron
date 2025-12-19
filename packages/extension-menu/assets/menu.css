@@ -441,24 +441,43 @@
 /* Prompt/dialog styles with mobile optimization */
 .kb-prompt {
   background: var(--kb-color-surface);
-  padding: var(--kb-space-md) var(--kb-space-lg) var(--kb-space-md)
-    var(--kb-space-lg);
+  padding: var(--kb-space-lg) var(--kb-space-xl);
   border: 1px solid var(--kb-color-border);
   position: fixed;
-  border-radius: var(--kb-radius-md);
+  border-radius: var(--kb-radius-lg);
   z-index: var(--kb-z-modal);
   box-shadow: var(--kb-shadow-lg);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  min-width: 300px;
+  min-width: 320px;
   max-width: 90vw;
 }
 
+.kb-prompt form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--kb-space-md);
+}
+
+.kb-prompt form > div {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Buttons container - override the column direction for field divs */
+.kb-prompt form > div.kb-prompt__buttons {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  margin-top: var(--kb-space-sm);
+  gap: var(--kb-space-sm);
+}
+
 .kb-prompt h5 {
-  margin: 0 0 var(--kb-space-md) 0;
+  margin: 0;
   font-weight: 600;
-  font-size: var(--kb-text-base);
+  font-size: var(--kb-text-lg);
   color: var(--kb-color-text);
 }
 
@@ -467,8 +486,8 @@
   background: var(--kb-color-surface-elevated);
   border: 1px solid var(--kb-color-border);
   border-radius: var(--kb-radius-sm);
-  padding: var(--kb-space-sm);
-  font-size: var(--kb-text-sm);
+  padding: var(--kb-space-sm) var(--kb-space-md);
+  font-size: var(--kb-text-base);
   color: var(--kb-color-text);
   width: 100%;
   box-sizing: border-box;
@@ -520,21 +539,36 @@
 }
 
 .kb-prompt__buttons {
-  margin-top: var(--kb-space-md);
+  margin-top: var(--kb-space-sm);
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   gap: var(--kb-space-sm);
-  justify-content: flex-end;
+  justify-content: space-between;
 }
 
 .kb-prompt__buttons button {
-  padding: var(--kb-space-sm) var(--kb-space-md);
+  padding: var(--kb-space-xs) var(--kb-space-md);
   border: 1px solid var(--kb-color-border);
   border-radius: var(--kb-radius-sm);
   background: var(--kb-color-surface);
   color: var(--kb-color-text);
   cursor: pointer;
   font-size: var(--kb-text-sm);
-  min-height: var(--kb-touch-target-comfortable);
+  font-weight: 500;
+  min-height: auto;
+  width: auto;
+  flex: 0 0 auto;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+/* OK button (submit) comes first in DOM, push Cancel to the end visually */
+.kb-prompt__buttons button[type='submit'] {
+  order: 2;
+}
+
+.kb-prompt__buttons button[type='button'] {
+  order: 1;
 }
 
 .kb-prompt__buttons button:hover {
