@@ -6,6 +6,7 @@ import * as random from 'lib0/random';
 import { userColors } from '@kerebron/extension-yjs/userColors';
 
 import { CoreEditor } from '@kerebron/editor';
+import { ExtensionHistory } from '@kerebron/extension-basic-editor/ExtensionHistory';
 import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
 import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
 import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
@@ -89,6 +90,7 @@ console.log("TEST")
       element: editorRef.current,
       extensions: [
         new AdvancedEditorKit(),
+        new ExtensionHistory(),
         LspEditorKit.createFrom({ getLspTransport }),
       ],
     });

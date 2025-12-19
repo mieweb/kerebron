@@ -117,21 +117,48 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
   const menu = [];
 
   // === 1. Undo ===
+  // Use a wrapper that dynamically gets the undo command from the editor
+  // This handles both prosemirror-history and y-prosemirror undo
   menu.push(
     new MenuItem({
       title: 'Undo last change',
-      run: () => editor.chain().undo().run(),
-      enable: (state) => editor.can().undo().run(),
+      run: (state, dispatch) => {
+        const undoCmd = editor.commandFactories['undo']?.();
+        if (undoCmd) {
+          return undoCmd(state, dispatch);
+        }
+        return false;
+      },
+      enable: (state) => {
+        const undoCmd = editor.commandFactories['undo']?.();
+        if (undoCmd) {
+          return undoCmd(state);
+        }
+        return false;
+      },
       icon: icons.undo,
     }),
   );
 
   // === 2. Redo ===
+  // Use a wrapper that dynamically gets the redo command from the editor
   menu.push(
     new MenuItem({
       title: 'Redo last undone change',
-      run: () => editor.chain().redo().run(),
-      enable: (state) => editor.can().redo().run(),
+      run: (state, dispatch) => {
+        const redoCmd = editor.commandFactories['redo']?.();
+        if (redoCmd) {
+          return redoCmd(state, dispatch);
+        }
+        return false;
+      },
+      enable: (state) => {
+        const redoCmd = editor.commandFactories['redo']?.();
+        if (redoCmd) {
+          return redoCmd(state);
+        }
+        return false;
+      },
       icon: icons.redo,
     }),
   );
