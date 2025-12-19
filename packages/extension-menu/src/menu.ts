@@ -196,6 +196,9 @@ export class Dropdown implements MenuElement {
       /// The label to show on the drop-down control.
       label?: string;
 
+      /// Describes an icon to show for this dropdown.
+      icon?: IconSpec;
+
       /// Sets the
       /// [`title`](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/title)
       /// attribute given to the menu control.
@@ -225,13 +228,29 @@ export class Dropdown implements MenuElement {
       label.classList.add(this.options.class);
     }
     if (this.options.css) label.setAttribute('style', this.options.css);
-    label.appendChild(
-      document.createTextNode(translate(view, this.options.label || '')),
-    );
-    if (this.options.title) {
-      const title = translate(view, this.options.title);
-      label.setAttribute('title', title);
-      label.setAttribute('aria-label', title);
+
+    // Add icon if specified
+    if (this.options.icon) {
+      const icon = getIcon(view.root, this.options.icon);
+      label.appendChild(icon);
+    }
+
+    // Add text label (hidden by CSS in toolbar, visible in title/aria-label)
+    const labelText = translate(view, this.options.label || '');
+    if (labelText) {
+      const textSpan = document.createElement('span');
+      textSpan.classList.add(this.CSS_PREFIX + '__label-text');
+      textSpan.textContent = labelText;
+      label.appendChild(textSpan);
+    }
+
+    // Set title from explicit title option, or use label as fallback
+    const titleText = this.options.title
+      ? translate(view, this.options.title)
+      : labelText;
+    if (titleText) {
+      label.setAttribute('title', titleText);
+      label.setAttribute('aria-label', titleText);
     }
 
     // Set ARIA attributes for accessibility

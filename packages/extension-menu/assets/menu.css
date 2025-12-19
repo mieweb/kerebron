@@ -188,6 +188,16 @@
   vertical-align: middle;
 }
 
+/* Hide text labels in toolbar buttons - show icons only */
+.kb-menu__button span {
+  display: none;
+}
+
+/* Hide text labels in dropdown buttons - show icons only */
+.kb-dropdown__label-text {
+  display: none;
+}
+
 /* Separator */
 .kb-menu__separator {
   width: 1px;

@@ -97,7 +97,12 @@ export const icons: { [name: string]: IconSpec } = {
     path:
       'M219 310v329q0 7-5 12t-12 5q-8 0-13-5l-164-164q-5-5-5-13t5-13l164-164q5-5 13-5 7 0 12 5t5 12zM1024 749v109q0 7-5 12t-12 5h-987q-7 0-12-5t-5-12v-109q0-7 5-12t12-5h987q7 0 12 5t5 12zM1024 530v109q0 7-5 12t-12 5h-621q-7 0-12-5t-5-12v-109q0-7 5-12t12-5h621q7 0 12 5t5 12zM1024 310v109q0 7-5 12t-12 5h-621q-7 0-12-5t-5-12v-109q0-7 5-12t12-5h621q7 0 12 5t5 12zM1024 91v109q0 7-5 12t-12 5h-987q-7 0-12-5t-5-12v-109q0-7 5-12t12-5h987q7 0 12 5t5 12z',
   },
-  selectParentNode: { text: '\u2b1a', css: 'font-weight: bold' },
+  selectParentNode: {
+    width: 24,
+    height: 24,
+    path:
+      'M3 5h2V3c-1.1 0-2 .9-2 2zm0 8h2v-2H3v2zm4 8h2v-2H7v2zM3 9h2V7H3v2zm10-6h-2v2h2V3zm6 0v2h2c0-1.1-.9-2-2-2zM5 21v-2H3c0 1.1.9 2 2 2zm-2-4h2v-2H3v2zM9 3H7v2h2V3zm2 18h2v-2h-2v2zm8-8h2v-2h-2v2zm0 8c1.1 0 2-.9 2-2h-2v2zm0-12h2V7h-2v2zm0 8h2v-2h-2v2zm-4 4h2v-2h-2v2zm0-16h2V3h-2v2z',
+  },
   undo: {
     width: 1024,
     height: 1024,
@@ -156,5 +161,32 @@ export const icons: { [name: string]: IconSpec } = {
     height: 896,
     path:
       'M0 448v256h256v-256h-128c0 0 0-128 128-128v-128c0 0-256 0-256 256zM640 320v-128c0 0-256 0-256 256v256h256v-256h-128c0 0 0-128 128-128z',
+  },
+  insert: {
+    width: 24,
+    height: 24,
+    path: 'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z',
+  },
+  type: {
+    width: 24,
+    height: 24,
+    path: 'M5 4v3h5.5v12h3V7H19V4H5z',
+  },
+  table: {
+    width: 24,
+    height: 24,
+    path:
+      'M3 3v18h18V3H3zm8 16H5v-6h6v6zm0-8H5V5h6v6zm8 8h-6v-6h6v6zm0-8h-6V5h6v6z',
+  },
+  image: {
+    width: 24,
+    height: 24,
+    path:
+      'M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z',
+  },
+  horizontalRule: {
+    width: 24,
+    height: 24,
+    path: 'M4 11h16v2H4z',
   },
 };

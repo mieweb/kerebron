@@ -135,6 +135,42 @@
   fill: currentColor;
 }
 
+/* Hide text labels in dropdown buttons - icons only in toolbar */
+.kb-custom-menu__item .kb-dropdown__label-text {
+  display: none;
+}
+
+/* Dropdown label styling for icon-only mode */
+.kb-custom-menu__item .kb-dropdown__label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding-right: 14px; /* Space for dropdown arrow */
+}
+
+/* Ensure dropdown icons are visible and sized correctly */
+.kb-custom-menu__item .kb-dropdown__label .kb-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kb-custom-menu__item .kb-dropdown__label .kb-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+/* Smaller dropdown arrow for icon-only dropdowns */
+.kb-custom-menu__item .kb-dropdown__label:after {
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 3px solid currentColor;
+  right: 4px;
+  top: calc(50% - 1.5px);
+}
+
 /* Dropdown menus within custom menu - match toolbar dark background */
 .kb-custom-menu .kb-dropdown__menu {
   background: var(--kb-menu-dropdown-dark-bg);

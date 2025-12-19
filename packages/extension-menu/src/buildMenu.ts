@@ -197,7 +197,6 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
   }
 
   const blockMenu = [];
-  const insertMenu = [];
   const typeMenu = [];
 
   if (schema.nodes.bullet_list) {
@@ -272,11 +271,11 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
 
   if (schema.nodes.image) {
     const nodeType = schema.nodes.image;
-    insertMenu.push(
+    // Image as standalone toolbar button
+    menu.push(
       new MenuItem({
         title: 'Insert image',
-        label: 'Image',
-        // enable: (state) => editor.can().setHorizontalRule().run(),
+        icon: icons.image,
         enable: (state) => canInsert(state, nodeType),
         run(state, dispatch) {
           let { from, to } = state.selection, attrs = null;
@@ -318,11 +317,12 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     );
   }
 
+  // Horizontal rule as standalone toolbar button
   if (schema.nodes.hr) {
-    insertMenu.push(
+    menu.push(
       new MenuItem({
         title: 'Insert horizontal rule',
-        label: 'Horizontal rule',
+        icon: icons.horizontalRule,
         run: () => editor.chain().setHorizontalRule().run(),
         enable: (state) => editor.can().setHorizontalRule().run(),
       }),
@@ -330,14 +330,9 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
   }
 
   menu.push(
-    new Dropdown(cut(insertMenu), {
-      label: 'Insert',
-    }),
-  );
-
-  menu.push(
     new Dropdown(cut(typeMenu), {
       label: 'Type',
+      icon: icons.type,
     }),
   );
 
@@ -410,7 +405,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
       // item('Make cell green', setCellAttr('background', '#dfd')),
       // item('Make cell not-green', setCellAttr('background', null)),
     ];
-    menu.push(new Dropdown(tableMenu, { label: 'Table' }));
+    menu.push(new Dropdown(tableMenu, { label: 'Table', icon: icons.table }));
   }
 
   return [menu, blockMenu];
