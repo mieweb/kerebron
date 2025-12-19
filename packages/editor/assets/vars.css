@@ -31,10 +31,10 @@
   --kb-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
 
   /* Z-index Scale */
-  --kb-z-dropdown: 100;
-  --kb-z-tooltip: 200;
-  --kb-z-modal: 300;
-  --kb-z-notification: 400;
+  --kb-z-dropdown: 1100;
+  --kb-z-tooltip: 1200;
+  --kb-z-modal: 1300;
+  --kb-z-notification: 1400;
 
   /* Brand Colors (Customizable) */
   --kb-color-primary: #3b82f6;

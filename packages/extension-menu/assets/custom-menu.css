@@ -59,7 +59,7 @@
 
 /* Toolbar */
 .kb-custom-menu {
-  margin: 0;
+  margin: calc(-1 * var(--kb-space-sm)) 0 0 0;
   line-height: 1;
   font-size: var(--kb-text-sm);
   font-family:
