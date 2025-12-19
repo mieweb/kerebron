@@ -33,7 +33,6 @@ export default defineConfig({
           }
           return assetInfo.name;
         },
-        manualChunks: () => 'everything',
       },
     },
   },

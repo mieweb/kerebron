@@ -1,7 +1,8 @@
 {
   "name": "@kerebron/lib-cdn",
   "tasks": {
-    "build": "deno run -A npm:vite build"
+    "build": "deno run -A npm:vite build",
+    "serve": "deno run --allow-net --allow-read jsr:@std/http/file-server"
   },
   "compilerOptions": {
     "target": "ES2022",
