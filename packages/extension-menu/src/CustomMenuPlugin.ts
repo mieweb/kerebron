@@ -10,16 +10,19 @@ import { CustomMenuOptions } from './ExtensionCustomMenu.ts';
 import type { MenuElement } from './menu.ts';
 
 const CSS_PREFIX = 'kb-custom-menu';
-const MAX_PINNED_ITEMS = 8;
-const STORAGE_KEY = 'kb-custom-menu-pinned';
-// Bootstrap md breakpoint: 768px (mobile is < 768px, desktop is >= 768px)
-const MOBILE_BREAKPOINT = 768;
+const STORAGE_KEY = 'kb-custom-menu-order';
+// Minimum width for overflow toggle button + some padding
+const OVERFLOW_BUTTON_WIDTH = 48;
+// Approximate width per toolbar item
+const ITEM_WIDTH = 40;
+// Delay before drag starts (ms) - user must hold before dragging
+const DRAG_START_DELAY = 150;
 
 interface ToolItem {
   id: string;
   label: string;
   element: MenuElement;
-  isPinned: boolean;
+  order: number;
 }
 
 export class CustomMenuView {
@@ -27,7 +30,6 @@ export class CustomMenuView {
   toolbar: HTMLElement;
   overflowMenu: HTMLElement;
   pinnedDropdownMenu: HTMLElement | null = null;
-  modal: HTMLElement | null = null;
   tools: ToolItem[] = [];
   root: Document | ShadowRoot;
   resizeHandle: HTMLElement;
@@ -38,6 +40,17 @@ export class CustomMenuView {
   private pinnedDropdownStack: Array<
     { title: string; tools: ToolItem[]; rootTool: ToolItem }
   > = [];
+  private resizeObserver: ResizeObserver | null = null;
+
+  // Drag and drop state
+  private draggedItem: ToolItem | null = null;
+  private dragStartTimer: number | null = null;
+  private isDragging = false;
+  private dragPlaceholder: HTMLElement | null = null;
+  private dragGhost: HTMLElement | null = null;
+
+  // Current overflow tools (calculated during render)
+  private currentOverflowTools: ToolItem[] = [];
 
   constructor(
     readonly editorView: EditorView,
@@ -86,8 +99,8 @@ export class CustomMenuView {
     // Initialize tools from content
     this.initializeTools();
 
-    // Load pinned state from localStorage
-    this.loadPinnedState();
+    // Load order state from localStorage
+    this.loadOrderState();
 
     // Setup resize functionality
     this.setupResize();
@@ -95,15 +108,17 @@ export class CustomMenuView {
     // Initial render
     this.render();
 
-    // Add window resize listener to re-render on mobile/desktop changes
-    if (typeof window !== 'undefined') {
-      globalThis.addEventListener('resize', () => {
+    // Use ResizeObserver to dynamically show/hide items based on available width
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
         this.render();
       });
+      this.resizeObserver.observe(this.toolbar);
     }
   }
 
   private initializeTools() {
+    let orderIndex = 0;
     this.content.forEach((group) => {
       group.forEach((element) => {
         const { dom, update } = element.render(this.editorView);
@@ -123,7 +138,7 @@ export class CustomMenuView {
           id,
           label,
           element,
-          isPinned: false,
+          order: orderIndex++,
         });
       });
     });
@@ -196,35 +211,37 @@ export class CustomMenuView {
     return 'Unknown Tool';
   }
 
-  private loadPinnedState() {
+  private loadOrderState() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        const pinnedIds = JSON.parse(saved) as string[];
+        const orderedIds = JSON.parse(saved) as string[];
+        // Apply saved order to tools
         this.tools.forEach((tool) => {
-          tool.isPinned = pinnedIds.includes(tool.id);
+          const savedIndex = orderedIds.indexOf(tool.id);
+          if (savedIndex !== -1) {
+            tool.order = savedIndex;
+          } else {
+            // New tools get placed at the end
+            tool.order = orderedIds.length + tool.order;
+          }
         });
-      } else {
-        // Default pinned items (first 8)
-        this.tools.slice(0, MAX_PINNED_ITEMS).forEach((tool) => {
-          tool.isPinned = true;
-        });
+        // Sort tools by their order
+        this.tools.sort((a, b) => a.order - b.order);
       }
+      // If no saved state, keep the default order from initialization
     } catch (e) {
-      console.error('Failed to load pinned state:', e);
-      // Default to first 8 items
-      this.tools.slice(0, MAX_PINNED_ITEMS).forEach((tool) => {
-        tool.isPinned = true;
-      });
+      console.error('Failed to load order state:', e);
+      // Keep default order on error
     }
   }
 
-  private savePinnedState() {
+  private saveOrderState() {
     try {
-      const pinnedIds = this.tools.filter((t) => t.isPinned).map((t) => t.id);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(pinnedIds));
+      const orderedIds = this.tools.map((t) => t.id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(orderedIds));
     } catch (e) {
-      console.error('Failed to save pinned state:', e);
+      console.error('Failed to save order state:', e);
     }
   }
 
@@ -544,9 +561,13 @@ export class CustomMenuView {
       ? this.submenuStack[this.submenuStack.length - 1]
       : null;
 
-    // Create scrollable content container
+    // Create scrollable content container - use grid layout for Google Docs style
     const overflowContent = document.createElement('div');
     overflowContent.classList.add(CSS_PREFIX + '__overflow-content');
+    // Apply flex-wrap style for Google Docs-like icon layout
+    if (!isSubmenu) {
+      overflowContent.classList.add(CSS_PREFIX + '__overflow-content--grid');
+    }
 
     if (isSubmenu && currentSubmenu) {
       // Render submenu header with back button
@@ -637,75 +658,11 @@ export class CustomMenuView {
         overflowContent.appendChild(wrapper);
       });
     } else {
-      // Render main overflow menu
-      const pinnedTools = this.tools.filter((t) => t.isPinned);
-      const overflowTools = this.tools.filter((t) => !t.isPinned);
+      // Render main overflow menu - use the stored overflow tools from render()
+      const allOverflowItems = this.currentOverflowTools;
 
-      // Check if we're in mobile view
-      const isMobile = typeof window !== 'undefined' &&
-        window.innerWidth < MOBILE_BREAKPOINT;
-      const mobileLimit = 4;
-      const mobileOverflowPinned = isMobile
-        ? pinnedTools.slice(mobileLimit)
-        : [];
-
-      // In mobile view, add the pinned overflow tools at the top with a label
-      if (isMobile && mobileOverflowPinned.length > 0) {
-        // Add section header
-        const header = document.createElement('div');
-        header.classList.add(CSS_PREFIX + '__overflow-header');
-        header.textContent = 'More Tools';
-        overflowContent.appendChild(header);
-
-        // Add the overflow pinned tools
-        mobileOverflowPinned.forEach((tool) => {
-          // Skip tools with empty or invalid labels
-          if (
-            !tool.label || tool.label.trim() === '' ||
-            tool.label === 'Unknown Tool'
-          ) {
-            return;
-          }
-
-          const { dom, update } = tool.element.render(this.editorView);
-          const wrapper = document.createElement('div');
-          wrapper.classList.add(CSS_PREFIX + '__overflow-item');
-
-          // Add label to the item
-          const label = document.createElement('span');
-          label.classList.add(CSS_PREFIX + '__overflow-item-label');
-          label.textContent = tool.label;
-
-          // Restructure the DOM to show icon + label
-          wrapper.appendChild(dom);
-          wrapper.appendChild(label);
-
-          // Make the entire wrapper clickable by dispatching mousedown to the button
-          wrapper.addEventListener('mousedown', (e) => {
-            if (e.target !== dom) {
-              e.preventDefault();
-              const mousedownEvent = new MouseEvent('mousedown', {
-                bubbles: true,
-                cancelable: true,
-                view: window,
-              });
-              dom.dispatchEvent(mousedownEvent);
-            }
-          });
-
-          overflowContent.appendChild(wrapper);
-        });
-
-        // Add separator after mobile overflow pinned section
-        if (overflowTools.length > 0) {
-          const separator = document.createElement('div');
-          separator.classList.add(CSS_PREFIX + '__overflow-separator');
-          overflowContent.appendChild(separator);
-        }
-      }
-
-      // Render overflow tools with labels
-      overflowTools.forEach((tool) => {
+      // Render all overflow tools as icon grid (Google Docs style)
+      allOverflowItems.forEach((tool) => {
         // Skip tools with empty or invalid labels
         if (
           !tool.label || tool.label.trim() === '' ||
@@ -719,9 +676,13 @@ export class CustomMenuView {
 
         const wrapper = document.createElement('div');
         wrapper.classList.add(CSS_PREFIX + '__overflow-item');
+        wrapper.classList.add(CSS_PREFIX + '__overflow-item--grid');
+        wrapper.setAttribute('title', tool.label); // Tooltip on hover
 
         if (isDropdown) {
-          // For dropdowns, create a custom button with icon and chevron
+          // For dropdowns, create a custom button with dropdown indicator
+          wrapper.classList.add(CSS_PREFIX + '__overflow-item--dropdown');
+
           const button = document.createElement('button');
           button.type = 'button';
           button.classList.add('kb-menu__button');
@@ -738,18 +699,11 @@ export class CustomMenuView {
 
           wrapper.appendChild(button);
 
-          // Add label
-          const label = document.createElement('span');
-          label.classList.add(CSS_PREFIX + '__overflow-item-label');
-          label.textContent = tool.label;
-          wrapper.appendChild(label);
-
-          // Add chevron to indicate submenu
-          const chevron = document.createElement('span');
-          chevron.classList.add(CSS_PREFIX + '__overflow-item-chevron');
-          chevron.innerHTML =
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>';
-          wrapper.appendChild(chevron);
+          // Add small dropdown indicator
+          const indicator = document.createElement('span');
+          indicator.classList.add(CSS_PREFIX + '__overflow-item-indicator');
+          indicator.innerHTML = '▼';
+          wrapper.appendChild(indicator);
 
           // Click handler for dropdown - navigate to submenu
           wrapper.addEventListener('click', (e) => {
@@ -758,17 +712,19 @@ export class CustomMenuView {
             this.showSubmenu(tool);
           });
         } else {
-          // Regular menu item
+          // Regular menu item - show icon only with tooltip
           const { dom, update } = tool.element.render(this.editorView);
 
-          // Add label to the item
-          const label = document.createElement('span');
-          label.classList.add(CSS_PREFIX + '__overflow-item-label');
-          label.textContent = tool.label;
+          // Hide any text labels, keep only icons
+          const spans = dom.querySelectorAll('span');
+          spans.forEach((span) => {
+            const isInsideIcon = span.closest('.kb-icon') !== null;
+            if (!isInsideIcon && !span.querySelector('svg')) {
+              span.style.display = 'none';
+            }
+          });
 
-          // Restructure the DOM to show icon + label
           wrapper.appendChild(dom);
-          wrapper.appendChild(label);
 
           // Make the entire wrapper clickable by dispatching mousedown to the button
           wrapper.addEventListener('mousedown', (e) => {
@@ -790,118 +746,138 @@ export class CustomMenuView {
 
     // Add the scrollable content to overflow menu
     this.overflowMenu.appendChild(overflowContent);
-
-    // Create sticky footer for manage button (only in main menu, not submenu)
-    if (
-      !isSubmenu &&
-      (this.tools.filter((t) => !t.isPinned).length > 0 ||
-        this.tools.filter((t) => t.isPinned).length > 0)
-    ) {
-      const overflowFooter = document.createElement('div');
-      overflowFooter.classList.add(CSS_PREFIX + '__overflow-footer');
-
-      const manageButton = document.createElement('button');
-      manageButton.type = 'button';
-      manageButton.className = CSS_PREFIX + '__manage-button';
-      manageButton.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 15v2m0 0v2m0-2h2m-2 0H10m11-7l-1.5-1.5M21 12l-1.5 1.5M3 12l1.5 1.5M3 12l1.5-1.5M12 3v2m0 14v2"></path>
-        </svg>
-        <span>Manage Pinned Tools</span>
-      `;
-      manageButton.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.openManageModal();
-      });
-
-      overflowFooter.appendChild(manageButton);
-      this.overflowMenu.appendChild(overflowFooter);
-    }
   }
 
   private render() {
+    // Skip render if currently dragging (to avoid interference)
+    if (this.isDragging) return;
+
     // Clear toolbar and overflow menu
     this.toolbar.innerHTML = '';
     this.overflowMenu.innerHTML = '';
 
-    const pinnedTools = this.tools.filter((t) => t.isPinned);
-    const overflowTools = this.tools.filter((t) => !t.isPinned);
+    // Get available width for toolbar items
+    const toolbarWidth = this.toolbar.offsetWidth || this.wrapper.offsetWidth;
+    const availableWidth = toolbarWidth - OVERFLOW_BUTTON_WIDTH - 16; // Reserve space for overflow button + padding
 
-    // Check if we're in mobile view (Bootstrap md breakpoint: < 768px)
-    const isMobile = typeof window !== 'undefined' &&
-      window.innerWidth < MOBILE_BREAKPOINT;
-    const mobileLimit = 4;
+    // First pass: render all items to measure their widths
+    const renderedItems: Array<{
+      tool: ToolItem;
+      wrapper: HTMLElement;
+      width: number;
+    }> = [];
 
-    // In mobile, only show first 4 pinned tools in toolbar
-    const visibleTools = isMobile
-      ? pinnedTools.slice(0, mobileLimit)
-      : pinnedTools;
-    const mobileOverflowPinned = isMobile ? pinnedTools.slice(mobileLimit) : [];
-
-    // Render visible pinned tools in toolbar
-    visibleTools.forEach((tool) => {
+    this.tools.forEach((tool) => {
       const wrapper = document.createElement('span');
       wrapper.classList.add(CSS_PREFIX + '__item');
       wrapper.setAttribute('data-tool-id', tool.id);
+      wrapper.setAttribute('draggable', 'false');
 
-      // Check if this is a dropdown with sub-items
       const isDropdown = (tool.element as any).content !== undefined;
 
       if (isDropdown) {
-        // For dropdowns, we'll render it but hide the default dropdown menu
-        const { dom, update } = tool.element.render(this.editorView);
-
-        // Find and hide the default dropdown menu if it exists
+        const { dom } = tool.element.render(this.editorView);
         const dropdownMenu = dom.querySelector('.kb-dropdown__content');
         if (dropdownMenu) {
           (dropdownMenu as HTMLElement).style.display = 'none';
         }
+        wrapper.appendChild(dom);
+      } else {
+        const { dom } = tool.element.render(this.editorView);
+        wrapper.appendChild(dom);
+      }
 
-        // Intercept all clicks on the button/label
-        const button = dom.querySelector('button');
-        const label = dom.querySelector('.kb-dropdown__label');
+      // Temporarily add to toolbar to measure
+      this.toolbar.appendChild(wrapper);
+      const width = wrapper.getBoundingClientRect().width;
+      renderedItems.push({ tool, wrapper, width });
+    });
+
+    // Second pass: determine which items fit
+    let usedWidth = 0;
+    const visibleItems: typeof renderedItems = [];
+    const overflowItems: typeof renderedItems = [];
+
+    for (const item of renderedItems) {
+      if (usedWidth + item.width <= availableWidth) {
+        visibleItems.push(item);
+        usedWidth += item.width;
+      } else {
+        overflowItems.push(item);
+      }
+    }
+
+    // Clear toolbar again and re-render only visible items
+    this.toolbar.innerHTML = '';
+
+    // Render visible tools in toolbar with proper event handlers
+    visibleItems.forEach(({ tool, wrapper }) => {
+      const isDropdown = (tool.element as any).content !== undefined;
+
+      if (isDropdown) {
+        const button = wrapper.querySelector('button');
+        const label = wrapper.querySelector('.kb-dropdown__label');
 
         const clickHandler = (e: Event) => {
+          // Don't open dropdown if we were dragging
+          if (this.isDragging) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            return;
+          }
           e.preventDefault();
           e.stopPropagation();
           e.stopImmediatePropagation();
           this.showPinnedDropdown(tool, wrapper);
         };
 
+        // Mousedown handler - prevents built-in dropdown from opening
+        // but allows our drag handler on the wrapper to work
+        const mousedownHandler = (e: MouseEvent) => {
+          // Stop the built-in dropdown's mousedown handler from firing
+          // This prevents the double-menu issue
+          e.stopImmediatePropagation();
+
+          // If dragging, also stop propagation
+          if (this.isDragging) {
+            e.stopPropagation();
+          }
+          // Note: We don't call preventDefault() so the wrapper's
+          // capture-phase drag handler can still work
+        };
+
         if (button) {
           button.addEventListener('click', clickHandler, { capture: true });
-          button.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }, { capture: true });
+          button.addEventListener('mousedown', mousedownHandler, {
+            capture: true,
+          });
         }
         if (label) {
           label.addEventListener('click', clickHandler, { capture: true });
-          label.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }, { capture: true });
+          label.addEventListener('mousedown', mousedownHandler, {
+            capture: true,
+          });
         }
-
-        wrapper.appendChild(dom);
-      } else {
-        // Regular items render normally
-        const { dom, update } = tool.element.render(this.editorView);
-        wrapper.appendChild(dom);
       }
 
+      // Add drag-and-drop handlers
+      this.setupDragHandlers(wrapper, tool);
       this.toolbar.appendChild(wrapper);
     });
 
-    // Add separator before overflow button
-    if (overflowTools.length > 0 || mobileOverflowPinned.length > 0) {
+    // Store overflow tools for the overflow menu
+    this.currentOverflowTools = overflowItems.map((item) => item.tool);
+
+    // Add separator before overflow button if there are overflow items
+    if (this.currentOverflowTools.length > 0) {
       const separator = document.createElement('div');
       separator.classList.add(CSS_PREFIX + '__separator');
       this.toolbar.appendChild(separator);
     }
 
-    // Add overflow toggle button
-    if (overflowTools.length > 0 || mobileOverflowPinned.length > 0) {
+    // Add overflow toggle button if there are overflow items
+    if (this.currentOverflowTools.length > 0) {
       const overflowToggle = document.createElement('button');
       overflowToggle.type = 'button';
       overflowToggle.className = CSS_PREFIX + '__overflow-toggle';
@@ -976,145 +952,228 @@ export class CustomMenuView {
     this.renderOverflowMenu();
   }
 
-  private openManageModal() {
-    // Close overflow menu
-    this.overflowMenu.style.display = 'none';
+  private setupDragHandlers(wrapper: HTMLElement, tool: ToolItem) {
+    let startX = 0;
+    let startY = 0;
 
-    // Create modal backdrop
-    const backdrop = document.createElement('div');
-    backdrop.classList.add(CSS_PREFIX + '__modal-backdrop');
+    const onMouseDown = (e: MouseEvent) => {
+      // Only handle left mouse button
+      if (e.button !== 0) return;
 
-    // Create modal
-    this.modal = document.createElement('div');
-    this.modal.classList.add(CSS_PREFIX + '__modal');
+      startX = e.clientX;
+      startY = e.clientY;
 
-    // Modal header
-    const header = document.createElement('div');
-    header.classList.add(CSS_PREFIX + '__modal-header');
-    header.innerHTML = `
-      <h2>Manage Pinned Tools</h2>
-      <button type="button" class="${CSS_PREFIX}__modal-close" aria-label="Close">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M6 6l12 12M6 18L18 6"/>
-        </svg>
-      </button>
-    `;
+      // Start a timer for delayed drag initiation
+      this.dragStartTimer = setTimeout(() => {
+        this.startDrag(wrapper, tool, e);
+      }, DRAG_START_DELAY);
 
-    // Modal message
-    const message = document.createElement('div');
-    message.classList.add(CSS_PREFIX + '__modal-message');
-    message.textContent = `Maximum pinned: ${MAX_PINNED_ITEMS}`;
-
-    // Modal content (tool list)
-    const content = document.createElement('div');
-    content.classList.add(CSS_PREFIX + '__modal-content');
-
-    const toolList = document.createElement('div');
-    toolList.classList.add(CSS_PREFIX + '__tool-list');
-
-    this.tools.forEach((tool) => {
-      const toolItem = document.createElement('label');
-      toolItem.classList.add(CSS_PREFIX + '__tool-item');
-
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.checked = tool.isPinned;
-      checkbox.disabled = false;
-
-      const pinnedCount = this.tools.filter((t) => t.isPinned).length;
-
-      // Disable unchecked items if we've reached the limit
-      if (!tool.isPinned && pinnedCount >= MAX_PINNED_ITEMS) {
-        checkbox.disabled = true;
-        toolItem.classList.add(CSS_PREFIX + '__tool-item--disabled');
-      }
-
-      checkbox.addEventListener('change', () => {
-        const currentPinnedCount = this.tools.filter((t) => t.isPinned).length;
-
-        if (checkbox.checked) {
-          if (currentPinnedCount >= MAX_PINNED_ITEMS) {
-            checkbox.checked = false;
-            return;
-          }
-          tool.isPinned = true;
-        } else {
-          tool.isPinned = false;
+      // Listen for mouse up to cancel if released early
+      const onMouseUp = () => {
+        if (this.dragStartTimer) {
+          clearTimeout(this.dragStartTimer);
+          this.dragStartTimer = null;
         }
+        document.removeEventListener('mouseup', onMouseUp);
+        document.removeEventListener('mousemove', onEarlyMove);
+      };
 
-        this.savePinnedState();
-        this.updateModalState(toolList);
-      });
+      // If mouse moves too much before timer, cancel drag start
+      const onEarlyMove = (moveEvent: MouseEvent) => {
+        const dx = Math.abs(moveEvent.clientX - startX);
+        const dy = Math.abs(moveEvent.clientY - startY);
+        // Allow some tolerance for slight movement
+        if (dx > 5 || dy > 5) {
+          if (this.dragStartTimer) {
+            clearTimeout(this.dragStartTimer);
+            this.dragStartTimer = null;
+          }
+        }
+      };
 
-      const label = document.createElement('span');
-      label.textContent = tool.label;
-
-      toolItem.appendChild(checkbox);
-      toolItem.appendChild(label);
-      toolList.appendChild(toolItem);
-    });
-
-    content.appendChild(toolList);
-
-    // Modal footer
-    const footer = document.createElement('div');
-    footer.classList.add(CSS_PREFIX + '__modal-footer');
-    footer.innerHTML = `
-      <button type="button" class="${CSS_PREFIX}__modal-button ${CSS_PREFIX}__modal-button--primary">
-        Done
-      </button>
-    `;
-
-    // Assemble modal
-    this.modal.appendChild(header);
-    this.modal.appendChild(message);
-    this.modal.appendChild(content);
-    this.modal.appendChild(footer);
-    backdrop.appendChild(this.modal);
-
-    // Add to DOM
-    (this.editorView.dom.ownerDocument || document).body.appendChild(backdrop);
-
-    // Close handlers
-    const closeModal = () => {
-      backdrop.remove();
-      this.modal = null;
-      this.render(); // Re-render toolbar with new pinned state
+      document.addEventListener('mouseup', onMouseUp);
+      document.addEventListener('mousemove', onEarlyMove);
     };
 
-    header.querySelector('.' + CSS_PREFIX + '__modal-close')?.addEventListener(
-      'click',
-      closeModal,
-    );
-    footer.querySelector('.' + CSS_PREFIX + '__modal-button')?.addEventListener(
-      'click',
-      closeModal,
-    );
-    backdrop.addEventListener('click', (e) => {
-      if (e.target === backdrop) {
-        closeModal();
-      }
-    });
+    // Use capture phase to ensure we get events from child elements (like dropdown buttons)
+    wrapper.addEventListener('mousedown', onMouseDown, { capture: true });
   }
 
-  private updateModalState(toolList: HTMLElement) {
-    const pinnedCount = this.tools.filter((t) => t.isPinned).length;
-    const items = toolList.querySelectorAll('.' + CSS_PREFIX + '__tool-item');
+  private startDrag(wrapper: HTMLElement, tool: ToolItem, e: MouseEvent) {
+    this.isDragging = true;
+    this.draggedItem = tool;
 
-    items.forEach((item, index) => {
-      const checkbox = item.querySelector(
-        'input[type="checkbox"]',
-      ) as HTMLInputElement;
-      const tool = this.tools[index];
+    // Add dragging class to wrapper
+    wrapper.classList.add(CSS_PREFIX + '__item--dragging');
+    this.wrapper.classList.add(CSS_PREFIX + '__wrapper--dragging');
 
-      if (!tool.isPinned && pinnedCount >= MAX_PINNED_ITEMS) {
-        checkbox.disabled = true;
-        item.classList.add(CSS_PREFIX + '__tool-item--disabled');
-      } else if (!tool.isPinned) {
-        checkbox.disabled = false;
-        item.classList.remove(CSS_PREFIX + '__tool-item--disabled');
+    // Create a ghost element for visual feedback
+    const rect = wrapper.getBoundingClientRect();
+    this.dragGhost = wrapper.cloneNode(true) as HTMLElement;
+    this.dragGhost.classList.add(CSS_PREFIX + '__drag-ghost');
+    this.dragGhost.style.position = 'fixed';
+    this.dragGhost.style.left = `${rect.left}px`;
+    this.dragGhost.style.top = `${rect.top}px`;
+    this.dragGhost.style.width = `${rect.width}px`;
+    this.dragGhost.style.height = `${rect.height}px`;
+    this.dragGhost.style.pointerEvents = 'none';
+    this.dragGhost.style.zIndex = '10000';
+    document.body.appendChild(this.dragGhost);
+
+    // Create a placeholder to show where the item will be dropped
+    this.dragPlaceholder = document.createElement('span');
+    this.dragPlaceholder.classList.add(CSS_PREFIX + '__drop-placeholder');
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      if (!this.isDragging || !this.dragGhost) return;
+
+      // Update ghost position
+      const ghostRect = this.dragGhost.getBoundingClientRect();
+      this.dragGhost.style.left = `${
+        moveEvent.clientX - ghostRect.width / 2
+      }px`;
+      this.dragGhost.style.top = `${
+        moveEvent.clientY - ghostRect.height / 2
+      }px`;
+
+      // Find the toolbar item we're hovering over
+      const toolbarItems = this.toolbar.querySelectorAll(
+        '.' + CSS_PREFIX + '__item',
+      );
+      let insertBefore: HTMLElement | null = null;
+      let insertIndex = -1;
+
+      toolbarItems.forEach((item, index) => {
+        if (item === wrapper) return; // Skip the dragged item itself
+
+        const itemRect = item.getBoundingClientRect();
+        const itemCenter = itemRect.left + itemRect.width / 2;
+
+        if (moveEvent.clientX < itemCenter && insertBefore === null) {
+          insertBefore = item as HTMLElement;
+          insertIndex = index;
+        }
+      });
+
+      // Remove existing placeholder
+      if (this.dragPlaceholder && this.dragPlaceholder.parentNode) {
+        this.dragPlaceholder.remove();
       }
-    });
+
+      // Insert placeholder at the appropriate position
+      if (insertBefore && this.dragPlaceholder) {
+        insertBefore.parentNode?.insertBefore(
+          this.dragPlaceholder,
+          insertBefore,
+        );
+      } else if (this.dragPlaceholder) {
+        // Insert at end (before separator or overflow toggle)
+        const separator = this.toolbar.querySelector(
+          '.' + CSS_PREFIX + '__separator',
+        );
+        if (separator) {
+          separator.parentNode?.insertBefore(this.dragPlaceholder, separator);
+        } else {
+          const overflowToggle = this.toolbar.querySelector(
+            '.' + CSS_PREFIX + '__overflow-toggle',
+          );
+          if (overflowToggle) {
+            overflowToggle.parentNode?.insertBefore(
+              this.dragPlaceholder,
+              overflowToggle,
+            );
+          } else {
+            this.toolbar.appendChild(this.dragPlaceholder);
+          }
+        }
+      }
+    };
+
+    const onMouseUp = (upEvent: MouseEvent) => {
+      if (!this.isDragging) return;
+
+      // Calculate new position based on placeholder
+      if (this.dragPlaceholder && this.dragPlaceholder.parentNode) {
+        const toolbarItems = Array.from(
+          this.toolbar.querySelectorAll('.' + CSS_PREFIX + '__item'),
+        );
+        const placeholderIndex = Array.from(this.toolbar.children).indexOf(
+          this.dragPlaceholder,
+        );
+        const draggedIndex = toolbarItems.indexOf(wrapper);
+
+        // Calculate target index in visible items
+        let visibleTargetIndex = 0;
+        for (let i = 0; i < this.toolbar.children.length; i++) {
+          const child = this.toolbar.children[i];
+          if (child === this.dragPlaceholder) break;
+          if (child.classList.contains(CSS_PREFIX + '__item')) {
+            visibleTargetIndex++;
+          }
+        }
+
+        // Find the tool's current index in the tools array
+        const currentToolIndex = this.tools.indexOf(tool);
+
+        if (
+          currentToolIndex !== -1 && visibleTargetIndex !== currentToolIndex
+        ) {
+          // Remove the tool from its current position
+          this.tools.splice(currentToolIndex, 1);
+
+          // Insert at new position
+          const insertAtIndex = visibleTargetIndex > currentToolIndex
+            ? visibleTargetIndex - 1
+            : visibleTargetIndex;
+          this.tools.splice(insertAtIndex, 0, tool);
+
+          // Update order values
+          this.tools.forEach((t, i) => {
+            t.order = i;
+          });
+
+          // Save to localStorage
+          this.saveOrderState();
+        }
+      }
+
+      // Clean up
+      this.cleanupDrag(wrapper);
+
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+
+      // Re-render after a short delay
+      setTimeout(() => {
+        this.render();
+      }, 0);
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }
+
+  private cleanupDrag(wrapper: HTMLElement) {
+    this.isDragging = false;
+    this.draggedItem = null;
+
+    wrapper.classList.remove(CSS_PREFIX + '__item--dragging');
+    this.wrapper.classList.remove(CSS_PREFIX + '__wrapper--dragging');
+
+    if (this.dragGhost) {
+      this.dragGhost.remove();
+      this.dragGhost = null;
+    }
+
+    if (this.dragPlaceholder) {
+      this.dragPlaceholder.remove();
+      this.dragPlaceholder = null;
+    }
+
+    if (this.dragStartTimer) {
+      clearTimeout(this.dragStartTimer);
+      this.dragStartTimer = null;
+    }
   }
 
   private setupResize() {
@@ -1186,16 +1245,30 @@ export class CustomMenuView {
       this.closePinnedDropdownHandler = null;
     }
 
+    // Clean up ResizeObserver
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+
     // Clean up pinned dropdown
     if (this.pinnedDropdownMenu) {
       this.pinnedDropdownMenu.remove();
       this.pinnedDropdownMenu = null;
     }
 
-    // Clean up modal
-    if (this.modal) {
-      this.modal.remove();
-      this.modal = null;
+    // Clean up drag state
+    if (this.dragGhost) {
+      this.dragGhost.remove();
+      this.dragGhost = null;
+    }
+    if (this.dragPlaceholder) {
+      this.dragPlaceholder.remove();
+      this.dragPlaceholder = null;
+    }
+    if (this.dragStartTimer) {
+      clearTimeout(this.dragStartTimer);
+      this.dragStartTimer = null;
     }
 
     // Clean up DOM
