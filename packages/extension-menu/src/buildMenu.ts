@@ -114,12 +114,13 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     return new MenuItem(passedOptions);
   }
 
-  const menu = [];
+  // Group 1: Undo/Redo
+  const undoRedoGroup: MenuElement[] = [];
 
   // === 1. Undo ===
   // Use a wrapper that dynamically gets the undo command from the editor
   // This handles both prosemirror-history and y-prosemirror undo
-  menu.push(
+  undoRedoGroup.push(
     new MenuItem({
       title: 'Undo last change',
       run: (state, dispatch) => {
@@ -142,7 +143,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
 
   // === 2. Redo ===
   // Use a wrapper that dynamically gets the redo command from the editor
-  menu.push(
+  undoRedoGroup.push(
     new MenuItem({
       title: 'Redo last undone change',
       run: (state, dispatch) => {
@@ -163,6 +164,9 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     }),
   );
 
+  // Group 2: Structure tools (Heading, Lift, Join, Blockquote)
+  const structureGroup: MenuElement[] = [];
+
   // === 3. Heading / Text style selector (the "H" dropdown) ===
   if (schema.nodes.heading) {
     const headingMenu = [];
@@ -173,7 +177,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
         attrs: { level: i },
       }));
     }
-    menu.push(
+    structureGroup.push(
       new Dropdown(headingMenu, {
         label: 'Heading',
         icon: icons.heading,
@@ -182,7 +186,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
   }
 
   // === 4. Decrease indent (outdent) ===
-  menu.push(
+  structureGroup.push(
     new MenuItem({
       title: 'Lift out of enclosing block',
       run: () => editor.chain().lift().run(),
@@ -192,7 +196,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
   );
 
   // === 5. Increase indent ===
-  menu.push(
+  structureGroup.push(
     new MenuItem({
       title: 'Join with above block',
       run: () => editor.chain().joinUp().run(),
@@ -203,15 +207,18 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
 
   // === 6. Block quote ===
   if (schema.nodes.blockquote) {
-    menu.push(wrapItem(schema.nodes.blockquote, {
+    structureGroup.push(wrapItem(schema.nodes.blockquote, {
       title: 'Wrap in block quote',
       icon: icons.blockquote,
     }));
   }
 
+  // Group 3: Text formatting (Bold through Link)
+  const formattingGroup: MenuElement[] = [];
+
   // === 7. Bold ===
   if (schema.marks.strong) {
-    menu.push(
+    formattingGroup.push(
       new MenuItem({
         title: 'Toggle bold',
         run: () => editor.chain().toggleStrong().run(),
@@ -223,7 +230,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
 
   // === 8. Italic ===
   if (schema.marks.em) {
-    menu.push(
+    formattingGroup.push(
       new MenuItem({
         title: 'Toggle italic',
         run: () => editor.chain().toggleItalic().run(),
@@ -235,7 +242,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
 
   // === 9. Strikethrough ===
   if (schema.marks.strike) {
-    menu.push(markItem(schema.marks.strike, {
+    formattingGroup.push(markItem(schema.marks.strike, {
       title: 'Toggle strikethrough',
       icon: icons.strike,
     }));
@@ -243,7 +250,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
 
   // === 10. Inline code ===
   if (schema.marks.code) {
-    menu.push(markItem(schema.marks.code, {
+    formattingGroup.push(markItem(schema.marks.code, {
       title: 'Toggle code font',
       icon: icons.code,
     }));
@@ -251,7 +258,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
 
   // === 11. Underline ===
   if (schema.marks.underline) {
-    menu.push(
+    formattingGroup.push(
       new MenuItem({
         title: 'Toggle underline',
         run: () => editor.chain().toggleUnderline().run(),
@@ -263,7 +270,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
 
   // === 12. Highlight / Text color ===
   if (schema.marks.highlight) {
-    menu.push(markItem(schema.marks.highlight, {
+    formattingGroup.push(markItem(schema.marks.highlight, {
       title: 'Toggle highlight',
       icon: icons.highlight,
     }));
@@ -273,7 +280,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
   if (schema.marks.link) {
     const markType = schema.marks.link;
 
-    menu.push(
+    formattingGroup.push(
       new MenuItem({
         title: 'Add or remove link',
         icon: icons.link,
@@ -311,9 +318,12 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     );
   }
 
+  // Group 4: Superscript/Subscript
+  const scriptGroup: MenuElement[] = [];
+
   // === 14. Superscript ===
   if (schema.marks.superscript) {
-    menu.push(markItem(schema.marks.superscript, {
+    scriptGroup.push(markItem(schema.marks.superscript, {
       title: 'Toggle superscript',
       icon: icons.superscript,
     }));
@@ -321,16 +331,19 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
 
   // === 15. Subscript ===
   if (schema.marks.subscript) {
-    menu.push(markItem(schema.marks.subscript, {
+    scriptGroup.push(markItem(schema.marks.subscript, {
       title: 'Toggle subscript',
       icon: icons.subscript,
     }));
   }
 
+  // Group 5: Text alignment
+  const alignmentGroup: MenuElement[] = [];
+
   // === 16-19. Text alignment ===
   // Check if paragraph has textAlign attribute
   if (schema.nodes.paragraph?.spec?.attrs?.textAlign !== undefined) {
-    menu.push(
+    alignmentGroup.push(
       new MenuItem({
         title: 'Align left',
         icon: icons.alignLeft,
@@ -338,7 +351,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
         enable: () => editor.can().setTextAlignLeft().run(),
       }),
     );
-    menu.push(
+    alignmentGroup.push(
       new MenuItem({
         title: 'Align center',
         icon: icons.alignCenter,
@@ -346,7 +359,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
         enable: () => editor.can().setTextAlignCenter().run(),
       }),
     );
-    menu.push(
+    alignmentGroup.push(
       new MenuItem({
         title: 'Align right',
         icon: icons.alignRight,
@@ -354,7 +367,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
         enable: () => editor.can().setTextAlignRight().run(),
       }),
     );
-    menu.push(
+    alignmentGroup.push(
       new MenuItem({
         title: 'Justify',
         icon: icons.alignJustify,
@@ -364,10 +377,13 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     );
   }
 
+  // Group 6: Insert tools (Image, Lists, HR, Table, Type)
+  const insertGroup: MenuElement[] = [];
+
   // === 20. Insert image ===
   if (schema.nodes.image) {
     const nodeType = schema.nodes.image;
-    menu.push(
+    insertGroup.push(
       new MenuItem({
         title: 'Insert image',
         icon: icons.image,
@@ -443,7 +459,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     );
   }
   if (listMenu.length > 0) {
-    menu.push(
+    insertGroup.push(
       new Dropdown(listMenu, {
         label: 'Lists',
         icon: icons.bulletList,
@@ -453,7 +469,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
 
   // === 22. Horizontal rule ===
   if (schema.nodes.hr) {
-    menu.push(
+    insertGroup.push(
       new MenuItem({
         title: 'Insert horizontal rule',
         icon: icons.horizontalRule,
@@ -487,7 +503,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
       item('Toggle header row', 'toggleHeaderRow'),
       item('Toggle header cells', 'toggleHeaderCell'),
     ];
-    menu.push(
+    insertGroup.push(
       new Dropdown(tableMenu, { label: 'Table', icon: icons.table }),
     );
   }
@@ -507,7 +523,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     }));
   }
   if (typeMenu.length > 0) {
-    menu.push(
+    insertGroup.push(
       new Dropdown(typeMenu, {
         label: 'Type',
         icon: icons.type,
@@ -515,9 +531,9 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     );
   }
 
-  // Block menu for secondary toolbar (keeping for compatibility)
-  const blockMenu = [];
-  blockMenu.push(
+  // Group 7: Block menu (Select parent node)
+  const blockGroup: MenuElement[] = [];
+  blockGroup.push(
     new MenuItem({
       title: 'Select parent node',
       run: () => editor.chain().selectParentNode().run(),
@@ -526,5 +542,17 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     }),
   );
 
-  return [menu, blockMenu];
+  // Return all groups - separators will be placed between non-empty groups
+  // Filter out empty groups to avoid unnecessary separators
+  const allGroups: MenuElement[][] = [
+    undoRedoGroup, // Undo, Redo
+    structureGroup, // Heading, Lift, Join, Blockquote
+    formattingGroup, // Bold, Italic, Strikethrough, Code, Underline, Highlight, Link
+    scriptGroup, // Superscript, Subscript
+    alignmentGroup, // Align left, center, right, Justify
+    insertGroup, // Image, Lists, HR, Table, Type
+    blockGroup, // Select parent node
+  ].filter((group) => group.length > 0);
+
+  return allGroups;
 }

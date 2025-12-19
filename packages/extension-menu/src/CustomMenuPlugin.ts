@@ -23,6 +23,7 @@ interface ToolItem {
   label: string;
   element: MenuElement;
   order: number;
+  groupIndex: number; // Track which group this tool belongs to
 }
 
 export class CustomMenuView {
@@ -52,6 +53,9 @@ export class CustomMenuView {
 
   // Current overflow tools (calculated during render)
   private currentOverflowTools: ToolItem[] = [];
+
+  // Default order of tools (stored on initialization)
+  private defaultOrder: string[] = [];
 
   // Currently focused toolbar item index for keyboard navigation
   private focusedToolbarIndex = -1;
@@ -260,7 +264,7 @@ export class CustomMenuView {
 
   private initializeTools() {
     let orderIndex = 0;
-    this.content.forEach((group) => {
+    this.content.forEach((group, groupIndex) => {
       group.forEach((element) => {
         const { dom, update } = element.render(this.editorView);
 
@@ -280,9 +284,13 @@ export class CustomMenuView {
           label,
           element,
           order: orderIndex++,
+          groupIndex,
         });
       });
     });
+
+    // Store the default order (before any localStorage modifications)
+    this.defaultOrder = this.tools.map((t) => t.id);
   }
 
   /**
@@ -384,6 +392,92 @@ export class CustomMenuView {
     } catch (e) {
       console.error('Failed to save order state:', e);
     }
+  }
+
+  /**
+   * Check if the current order differs from the default order.
+   */
+  private hasCustomOrder(): boolean {
+    const currentOrder = this.tools.map((t) => t.id);
+    if (currentOrder.length !== this.defaultOrder.length) return true;
+    return currentOrder.some((id, index) => id !== this.defaultOrder[index]);
+  }
+
+  /**
+   * Reset toolbar to default order, clearing any customizations.
+   */
+  private resetToDefault() {
+    // Clear localStorage
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {
+      console.error('Failed to clear order state:', e);
+    }
+
+    // Reset tool order based on default order
+    this.tools.forEach((tool) => {
+      const defaultIndex = this.defaultOrder.indexOf(tool.id);
+      if (defaultIndex !== -1) {
+        tool.order = defaultIndex;
+      }
+    });
+
+    // Sort tools by their order
+    this.tools.sort((a, b) => a.order - b.order);
+
+    // Close overflow menu
+    this.closeAllMenus();
+
+    // Re-render
+    this.render();
+  }
+
+  /**
+   * Create a reset button element.
+   * @param iconOnly - If true, show only the icon (for toolbar); if false, show icon + text (for overflow menu)
+   */
+  private createResetButton(iconOnly: boolean): HTMLButtonElement {
+    const resetButton = document.createElement('button');
+    resetButton.type = 'button';
+    resetButton.classList.add(CSS_PREFIX + '__reset-button');
+    if (iconOnly) {
+      resetButton.classList.add(CSS_PREFIX + '__reset-button--icon-only');
+      // In toolbar, use button role
+      resetButton.setAttribute('role', 'button');
+    } else {
+      // In overflow menu, use menuitem role
+      resetButton.setAttribute('role', 'menuitem');
+    }
+    resetButton.setAttribute('tabindex', '0');
+    resetButton.setAttribute('aria-label', 'Reset toolbar to default order');
+    resetButton.title = 'Reset toolbar to default order';
+
+    const svg =
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+      <path d="M3 3v5h5"/>
+    </svg>`;
+
+    if (iconOnly) {
+      resetButton.innerHTML = svg;
+    } else {
+      resetButton.innerHTML = `${svg}<span>Reset to Default</span>`;
+    }
+
+    resetButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.resetToDefault();
+    });
+    resetButton.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+        this.resetToDefault();
+      }
+    });
+
+    return resetButton;
   }
 
   private showSubmenu(tool: ToolItem) {
@@ -971,6 +1065,16 @@ export class CustomMenuView {
 
     // Add the scrollable content to overflow menu
     this.overflowMenu.appendChild(overflowContent);
+
+    // Add "Reset to Default" button if order has been customized (only in main menu, not submenus)
+    if (!isSubmenu && this.hasCustomOrder()) {
+      const footer = document.createElement('div');
+      footer.classList.add(CSS_PREFIX + '__overflow-footer');
+
+      const resetButton = this.createResetButton(false);
+      footer.appendChild(resetButton);
+      this.overflowMenu.appendChild(footer);
+    }
   }
 
   private render() {
@@ -1039,8 +1143,22 @@ export class CustomMenuView {
     // Clear toolbar again and re-render only visible items
     this.toolbar.innerHTML = '';
 
+    // Track previous group index for inserting separators between groups
+    let previousGroupIndex: number | undefined = undefined;
+
     // Render visible tools in toolbar with proper event handlers
     visibleItems.forEach(({ tool, wrapper }) => {
+      // Insert separator if group changed (and not first item)
+      if (
+        previousGroupIndex !== undefined &&
+        tool.groupIndex !== previousGroupIndex
+      ) {
+        const separator = document.createElement('div');
+        separator.classList.add(CSS_PREFIX + '__separator');
+        this.toolbar.appendChild(separator);
+      }
+      previousGroupIndex = tool.groupIndex;
+
       const isDropdown = (tool.element as any).content !== undefined;
 
       if (isDropdown) {
@@ -1188,6 +1306,14 @@ export class CustomMenuView {
       });
 
       this.toolbar.appendChild(overflowToggle);
+    } else if (this.hasCustomOrder()) {
+      // No overflow items but order has been customized - show reset button in toolbar
+      const separator = document.createElement('div');
+      separator.classList.add(CSS_PREFIX + '__separator');
+      this.toolbar.appendChild(separator);
+
+      const resetButton = this.createResetButton(true);
+      this.toolbar.appendChild(resetButton);
     }
 
     // Render overflow menu content

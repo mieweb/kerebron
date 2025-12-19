@@ -1036,3 +1036,73 @@
   max-height: 400px;
   overflow-y: auto;
 }
+
+/* Overflow menu footer (for Reset to Default) */
+.kb-custom-menu__overflow-footer {
+  padding: var(--kb-space-sm);
+  border-top: 1px solid var(--kb-color-border);
+  display: flex;
+  justify-content: center;
+}
+
+/* Reset to Default button */
+.kb-custom-menu__reset-button {
+  display: flex;
+  align-items: center;
+  gap: var(--kb-space-sm);
+  padding: var(--kb-space-sm) var(--kb-space-md);
+  font-size: 12px;
+  color: var(--kb-color-text-muted);
+  background: transparent;
+  border: 1px solid var(--kb-color-border);
+  border-radius: var(--kb-radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.kb-custom-menu__reset-button:hover {
+  background: var(--kb-color-surface-hover);
+  color: var(--kb-color-text);
+  border-color: var(--kb-color-border-strong);
+}
+
+.kb-custom-menu__reset-button:focus {
+  outline: 2px solid var(--kb-color-primary);
+  outline-offset: 2px;
+}
+
+.kb-custom-menu__reset-button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.kb-custom-menu__reset-button:focus-visible {
+  outline: 2px solid var(--kb-color-primary);
+  outline-offset: 2px;
+}
+
+.kb-custom-menu__reset-button svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.kb-custom-menu__reset-button span {
+  white-space: nowrap;
+}
+
+/* Icon-only variant for toolbar display */
+.kb-custom-menu__reset-button--icon-only {
+  padding: var(--kb-space-sm);
+  border: none;
+  background: transparent;
+}
+
+.kb-custom-menu__reset-button--icon-only:hover {
+  background: var(--kb-color-surface-hover);
+  border: none;
+}
+
+.kb-custom-menu__reset-button--icon-only svg {
+  width: 18px;
+  height: 18px;
+}
