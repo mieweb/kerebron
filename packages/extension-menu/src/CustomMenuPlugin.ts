@@ -36,6 +36,7 @@ export class CustomMenuView {
   editorContainer: HTMLElement;
   private closeOverflowHandler: ((e: MouseEvent) => void) | null = null;
   private closePinnedDropdownHandler: ((e: MouseEvent) => void) | null = null;
+  private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
   private submenuStack: Array<{ title: string; tools: ToolItem[] }> = [];
   private pinnedDropdownStack: Array<
     { title: string; tools: ToolItem[]; rootTool: ToolItem }
@@ -51,6 +52,9 @@ export class CustomMenuView {
 
   // Current overflow tools (calculated during render)
   private currentOverflowTools: ToolItem[] = [];
+
+  // Currently focused toolbar item index for keyboard navigation
+  private focusedToolbarIndex = -1;
 
   constructor(
     readonly editorView: EditorView,
@@ -115,6 +119,143 @@ export class CustomMenuView {
       });
       this.resizeObserver.observe(this.toolbar);
     }
+
+    // Setup keyboard navigation for accessibility
+    this.setupKeyboardNavigation();
+  }
+
+  /**
+   * Close all open menus (overflow menu and pinned dropdowns).
+   * Optionally returns focus to a specific element.
+   */
+  private closeAllMenus(returnFocusTo?: HTMLElement) {
+    // Close overflow menu
+    if (this.overflowMenu.style.display !== 'none') {
+      this.overflowMenu.style.display = 'none';
+      this.submenuStack = [];
+      const overflowToggle = this.toolbar.querySelector(
+        '.' + CSS_PREFIX + '__overflow-toggle',
+      ) as HTMLElement;
+      if (overflowToggle) {
+        overflowToggle.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    // Close pinned dropdown
+    if (this.pinnedDropdownMenu) {
+      this.pinnedDropdownMenu.remove();
+      this.pinnedDropdownMenu = null;
+      this.pinnedDropdownStack = [];
+    }
+
+    // Return focus if specified
+    if (returnFocusTo) {
+      returnFocusTo.focus();
+    }
+  }
+
+  /**
+   * Get all focusable toolbar items (buttons).
+   */
+  private getToolbarButtons(): HTMLButtonElement[] {
+    const buttons: HTMLButtonElement[] = [];
+    const items = this.toolbar.querySelectorAll('.' + CSS_PREFIX + '__item');
+    items.forEach((item) => {
+      const button = item.querySelector('button') as HTMLButtonElement;
+      if (button) buttons.push(button);
+    });
+    // Add overflow toggle if present
+    const overflowToggle = this.toolbar.querySelector(
+      '.' + CSS_PREFIX + '__overflow-toggle',
+    ) as HTMLButtonElement;
+    if (overflowToggle) buttons.push(overflowToggle);
+    return buttons;
+  }
+
+  /**
+   * Setup keyboard navigation for toolbar (WCAG toolbar pattern).
+   * - Left/Right arrows move between items
+   * - Home/End jump to first/last item
+   * - Escape closes menus
+   */
+  private setupKeyboardNavigation() {
+    this.keydownHandler = (e: KeyboardEvent) => {
+      // Check if focus is within toolbar
+      const activeElement = document.activeElement as HTMLElement;
+      const isInToolbar = this.toolbar.contains(activeElement);
+      const isInOverflowMenu = this.overflowMenu.contains(activeElement);
+      const isInPinnedDropdown = this.pinnedDropdownMenu?.contains(
+        activeElement,
+      );
+
+      // Handle Escape key - close menus
+      if (e.key === 'Escape') {
+        if (isInPinnedDropdown || this.pinnedDropdownMenu) {
+          e.preventDefault();
+          const lastFocused = this.toolbar.querySelector(
+            '[data-last-focused="true"]',
+          ) as HTMLElement;
+          this.closeAllMenus(lastFocused || undefined);
+          return;
+        }
+        if (isInOverflowMenu || this.overflowMenu.style.display !== 'none') {
+          e.preventDefault();
+          const overflowToggle = this.toolbar.querySelector(
+            '.' + CSS_PREFIX + '__overflow-toggle',
+          ) as HTMLElement;
+          this.closeAllMenus(overflowToggle || undefined);
+          return;
+        }
+      }
+
+      // Arrow key navigation within toolbar
+      if (isInToolbar && !isInOverflowMenu && !isInPinnedDropdown) {
+        const buttons = this.getToolbarButtons();
+        const currentIndex = buttons.indexOf(
+          activeElement as HTMLButtonElement,
+        );
+
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          const nextIndex = (currentIndex + 1) % buttons.length;
+          buttons[nextIndex]?.focus();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          const prevIndex = (currentIndex - 1 + buttons.length) %
+            buttons.length;
+          buttons[prevIndex]?.focus();
+        } else if (e.key === 'Home') {
+          e.preventDefault();
+          buttons[0]?.focus();
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          buttons[buttons.length - 1]?.focus();
+        }
+      }
+
+      // Arrow key navigation within overflow menu
+      if (isInOverflowMenu) {
+        const focusableItems = Array.from(
+          this.overflowMenu.querySelectorAll(
+            'button, [role="menuitem"], .' + CSS_PREFIX + '__overflow-item',
+          ),
+        ) as HTMLElement[];
+        const currentIndex = focusableItems.indexOf(activeElement);
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const nextIndex = (currentIndex + 1) % focusableItems.length;
+          focusableItems[nextIndex]?.focus();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          const prevIndex = (currentIndex - 1 + focusableItems.length) %
+            focusableItems.length;
+          focusableItems[prevIndex]?.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', this.keydownHandler);
   }
 
   private initializeTools() {
@@ -291,11 +432,29 @@ export class CustomMenuView {
   }
 
   private showPinnedDropdown(tool: ToolItem, triggerElement: HTMLElement) {
+    // Close overflow menu if open (ensure only one menu is open at a time)
+    if (this.overflowMenu.style.display !== 'none') {
+      this.overflowMenu.style.display = 'none';
+      this.submenuStack = [];
+      const overflowToggle = this.toolbar.querySelector(
+        '.' + CSS_PREFIX + '__overflow-toggle',
+      ) as HTMLElement;
+      if (overflowToggle) {
+        overflowToggle.setAttribute('aria-expanded', 'false');
+      }
+    }
+
     // Close any existing pinned dropdown
     if (this.pinnedDropdownMenu) {
       this.pinnedDropdownMenu.remove();
       this.pinnedDropdownMenu = null;
     }
+
+    // Mark trigger as last focused for focus return on Escape
+    this.toolbar.querySelectorAll('[data-last-focused]').forEach((el) => {
+      el.removeAttribute('data-last-focused');
+    });
+    triggerElement.setAttribute('data-last-focused', 'true');
 
     const dropdown = tool.element as any;
     if (!dropdown.content) return;
@@ -406,6 +565,8 @@ export class CustomMenuView {
     // Create dropdown menu
     this.pinnedDropdownMenu = document.createElement('div');
     this.pinnedDropdownMenu.classList.add(CSS_PREFIX + '__pinned-dropdown');
+    this.pinnedDropdownMenu.setAttribute('role', 'menu');
+    this.pinnedDropdownMenu.setAttribute('aria-label', currentLevel.title);
 
     // Position it below the trigger element
     const rect = triggerElement.getBoundingClientRect();
@@ -426,8 +587,9 @@ export class CustomMenuView {
       const backButton = document.createElement('button');
       backButton.type = 'button';
       backButton.classList.add(CSS_PREFIX + '__overflow-back-button');
+      backButton.setAttribute('aria-label', 'Go back to ' + currentLevel.title);
       backButton.innerHTML =
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>';
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 19l-7-7 7-7"/></svg>';
       backButton.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -449,6 +611,8 @@ export class CustomMenuView {
       const wrapper = document.createElement('div');
       wrapper.classList.add(CSS_PREFIX + '__overflow-item');
       wrapper.setAttribute('data-tool-id', subTool.id);
+      wrapper.setAttribute('role', 'menuitem');
+      wrapper.setAttribute('tabindex', '0');
 
       if (isNestedDropdown) {
         // For nested dropdowns, show label and chevron
@@ -555,6 +719,10 @@ export class CustomMenuView {
     // Clear overflow menu
     this.overflowMenu.innerHTML = '';
 
+    // Set ARIA attributes for overflow menu
+    this.overflowMenu.setAttribute('role', 'menu');
+    this.overflowMenu.setAttribute('aria-label', 'More tools');
+
     // Check if we're showing a submenu
     const isSubmenu = this.submenuStack.length > 0;
     const currentSubmenu = isSubmenu
@@ -577,8 +745,12 @@ export class CustomMenuView {
       const backButton = document.createElement('button');
       backButton.type = 'button';
       backButton.classList.add(CSS_PREFIX + '__overflow-back-button');
+      backButton.setAttribute(
+        'aria-label',
+        'Go back to previous menu',
+      );
       backButton.innerHTML =
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>';
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 19l-7-7 7-7"/></svg>';
       backButton.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -600,9 +772,12 @@ export class CustomMenuView {
 
         const wrapper = document.createElement('div');
         wrapper.classList.add(CSS_PREFIX + '__overflow-item');
+        wrapper.setAttribute('role', 'menuitem');
+        wrapper.setAttribute('tabindex', '0');
 
         if (isDropdown) {
           // For nested dropdowns, just show label and chevron (no icon/button)
+          wrapper.setAttribute('aria-haspopup', 'true');
           // Add label
           const label = document.createElement('span');
           label.classList.add(CSS_PREFIX + '__overflow-item-label');
@@ -612,15 +787,22 @@ export class CustomMenuView {
           // Add chevron to indicate submenu
           const chevron = document.createElement('span');
           chevron.classList.add(CSS_PREFIX + '__overflow-item-chevron');
+          chevron.setAttribute('aria-hidden', 'true');
           chevron.innerHTML =
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>';
           wrapper.appendChild(chevron);
 
-          // Click handler for nested dropdown - navigate deeper
-          wrapper.addEventListener('click', (e) => {
+          // Click and keyboard handler for nested dropdown - navigate deeper
+          const handleActivate = (e: Event) => {
             e.preventDefault();
             e.stopPropagation();
             this.showSubmenu(tool);
+          };
+          wrapper.addEventListener('click', handleActivate);
+          wrapper.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              handleActivate(e);
+            }
           });
         } else {
           // Regular menu item
@@ -644,6 +826,19 @@ export class CustomMenuView {
           // Make the entire wrapper clickable by dispatching mousedown to the button
           wrapper.addEventListener('mousedown', (e) => {
             if (e.target !== dom) {
+              e.preventDefault();
+              const mousedownEvent = new MouseEvent('mousedown', {
+                bubbles: true,
+                cancelable: true,
+                view: window,
+              });
+              dom.dispatchEvent(mousedownEvent);
+            }
+          });
+
+          // Add keyboard support for Enter/Space
+          wrapper.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
               const mousedownEvent = new MouseEvent('mousedown', {
                 bubbles: true,
@@ -678,14 +873,20 @@ export class CustomMenuView {
         wrapper.classList.add(CSS_PREFIX + '__overflow-item');
         wrapper.classList.add(CSS_PREFIX + '__overflow-item--grid');
         wrapper.setAttribute('title', tool.label); // Tooltip on hover
+        wrapper.setAttribute('role', 'menuitem');
+        wrapper.setAttribute('tabindex', '0');
+        wrapper.setAttribute('aria-label', tool.label);
 
         if (isDropdown) {
           // For dropdowns, create a custom button with dropdown indicator
           wrapper.classList.add(CSS_PREFIX + '__overflow-item--dropdown');
+          wrapper.setAttribute('aria-haspopup', 'true');
 
           const button = document.createElement('button');
           button.type = 'button';
           button.classList.add('kb-menu__button');
+          button.setAttribute('tabindex', '-1'); // Parent is focusable
+          button.setAttribute('aria-hidden', 'true');
 
           // Add an icon (we'll use a document icon for Type menu)
           const icon = document.createElement('svg');
@@ -693,6 +894,7 @@ export class CustomMenuView {
           icon.setAttribute('fill', 'none');
           icon.setAttribute('stroke', 'currentColor');
           icon.setAttribute('stroke-width', '2');
+          icon.setAttribute('aria-hidden', 'true');
           icon.innerHTML =
             '<path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>';
           button.appendChild(icon);
@@ -702,6 +904,7 @@ export class CustomMenuView {
           // Add small dropdown indicator
           const indicator = document.createElement('span');
           indicator.classList.add(CSS_PREFIX + '__overflow-item-indicator');
+          indicator.setAttribute('aria-hidden', 'true');
           indicator.innerHTML = '▼';
           wrapper.appendChild(indicator);
 
@@ -710,6 +913,15 @@ export class CustomMenuView {
             e.preventDefault();
             e.stopPropagation();
             this.showSubmenu(tool);
+          });
+
+          // Add keyboard support for Enter/Space
+          wrapper.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              this.showSubmenu(tool);
+            }
           });
         } else {
           // Regular menu item - show icon only with tooltip
@@ -729,6 +941,19 @@ export class CustomMenuView {
           // Make the entire wrapper clickable by dispatching mousedown to the button
           wrapper.addEventListener('mousedown', (e) => {
             if (e.target !== dom) {
+              e.preventDefault();
+              const mousedownEvent = new MouseEvent('mousedown', {
+                bubbles: true,
+                cancelable: true,
+                view: window,
+              });
+              dom.dispatchEvent(mousedownEvent);
+            }
+          });
+
+          // Add keyboard support for Enter/Space
+          wrapper.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
               const mousedownEvent = new MouseEvent('mousedown', {
                 bubbles: true,
@@ -815,8 +1040,12 @@ export class CustomMenuView {
       const isDropdown = (tool.element as any).content !== undefined;
 
       if (isDropdown) {
-        const button = wrapper.querySelector('button');
-        const label = wrapper.querySelector('.kb-dropdown__label');
+        const button = wrapper.querySelector('button') as
+          | HTMLButtonElement
+          | null;
+        const label = wrapper.querySelector('.kb-dropdown__label') as
+          | HTMLElement
+          | null;
 
         const clickHandler = (e: Event) => {
           // Don't open dropdown if we were dragging
@@ -881,9 +1110,10 @@ export class CustomMenuView {
       const overflowToggle = document.createElement('button');
       overflowToggle.type = 'button';
       overflowToggle.className = CSS_PREFIX + '__overflow-toggle';
-      overflowToggle.setAttribute('aria-haspopup', 'true');
+      overflowToggle.setAttribute('aria-haspopup', 'menu');
       overflowToggle.setAttribute('aria-expanded', 'false');
-      overflowToggle.title = 'More';
+      overflowToggle.setAttribute('aria-label', 'More tools');
+      overflowToggle.title = 'More tools';
       overflowToggle.innerHTML = `
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="5" cy="12" r="2"/>
@@ -895,6 +1125,14 @@ export class CustomMenuView {
       overflowToggle.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
+
+        // Close any open pinned dropdown first (only one menu open at a time)
+        if (this.pinnedDropdownMenu) {
+          this.pinnedDropdownMenu.remove();
+          this.pinnedDropdownMenu = null;
+          this.pinnedDropdownStack = [];
+        }
+
         const isOpen = this.overflowMenu.style.display !== 'none';
         this.overflowMenu.style.display = isOpen ? 'none' : 'block';
         overflowToggle.setAttribute('aria-expanded', String(!isOpen));
@@ -1037,23 +1275,24 @@ export class CustomMenuView {
       }px`;
 
       // Find the toolbar item we're hovering over
-      const toolbarItems = this.toolbar.querySelectorAll(
-        '.' + CSS_PREFIX + '__item',
-      );
+      const toolbarItems = Array.from(
+        this.toolbar.querySelectorAll('.' + CSS_PREFIX + '__item'),
+      ) as HTMLElement[];
       let insertBefore: HTMLElement | null = null;
       let insertIndex = -1;
 
-      toolbarItems.forEach((item, index) => {
-        if (item === wrapper) return; // Skip the dragged item itself
+      for (let i = 0; i < toolbarItems.length; i++) {
+        const item = toolbarItems[i];
+        if (item === wrapper) continue; // Skip the dragged item itself
 
         const itemRect = item.getBoundingClientRect();
         const itemCenter = itemRect.left + itemRect.width / 2;
 
         if (moveEvent.clientX < itemCenter && insertBefore === null) {
-          insertBefore = item as HTMLElement;
-          insertIndex = index;
+          insertBefore = item;
+          insertIndex = i;
         }
-      });
+      }
 
       // Remove existing placeholder
       if (this.dragPlaceholder && this.dragPlaceholder.parentNode) {
@@ -1243,6 +1482,12 @@ export class CustomMenuView {
     if (this.closePinnedDropdownHandler) {
       doc.removeEventListener('click', this.closePinnedDropdownHandler);
       this.closePinnedDropdownHandler = null;
+    }
+
+    // Clean up keyboard handler
+    if (this.keydownHandler) {
+      document.removeEventListener('keydown', this.keydownHandler);
+      this.keydownHandler = null;
     }
 
     // Clean up ResizeObserver
