@@ -116,38 +116,105 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
 
   const menu = [];
 
+  // === 1. Undo ===
+  menu.push(
+    new MenuItem({
+      title: 'Undo last change',
+      run: () => editor.chain().undo().run(),
+      enable: (state) => editor.can().undo().run(),
+      icon: icons.undo,
+    }),
+  );
+
+  // === 2. Redo ===
+  menu.push(
+    new MenuItem({
+      title: 'Redo last undone change',
+      run: () => editor.chain().redo().run(),
+      enable: (state) => editor.can().redo().run(),
+      icon: icons.redo,
+    }),
+  );
+
+  // === 3. Heading / Text style selector (the "H" dropdown) ===
+  if (schema.nodes.heading) {
+    const headingMenu = [];
+    for (let i = 1; i <= 6; i++) {
+      headingMenu.push(blockTypeItem(schema.nodes.heading, {
+        title: 'Change to heading ' + i,
+        label: 'Heading ' + i,
+        attrs: { level: i },
+      }));
+    }
+    menu.push(
+      new Dropdown(headingMenu, {
+        label: 'Heading',
+        icon: icons.heading,
+      }),
+    );
+  }
+
+  // === 4. Decrease indent (outdent) ===
+  menu.push(
+    new MenuItem({
+      title: 'Lift out of enclosing block',
+      run: () => editor.chain().lift().run(),
+      select: () => editor.can().lift().run(),
+      icon: icons.outdent,
+    }),
+  );
+
+  // === 5. Increase indent ===
+  menu.push(
+    new MenuItem({
+      title: 'Join with above block',
+      run: () => editor.chain().joinUp().run(),
+      select: () => editor.can().joinUp().run(),
+      icon: icons.indent,
+    }),
+  );
+
+  // === 6. Block quote ===
+  if (schema.nodes.blockquote) {
+    menu.push(wrapItem(schema.nodes.blockquote, {
+      title: 'Wrap in block quote',
+      icon: icons.blockquote,
+    }));
+  }
+
+  // === 7. Bold ===
   if (schema.marks.strong) {
     menu.push(
       new MenuItem({
-        title: 'Toggle strong assets',
+        title: 'Toggle bold',
         run: () => editor.chain().toggleStrong().run(),
         enable: (state) => editor.can().toggleStrong().run(),
         icon: icons.strong,
       }),
     );
   }
+
+  // === 8. Italic ===
   if (schema.marks.em) {
     menu.push(
       new MenuItem({
-        title: 'Toggle emphasis',
+        title: 'Toggle italic',
         run: () => editor.chain().toggleItalic().run(),
         enable: (state) => editor.can().toggleItalic().run(),
         icon: icons.em,
       }),
     );
   }
-  if (schema.marks.underline) {
-    menu.push(
-      new MenuItem({
-        title: 'Toggle underline',
-        label: '_',
-        run: () => editor.chain().toggleUnderline().run(),
-        enable: (state) => editor.can().toggleUnderline().run(),
-        icon: icons.underline,
-      }),
-    );
+
+  // === 9. Strikethrough ===
+  if (schema.marks.strike) {
+    menu.push(markItem(schema.marks.strike, {
+      title: 'Toggle strikethrough',
+      icon: icons.strike,
+    }));
   }
 
+  // === 10. Inline code ===
   if (schema.marks.code) {
     menu.push(markItem(schema.marks.code, {
       title: 'Toggle code font',
@@ -155,6 +222,27 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     }));
   }
 
+  // === 11. Underline ===
+  if (schema.marks.underline) {
+    menu.push(
+      new MenuItem({
+        title: 'Toggle underline',
+        run: () => editor.chain().toggleUnderline().run(),
+        enable: (state) => editor.can().toggleUnderline().run(),
+        icon: icons.underline,
+      }),
+    );
+  }
+
+  // === 12. Highlight / Text color ===
+  if (schema.marks.highlight) {
+    menu.push(markItem(schema.marks.highlight, {
+      title: 'Toggle highlight',
+      icon: icons.highlight,
+    }));
+  }
+
+  // === 13. Insert link ===
   if (schema.marks.link) {
     const markType = schema.marks.link;
 
@@ -196,89 +284,70 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     );
   }
 
-  const blockMenu = [];
-  const typeMenu = [];
-
-  if (schema.nodes.bullet_list) {
-    blockMenu.push(wrapListItem(schema.nodes.bullet_list, {
-      title: 'Wrap in bullet list',
-      icon: icons.bulletList,
+  // === 14. Superscript ===
+  if (schema.marks.superscript) {
+    menu.push(markItem(schema.marks.superscript, {
+      title: 'Toggle superscript',
+      icon: icons.superscript,
     }));
   }
-  if (schema.nodes.ordered_list) {
-    blockMenu.push(wrapListItem(schema.nodes.ordered_list, {
-      title: 'Wrap in ordered list',
-      icon: icons.orderedList,
+
+  // === 15. Subscript ===
+  if (schema.marks.subscript) {
+    menu.push(markItem(schema.marks.subscript, {
+      title: 'Toggle subscript',
+      icon: icons.subscript,
     }));
   }
-  if (schema.nodes.blockquote) {
-    blockMenu.push(wrapItem(schema.nodes.blockquote, {
-      title: 'Wrap in block quote',
-      icon: icons.blockquote,
-    }));
+
+  // === 16-19. Text alignment ===
+  // Check if paragraph has textAlign attribute
+  if (schema.nodes.paragraph?.spec?.attrs?.textAlign !== undefined) {
+    menu.push(
+      new MenuItem({
+        title: 'Align left',
+        icon: icons.alignLeft,
+        run: () => editor.chain().setTextAlignLeft().run(),
+        enable: () => editor.can().setTextAlignLeft().run(),
+      }),
+    );
+    menu.push(
+      new MenuItem({
+        title: 'Align center',
+        icon: icons.alignCenter,
+        run: () => editor.chain().setTextAlignCenter().run(),
+        enable: () => editor.can().setTextAlignCenter().run(),
+      }),
+    );
+    menu.push(
+      new MenuItem({
+        title: 'Align right',
+        icon: icons.alignRight,
+        run: () => editor.chain().setTextAlignRight().run(),
+        enable: () => editor.can().setTextAlignRight().run(),
+      }),
+    );
+    menu.push(
+      new MenuItem({
+        title: 'Justify',
+        icon: icons.alignJustify,
+        run: () => editor.chain().setTextAlignJustify().run(),
+        enable: () => editor.can().setTextAlignJustify().run(),
+      }),
+    );
   }
-  if (schema.nodes.paragraph) {
-    typeMenu.push(blockTypeItem(schema.nodes.paragraph, {
-      title: 'Change to paragraph',
-      label: 'Plain',
-    }));
-  }
-  if (schema.nodes.code_block) {
-    typeMenu.push(blockTypeItem(schema.nodes.code_block, {
-      title: 'Change to code block',
-      label: 'Code',
-    }));
-  }
-  if (schema.nodes.heading) {
-    const makeHeadMenu = [];
 
-    for (let i = 1; i <= 6; i++) {
-      makeHeadMenu.push(blockTypeItem(schema.nodes.heading, {
-        title: 'Change to heading ' + i,
-        label: 'Heading ' + i,
-        attrs: { level: i },
-      }));
-    }
-
-    typeMenu.push(new DropdownSubmenu(makeHeadMenu, { label: 'Headings' }));
-  }
-
-  blockMenu.push(
-    new MenuItem({
-      title: 'Join with above block',
-      run: () => editor.chain().joinUp().run(),
-      select: () => editor.can().joinUp().run(),
-      icon: icons.join,
-    }),
-  );
-
-  blockMenu.push(
-    new MenuItem({
-      title: 'Lift out of enclosing block',
-      run: () => editor.chain().lift().run(),
-      select: () => editor.can().lift().run(),
-      icon: icons.lift,
-    }),
-  );
-  blockMenu.push(
-    new MenuItem({
-      title: 'Select parent node',
-      run: () => editor.chain().selectParentNode().run(),
-      select: () => editor.can().selectParentNode().run(),
-      icon: icons.selectParentNode,
-    }),
-  );
-
+  // === 20. Insert image ===
   if (schema.nodes.image) {
     const nodeType = schema.nodes.image;
-    // Image as standalone toolbar button
     menu.push(
       new MenuItem({
         title: 'Insert image',
         icon: icons.image,
         enable: (state) => canInsert(state, nodeType),
         run(state, dispatch) {
-          let { from, to } = state.selection, attrs = null;
+          let { from, to } = state.selection,
+            attrs = null;
           if (
             state.selection instanceof NodeSelection &&
             state.selection.node.type == nodeType
@@ -317,7 +386,45 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     );
   }
 
-  // Horizontal rule as standalone toolbar button
+  // === 21. Lists dropdown (top-level) ===
+  const listMenu = [];
+  if (schema.nodes.bullet_list) {
+    listMenu.push(
+      wrapListItem(schema.nodes.bullet_list, {
+        title: 'Wrap in bullet list',
+        label: 'Bullet List',
+        icon: icons.bulletList,
+      }),
+    );
+  }
+  if (schema.nodes.ordered_list) {
+    listMenu.push(
+      wrapListItem(schema.nodes.ordered_list, {
+        title: 'Wrap in ordered list',
+        label: 'Ordered List',
+        icon: icons.orderedList,
+      }),
+    );
+  }
+  if (schema.nodes.task_list) {
+    listMenu.push(
+      wrapListItem(schema.nodes.task_list, {
+        title: 'Wrap in task list',
+        label: 'Task List',
+        icon: icons.taskList,
+      }),
+    );
+  }
+  if (listMenu.length > 0) {
+    menu.push(
+      new Dropdown(listMenu, {
+        label: 'Lists',
+        icon: icons.bulletList,
+      }),
+    );
+  }
+
+  // === 22. Horizontal rule ===
   if (schema.nodes.hr) {
     menu.push(
       new MenuItem({
@@ -329,57 +436,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     );
   }
 
-  menu.push(
-    new Dropdown(cut(typeMenu), {
-      label: 'Type',
-      icon: icons.type,
-    }),
-  );
-
-  /*
-  r.blockMenu = [
-    cut([
-      r.wrapBulletList,
-      r.wrapOrderedList,
-      r.wrapBlockQuote,
-      joinUpItem,
-      liftItem,
-      selectParentNodeItem,
-    ]),
-  ];
-  */
-
-  const editorView = editor.view;
-  if (editorView instanceof EditorView) {
-    menu.push(
-      new MenuItem({
-        title: 'Undo last change',
-        run: (state, dispatch) => {
-          return editor.commandFactories.undo()(
-            editor.view.state,
-            editor.view.dispatch,
-            editorView,
-          );
-        },
-        enable: (state) => {
-          return editor.commandFactories.undo()(state);
-        },
-        icon: icons.undo,
-      }),
-    );
-
-    menu.push(
-      new MenuItem({
-        title: 'Redo last undone change',
-        run: (state, dispatch) => {
-          return editor.commandFactories.redo()(state, dispatch);
-        },
-        enable: (state) => editor.commandFactories.redo()(state),
-        icon: icons.redo,
-      }),
-    );
-  }
-
+  // === 23. Table dropdown (top-level) ===
   if (schema.nodes.table) {
     const item = (label: string, cmdName: string) => {
       return new MenuItem({
@@ -402,11 +459,45 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
       item('Toggle header column', 'toggleHeaderColumn'),
       item('Toggle header row', 'toggleHeaderRow'),
       item('Toggle header cells', 'toggleHeaderCell'),
-      // item('Make cell green', setCellAttr('background', '#dfd')),
-      // item('Make cell not-green', setCellAttr('background', null)),
     ];
-    menu.push(new Dropdown(tableMenu, { label: 'Table', icon: icons.table }));
+    menu.push(
+      new Dropdown(tableMenu, { label: 'Table', icon: icons.table }),
+    );
   }
+
+  // === 24. Type dropdown (top-level) ===
+  const typeMenu = [];
+  if (schema.nodes.paragraph) {
+    typeMenu.push(blockTypeItem(schema.nodes.paragraph, {
+      title: 'Change to paragraph',
+      label: 'Plain',
+    }));
+  }
+  if (schema.nodes.code_block) {
+    typeMenu.push(blockTypeItem(schema.nodes.code_block, {
+      title: 'Change to code block',
+      label: 'Code',
+    }));
+  }
+  if (typeMenu.length > 0) {
+    menu.push(
+      new Dropdown(typeMenu, {
+        label: 'Type',
+        icon: icons.type,
+      }),
+    );
+  }
+
+  // Block menu for secondary toolbar (keeping for compatibility)
+  const blockMenu = [];
+  blockMenu.push(
+    new MenuItem({
+      title: 'Select parent node',
+      run: () => editor.chain().selectParentNode().run(),
+      select: () => editor.can().selectParentNode().run(),
+      icon: icons.selectParentNode,
+    }),
+  );
 
   return [menu, blockMenu];
 }

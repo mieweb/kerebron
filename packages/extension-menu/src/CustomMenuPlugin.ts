@@ -1019,14 +1019,18 @@ export class CustomMenuView {
     });
 
     // Second pass: determine which items fit
+    // Account for gaps between items (4px gap between each item)
+    const GAP_SIZE = 4;
     let usedWidth = 0;
     const visibleItems: typeof renderedItems = [];
     const overflowItems: typeof renderedItems = [];
 
     for (const item of renderedItems) {
-      if (usedWidth + item.width <= availableWidth) {
+      // Add gap for items after the first one
+      const gapToAdd = visibleItems.length > 0 ? GAP_SIZE : 0;
+      if (usedWidth + gapToAdd + item.width <= availableWidth) {
         visibleItems.push(item);
-        usedWidth += item.width;
+        usedWidth += gapToAdd + item.width;
       } else {
         overflowItems.push(item);
       }
