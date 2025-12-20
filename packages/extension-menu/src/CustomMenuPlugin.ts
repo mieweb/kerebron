@@ -998,7 +998,7 @@ export class CustomMenuView {
           const indicator = document.createElement('span');
           indicator.classList.add(CSS_PREFIX + '__overflow-item-indicator');
           indicator.setAttribute('aria-hidden', 'true');
-          indicator.innerHTML = '▼';
+          // CSS creates the triangle using borders
           wrapper.appendChild(indicator);
 
           // Click handler for dropdown - navigate to submenu

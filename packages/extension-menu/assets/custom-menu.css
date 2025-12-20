@@ -70,8 +70,9 @@
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: var(--kb-space-xs);
-  padding: 6px var(--kb-space-sm);
+  gap: 2px;
+  height: 56px;
+  padding: 0 var(--kb-space-sm);
   background: var(--kb-color-surface-elevated);
   border-bottom: 1px solid var(--kb-color-border-strong);
   z-index: 1000;
@@ -86,9 +87,11 @@
 
 .kb-custom-menu__item .kb-menu__button,
 .kb-custom-menu__item .kb-dropdown__label {
-  min-width: 28px;
-  min-height: 28px;
-  padding: var(--kb-space-xs);
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: none;
   background: transparent;
   color: var(--kb-color-text);
@@ -154,7 +157,6 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  padding-right: 10px; /* Space for dropdown arrow */
 }
 
 /* Ensure dropdown icons are visible and sized correctly */
@@ -178,8 +180,8 @@
   border-top: 3px solid currentColor;
   opacity: 0.7;
   position: absolute;
-  right: 16px;
-  top: calc(50% - 1.5px);
+  right: 2px;
+  bottom: 2px;
 }
 
 /* Remove left padding from dropdown wrapper in custom menu */
@@ -253,7 +255,7 @@
   width: 1px;
   height: var(--kb-space-lg);
   background: var(--kb-color-border-strong);
-  margin: 0 var(--kb-space-xs);
+  margin: 0 8px;
   flex-shrink: 0;
 }
 
@@ -262,9 +264,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 32px;
-  min-height: 32px;
-  padding: var(--kb-space-xs);
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: none;
   background: transparent;
   color: var(--kb-color-text);
@@ -382,8 +386,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   padding: 6px;
   margin: 0;
   gap: 0;
@@ -396,19 +400,28 @@
   background: var(--kb-color-surface-hover);
 }
 
-/* Dropdown items in grid have indicator */
+/* Dropdown items in grid have indicator - same size as regular grid items */
 .kb-custom-menu__overflow-item--grid.kb-custom-menu__overflow-item--dropdown {
-  width: auto;
-  min-width: 32px;
-  padding: 6px 8px;
-  gap: 2px;
+  width: 44px;
+  min-width: 44px;
+  padding: 6px;
+  gap: 0;
+  position: relative;
 }
 
-/* Dropdown indicator (small down arrow) */
+/* Dropdown indicator (small down arrow) - vertically centered on right */
 .kb-custom-menu__overflow-item-indicator {
-  font-size: 6px;
-  color: var(--kb-color-text-muted);
-  margin-left: 2px;
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 3px solid currentColor;
+  opacity: 0.7;
+  font-size: 0;
+  line-height: 0;
+  margin-left: 0;
 }
 
 /* Regular list items hover */
@@ -419,10 +432,10 @@
 /* Grid items button styles */
 .kb-custom-menu__overflow-item--grid .kb-menu__button,
 .kb-custom-menu__overflow-item--grid .kb-dropdown__label {
-  min-width: 32px;
-  min-height: 32px;
-  width: 32px;
-  height: 32px;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: none;
   background: transparent;
@@ -490,12 +503,6 @@
   position: relative;
 }
 
-.kb-custom-menu__item[data-tool-id='tool-insert'] > div > button,
-.kb-custom-menu__item[data-tool-id='tool-type'] > div > button,
-.kb-custom-menu__item[data-tool-id='tool-table'] > div > button {
-  padding-right: 10px;
-}
-
 .kb-custom-menu__item[data-tool-id='tool-insert'] > div > button:after,
 .kb-custom-menu__item[data-tool-id='tool-type'] > div > button:after,
 .kb-custom-menu__item[data-tool-id='tool-table'] > div > button:after {
@@ -505,8 +512,8 @@
   border-top: 3px solid currentColor;
   opacity: 0.7;
   position: absolute;
-  right: 16px;
-  top: calc(50% - 1.5px);
+  right: 2px;
+  bottom: 2px;
 }
 
 .kb-custom-menu__item[data-tool-id='tool-toggle-code-font'] button > span,
@@ -852,28 +859,11 @@
 
 /* Small screen adjustments - toolbar stays at top */
 @media (max-width: 767.98px) {
-  .kb-custom-menu {
-    /* Toolbar stays at top, no position change */
-    padding: 4px var(--kb-space-sm);
-  }
-
-  /* Increase touch targets for mobile accessibility (WCAG 2.5.5 Target Size) */
-  .kb-custom-menu__item .kb-menu__button,
-  .kb-custom-menu__item .kb-dropdown__label {
-    min-width: 44px;
-    min-height: 44px;
-  }
-
   .kb-custom-menu__overflow-menu {
     /* Dropdown stays below toolbar */
     max-width: 100%;
     left: var(--kb-space-sm);
     right: var(--kb-space-sm);
-  }
-
-  .kb-custom-menu__overflow-toggle {
-    min-width: 44px;
-    min-height: 44px;
   }
 
   /* Larger touch targets for overflow menu items on mobile */
