@@ -135,6 +135,14 @@
   fill: currentColor;
 }
 
+/* Center icon content vertically */
+.kb-custom-menu__item .kb-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
 /* Hide text labels in dropdown buttons - icons only in toolbar */
 .kb-custom-menu__item .kb-dropdown__label-text {
   display: none;
