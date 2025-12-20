@@ -8,6 +8,7 @@ import type { CoreEditor } from '@kerebron/editor';
 import { CustomMenuOptions } from './ExtensionCustomMenu.ts';
 
 import type { MenuElement } from './menu.ts';
+import { getIcon } from './icons.ts';
 
 const CSS_PREFIX = 'kb-custom-menu';
 const STORAGE_KEY = 'kb-custom-menu-order';
@@ -982,16 +983,12 @@ export class CustomMenuView {
           button.setAttribute('tabindex', '-1'); // Parent is focusable
           button.setAttribute('aria-hidden', 'true');
 
-          // Add an icon (we'll use a document icon for Type menu)
-          const icon = document.createElement('svg');
-          icon.setAttribute('viewBox', '0 0 24 24');
-          icon.setAttribute('fill', 'none');
-          icon.setAttribute('stroke', 'currentColor');
-          icon.setAttribute('stroke-width', '2');
-          icon.setAttribute('aria-hidden', 'true');
-          icon.innerHTML =
-            '<path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>';
-          button.appendChild(icon);
+          // Get the icon from the dropdown's options
+          const dropdown = tool.element as any;
+          if (dropdown.options?.icon) {
+            const icon = getIcon(this.root, dropdown.options.icon);
+            button.appendChild(icon);
+          }
 
           wrapper.appendChild(button);
 
