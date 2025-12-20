@@ -1025,6 +1025,10 @@
   opacity: 0.3;
 }
 
+.kb-custom-menu__overflow-item--dragging {
+  opacity: 0.3;
+}
+
 .kb-custom-menu__drag-ghost {
   opacity: 0.9;
   background: var(--kb-color-surface-elevated);

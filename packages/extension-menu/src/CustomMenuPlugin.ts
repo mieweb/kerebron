@@ -49,8 +49,10 @@ export class CustomMenuView {
   private draggedItem: ToolItem | null = null;
   private dragStartTimer: number | null = null;
   private isDragging = false;
+  private isDraggingFromOverflow = false;
   private dragPlaceholder: HTMLElement | null = null;
   private dragGhost: HTMLElement | null = null;
+  private dragSourceWrapper: HTMLElement | null = null;
 
   // Current overflow tools (calculated during render)
   private currentOverflowTools: ToolItem[] = [];
@@ -1029,18 +1031,10 @@ export class CustomMenuView {
 
           wrapper.appendChild(dom);
 
-          // Make the entire wrapper clickable by dispatching mousedown to the button
-          wrapper.addEventListener('mousedown', (e) => {
-            if (e.target !== dom) {
-              e.preventDefault();
-              const mousedownEvent = new MouseEvent('mousedown', {
-                bubbles: true,
-                cancelable: true,
-                view: window,
-              });
-              dom.dispatchEvent(mousedownEvent);
-            }
-          });
+          // Store the button DOM for later use (click after drag timeout)
+          wrapper.dataset.hasButton = 'true';
+          (wrapper as HTMLElement & { _buttonDom: HTMLElement })._buttonDom =
+            dom;
 
           // Add keyboard support for Enter/Space
           wrapper.addEventListener('keydown', (e: KeyboardEvent) => {
@@ -1054,6 +1048,11 @@ export class CustomMenuView {
               dom.dispatchEvent(mousedownEvent);
             }
           });
+        }
+
+        // Add drag handlers for overflow items (only in main menu, not submenus)
+        if (!isSubmenu) {
+          this.setupOverflowDragHandlers(wrapper, tool);
         }
 
         overflowContent.appendChild(wrapper);
@@ -1120,18 +1119,32 @@ export class CustomMenuView {
     });
 
     // Second pass: determine which items fit
-    // Account for gaps between items (4px gap between each item)
+    // Account for gaps between items (4px gap) and separators between groups
     const GAP_SIZE = 4;
+    const SEPARATOR_WIDTH = 9; // 1px width + 4px margin on each side
     let usedWidth = 0;
+    let previousGroupIndex: number | undefined = undefined;
     const visibleItems: typeof renderedItems = [];
     const overflowItems: typeof renderedItems = [];
 
     for (const item of renderedItems) {
-      // Add gap for items after the first one
-      const gapToAdd = visibleItems.length > 0 ? GAP_SIZE : 0;
-      if (usedWidth + gapToAdd + item.width <= availableWidth) {
+      // Calculate extra width needed for gap and potentially a separator
+      let extraWidth = 0;
+      if (visibleItems.length > 0) {
+        extraWidth += GAP_SIZE; // Gap between items
+        // Add separator width if group is changing
+        if (
+          previousGroupIndex !== undefined &&
+          item.tool.groupIndex !== previousGroupIndex
+        ) {
+          extraWidth += SEPARATOR_WIDTH + GAP_SIZE; // Separator + its gap
+        }
+      }
+
+      if (usedWidth + extraWidth + item.width <= availableWidth) {
         visibleItems.push(item);
-        usedWidth += gapToAdd + item.width;
+        usedWidth += extraWidth + item.width;
+        previousGroupIndex = item.tool.groupIndex;
       } else {
         overflowItems.push(item);
       }
@@ -1141,20 +1154,20 @@ export class CustomMenuView {
     this.toolbar.innerHTML = '';
 
     // Track previous group index for inserting separators between groups
-    let previousGroupIndex: number | undefined = undefined;
+    let prevGroupIndex: number | undefined = undefined;
 
     // Render visible tools in toolbar with proper event handlers
     visibleItems.forEach(({ tool, wrapper }) => {
       // Insert separator if group changed (and not first item)
       if (
-        previousGroupIndex !== undefined &&
-        tool.groupIndex !== previousGroupIndex
+        prevGroupIndex !== undefined &&
+        tool.groupIndex !== prevGroupIndex
       ) {
         const separator = document.createElement('div');
         separator.classList.add(CSS_PREFIX + '__separator');
         this.toolbar.appendChild(separator);
       }
-      previousGroupIndex = tool.groupIndex;
+      prevGroupIndex = tool.groupIndex;
 
       const isDropdown = (tool.element as any).content !== undefined;
 
@@ -1364,6 +1377,305 @@ export class CustomMenuView {
     wrapper.addEventListener('mousedown', onMouseDown, { capture: true });
   }
 
+  /**
+   * Set up drag handlers for overflow menu items.
+   * Long-hold initiates drag to toolbar, short click activates the item.
+   */
+  private setupOverflowDragHandlers(wrapper: HTMLElement, tool: ToolItem) {
+    let startX = 0;
+    let startY = 0;
+    let dragInitiated = false;
+
+    const onMouseDown = (e: MouseEvent) => {
+      // Only handle left mouse button
+      if (e.button !== 0) return;
+
+      startX = e.clientX;
+      startY = e.clientY;
+      dragInitiated = false;
+
+      // Prevent default to stop button action from firing immediately
+      e.preventDefault();
+
+      // Start a timer for delayed drag initiation
+      this.dragStartTimer = setTimeout(() => {
+        dragInitiated = true;
+        this.startOverflowDrag(wrapper, tool, e);
+      }, DRAG_START_DELAY);
+
+      // Listen for mouse up to cancel if released early (allows normal click)
+      const onMouseUp = () => {
+        if (this.dragStartTimer) {
+          clearTimeout(this.dragStartTimer);
+          this.dragStartTimer = null;
+        }
+
+        // If drag wasn't initiated, this was a short click - trigger the button action
+        if (!dragInitiated) {
+          const buttonDom = (
+            wrapper as HTMLElement & { _buttonDom?: HTMLElement }
+          )._buttonDom;
+          if (buttonDom) {
+            const mousedownEvent = new MouseEvent('mousedown', {
+              bubbles: true,
+              cancelable: true,
+              view: window,
+            });
+            buttonDom.dispatchEvent(mousedownEvent);
+          }
+        }
+
+        document.removeEventListener('mouseup', onMouseUp);
+        document.removeEventListener('mousemove', onEarlyMove);
+      };
+
+      // If mouse moves too much before timer, cancel drag start
+      const onEarlyMove = (moveEvent: MouseEvent) => {
+        const dx = Math.abs(moveEvent.clientX - startX);
+        const dy = Math.abs(moveEvent.clientY - startY);
+        // Allow some tolerance for slight movement
+        if (dx > 5 || dy > 5) {
+          if (this.dragStartTimer) {
+            clearTimeout(this.dragStartTimer);
+            this.dragStartTimer = null;
+          }
+        }
+      };
+
+      document.addEventListener('mouseup', onMouseUp);
+      document.addEventListener('mousemove', onEarlyMove);
+    };
+
+    // Use capture phase and stop propagation to prevent other handlers
+    wrapper.addEventListener('mousedown', onMouseDown, { capture: true });
+  }
+
+  /**
+   * Start dragging an item from the overflow menu to the toolbar.
+   */
+  private startOverflowDrag(
+    wrapper: HTMLElement,
+    tool: ToolItem,
+    e: MouseEvent,
+  ) {
+    this.isDragging = true;
+    this.isDraggingFromOverflow = true;
+    this.draggedItem = tool;
+    this.dragSourceWrapper = wrapper;
+
+    // Add dragging class to wrapper
+    wrapper.classList.add(CSS_PREFIX + '__overflow-item--dragging');
+    this.wrapper.classList.add(CSS_PREFIX + '__wrapper--dragging');
+
+    // Close the overflow menu to allow dropping on toolbar
+    this.closeOverflowMenu();
+
+    // Create a ghost element for visual feedback
+    const rect = wrapper.getBoundingClientRect();
+    this.dragGhost = wrapper.cloneNode(true) as HTMLElement;
+    this.dragGhost.classList.add(CSS_PREFIX + '__drag-ghost');
+    this.dragGhost.style.position = 'fixed';
+    this.dragGhost.style.left = `${rect.left}px`;
+    this.dragGhost.style.top = `${rect.top}px`;
+    this.dragGhost.style.width = `${rect.width}px`;
+    this.dragGhost.style.height = `${rect.height}px`;
+    this.dragGhost.style.pointerEvents = 'none';
+    this.dragGhost.style.zIndex = '10000';
+    document.body.appendChild(this.dragGhost);
+
+    // Create a placeholder to show where the item will be dropped
+    this.dragPlaceholder = document.createElement('span');
+    this.dragPlaceholder.classList.add(CSS_PREFIX + '__drop-placeholder');
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      if (!this.isDragging || !this.dragGhost) return;
+
+      // Update ghost position
+      const ghostRect = this.dragGhost.getBoundingClientRect();
+      this.dragGhost.style.left = `${
+        moveEvent.clientX - ghostRect.width / 2
+      }px`;
+      this.dragGhost.style.top = `${
+        moveEvent.clientY - ghostRect.height / 2
+      }px`;
+
+      // Check if we're over the toolbar area
+      const toolbarRect = this.toolbar.getBoundingClientRect();
+      const isOverToolbar = moveEvent.clientY >= toolbarRect.top &&
+        moveEvent.clientY <= toolbarRect.bottom &&
+        moveEvent.clientX >= toolbarRect.left &&
+        moveEvent.clientX <= toolbarRect.right;
+
+      // Find the toolbar item we're hovering over
+      const toolbarItems = Array.from(
+        this.toolbar.querySelectorAll('.' + CSS_PREFIX + '__item'),
+      ) as HTMLElement[];
+      let insertBefore: HTMLElement | null = null;
+
+      if (isOverToolbar) {
+        for (let i = 0; i < toolbarItems.length; i++) {
+          const item = toolbarItems[i];
+          const itemRect = item.getBoundingClientRect();
+          const itemCenter = itemRect.left + itemRect.width / 2;
+
+          if (moveEvent.clientX < itemCenter && insertBefore === null) {
+            insertBefore = item;
+          }
+        }
+      }
+
+      // Remove existing placeholder
+      if (this.dragPlaceholder && this.dragPlaceholder.parentNode) {
+        this.dragPlaceholder.remove();
+      }
+
+      // Only show placeholder if over toolbar
+      if (isOverToolbar && this.dragPlaceholder) {
+        if (insertBefore) {
+          insertBefore.parentNode?.insertBefore(
+            this.dragPlaceholder,
+            insertBefore,
+          );
+        } else {
+          // Insert at end (before separator or overflow toggle)
+          const separator = this.toolbar.querySelector(
+            '.' + CSS_PREFIX + '__separator',
+          );
+          if (separator) {
+            separator.parentNode?.insertBefore(this.dragPlaceholder, separator);
+          } else {
+            const overflowToggle = this.toolbar.querySelector(
+              '.' + CSS_PREFIX + '__overflow-toggle',
+            );
+            if (overflowToggle) {
+              overflowToggle.parentNode?.insertBefore(
+                this.dragPlaceholder,
+                overflowToggle,
+              );
+            } else {
+              this.toolbar.appendChild(this.dragPlaceholder);
+            }
+          }
+        }
+      }
+    };
+
+    const onMouseUp = (_upEvent: MouseEvent) => {
+      if (!this.isDragging) return;
+
+      // Calculate new position based on placeholder
+      if (this.dragPlaceholder && this.dragPlaceholder.parentNode) {
+        // Count toolbar items before the placeholder to determine insert position
+        let insertAtIndex = 0;
+        for (let i = 0; i < this.toolbar.children.length; i++) {
+          const child = this.toolbar.children[i];
+          if (child === this.dragPlaceholder) break;
+          if (child.classList.contains(CSS_PREFIX + '__item')) {
+            insertAtIndex++;
+          }
+        }
+
+        // Find the tool's current index in the tools array
+        const currentToolIndex = this.tools.indexOf(tool);
+
+        if (currentToolIndex !== -1) {
+          // Remove the tool from its current position
+          this.tools.splice(currentToolIndex, 1);
+
+          // Insert at new position (at the target index)
+          this.tools.splice(insertAtIndex, 0, tool);
+
+          // Update order values
+          this.tools.forEach((t, i) => {
+            t.order = i;
+          });
+
+          // Save to localStorage
+          this.saveOrderState();
+        }
+      }
+
+      // Clean up
+      this.cleanupOverflowDrag();
+
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+
+      // Re-render after a short delay
+      setTimeout(() => {
+        this.render();
+      }, 0);
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }
+
+  /**
+   * Close the overflow menu programmatically.
+   */
+  private closeOverflowMenu() {
+    if (this.overflowMenu) {
+      this.overflowMenu.style.display = 'none';
+    }
+
+    // Update the overflow toggle button state
+    const overflowToggle = this.toolbar.querySelector(
+      '.' + CSS_PREFIX + '__overflow-toggle',
+    );
+    if (overflowToggle) {
+      overflowToggle.setAttribute('aria-expanded', 'false');
+    }
+
+    // Clear submenu stack
+    this.submenuStack = [];
+
+    // Remove close handler
+    const doc = this.editorView.dom.ownerDocument || document;
+    if (this.closeOverflowHandler) {
+      doc.removeEventListener('click', this.closeOverflowHandler);
+      this.closeOverflowHandler = null;
+    }
+  }
+
+  private cleanupOverflowDrag() {
+    this.isDragging = false;
+    this.isDraggingFromOverflow = false;
+    this.draggedItem = null;
+
+    if (this.dragSourceWrapper) {
+      this.dragSourceWrapper.classList.remove(
+        CSS_PREFIX + '__overflow-item--dragging',
+      );
+      this.dragSourceWrapper = null;
+    }
+
+    this.wrapper.classList.remove(CSS_PREFIX + '__wrapper--dragging');
+
+    if (this.dragGhost) {
+      this.dragGhost.remove();
+      this.dragGhost = null;
+    }
+
+    // Also clean up any orphaned ghost elements (fallback)
+    const orphanedGhost = document.querySelector(
+      '.' + CSS_PREFIX + '__drag-ghost',
+    );
+    if (orphanedGhost) {
+      orphanedGhost.remove();
+    }
+
+    if (this.dragPlaceholder) {
+      this.dragPlaceholder.remove();
+      this.dragPlaceholder = null;
+    }
+
+    if (this.dragStartTimer) {
+      clearTimeout(this.dragStartTimer);
+      this.dragStartTimer = null;
+    }
+  }
+
   private startDrag(wrapper: HTMLElement, tool: ToolItem, e: MouseEvent) {
     this.isDragging = true;
     this.draggedItem = tool;
@@ -1529,6 +1841,14 @@ export class CustomMenuView {
     if (this.dragGhost) {
       this.dragGhost.remove();
       this.dragGhost = null;
+    }
+
+    // Also clean up any orphaned ghost elements (fallback)
+    const orphanedGhost = document.querySelector(
+      '.' + CSS_PREFIX + '__drag-ghost',
+    );
+    if (orphanedGhost) {
+      orphanedGhost.remove();
     }
 
     if (this.dragPlaceholder) {
