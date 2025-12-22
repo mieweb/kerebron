@@ -1,5 +1,4 @@
 import {
-  Command,
   EditorState,
   Plugin,
   PluginKey,
@@ -8,6 +7,7 @@ import {
 } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 
+import { type Command } from '../commands/types.ts';
 import { SearchQuery, SearchResult } from './query.ts';
 
 class SearchState {

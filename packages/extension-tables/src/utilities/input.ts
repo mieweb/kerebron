@@ -3,7 +3,6 @@
 
 import { Fragment, ResolvedPos, Slice } from 'prosemirror-model';
 import {
-  Command,
   EditorState,
   Selection,
   TextSelection,
@@ -13,6 +12,7 @@ import {
 import { EditorView } from 'prosemirror-view';
 
 import { keydownHandler } from '@kerebron/editor/plugins/keymap';
+import type { Command } from '@kerebron/editor/commands';
 
 import { CellSelection } from './CellSelection.ts';
 import { deleteCellSelection } from './commands.ts';

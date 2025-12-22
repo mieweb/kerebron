@@ -1,8 +1,9 @@
-import { Command, EditorState, NodeSelection } from 'prosemirror-state';
+import { EditorState, NodeSelection } from 'prosemirror-state';
 import { Attrs, MarkType, NodeType, Schema } from 'prosemirror-model';
 import { EditorView } from 'prosemirror-view';
 
 import { type CoreEditor } from '@kerebron/editor';
+import type { Command } from '@kerebron/editor/commands';
 
 import {
   Dropdown,

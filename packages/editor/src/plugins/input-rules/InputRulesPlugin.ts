@@ -1,11 +1,13 @@
+import { Fragment, Node as ProseMirrorNode } from 'prosemirror-model';
 import {
-  Command,
   EditorState,
   Plugin,
   TextSelection,
   Transaction,
 } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
+
+import { type Command } from '../../commands/types.ts';
 
 /// Input rules are regular expressions describing a piece of text
 /// that, when typed, causes something to happen. This might be
@@ -113,7 +115,42 @@ export class InputRulesPlugin extends Plugin<PluginState> {
         },
         apply(this: InputRulesPlugin, tr, prev) {
           let stored = tr.getMeta(this);
-          if (stored) return stored;
+          if (stored) {
+            return stored;
+          }
+
+          const simulatedInputMeta = tr.getMeta('applyInputRules') as
+            | undefined
+            | {
+              from: number;
+              text: string | ProseMirrorNode | Fragment;
+            };
+          const isSimulatedInput = !!simulatedInputMeta;
+
+          if (isSimulatedInput) {
+            setTimeout(() => {
+              let { text } = simulatedInputMeta;
+
+              if (typeof text === 'string') {
+                text = text as string;
+              } else {
+                text = getHTMLFromFragment(Fragment.from(text), state.schema);
+              }
+
+              const { from } = simulatedInputMeta;
+              const to = from + text.length;
+
+              run(
+                view,
+                from,
+                to,
+                text,
+                rules,
+                plugin,
+              );
+            });
+          }
+
           return tr.selectionSet || tr.docChanged ? null : prev;
         },
       },

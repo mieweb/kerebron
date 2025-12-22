@@ -7,7 +7,6 @@ import {
   Slice,
 } from 'prosemirror-model';
 import type {
-  Command,
   EditorState,
   NodeSelection,
   Transaction,
@@ -15,6 +14,7 @@ import type {
 import { Selection } from 'prosemirror-state';
 import { type CoreEditor, Node } from '@kerebron/editor';
 import {
+  type Command,
   type CommandFactories,
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
@@ -28,7 +28,10 @@ import {
 /// Build a command that splits a non-empty textblock at the top level
 /// of a list item by also splitting that list item.
 export function splitListItem(itemType: NodeType, itemAttrs?: Attrs): Command {
-  return function (state: EditorState, dispatch?: (tr: Transaction) => void) {
+  const cmd: Command = function (
+    state: EditorState,
+    dispatch?: (tr: Transaction) => void,
+  ) {
     const { $from, $to, node } = state.selection as NodeSelection;
     if ((node && node.isBlock) || $from.depth < 2 || !$from.sameParent($to)) {
       return false;
@@ -90,6 +93,10 @@ export function splitListItem(itemType: NodeType, itemAttrs?: Attrs): Command {
     if (dispatch) dispatch(tr.split($from.pos, 2, types).scrollIntoView());
     return true;
   };
+
+  cmd.displayName = `splitListItem(${itemType.name})`;
+
+  return cmd;
 }
 
 /// Acts like [`splitListItem`](#schema-list.splitListItem), but

@@ -1,6 +1,11 @@
-import type { Command } from 'prosemirror-state';
+import type { Command as PmCommand } from 'prosemirror-state';
 
-export { Command };
+interface Command extends PmCommand {
+  displayName?: string;
+  description?: string;
+}
+
+export type { Command };
 
 export type CommandFactory = (...args: any[]) => Command;
 

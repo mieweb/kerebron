@@ -7,7 +7,6 @@ import {
 } from 'prosemirror-model';
 import {
   AllSelection,
-  Command,
   EditorState,
   TextSelection,
   Transaction,

@@ -7,12 +7,9 @@ import {
   ResolvedPos,
   Slice,
 } from 'prosemirror-model';
-import {
-  Command,
-  EditorState,
-  TextSelection,
-  Transaction,
-} from 'prosemirror-state';
+import { EditorState, TextSelection, Transaction } from 'prosemirror-state';
+
+import type { Command, CommandFactory } from '@kerebron/editor/commands';
 
 import { CellSelection } from './CellSelection.ts';
 import type { Direction } from './input.ts';
@@ -29,7 +26,6 @@ import {
   removeColSpan,
   selectionCell,
 } from './util.ts';
-import { CommandFactory } from '@kerebron/editor/commands';
 
 /**
  * @public

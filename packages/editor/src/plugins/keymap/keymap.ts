@@ -1,5 +1,7 @@
-import { Command, Plugin } from 'prosemirror-state';
+import { Plugin } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
+
+import type { Command } from '../../commands/types.ts';
 import { base, keyName } from './w3c-keyname.ts';
 
 const mac = typeof navigator != 'undefined' &&

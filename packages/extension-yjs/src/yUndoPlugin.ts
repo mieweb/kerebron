@@ -1,5 +1,7 @@
-import { Command, EditorState, Plugin } from 'prosemirror-state';
+import { EditorState, Plugin } from 'prosemirror-state';
 import { ContentType, Item, Text, UndoManager, XmlElement } from 'yjs';
+
+import type { Command } from '@kerebron/editor/commands';
 
 import { getRelativeSelection } from './ySyncPlugin.ts';
 import { ySyncPluginKey, yUndoPluginKey } from './keys.ts';

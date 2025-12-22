@@ -519,14 +519,21 @@ const lift = (): Command => (state, dispatch) => {
 /// If the selection is in a node whose type has a truthy
 /// [`code`](#model.NodeSpec.code) property in its spec, replace the
 /// selection with a newline character.
-const newlineInCode = (): Command => (state, dispatch) => {
-  let { $head, $anchor } = state.selection;
-  if (!$head.parent.type.spec.code || !$head.sameParent($anchor)) return false;
-  if (dispatch) dispatch(state.tr.insertText('\n').scrollIntoView());
-  return true;
+const newlineInCode = (): Command => {
+  const cmd: Command = (state, dispatch) => {
+    let { $head, $anchor } = state.selection;
+    if (!$head.parent.type.spec.code || !$head.sameParent($anchor)) {
+      return false;
+    }
+    if (dispatch) dispatch(state.tr.insertText('\n').scrollIntoView());
+    return true;
+  };
+  cmd.displayName = 'newlineInCode()';
+  return cmd;
 };
 
 function defaultBlockAt(match: ContentMatch) {
+  console.log('defaultBlockAt', match);
   for (let i = 0; i < match.edgeCount; i++) {
     let { type } = match.edge(i);
     if (type.isTextblock && !type.hasRequiredAttrs()) return type;
@@ -555,41 +562,50 @@ const exitCode = (): Command => (state, dispatch) => {
 
 /// If a block node is selected, create an empty paragraph before (if
 /// it is its parent's first child) or after it.
-const createParagraphNear = (): Command => (state, dispatch) => {
-  let sel = state.selection, { $from, $to } = sel;
-  if (
-    sel instanceof AllSelection || $from.parent.inlineContent ||
-    $to.parent.inlineContent
-  ) return false;
-  let type = defaultBlockAt($to.parent.contentMatchAt($to.indexAfter()));
-  if (!type || !type.isTextblock) return false;
-  if (dispatch) {
-    let side =
-      (!$from.parentOffset && $to.index() < $to.parent.childCount ? $from : $to)
+const createParagraphNear = (): Command => {
+  const cmd: Command = (state, dispatch) => {
+    let sel = state.selection, { $from, $to } = sel;
+    if (
+      sel instanceof AllSelection || $from.parent.inlineContent ||
+      $to.parent.inlineContent
+    ) return false;
+    let type = defaultBlockAt($to.parent.contentMatchAt($to.indexAfter()));
+    if (!type || !type.isTextblock) return false;
+    if (dispatch) {
+      let side = (!$from.parentOffset && $to.index() < $to.parent.childCount
+        ? $from
+        : $to)
         .pos;
-    let tr = state.tr.insert(side, type.createAndFill()!);
-    tr.setSelection(TextSelection.create(tr.doc, side + 1));
-    dispatch(tr.scrollIntoView());
-  }
-  return true;
+      let tr = state.tr.insert(side, type.createAndFill()!);
+      tr.setSelection(TextSelection.create(tr.doc, side + 1));
+      dispatch(tr.scrollIntoView());
+    }
+    return true;
+  };
+  cmd.displayName = 'createParagraphNear()';
+  return cmd;
 };
 
 /// If the cursor is in an empty textblock that can be lifted, lift the
 /// block.
-const liftEmptyBlock = (): Command => (state, dispatch) => {
-  let { $cursor } = state.selection as TextSelection;
-  if (!$cursor || $cursor.parent.content.size) return false;
-  if ($cursor.depth > 1 && $cursor.after() != $cursor.end(-1)) {
-    let before = $cursor.before();
-    if (canSplit(state.doc, before)) {
-      if (dispatch) dispatch(state.tr.split(before).scrollIntoView());
-      return true;
+const liftEmptyBlock = (): Command => {
+  const cmd: Command = (state, dispatch) => {
+    let { $cursor } = state.selection as TextSelection;
+    if (!$cursor || $cursor.parent.content.size) return false;
+    if ($cursor.depth > 1 && $cursor.after() != $cursor.end(-1)) {
+      let before = $cursor.before();
+      if (canSplit(state.doc, before)) {
+        if (dispatch) dispatch(state.tr.split(before).scrollIntoView());
+        return true;
+      }
     }
-  }
-  let range = $cursor.blockRange(), target = range && liftTarget(range);
-  if (target == null) return false;
-  if (dispatch) dispatch(state.tr.lift(range!, target).scrollIntoView());
-  return true;
+    let range = $cursor.blockRange(), target = range && liftTarget(range);
+    if (target == null) return false;
+    if (dispatch) dispatch(state.tr.lift(range!, target).scrollIntoView());
+    return true;
+  };
+  cmd.displayName = 'liftEmptyBlock()';
+  return cmd;
 };
 
 /// Create a variant of [`splitBlock`](#commands.splitBlock) that uses
@@ -601,7 +617,7 @@ const splitBlockAs = (
     $from: ResolvedPos,
   ) => { type: NodeType; attrs?: Attrs } | null,
 ): Command => {
-  return (state, dispatch) => {
+  const cmd: Command = (state, dispatch) => {
     let { $from, $to } = state.selection;
     if (
       state.selection instanceof NodeSelection && state.selection.node.isBlock
@@ -661,6 +677,9 @@ const splitBlockAs = (
     if (dispatch) dispatch(tr.scrollIntoView());
     return true;
   };
+  cmd.displayName = 'splitBlockAs()';
+
+  return cmd;
 };
 
 /// Split the parent block of the selection. If the selection is a text

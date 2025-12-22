@@ -1,5 +1,4 @@
 import {
-  Command,
   EditorState,
   NodeSelection,
   Plugin,
@@ -10,6 +9,7 @@ import { Fragment, Node, ResolvedPos, Slice } from 'prosemirror-model';
 import { Mappable } from 'prosemirror-transform';
 import { Decoration, DecorationSet, EditorView } from 'prosemirror-view';
 
+import type { Command } from '@kerebron/editor/commands';
 import { Extension } from '@kerebron/editor';
 import { keydownHandler } from '@kerebron/editor/plugins/keymap';
 

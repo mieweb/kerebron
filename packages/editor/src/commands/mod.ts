@@ -8,15 +8,24 @@ export * from './types.ts';
 /// Combine a number of command functions into a single function (which
 /// calls them one by one until one returns true).
 export function firstCommand(...commands: readonly Command[]): Command {
-  return function (state, dispatch, view) {
+  const cmd: Command = function (state, dispatch, view) {
     for (let i = 0; i < commands.length; i++) {
       if (commands[i](state, dispatch, view)) {
-        console.debug('firstCommand: ', commands[i]);
+        const cmd: Command = commands[i];
+        if (cmd.displayName !== 'first') {
+          console.debug(
+            'firstCommand: ',
+            commands[i].displayName || commands[i],
+          );
+        }
         return true;
       }
     }
     return false;
   };
+  cmd.displayName = 'first';
+
+  return cmd;
 }
 
 export function alternativeCommands(...commands: readonly Command[]): Command {

@@ -1,5 +1,7 @@
 import { Fragment, MarkType, Node } from 'prosemirror-model';
-import { Command, Transaction } from 'prosemirror-state';
+import { Transaction } from 'prosemirror-state';
+
+import type { Command } from '@kerebron/editor/commands';
 
 function onlyHasCodeMarkedText(
   paragraph: Node,
