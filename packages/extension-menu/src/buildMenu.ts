@@ -256,17 +256,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     }),
   );
 
-  // === 5. Increase indent ===
-  structureGroup.push(
-    new MenuItem({
-      title: 'Join with above block',
-      run: () => editor.chain().joinUp().run(),
-      select: () => editor.can().joinUp().run(),
-      icon: icons.indent,
-    }),
-  );
-
-  // === 6. Block quote ===
+  // === 5. Block quote ===
   if (schema.nodes.blockquote) {
     structureGroup.push(wrapItem(schema.nodes.blockquote, {
       title: 'Wrap in block quote',
