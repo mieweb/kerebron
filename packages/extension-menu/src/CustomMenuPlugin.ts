@@ -1049,7 +1049,10 @@ export class CustomMenuView {
               requestAnimationFrame(() => {
                 const menuItem = tool.element as any;
                 if (menuItem.spec && typeof menuItem.spec.run === 'function') {
-                  menuItem.spec.run(this.editorView.state, this.editorView.dispatch);
+                  menuItem.spec.run(
+                    this.editorView.state,
+                    this.editorView.dispatch,
+                  );
                 }
               });
             }
@@ -1427,7 +1430,10 @@ export class CustomMenuView {
             // Call the spec's run method directly instead of dispatching DOM events
             const menuItem = tool.element as any;
             if (menuItem.spec && typeof menuItem.spec.run === 'function') {
-              menuItem.spec.run(this.editorView.state, this.editorView.dispatch);
+              menuItem.spec.run(
+                this.editorView.state,
+                this.editorView.dispatch,
+              );
             }
           });
         }
