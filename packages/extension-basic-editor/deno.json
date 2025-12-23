@@ -14,6 +14,7 @@
     "./ExtensionMediaUpload": "./src/ExtensionMediaUpload.ts",
     "./ExtensionRemoteSelection": "./src/remote-selection/ExtensionRemoteSelection.ts",
     "./ExtensionHtml": "./src/ExtensionHtml.ts",
+    "./ExtensionTextAlign": "./src/ExtensionTextAlign.ts",
     "./NodeDocument": "./src/NodeDocument.ts",
     "./NodeDocumentCode": "./src/NodeDocumentCode.ts",
     "./NodeCodeBlock": "./src/NodeCodeBlock.ts",
@@ -37,7 +38,6 @@
     "./MarkStrong": "./src/MarkStrong.ts",
     "./MarkUnderline": "./src/MarkUnderline.ts",
     "./MarkSuperscript": "./src/MarkSuperscript.ts",
-    "./MarkSubscript": "./src/MarkSubscript.ts",
-    "./ExtensionTextAlign": "./src/ExtensionTextAlign.ts"
+    "./MarkSubscript": "./src/MarkSubscript.ts"
   }
 }

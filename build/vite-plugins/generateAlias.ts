@@ -18,5 +18,7 @@ export function generateAlias() {
       'packages/extension-codejar/assets',
     '@kerebron/extension-autocomplete/assets': __dirname + '/../../' +
       'packages/extension-autocomplete/assets',
+    '@kerebron/extension-basic-editor/assets': __dirname + '/../../' +
+      'packages/extension-basic-editor/assets',
   };
 }

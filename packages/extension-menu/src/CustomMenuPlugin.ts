@@ -1060,7 +1060,9 @@ export class CustomMenuView {
         }
 
         // Add drag handlers for overflow items (only in main menu, not submenus)
-        if (!isSubmenu) {
+        // Skip dropdowns - they have their own click handlers for submenu navigation
+        // and shouldn't be draggable to the toolbar
+        if (!isSubmenu && !isDropdown) {
           this.setupOverflowDragHandlers(wrapper, tool);
         }
 

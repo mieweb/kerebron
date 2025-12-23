@@ -4,6 +4,7 @@
   :host {
     --kb-color-text: #f9fafb;
     --kb-color-text-muted: #9ca3af;
+    --kb-color-icon: #bdc1c6;
     --kb-color-surface: #1f2937;
     --kb-color-surface-elevated: #374151;
     --kb-color-border: #374151;
@@ -22,6 +23,7 @@
 .kb-component--dark {
   --kb-color-text: #f9fafb;
   --kb-color-text-muted: #9ca3af;
+  --kb-color-icon: #bdc1c6;
   --kb-color-surface: #1f2937;
   --kb-color-surface-elevated: #374151;
   --kb-color-border: #374151;
@@ -35,3 +37,4 @@
   --kb-menu-dropdown-text: #e8eaed;
   --kb-menu-dropdown-hover: rgba(232, 234, 237, 0.08);
 }
+
