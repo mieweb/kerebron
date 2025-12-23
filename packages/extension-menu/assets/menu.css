@@ -604,6 +604,60 @@
   background: var(--kb-color-primary-hover);
 }
 
+/* File field styles for image upload */
+.kb-prompt__file-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--kb-space-xs);
+}
+
+.kb-prompt__file-label {
+  font-size: var(--kb-text-sm);
+  color: var(--kb-color-text-muted);
+  font-weight: 500;
+}
+
+.kb-prompt__file-input {
+  background: var(--kb-color-surface-elevated);
+  border: 1px solid var(--kb-color-border);
+  border-radius: var(--kb-radius-sm);
+  padding: var(--kb-space-sm) var(--kb-space-md);
+  font-size: var(--kb-text-sm);
+  color: var(--kb-color-text);
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.kb-prompt__file-input::file-selector-button {
+  background: var(--kb-color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--kb-radius-sm);
+  padding: var(--kb-space-xs) var(--kb-space-md);
+  margin-right: var(--kb-space-md);
+  cursor: pointer;
+  font-size: var(--kb-text-sm);
+  font-weight: 500;
+  transition: background-color 0.15s ease;
+}
+
+.kb-prompt__file-input::file-selector-button:hover {
+  background: var(--kb-color-primary-hover);
+}
+
+.kb-prompt__file-input:focus {
+  border-color: var(--kb-color-primary);
+  box-shadow: 0 0 0 3px var(--kb-color-focus);
+  outline: none;
+}
+
+.kb-prompt__file-name {
+  font-size: var(--kb-text-xs);
+  color: var(--kb-color-text-muted);
+  font-style: italic;
+}
+
 /* Prompt/Dialog mobile optimization */
 @media (max-width: 767px) {
   .kb-editor-prompt {
