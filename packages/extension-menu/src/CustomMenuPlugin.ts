@@ -16,8 +16,8 @@ const STORAGE_KEY = 'kb-custom-menu-order';
 const OVERFLOW_BUTTON_WIDTH = 48;
 // Approximate width per toolbar item
 const ITEM_WIDTH = 40;
-// Delay before drag starts (ms) - user must hold before dragging
-const DRAG_START_DELAY = 150;
+// Delay before drag starts (ms) - user must hold for 2 seconds before dragging activates
+const DRAG_START_DELAY = 2000;
 
 interface ToolItem {
   id: string;
@@ -1029,6 +1029,9 @@ export class CustomMenuView {
             }
           });
 
+          // Disable pointer events on the button itself - wrapper handles clicks
+          dom.style.pointerEvents = 'none';
+
           wrapper.appendChild(dom);
 
           // Store the button DOM for later use (click after drag timeout)
@@ -1040,12 +1043,15 @@ export class CustomMenuView {
           wrapper.addEventListener('keydown', (e: KeyboardEvent) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
-              const mousedownEvent = new MouseEvent('mousedown', {
-                bubbles: true,
-                cancelable: true,
-                view: window,
+              // Close the overflow menu FIRST
+              this.closeAllMenus();
+              // Then trigger the action after menu is closed
+              requestAnimationFrame(() => {
+                const menuItem = tool.element as any;
+                if (menuItem.spec && typeof menuItem.spec.run === 'function') {
+                  menuItem.spec.run(this.editorView.state, this.editorView.dispatch);
+                }
               });
-              dom.dispatchEvent(mousedownEvent);
             }
           });
         }
@@ -1412,17 +1418,18 @@ export class CustomMenuView {
 
         // If drag wasn't initiated, this was a short click - trigger the button action
         if (!dragInitiated) {
-          const buttonDom = (
-            wrapper as HTMLElement & { _buttonDom?: HTMLElement }
-          )._buttonDom;
-          if (buttonDom) {
-            const mousedownEvent = new MouseEvent('mousedown', {
-              bubbles: true,
-              cancelable: true,
-              view: window,
-            });
-            buttonDom.dispatchEvent(mousedownEvent);
-          }
+          // Close the overflow menu FIRST to prevent it from capturing modal events
+          this.closeAllMenus();
+
+          // Then trigger the action after the menu is closed
+          // Use requestAnimationFrame to ensure DOM is updated
+          requestAnimationFrame(() => {
+            // Call the spec's run method directly instead of dispatching DOM events
+            const menuItem = tool.element as any;
+            if (menuItem.spec && typeof menuItem.spec.run === 'function') {
+              menuItem.spec.run(this.editorView.state, this.editorView.dispatch);
+            }
+          });
         }
 
         document.removeEventListener('mouseup', onMouseUp);

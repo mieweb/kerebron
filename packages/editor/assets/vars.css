@@ -49,10 +49,11 @@
   --kb-color-border: #e5e7eb;
   --kb-color-border-strong: #d1d5db;
 
-  /* Menu specific colors (Google Docs style) */
-  --kb-menu-dropdown-dark-bg: #344154;
-  --kb-menu-dropdown-dark-border: #5f6368;
-  --kb-menu-dropdown-dark-text: #e8eaed;
+  /* Menu specific colors (Google Docs style) - Light mode */
+  --kb-menu-dropdown-bg: #ffffff;
+  --kb-menu-dropdown-border: #dadce0;
+  --kb-menu-dropdown-text: #3c4043;
+  --kb-menu-dropdown-hover: rgba(60, 64, 67, 0.08);
   --kb-menu-info-bg: #e8f0fe;
   --kb-menu-info-text: #1967d2;
 }
@@ -69,6 +70,12 @@
     --kb-color-border-strong: #4b5563;
     --kb-color-hover: rgba(59, 130, 246, 0.1);
     --kb-color-active: rgba(59, 130, 246, 0.2);
+
+    /* Menu dropdown - Dark mode */
+    --kb-menu-dropdown-bg: #344154;
+    --kb-menu-dropdown-border: #5f6368;
+    --kb-menu-dropdown-text: #e8eaed;
+    --kb-menu-dropdown-hover: rgba(232, 234, 237, 0.08);
   }
 }
 
@@ -94,4 +101,10 @@
   --kb-color-border-strong: #4b5563;
   --kb-color-hover: rgba(59, 130, 246, 0.1);
   --kb-color-active: rgba(59, 130, 246, 0.2);
+
+  /* Menu dropdown - Dark mode */
+  --kb-menu-dropdown-bg: #344154;
+  --kb-menu-dropdown-border: #5f6368;
+  --kb-menu-dropdown-text: #e8eaed;
+  --kb-menu-dropdown-hover: rgba(232, 234, 237, 0.08);
 }

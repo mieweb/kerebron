@@ -50,7 +50,7 @@
 }
 
 .kb-custom-menu__resize-handle:hover .kb-custom-menu__resize-handle-bar {
-  background: var(--kb-menu-dropdown-dark-border);
+  background: var(--kb-menu-dropdown-border);
 }
 
 .kb-custom-menu__wrapper--resizing .kb-custom-menu__resize-handle-bar {
@@ -191,15 +191,15 @@
 
 /* Dropdown menus within custom menu - match toolbar dark background */
 .kb-custom-menu .kb-dropdown__menu {
-  background: var(--kb-menu-dropdown-dark-bg);
-  border: 1px solid var(--kb-menu-dropdown-dark-border);
+  background: var(--kb-menu-dropdown-bg);
+  border: 1px solid var(--kb-menu-dropdown-border);
   border-radius: var(--kb-radius-lg);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   padding: var(--kb-space-sm) 0;
 }
 
 .kb-custom-menu .kb-dropdown__item {
-  color: var(--kb-menu-dropdown-dark-text);
+  color: var(--kb-menu-dropdown-text);
   padding: var(--kb-space-sm) var(--kb-space-md);
   font-size: var(--kb-text-sm);
   min-height: 36px;
@@ -227,19 +227,19 @@
 }
 
 .kb-custom-menu .kb-dropdown__item:hover {
-  background: rgba(232, 234, 237, 0.08);
+  background: var(--kb-menu-dropdown-hover);
 }
 
 /* Submenu within custom menu (e.g., Heading levels) */
 .kb-custom-menu .kb-submenu__content {
-  background: var(--kb-menu-dropdown-dark-bg) !important;
-  border: 1px solid var(--kb-menu-dropdown-dark-border) !important;
+  background: var(--kb-menu-dropdown-bg) !important;
+  border: 1px solid var(--kb-menu-dropdown-border) !important;
   border-radius: var(--kb-radius-lg) !important;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
 }
 
 .kb-custom-menu .kb-submenu__label {
-  color: var(--kb-menu-dropdown-dark-text) !important;
+  color: var(--kb-menu-dropdown-text) !important;
 }
 
 .kb-custom-menu .kb-submenu__label:hover {
@@ -247,7 +247,7 @@
 }
 
 .kb-custom-menu .kb-submenu__label:after {
-  border-left-color: var(--kb-menu-dropdown-dark-text) !important;
+  border-left-color: var(--kb-menu-dropdown-text) !important;
 }
 
 /* Separator */
@@ -903,7 +903,7 @@
   }
 
   .kb-custom-menu__resize-handle-bar {
-    background: var(--kb-menu-dropdown-dark-border);
+    background: var(--kb-menu-dropdown-border);
   }
 
   .kb-custom-menu__resize-handle:hover .kb-custom-menu__resize-handle-bar {
@@ -917,22 +917,22 @@
   .kb-custom-menu__item .kb-menu__button,
   .kb-custom-menu__item .kb-dropdown__label,
   .kb-custom-menu__overflow-toggle {
-    color: var(--kb-menu-dropdown-dark-text);
+    color: var(--kb-menu-dropdown-text);
   }
 
   .kb-custom-menu__item .kb-menu__button:hover,
   .kb-custom-menu__item .kb-dropdown__label:hover,
   .kb-custom-menu__overflow-toggle:hover {
-    background: rgba(232, 234, 237, 0.08);
+    background: var(--kb-menu-dropdown-hover);
   }
 
   .kb-custom-menu__separator {
-    background: var(--kb-menu-dropdown-dark-border);
+    background: var(--kb-menu-dropdown-border);
   }
 
   .kb-custom-menu__overflow-menu {
-    background: var(--kb-menu-dropdown-dark-bg);
-    border-color: var(--kb-menu-dropdown-dark-border);
+    background: var(--kb-menu-dropdown-bg);
+    border-color: var(--kb-menu-dropdown-border);
   }
 
   .kb-custom-menu__overflow-header {
@@ -941,24 +941,24 @@
 
   .kb-custom-menu__overflow-item .kb-menu__button,
   .kb-custom-menu__overflow-item .kb-dropdown__label {
-    color: var(--kb-menu-dropdown-dark-text);
+    color: var(--kb-menu-dropdown-text);
   }
 
   .kb-custom-menu__overflow-item-label {
-    color: var(--kb-menu-dropdown-dark-text);
+    color: var(--kb-menu-dropdown-text);
   }
 
   .kb-custom-menu__overflow-item:hover {
-    background: rgba(232, 234, 237, 0.08);
+    background: var(--kb-menu-dropdown-hover);
   }
 
   .kb-custom-menu__overflow-separator {
-    background: var(--kb-menu-dropdown-dark-border);
+    background: var(--kb-menu-dropdown-border);
   }
 
   .kb-custom-menu__overflow-footer {
-    background: var(--kb-menu-dropdown-dark-bg);
-    border-top-color: var(--kb-menu-dropdown-dark-border);
+    background: var(--kb-menu-dropdown-bg);
+    border-top-color: var(--kb-menu-dropdown-border);
   }
 
   .kb-custom-menu__modal {
@@ -966,11 +966,11 @@
   }
 
   .kb-custom-menu__modal-header {
-    border-bottom-color: var(--kb-menu-dropdown-dark-border);
+    border-bottom-color: var(--kb-menu-dropdown-border);
   }
 
   .kb-custom-menu__modal-header h2 {
-    color: var(--kb-menu-dropdown-dark-text);
+    color: var(--kb-menu-dropdown-text);
   }
 
   .kb-custom-menu__modal-close {
@@ -980,15 +980,15 @@
   .kb-custom-menu__modal-message {
     background: var(--kb-menu-info-bg);
     color: var(--kb-menu-info-text);
-    border-bottom-color: var(--kb-menu-dropdown-dark-border);
+    border-bottom-color: var(--kb-menu-dropdown-border);
   }
 
   .kb-custom-menu__modal-footer {
-    border-top-color: var(--kb-menu-dropdown-dark-border);
+    border-top-color: var(--kb-menu-dropdown-border);
   }
 
   .kb-custom-menu__tool-item span {
-    color: var(--kb-menu-dropdown-dark-text);
+    color: var(--kb-menu-dropdown-text);
   }
 }
 
@@ -1007,8 +1007,21 @@
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.kb-custom-menu__item:active {
-  cursor: grabbing;
+/* Only show grabbing cursor when wrapper has dragging class, not just on :active */
+.kb-custom-menu__wrapper--dragging .kb-custom-menu__item {
+  cursor: grabbing !important;
+}
+
+/* Ensure buttons inside items have pointer cursor for click feedback */
+.kb-custom-menu__item .kb-menu__button,
+.kb-custom-menu__item .kb-dropdown__label {
+  cursor: pointer !important;
+}
+
+/* Override to grabbing cursor only when actively dragging */
+.kb-custom-menu__wrapper--dragging .kb-custom-menu__item .kb-menu__button,
+.kb-custom-menu__wrapper--dragging .kb-custom-menu__item .kb-dropdown__label {
+  cursor: grabbing !important;
 }
 
 .kb-custom-menu__item--dragging {
@@ -1041,7 +1054,7 @@
 .kb-custom-menu__pinned-dropdown {
   min-width: 200px;
   max-width: 300px;
-  background: var(--kb-menu-dropdown-dark-bg) !important;
+  background: var(--kb-menu-dropdown-bg) !important;
   border: 1px solid var(--kb-color-border-strong);
   border-radius: var(--kb-radius-lg);
   box-shadow: var(--kb-shadow-lg);
