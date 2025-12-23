@@ -11,6 +11,4 @@ Deno.test('ExtensionHistory should handle commands', () => {
   editor.chain().undo().run();
   // Test redo command
   editor.chain().redo().run();
-  // Test undoInputRule command
-  editor.chain().undoInputRule().run();
 });

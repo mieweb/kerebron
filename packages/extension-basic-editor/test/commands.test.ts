@@ -37,4 +37,7 @@ Deno.test('test command toggleItalic', () => {
 
   const modified = editor.getJSON();
   assertEquals(modified.content[0].content?.length, 2);
+
+  // Test undoInputRule command
+  editor.chain().undoInputRule().run();
 });

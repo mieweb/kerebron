@@ -105,3 +105,10 @@
     repeat-x bottom center;
   background-size: 20px 4px;
 }
+
+.kb-shortcode-inline {
+  background-color: green;
+  border-radius: 3px;
+  margin: 0 5px 0;
+  padding: 4px 10px;
+}

@@ -31,6 +31,10 @@ import {
 import { EditorView } from 'prosemirror-view';
 
 import { type Command, CommandFactory } from './types.ts';
+import {
+  runInputRules,
+  undoInputRuleCommand,
+} from '../plugins/input-rules/InputRulesPlugin.ts';
 
 /// Returns a command function that wraps the selection in a list with
 /// the given type an attributes. If `dispatch` is null, only return a
@@ -61,36 +65,40 @@ const wrapInList = (
 /// is non-null, the wrapping is added to that transaction. When it is
 /// `null`, the function only queries whether the wrapping is
 /// possible.
-const wrapRangeInList = (
+const wrapRangeInList: CommandFactory = (
   tr: Transaction | null,
   range: NodeRange,
   listType: NodeType,
   attrs: Attrs | null = null,
-): boolean => {
-  let doJoin = false, outerRange = range, doc = range.$from.doc;
-  // This is at the top of an existing list item
-  if (
-    range.depth >= 2 &&
-    range.$from.node(range.depth - 1).type.compatibleContent(listType) &&
-    range.startIndex == 0
-  ) {
-    // Don't do anything if this is the top of the list
-    if (range.$from.index(range.depth - 1) == 0) return false;
-    let $insert = doc.resolve(range.start - 2);
-    outerRange = new NodeRange($insert, $insert, range.depth);
-    if (range.endIndex < range.parent.childCount) {
-      range = new NodeRange(
-        range.$from,
-        doc.resolve(range.$to.end(range.depth)),
-        range.depth,
-      );
+): Command => {
+  const cmd: Command = () => {
+    let doJoin = false, outerRange = range, doc = range.$from.doc;
+    // This is at the top of an existing list item
+    if (
+      range.depth >= 2 &&
+      range.$from.node(range.depth - 1).type.compatibleContent(listType) &&
+      range.startIndex == 0
+    ) {
+      // Don't do anything if this is the top of the list
+      if (range.$from.index(range.depth - 1) == 0) return false;
+      let $insert = doc.resolve(range.start - 2);
+      outerRange = new NodeRange($insert, $insert, range.depth);
+      if (range.endIndex < range.parent.childCount) {
+        range = new NodeRange(
+          range.$from,
+          doc.resolve(range.$to.end(range.depth)),
+          range.depth,
+        );
+      }
+      doJoin = true;
     }
-    doJoin = true;
-  }
-  let wrap = findWrapping(outerRange, listType, attrs, range);
-  if (!wrap) return false;
-  if (tr) doWrapInList(tr, range, wrap, doJoin, listType);
-  return true;
+    let wrap = findWrapping(outerRange, listType, attrs, range);
+    if (!wrap) return false;
+    if (tr) doWrapInList(tr, range, wrap, doJoin, listType);
+    return true;
+  };
+
+  return cmd;
 };
 
 function doWrapInList(
@@ -1061,6 +1069,8 @@ function toggleMark(
   };
 }
 
+const undoInputRule: CommandFactory = () => undoInputRuleCommand;
+
 export const baseCommandFactories: Record<string, CommandFactory> = {
   wrapInList,
   wrapRangeInList,
@@ -1088,4 +1098,6 @@ export const baseCommandFactories: Record<string, CommandFactory> = {
   wrapIn,
   setBlockType,
   toggleMark,
+  undoInputRule,
+  runInputRules,
 };

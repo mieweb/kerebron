@@ -2,6 +2,7 @@ import { CommandFactory, firstCommand } from '@kerebron/editor/commands';
 import { baseCommandFactories } from './baseCommandFactories.ts';
 
 const backspace = firstCommand(
+  baseCommandFactories.undoInputRule(),
   baseCommandFactories.deleteSelection(),
   baseCommandFactories.joinBackward(),
   baseCommandFactories.selectNodeBackward(),

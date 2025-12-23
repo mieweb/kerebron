@@ -1,5 +1,5 @@
 import { canJoin, findWrapping } from 'prosemirror-transform';
-import { Attrs, Node, NodeType } from 'prosemirror-model';
+import { Attrs, Fragment, Node, NodeType, Slice } from 'prosemirror-model';
 
 import { InputRule } from './InputRulesPlugin.ts';
 
@@ -25,14 +25,14 @@ export function wrappingInputRule(
   joinPredicate?: (match: RegExpMatchArray, node: Node) => boolean,
 ) {
   return new InputRule(regexp, (state, match, start, end) => {
-    let attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
-    let tr = state.tr.delete(start, end);
-    let $start = tr.doc.resolve(start),
-      range = $start.blockRange(),
-      wrapping = range && findWrapping(range, nodeType, attrs);
+    const attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
+    const tr = state.tr.delete(start, end);
+    const $start = tr.doc.resolve(start);
+    const range = $start.blockRange();
+    const wrapping = range && findWrapping(range, nodeType, attrs);
     if (!wrapping) return null;
     tr.wrap(range!, wrapping);
-    let before = tr.doc.resolve(start - 1).nodeBefore;
+    const before = tr.doc.resolve(start - 1).nodeBefore;
     if (
       before && before.type == nodeType && canJoin(tr.doc, start - 1) &&
       (!joinPredicate || joinPredicate(match, before))
@@ -55,8 +55,8 @@ export function textblockTypeInputRule(
   getAttrs: Attrs | null | ((match: RegExpMatchArray) => Attrs | null) = null,
 ) {
   return new InputRule(regexp, (state, match, start, end) => {
-    let $start = state.doc.resolve(start);
-    let attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
+    const $start = state.doc.resolve(start);
+    const attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
     if (
       !$start.node(-1).canReplaceWith(
         $start.index(-1),
@@ -67,5 +67,22 @@ export function textblockTypeInputRule(
     return state.tr
       .delete(start, end)
       .setBlockType(start, start, nodeType, attrs);
+  });
+}
+
+export function replaceInlineNode(
+  regexp: RegExp,
+  nodeType: NodeType,
+  getAttrs: Attrs | null | ((matches: RegExpMatchArray) => Attrs | null) = null,
+) {
+  return new InputRule(regexp, (state, match, start, end) => {
+    const attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
+    const node = nodeType.createAndFill(attrs);
+    const slice = new Slice(Fragment.from(node), 0, 0);
+
+    const tr = state.tr;
+    const from = tr.mapping.map(start);
+    const to = tr.mapping.map(end);
+    return tr.replace(from, to, slice);
   });
 }

@@ -55,10 +55,6 @@ export class NodeTableCell extends Node {
     };
   }
 
-  override getInputRules(type: NodeType): InputRule[] {
-    return [];
-  }
-
   override getCommandFactories(
     editor: CoreEditor,
     type: NodeType,

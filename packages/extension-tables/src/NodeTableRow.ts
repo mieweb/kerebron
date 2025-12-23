@@ -25,10 +25,6 @@ export class NodeTableRow extends Node {
     };
   }
 
-  override getInputRules(type: NodeType): InputRule[] {
-    return [];
-  }
-
   override getCommandFactories(
     editor: CoreEditor,
     type: NodeType,
