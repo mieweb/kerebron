@@ -33,6 +33,15 @@ export class Server {
     this.app = app;
     this.fetch = app.fetch;
 
+    // Enable CORS for all routes - must be first
+    this.app.use('/*', cors({
+      origin: '*',
+      allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowHeaders: ['Content-Type', 'Authorization'],
+      exposeHeaders: ['Content-Length'],
+      credentials: true,
+    }));
+
     const docSites = Array
       .from(Deno.readDirSync(__dirname + '/../../../docs'))
       .filter((file) => file.isFile && file.name.endsWith('.md'))
@@ -153,6 +162,39 @@ export class Server {
       }),
     );
 
+    // Serve WASM files
+    const wasmPath = __dirname + '/../../../packages/wasm/assets';
+    console.log(`Serving WASM files: /wasm => ${wasmPath}`);
+    this.app.use(
+      '/wasm/*',
+      serveStatic({
+        root: wasmPath,
+        rewriteRequestPath: (path: string) => {
+          return path.replace('/wasm', '');
+        },
+      }),
+    );
+
+    // Serve built static files from dist folders
+    for (const example of examples) {
+      const distPath = __dirname + '/../../' + example + '/dist';
+      try {
+        Deno.statSync(distPath);
+        console.log(`Serving static files: /examples-frame/${example} => ${distPath}`);
+        this.app.use(
+          `/examples-frame/${example}/*`,
+          serveStatic({
+            root: distPath,
+            rewriteRequestPath: (path: string) => {
+              return path.replace(`/examples-frame/${example}`, '');
+            },
+          }),
+        );
+      } catch {
+        // dist folder doesn't exist, skip
+      }
+    }
+
     for (const path in this.opts.devProxyUrls) {
       const devProxyUrl = this.opts.devProxyUrls[path];
       console.log(`Proxy: ${path} => ${devProxyUrl}`);
@@ -198,6 +240,5 @@ export class Server {
         mimes: { 'wasm': 'application/wasm' },
       }),
     );
-    this.app.use('/*', cors());
   }
 }

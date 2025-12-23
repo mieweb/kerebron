@@ -5,7 +5,8 @@ import { deno } from '../../build/vite-plugins/denoPlugin.ts';
 import { generateAlias } from '../../build/vite-plugins/generateAlias.ts';
 
 export default defineConfig({
-  base: '',
+  base: 'https://localhost:8000/examples-frame/browser-react/',
+  appType: 'mpa',
   plugins: [
     react(),
     wasm(),
@@ -17,6 +18,13 @@ export default defineConfig({
   build: {
     target: 'es2022',
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        entryFileNames: 'assets/[name].js',
+        chunkFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/[name].[ext]',
+      },
+    },
   },
   clearScreen: false,
 });

@@ -7,10 +7,7 @@ import { userColors } from '@kerebron/extension-yjs/userColors';
 
 import { CoreEditor } from '@kerebron/editor';
 import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
-import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
 import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
-import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
-import { LspTransportGetter, Transport } from '@kerebron/extension-lsp';
 
 const MyEditor: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -62,34 +59,34 @@ console.log("TEST")
   useEffect(() => {
     if (!editorRef.current) return;
 
-    const getLspTransport: LspTransportGetter = (
-      lang: string,
-    ): Transport | undefined => {
-      const protocol = globalThis.location.protocol === 'http:'
-        ? 'ws:'
-        : 'wss:';
-      const uri = protocol + '//' + globalThis.location.host + '/lsp';
+    // Get room ID from URL hash
+    const hash = window.location.hash.slice(1);
+    const roomId = hash.startsWith('room:')
+      ? hash.substring('room:'.length)
+      : String(Math.random());
 
-      switch (lang) {
-        case 'markdown':
-          return new LspWebSocketTransport(uri + '/mine');
-        case 'json':
-          return new LspWebSocketTransport(uri + '/deno');
-        case 'typescript':
-        case 'javascript':
-          return new LspWebSocketTransport(uri + '/typescript');
-        case 'yaml':
-          return new LspWebSocketTransport(uri + '/yaml');
-      }
-      return undefined;
-    };
+    // Initialize Yjs document and WebSocket provider
+    const doc = new Y.Doc();
+    const provider = new WebsocketProvider(
+      'wss://localhost:8000/yjs',
+      roomId,
+      doc,
+      {
+        connect: true,
+      },
+    );
+
+    setYdoc(doc);
+    wsProvider.current = provider;
+
+    const userColor = userColors[random.uint32() % userColors.length];
 
     // Initialize the editor
     const editor = new CoreEditor({
       element: editorRef.current,
       extensions: [
         new AdvancedEditorKit(),
-        LspEditorKit.createFrom({ getLspTransport }),
+        YjsEditorKit.createFrom(doc, roomId, userColor),
       ],
     });
 
@@ -119,6 +116,7 @@ console.log("TEST")
     return () => {
       editor.removeEventListener('transaction', onTransaction);
       editor.destroy();
+      provider.destroy();
     };
   }, []);
 

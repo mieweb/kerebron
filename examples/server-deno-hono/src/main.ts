@@ -36,4 +36,35 @@ for (const exampleName of broswerExamples) {
 }
 
 const server = new Server({ devProxyUrls });
-Deno.serve(server.fetch);
+
+// Generate self-signed certificate for HTTPS development
+const generateCert = async () => {
+  const cmd = new Deno.Command('openssl', {
+    args: [
+      'req', '-x509', '-newkey', 'rsa:4096', '-keyout', '/tmp/key.pem',
+      '-out', '/tmp/cert.pem', '-days', '365', '-nodes',
+      '-subj', '/CN=localhost'
+    ],
+    stderr: 'piped',
+    stdout: 'piped',
+  });
+  await cmd.output();
+};
+
+// Check if certs exist, if not generate them
+try {
+  await Deno.stat('/tmp/cert.pem');
+  await Deno.stat('/tmp/key.pem');
+} catch {
+  console.log('Generating self-signed certificates...');
+  await generateCert();
+}
+
+const cert = await Deno.readTextFile('/tmp/cert.pem');
+const key = await Deno.readTextFile('/tmp/key.pem');
+
+Deno.serve({
+  port: 8000,
+  cert,
+  key,
+}, server.fetch);

@@ -23,8 +23,8 @@ window.addEventListener('load', async () => {
   const getLspTransport: LspTransportGetter = (
     lang: string,
   ): Transport | undefined => {
-    const protocol = globalThis.location.protocol === 'http:' ? 'ws:' : 'wss:';
-    const uri = protocol + '//' + globalThis.location.host + '/lsp';
+    // Always use localhost for LSP WebSocket connections
+    const uri = 'wss://localhost:8000/lsp';
 
     switch (lang) {
       case 'markdown':
@@ -47,7 +47,7 @@ window.addEventListener('load', async () => {
     extensions: [
       new CodeEditorKit('json'),
       YjsEditorKit.createFrom(ydoc, roomId),
-      LspEditorKit.createFrom({ getLspTransport }),
+      // LspEditorKit.createFrom({ getLspTransport }),
       // lsp-ws-proxy --listen 9991 -- npx yaml-language-server --stdio
       // lsp-ws-proxy --listen 9991 -- npx vscode-json-languageserver --stdio
       // ... https://www.npmjs.com/search?q=language-server
