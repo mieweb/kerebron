@@ -35,7 +35,7 @@
 }
 
 /* Task list items */
-.kb-editor li[data-type="task_item"] {
+.kb-editor li[data-type='task_item'] {
   display: flex;
   align-items: flex-start;
   gap: 0.5em;
@@ -43,28 +43,28 @@
   margin-left: -1.5em;
 }
 
-.kb-editor li[data-type="task_item"] > label {
+.kb-editor li[data-type='task_item'] > label {
   display: flex;
   align-items: center;
   flex-shrink: 0;
   margin-top: 0.25em;
 }
 
-.kb-editor li[data-type="task_item"] > label input[type="checkbox"] {
+.kb-editor li[data-type='task_item'] > label input[type='checkbox'] {
   cursor: pointer;
   margin: 0;
 }
 
-.kb-editor li[data-type="task_item"] > div {
+.kb-editor li[data-type='task_item'] > div {
   flex: 1;
   min-width: 0;
 }
 
-.kb-editor li[data-type="task_item"] > div p {
+.kb-editor li[data-type='task_item'] > div p {
   margin: 0;
 }
 
-.kb-editor li[data-type="task_item"][data-checked="true"] > div {
+.kb-editor li[data-type='task_item'][data-checked='true'] > div {
   text-decoration: line-through;
   opacity: 0.6;
 }
