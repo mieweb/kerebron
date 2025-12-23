@@ -112,7 +112,7 @@ export default {
       }
 
       this.editor = new CoreEditor({
-        cdnUrl: 'https://localhost:8000/wasm/',
+        cdnUrl: 'http://localhost:8000/wasm/',
         uri: 'file:///test.md',
         element: this.$refs.editor,
         extensions: [

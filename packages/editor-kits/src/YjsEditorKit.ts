@@ -17,9 +17,9 @@ export class YjsEditorKit extends Extension {
       throw new Error('No room id');
     }
 
-    // Always use localhost for Yjs WebSocket connections
+    const protocol = globalThis.location.protocol === 'http:' ? 'ws:' : 'wss:';
     const wsProvider: YjsProvider = new WebsocketProvider(
-      'wss://localhost:8000/yjs',
+      protocol + '//' + globalThis.location.host + '/yjs',
       roomId,
       ydoc,
     );

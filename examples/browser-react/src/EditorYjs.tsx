@@ -4,10 +4,10 @@ import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 import * as random from 'lib0/random';
 import { userColors } from '@kerebron/extension-yjs/userColors';
+import { ExtensionYjs } from '@kerebron/extension-yjs';
 
 import { CoreEditor } from '@kerebron/editor';
 import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
-import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
 
 const MyEditor: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -15,7 +15,6 @@ const MyEditor: React.FC = () => {
   const wsProvider = useRef<WebsocketProvider | null>(null);
 
   const [md, setMd] = useState<string>('');
-  const [ydoc, setYdoc] = useState<Y.Doc | null>(null);
 
   // Public methods (equivalent to expose in Vue)
   const loadDoc = async () => {
@@ -61,32 +60,38 @@ console.log("TEST")
 
     // Get room ID from URL hash
     const hash = window.location.hash.slice(1);
-    const roomId = hash.startsWith('room:')
-      ? hash.substring('room:'.length)
-      : String(Math.random());
+    if (!hash.startsWith('room:')) {
+      return;
+    }
+    const roomId = hash.substring('room:'.length);
 
     // Initialize Yjs document and WebSocket provider
-    const doc = new Y.Doc();
+    const ydoc = new Y.Doc();
     const provider = new WebsocketProvider(
       'wss://localhost:8000/yjs',
       roomId,
-      doc,
+      ydoc,
       {
         connect: true,
       },
     );
 
-    setYdoc(doc);
     wsProvider.current = provider;
 
     const userColor = userColors[random.uint32() % userColors.length];
+    provider.awareness.setLocalStateField('user', {
+      name: 'Anonymous ' + Math.floor(Math.random() * 100),
+      color: userColor.color,
+      colorLight: userColor.light,
+    });
 
     // Initialize the editor
     const editor = new CoreEditor({
       element: editorRef.current,
+      cdnUrl: 'https://localhost:8000/wasm/',
       extensions: [
         new AdvancedEditorKit(),
-        YjsEditorKit.createFrom(doc, roomId, userColor),
+        new ExtensionYjs({ ydoc, provider }),
       ],
     });
 

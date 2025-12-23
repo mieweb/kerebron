@@ -11,7 +11,7 @@ import { DecorationInline, Decorator } from './Decorator.ts';
 export class TreeSitterHighlighter {
   parser: Parser | undefined;
   hightligtScm: string | undefined;
-  cdnUrl? = 'https://localhost:8000/wasm/';
+  cdnUrl? = 'http://localhost:8000/wasm/';
   lang?: string;
 
   async init(lang: string): Promise<boolean> {
@@ -30,13 +30,16 @@ export class TreeSitterHighlighter {
       this.parser = await createParser(wasm);
 
       this.hightligtScm = await fetchTextResource(highlightUrl);
-    } catch (_err) {
-      // Tree-sitter WASM not available, syntax highlighting disabled
-      return false;
+    } catch (err) {
+      console.error('Error init highlight for: ' + lang, err);
     }
 
-    if (!this.parser || !this.hightligtScm) {
-      // Tree-sitter initialization failed, syntax highlighting disabled
+    if (!this.parser) {
+      console.warn('Parser not inited');
+      return false;
+    }
+    if (!this.hightligtScm) {
+      console.warn('hightligtScm not inited');
       return false;
     }
 

@@ -10,7 +10,7 @@ export function getLangsList(): string[] {
 
 export function getLangTreeSitter(
   lang: string,
-  cdnUrl = 'https://localhost:8000/wasm/',
+  cdnUrl = 'http://localhost:8000/wasm/',
 ) {
   const langManifest = manifest.find((item) => item.repo.endsWith('-' + lang));
   if (!langManifest) {
