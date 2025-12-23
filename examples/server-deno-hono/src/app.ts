@@ -34,13 +34,16 @@ export class Server {
     this.fetch = app.fetch;
 
     // Enable CORS for all routes - must be first
-    this.app.use('/*', cors({
-      origin: '*',
-      allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowHeaders: ['Content-Type', 'Authorization'],
-      exposeHeaders: ['Content-Length'],
-      credentials: true,
-    }));
+    this.app.use(
+      '/*',
+      cors({
+        origin: '*',
+        allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowHeaders: ['Content-Type', 'Authorization'],
+        exposeHeaders: ['Content-Length'],
+        credentials: true,
+      }),
+    );
 
     const docSites = Array
       .from(Deno.readDirSync(__dirname + '/../../../docs'))
@@ -180,7 +183,9 @@ export class Server {
       const distPath = __dirname + '/../../' + example + '/dist';
       try {
         Deno.statSync(distPath);
-        console.log(`Serving static files: /examples-frame/${example} => ${distPath}`);
+        console.log(
+          `Serving static files: /examples-frame/${example} => ${distPath}`,
+        );
         this.app.use(
           `/examples-frame/${example}/*`,
           serveStatic({

@@ -41,9 +41,19 @@ const server = new Server({ devProxyUrls });
 const generateCert = async () => {
   const cmd = new Deno.Command('openssl', {
     args: [
-      'req', '-x509', '-newkey', 'rsa:4096', '-keyout', '/tmp/key.pem',
-      '-out', '/tmp/cert.pem', '-days', '365', '-nodes',
-      '-subj', '/CN=localhost'
+      'req',
+      '-x509',
+      '-newkey',
+      'rsa:4096',
+      '-keyout',
+      '/tmp/key.pem',
+      '-out',
+      '/tmp/cert.pem',
+      '-days',
+      '365',
+      '-nodes',
+      '-subj',
+      '/CN=localhost',
     ],
     stderr: 'piped',
     stdout: 'piped',
