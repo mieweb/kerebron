@@ -58,6 +58,12 @@ console.log("TEST")
   useEffect(() => {
     if (!editorRef.current) return;
 
+    const wsProtocol = globalThis.location.protocol === 'https:'
+      ? 'wss:'
+      : 'ws:';
+    const wsBaseUrl = wsProtocol + '//' + globalThis.location.host;
+    const cdnUrl = new URL('/wasm/', globalThis.location.origin).toString();
+
     // Get room ID from URL hash
     const hash = window.location.hash.slice(1);
     if (!hash.startsWith('room:')) {
@@ -68,7 +74,7 @@ console.log("TEST")
     // Initialize Yjs document and WebSocket provider
     const ydoc = new Y.Doc();
     const provider = new WebsocketProvider(
-      'wss://localhost:8000/yjs',
+      wsBaseUrl + '/yjs',
       roomId,
       ydoc,
       {
@@ -88,7 +94,7 @@ console.log("TEST")
     // Initialize the editor
     const editor = new CoreEditor({
       element: editorRef.current,
-      cdnUrl: 'https://localhost:8000/wasm/',
+      cdnUrl,
       extensions: [
         new AdvancedEditorKit(),
         new ExtensionYjs({ ydoc, provider }),
