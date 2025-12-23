@@ -7,6 +7,7 @@ import { userColors } from '@kerebron/extension-yjs/userColors';
 import { ExtensionYjs } from '@kerebron/extension-yjs';
 
 import { CoreEditor } from '@kerebron/editor';
+import { ExtensionHistory } from '@kerebron/extension-basic-editor/ExtensionHistory';
 import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
 
 const MyEditor: React.FC = () => {

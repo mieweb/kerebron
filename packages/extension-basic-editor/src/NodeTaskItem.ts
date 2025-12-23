@@ -92,6 +92,14 @@ export class NodeTaskItem extends Node {
       const checkbox = document.createElement('input');
       const content = document.createElement('div');
 
+      // Style for inline checkbox and text
+      listItem.style.display = 'flex';
+      listItem.style.alignItems = 'flex-start';
+      listItem.style.gap = '0.5em';
+      checkboxWrapper.style.flexShrink = '0';
+      checkboxWrapper.style.marginTop = '0.25em';
+      content.style.flex = '1';
+
       checkboxWrapper.contentEditable = 'false';
       checkbox.type = 'checkbox';
       checkbox.addEventListener('mousedown', (event) => event.preventDefault());
