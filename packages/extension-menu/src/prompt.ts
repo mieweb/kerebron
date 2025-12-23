@@ -10,8 +10,6 @@ export function openPrompt(options: {
   // Create a backdrop to capture clicks outside the modal
   let backdrop = document.body.appendChild(document.createElement('div'));
   backdrop.className = CSS_PREFIX + '-backdrop';
-  backdrop.style.cssText =
-    'position:fixed;top:0;left:0;right:0;bottom:0;z-index:1299;';
 
   let wrapper = document.body.appendChild(document.createElement('div'));
   wrapper.className = CSS_PREFIX;

@@ -475,6 +475,15 @@
   flex-direction: column;
 }
 
+.kb-prompt-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1299;
+}
+
 /* Buttons container - override the column direction for field divs */
 .kb-prompt form > div.kb-prompt__buttons {
   flex-direction: row;
