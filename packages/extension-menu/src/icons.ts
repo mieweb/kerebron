@@ -88,8 +88,7 @@ export const icons: { [name: string]: IconSpec } = {
   join: {
     width: 24,
     height: 24,
-    path:
-      'M16 13h-3V3h-2v10H8l4 4 4-4zM4 19v2h16v-2H4z',
+    path: 'M16 13h-3V3h-2v10H8l4 4 4-4zM4 19v2h16v-2H4z',
   },
   lift: {
     width: 24,
@@ -124,8 +123,7 @@ export const icons: { [name: string]: IconSpec } = {
   em: {
     width: 24,
     height: 24,
-    path:
-      'M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4z',
+    path: 'M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4z',
   },
   underline: {
     width: 24,
@@ -166,8 +164,7 @@ export const icons: { [name: string]: IconSpec } = {
   blockquote: {
     width: 24,
     height: 24,
-    path:
-      'M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z',
+    path: 'M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z',
   },
   insert: {
     width: 24,
