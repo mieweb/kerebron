@@ -5,17 +5,22 @@ const XLINK = 'http://www.w3.org/1999/xlink';
 
 const prefix = 'kb-icon';
 
-function hashPath(path: string) {
+type PathSpec = string | { d: string; fill?: string };
+
+function hashPath(path: string | PathSpec[]): string {
+  const pathStr = Array.isArray(path)
+    ? path.map((p) => typeof p === 'string' ? p : p.d + (p.fill || '')).join('')
+    : path;
   let hash = 0;
-  for (let i = 0; i < path.length; i++) {
-    hash = (((hash << 5) - hash) + path.charCodeAt(i)) | 0;
+  for (let i = 0; i < pathStr.length; i++) {
+    hash = (((hash << 5) - hash) + pathStr.charCodeAt(i)) | 0;
   }
-  return hash;
+  return hash.toString(16);
 }
 
 export function getIcon(
   root: Document | ShadowRoot,
-  icon: { path: string; width: number; height: number } | {
+  icon: { path: string | PathSpec[]; width: number; height: number } | {
     text: string;
     css?: string;
   } | { dom: Node },
@@ -26,16 +31,16 @@ export function getIcon(
   node.className = prefix;
   if ((icon as any).path) {
     let { path, width, height } = icon as {
-      path: string;
+      path: string | PathSpec[];
       width: number;
       height: number;
     };
-    let name = 'pm-icon-' + hashPath(path).toString(16);
+    let name = 'pm-icon-' + hashPath(path);
     if (!doc.getElementById(name)) {
       buildSVG(
         root,
         name,
-        icon as { path: string; width: number; height: number },
+        icon as { path: string | PathSpec[]; width: number; height: number },
       );
     }
     let svg = node.appendChild(doc.createElementNS(SVG, 'svg'));
@@ -59,7 +64,7 @@ export function getIcon(
 function buildSVG(
   root: Document | ShadowRoot,
   name: string,
-  data: { width: number; height: number; path: string },
+  data: { width: number; height: number; path: string | PathSpec[] },
 ) {
   let [doc, top] = root.nodeType == 9
     ? [root as Document, (root as Document).body]
@@ -74,8 +79,20 @@ function buildSVG(
   let sym = doc.createElementNS(SVG, 'symbol');
   sym.id = name;
   sym.setAttribute('viewBox', '0 0 ' + data.width + ' ' + data.height);
-  let path = sym.appendChild(doc.createElementNS(SVG, 'path'));
-  path.setAttribute('d', data.path);
+
+  const paths = Array.isArray(data.path) ? data.path : [data.path];
+  for (const pathSpec of paths) {
+    let pathEl = sym.appendChild(doc.createElementNS(SVG, 'path'));
+    if (typeof pathSpec === 'string') {
+      pathEl.setAttribute('d', pathSpec);
+    } else {
+      pathEl.setAttribute('d', pathSpec.d);
+      if (pathSpec.fill) {
+        pathEl.setAttribute('fill', pathSpec.fill);
+      }
+    }
+  }
+
   collection.appendChild(sym);
 }
 
@@ -206,8 +223,10 @@ export const icons: { [name: string]: IconSpec } = {
   highlight: {
     width: 24,
     height: 24,
-    path:
-      'M17.75 7L14 3.25l-10 10V17h3.75l10-10zm2.96-2.96a.996.996 0 0 0 0-1.41L18.37.29a.996.996 0 0 0-1.41 0L15 2.25 18.75 6l1.96-1.96zM2 20h20v4H2z',
+    path: [
+      'M17.75 7L14 3.25l-10 10V17h3.75l10-10zm2.96-2.96a.996.996 0 0 0 0-1.41L18.37.29a.996.996 0 0 0-1.41 0L15 2.25 18.75 6l1.96-1.96z',
+      { d: 'M2 20h20v4H2z', fill: '#FFEB3B' },
+    ],
   },
   indent: {
     width: 24,
