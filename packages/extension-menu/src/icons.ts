@@ -97,18 +97,23 @@ export const icons: { [name: string]: IconSpec } = {
     path:
       'M219 310v329q0 7-5 12t-12 5q-8 0-13-5l-164-164q-5-5-5-13t5-13l164-164q5-5 13-5 7 0 12 5t5 12zM1024 749v109q0 7-5 12t-12 5h-987q-7 0-12-5t-5-12v-109q0-7 5-12t12-5h987q7 0 12 5t5 12zM1024 530v109q0 7-5 12t-12 5h-621q-7 0-12-5t-5-12v-109q0-7 5-12t12-5h621q7 0 12 5t5 12zM1024 310v109q0 7-5 12t-12 5h-621q-7 0-12-5t-5-12v-109q0-7 5-12t12-5h621q7 0 12 5t5 12zM1024 91v109q0 7-5 12t-12 5h-987q-7 0-12-5t-5-12v-109q0-7 5-12t12-5h987q7 0 12 5t5 12z',
   },
-  selectParentNode: { text: '\u2b1a', css: 'font-weight: bold' },
-  undo: {
-    width: 1024,
-    height: 1024,
+  selectParentNode: {
+    width: 24,
+    height: 24,
     path:
-      'M761 1024c113-206 132-520-313-509v253l-384-384 384-384v248c534-13 594 472 313 775z',
+      'M3 5h2V3c-1.1 0-2 .9-2 2zm0 8h2v-2H3v2zm4 8h2v-2H7v2zM3 9h2V7H3v2zm10-6h-2v2h2V3zm6 0v2h2c0-1.1-.9-2-2-2zM5 21v-2H3c0 1.1.9 2 2 2zm-2-4h2v-2H3v2zM9 3H7v2h2V3zm2 18h2v-2h-2v2zm8-8h2v-2h-2v2zm0 8c1.1 0 2-.9 2-2h-2v2zm0-12h2V7h-2v2zm0 8h2v-2h-2v2zm-4 4h2v-2h-2v2zm0-16h2V3h-2v2z',
+  },
+  undo: {
+    width: 24,
+    height: 24,
+    path:
+      'M12.5 8c-2.65 0-5.05 1-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z',
   },
   redo: {
-    width: 1024,
-    height: 1024,
+    width: 24,
+    height: 24,
     path:
-      'M576 248v-248l384 384-384 384v-253c-446-10-427 303-313 509-280-303-221-789 313-775z',
+      'M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z',
   },
   strong: {
     width: 805,
@@ -151,10 +156,107 @@ export const icons: { [name: string]: IconSpec } = {
     path:
       'M320 512h448v-128h-448v128zM320 768h448v-128h-448v128zM320 128v128h448v-128h-448zM79 384h78v-256h-36l-85 23v50l43-2v185zM189 590c0-36-12-78-96-78-33 0-64 6-83 16l1 66c21-10 42-15 67-15s32 11 32 28c0 26-30 58-110 112v50h192v-67l-91 2c49-30 87-66 87-113l1-1z',
   },
+  taskList: {
+    width: 24,
+    height: 24,
+    path:
+      'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z',
+  },
   blockquote: {
     width: 640,
     height: 896,
     path:
       'M0 448v256h256v-256h-128c0 0 0-128 128-128v-128c0 0-256 0-256 256zM640 320v-128c0 0-256 0-256 256v256h256v-256h-128c0 0 0-128 128-128z',
+  },
+  insert: {
+    width: 24,
+    height: 24,
+    path: 'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z',
+  },
+  type: {
+    width: 20,
+    height: 22,
+    path: 'M2.5 3v3h5.5v13h4V6H17.5V3H2.5z',
+  },
+  table: {
+    width: 24,
+    height: 24,
+    path:
+      'M3 3v18h18V3H3zm8 16H5v-6h6v6zm0-8H5V5h6v6zm8 8h-6v-6h6v6zm0-8h-6V5h6v6z',
+  },
+  image: {
+    width: 24,
+    height: 24,
+    path:
+      'M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z',
+  },
+  horizontalRule: {
+    width: 24,
+    height: 24,
+    path: 'M4 11h16v2H4z',
+  },
+  heading: {
+    width: 18,
+    height: 23,
+    path: 'M2.5 3v17h3v-7h7v7h3V3h-3v8h-7V3h-3z',
+  },
+  strike: {
+    width: 24,
+    height: 24,
+    path: 'M10 19h4v-3h-4v3zM5 4v3h5v3h4V7h5V4H5zM3 14h18v-2H3v2z',
+  },
+  highlight: {
+    width: 24,
+    height: 24,
+    path:
+      'M17.75 7L14 3.25l-10 10V17h3.75l10-10zm2.96-2.96a.996.996 0 0 0 0-1.41L18.37.29a.996.996 0 0 0-1.41 0L15 2.25 18.75 6l1.96-1.96zM2 20h20v4H2z',
+  },
+  indent: {
+    width: 24,
+    height: 24,
+    path:
+      'M3 21h18v-2H3v2zM3 8v8l4-4-4-4zm8 9h10v-2H11v2zM3 3v2h18V3H3zm8 6h10V7H11v2zm0 4h10v-2H11v2z',
+  },
+  outdent: {
+    width: 24,
+    height: 24,
+    path:
+      'M3 21h18v-2H3v2zM7 8v8l-4-4 4-4zm4 9h10v-2H11v2zM3 3v2h18V3H3zm8 6h10V7H11v2zm0 4h10v-2H11v2z',
+  },
+  superscript: {
+    width: 24,
+    height: 24,
+    path:
+      'M22 7h-2v1h3v1h-4V7c0-.55.45-1 1-1h2V5h-3V4h3c.55 0 1 .45 1 1v1c0 .55-.45 1-1 1zM5.88 20h2.66l3.4-5.42h.12l3.4 5.42h2.66l-4.65-7.27L17.81 6h-2.68l-3.07 4.99h-.12L8.87 6H6.19l4.32 6.73L5.88 20z',
+  },
+  subscript: {
+    width: 24,
+    height: 24,
+    path:
+      'M22 18h-2v1h3v1h-4v-2c0-.55.45-1 1-1h2v-1h-3v-1h3c.55 0 1 .45 1 1v1c0 .55-.45 1-1 1zM5.88 18h2.66l3.4-5.42h.12l3.4 5.42h2.66l-4.65-7.27L17.81 4h-2.68l-3.07 4.99h-.12L8.87 4H6.19l4.32 6.73L5.88 18z',
+  },
+  alignLeft: {
+    width: 24,
+    height: 24,
+    path:
+      'M15 15H3v2h12v-2zm0-8H3v2h12V7zM3 13h18v-2H3v2zm0 8h18v-2H3v2zM3 3v2h18V3H3z',
+  },
+  alignCenter: {
+    width: 24,
+    height: 24,
+    path:
+      'M7 15v2h10v-2H7zm-4 6h18v-2H3v2zm0-8h18v-2H3v2zm4-6v2h10V7H7zM3 3v2h18V3H3z',
+  },
+  alignRight: {
+    width: 24,
+    height: 24,
+    path:
+      'M3 21h18v-2H3v2zm6-4h12v-2H9v2zm-6-4h18v-2H3v2zm6-4h12V7H9v2zM3 3v2h18V3H3z',
+  },
+  alignJustify: {
+    width: 24,
+    height: 24,
+    path:
+      'M3 21h18v-2H3v2zm0-4h18v-2H3v2zm0-4h18v-2H3v2zm0-4h18V7H3v2zm0-6v2h18V3H3z',
   },
 };

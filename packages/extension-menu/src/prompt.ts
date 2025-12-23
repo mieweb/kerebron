@@ -7,17 +7,24 @@ export function openPrompt(options: {
   fields: { [name: string]: Field };
   callback: (attrs: Attrs) => void;
 }) {
+  // Create a backdrop to capture clicks outside the modal
+  let backdrop = document.body.appendChild(document.createElement('div'));
+  backdrop.className = CSS_PREFIX + '-backdrop';
+
   let wrapper = document.body.appendChild(document.createElement('div'));
   wrapper.className = CSS_PREFIX;
 
-  let mouseOutside = (e: MouseEvent) => {
-    if (!wrapper.contains(e.target as HTMLElement)) close();
-  };
-  setTimeout(() => globalThis.addEventListener('mousedown', mouseOutside), 50);
   let close = () => {
-    globalThis.removeEventListener('mousedown', mouseOutside);
+    if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
     if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
   };
+
+  // Click on backdrop closes the modal
+  backdrop.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    close();
+  });
 
   let domFields: HTMLElement[] = [];
   for (let name in options.fields) {
@@ -32,7 +39,12 @@ export function openPrompt(options: {
   cancelButton.type = 'button';
   cancelButton.className = CSS_PREFIX + '--cancel';
   cancelButton.textContent = 'Cancel';
-  cancelButton.addEventListener('click', close);
+  // Use click event - mousedown caused issues with events falling through to toolbar
+  cancelButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    close();
+  });
 
   let form = wrapper.appendChild(document.createElement('form'));
   if (options.title) {

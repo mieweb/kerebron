@@ -6,6 +6,7 @@ import { ExtensionGapcursor } from './ExtensionGapcursor.ts';
 import { ExtensionHtml } from './ExtensionHtml.ts';
 import { ExtensionMediaUpload } from './ExtensionMediaUpload.ts';
 import { ExtensionRemoteSelection } from './remote-selection/ExtensionRemoteSelection.ts';
+import { ExtensionTextAlign } from './ExtensionTextAlign.ts';
 
 import { MarkLink } from './MarkLink.ts';
 import { MarkStrong } from './MarkStrong.ts';
@@ -17,6 +18,8 @@ import { MarkChange } from './MarkChange.ts';
 import { MarkBookmark } from './MarkBookmark.ts';
 import { MarkTextColor } from './MarkTextColor.ts';
 import { MarkHighlight } from './MarkHighlight.ts';
+import { MarkSuperscript } from './MarkSuperscript.ts';
+import { MarkSubscript } from './MarkSubscript.ts';
 
 import { NodeDocument } from './NodeDocument.ts';
 import { NodeText } from './NodeText.ts';
@@ -52,6 +55,7 @@ export class ExtensionBasicEditor extends Extension {
     new ExtensionMediaUpload(),
     new ExtensionRemoteSelection(),
     new ExtensionSelection(),
+    new ExtensionTextAlign(),
     new NodeDocument(),
     new NodeText(),
     new NodeParagraph(),
@@ -87,5 +91,7 @@ export class ExtensionBasicEditor extends Extension {
     new MarkBookmark(),
     new MarkTextColor(),
     new MarkHighlight(),
+    new MarkSuperscript(),
+    new MarkSubscript(),
   ];
 }

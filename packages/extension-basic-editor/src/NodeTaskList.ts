@@ -12,7 +12,7 @@ export class NodeTaskList extends Node {
 
   override getNodeSpec(): NodeSpec {
     return {
-      content: 'list_item+',
+      content: 'task_item+',
       group: 'block',
       parseDOM: [{ tag: `ul[data-type="${this.name}"]` }],
       toDOM() {

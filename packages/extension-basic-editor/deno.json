@@ -34,6 +34,9 @@
     "./MarkLink": "./src/MarkLink.ts",
     "./MarkItalic": "./src/MarkItalic.ts",
     "./MarkStrong": "./src/MarkStrong.ts",
-    "./MarkUnderline": "./src/MarkUnderline.ts"
+    "./MarkUnderline": "./src/MarkUnderline.ts",
+    "./MarkSuperscript": "./src/MarkSuperscript.ts",
+    "./MarkSubscript": "./src/MarkSubscript.ts",
+    "./ExtensionTextAlign": "./src/ExtensionTextAlign.ts"
   }
 }

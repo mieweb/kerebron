@@ -50,7 +50,7 @@
 }
 
 .kb-custom-menu__resize-handle:hover .kb-custom-menu__resize-handle-bar {
-  background: var(--kb-menu-dropdown-dark-border);
+  background: var(--kb-menu-dropdown-border);
 }
 
 .kb-custom-menu__wrapper--resizing .kb-custom-menu__resize-handle-bar {
@@ -59,7 +59,7 @@
 
 /* Toolbar */
 .kb-custom-menu {
-  margin: 0;
+  margin: calc(-1 * var(--kb-space-sm)) 0 0 0;
   line-height: 1;
   font-size: var(--kb-text-sm);
   font-family:
@@ -70,8 +70,9 @@
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: var(--kb-space-xs);
-  padding: 6px var(--kb-space-sm);
+  gap: 2px;
+  height: 56px;
+  padding: 0 var(--kb-space-sm);
   background: var(--kb-color-surface-elevated);
   border-bottom: 1px solid var(--kb-color-border-strong);
   z-index: 1000;
@@ -86,19 +87,39 @@
 
 .kb-custom-menu__item .kb-menu__button,
 .kb-custom-menu__item .kb-dropdown__label {
-  min-width: 32px;
-  min-height: 32px;
-  padding: var(--kb-space-xs) var(--kb-space-sm);
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: none;
   background: transparent;
   color: var(--kb-color-text);
   cursor: pointer;
   border-radius: var(--kb-radius-sm);
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, outline-color 0.15s ease;
   font-size: var(--kb-text-sm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Focus styles for accessibility */
+.kb-custom-menu__item .kb-menu__button:focus,
+.kb-custom-menu__item .kb-dropdown__label:focus {
+  outline: 2px solid var(--kb-color-primary);
+  outline-offset: 2px;
+}
+
+.kb-custom-menu__item .kb-menu__button:focus:not(:focus-visible),
+.kb-custom-menu__item .kb-dropdown__label:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.kb-custom-menu__item .kb-menu__button:focus-visible,
+.kb-custom-menu__item .kb-dropdown__label:focus-visible {
+  outline: 2px solid var(--kb-color-primary);
+  outline-offset: 2px;
 }
 
 .kb-custom-menu__item .kb-menu__button:hover,
@@ -112,22 +133,73 @@
 }
 
 .kb-custom-menu__item .kb-menu__button svg {
-  width: 18px;
-  height: 18px;
+  width: 20px !important;
+  height: 20px !important;
   fill: currentColor;
+}
+
+/* Center icon content vertically */
+.kb-custom-menu__item .kb-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* Hide text labels in dropdown buttons - icons only in toolbar */
+.kb-custom-menu__item .kb-dropdown__label-text {
+  display: none;
+}
+
+/* Dropdown label styling for icon-only mode */
+.kb-custom-menu__item .kb-dropdown__label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Ensure dropdown icons are visible and sized correctly */
+.kb-custom-menu__item .kb-dropdown__label .kb-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kb-custom-menu__item .kb-dropdown__label .kb-icon svg {
+  width: 20px !important;
+  height: 20px !important;
+  fill: currentColor;
+}
+
+/* Dropdown arrow for icon-only dropdowns */
+.kb-custom-menu__item .kb-dropdown__label:after {
+  content: '';
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 3px solid currentColor;
+  opacity: 0.7;
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+}
+
+/* Remove left padding from dropdown wrapper in custom menu */
+.kb-custom-menu__item .kb-dropdown {
+  padding: 1px 0;
 }
 
 /* Dropdown menus within custom menu - match toolbar dark background */
 .kb-custom-menu .kb-dropdown__menu {
-  background: var(--kb-menu-dropdown-dark-bg);
-  border: 1px solid var(--kb-menu-dropdown-dark-border);
+  background: var(--kb-menu-dropdown-bg);
+  border: 1px solid var(--kb-menu-dropdown-border);
   border-radius: var(--kb-radius-lg);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   padding: var(--kb-space-sm) 0;
 }
 
 .kb-custom-menu .kb-dropdown__item {
-  color: var(--kb-menu-dropdown-dark-text);
+  color: var(--kb-menu-dropdown-text);
   padding: var(--kb-space-sm) var(--kb-space-md);
   font-size: var(--kb-text-sm);
   min-height: 36px;
@@ -155,19 +227,19 @@
 }
 
 .kb-custom-menu .kb-dropdown__item:hover {
-  background: rgba(232, 234, 237, 0.08);
+  background: var(--kb-menu-dropdown-hover);
 }
 
 /* Submenu within custom menu (e.g., Heading levels) */
 .kb-custom-menu .kb-submenu__content {
-  background: var(--kb-menu-dropdown-dark-bg) !important;
-  border: 1px solid var(--kb-menu-dropdown-dark-border) !important;
+  background: var(--kb-menu-dropdown-bg) !important;
+  border: 1px solid var(--kb-menu-dropdown-border) !important;
   border-radius: var(--kb-radius-lg) !important;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
 }
 
 .kb-custom-menu .kb-submenu__label {
-  color: var(--kb-menu-dropdown-dark-text) !important;
+  color: var(--kb-menu-dropdown-text) !important;
 }
 
 .kb-custom-menu .kb-submenu__label:hover {
@@ -175,7 +247,7 @@
 }
 
 .kb-custom-menu .kb-submenu__label:after {
-  border-left-color: var(--kb-menu-dropdown-dark-text) !important;
+  border-left-color: var(--kb-menu-dropdown-text) !important;
 }
 
 /* Separator */
@@ -183,9 +255,8 @@
   width: 1px;
   height: var(--kb-space-lg);
   background: var(--kb-color-border-strong);
-  margin: 0 var(--kb-space-xs);
+  margin: 0 8px;
   flex-shrink: 0;
-  margin-left: auto;
 }
 
 /* Overflow toggle button (3-dot menu) */
@@ -193,9 +264,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 32px;
-  min-height: 32px;
-  padding: var(--kb-space-xs);
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: none;
   background: transparent;
   color: var(--kb-color-text);
@@ -203,10 +276,25 @@
   border-radius: var(--kb-radius-sm);
   margin-left: auto;
   flex-shrink: 0;
+  transition: background-color 0.2s ease;
 }
 
 .kb-custom-menu__overflow-toggle:hover {
   background: var(--kb-color-surface-hover);
+}
+
+.kb-custom-menu__overflow-toggle:focus {
+  outline: 2px solid var(--kb-color-primary);
+  outline-offset: 2px;
+}
+
+.kb-custom-menu__overflow-toggle:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.kb-custom-menu__overflow-toggle:focus-visible {
+  outline: 2px solid var(--kb-color-primary);
+  outline-offset: 2px;
 }
 
 .kb-custom-menu__overflow-toggle svg {
@@ -215,13 +303,14 @@
   fill: currentColor;
 }
 
-/* Overflow menu dropdown */
+/* Overflow menu dropdown - Google Docs style */
 .kb-custom-menu__overflow-menu {
   position: absolute;
   top: 48px;
   right: var(--kb-space-sm);
-  min-width: 220px;
-  max-width: 280px;
+  width: auto;
+  min-width: 180px;
+  max-width: 320px;
   background: var(--kb-color-surface);
   border: 1px solid var(--kb-color-border-strong);
   border-radius: var(--kb-radius-lg);
@@ -237,13 +326,24 @@
 .kb-custom-menu__overflow-content {
   flex: 1;
   overflow-y: auto;
-  padding: var(--kb-space-sm) 0;
+  padding: var(--kb-space-sm);
   min-height: 0;
   max-height: 800px;
 }
 
+/* Google Docs style grid layout for overflow menu */
+.kb-custom-menu__overflow-content--grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  padding: var(--kb-space-sm);
+}
+
 /* Overflow menu section header */
 .kb-custom-menu__overflow-header {
+  width: 100%;
   padding: var(--kb-space-sm) var(--kb-space-md) var(--kb-space-xs)
     var(--kb-space-md);
   font-size: 11px;
@@ -254,7 +354,7 @@
   margin-bottom: var(--kb-space-xs);
 }
 
-/* Overflow menu items */
+/* Overflow menu items - default list style */
 .kb-custom-menu__overflow-item {
   display: flex;
   align-items: center;
@@ -266,12 +366,97 @@
   margin: 0 var(--kb-space-sm);
 }
 
-.kb-custom-menu__overflow-item:hover {
+/* Focus styles for overflow menu items */
+.kb-custom-menu__overflow-item:focus {
+  outline: 2px solid var(--kb-color-primary);
+  outline-offset: -2px;
+}
+
+.kb-custom-menu__overflow-item:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.kb-custom-menu__overflow-item:focus-visible {
+  outline: 2px solid var(--kb-color-primary);
+  outline-offset: -2px;
+}
+
+/* Grid style item (Google Docs style) */
+.kb-custom-menu__overflow-item--grid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 6px;
+  margin: 0;
+  gap: 0;
+  flex-shrink: 0;
+  position: relative;
+  border-radius: var(--kb-radius-sm);
+}
+
+.kb-custom-menu__overflow-item--grid:hover {
   background: var(--kb-color-surface-hover);
 }
 
-.kb-custom-menu__overflow-item .kb-menu__button,
-.kb-custom-menu__overflow-item .kb-dropdown__label {
+/* Dropdown items in grid have indicator - same size as regular grid items */
+.kb-custom-menu__overflow-item--grid.kb-custom-menu__overflow-item--dropdown {
+  width: 44px;
+  min-width: 44px;
+  padding: 6px;
+  gap: 0;
+  position: relative;
+}
+
+/* Dropdown indicator (small down arrow) - vertically centered on right */
+.kb-custom-menu__overflow-item-indicator {
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 3px solid currentColor;
+  opacity: 0.7;
+  font-size: 0;
+  line-height: 0;
+  margin-left: 0;
+}
+
+/* Regular list items hover */
+.kb-custom-menu__overflow-item:not(.kb-custom-menu__overflow-item--grid):hover {
+  background: var(--kb-color-surface-hover);
+}
+
+/* Grid items button styles */
+.kb-custom-menu__overflow-item--grid .kb-menu__button,
+.kb-custom-menu__overflow-item--grid .kb-dropdown__label {
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--kb-color-text);
+  cursor: pointer;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kb-custom-menu__overflow-item--grid .kb-menu__button svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* List-style item button styles */
+.kb-custom-menu__overflow-item:not(.kb-custom-menu__overflow-item--grid)
+  .kb-menu__button,
+.kb-custom-menu__overflow-item:not(.kb-custom-menu__overflow-item--grid)
+  .kb-dropdown__label {
   min-height: 36px;
   padding: var(--kb-space-sm) 0;
   border: none;
@@ -286,16 +471,15 @@
   flex-shrink: 0;
 }
 
-/* Hide buttons without icons (empty buttons in submenu items) */
-.kb-custom-menu__overflow-item
+/* Hide buttons without icons in list-style items (empty buttons in submenu items) */
+.kb-custom-menu__overflow-item:not(.kb-custom-menu__overflow-item--grid)
   .kb-menu__button:not(:has(svg)):not(:has(.kb-icon)) {
   display: none;
 }
 
-/* Hide empty overflow items with no label text */
-.kb-custom-menu__overflow-item:not(:has(.kb-custom-menu__overflow-item-label)),
-.kb-custom-menu__overflow-item:has(.kb-custom-menu__overflow-item-label:empty) {
-  display: none;
+/* Grid items always show the button */
+.kb-custom-menu__overflow-item--grid .kb-menu__button {
+  display: flex !important;
 }
 
 .kb-custom-menu__overflow-item[data-tool-id='tool-toggle-underline']
@@ -303,14 +487,10 @@
   display: flex;
 }
 
-.kb-custom-menu__overflow-item[data-tool-id='tool-insert'],
-.kb-custom-menu__overflow-item[data-tool-id='tool-type'] {
-  height: 68px;
-}
-.kb-custom-menu__overflow-item[data-tool-id='tool-insert'] button,
-.kb-custom-menu__overflow-item[data-tool-id='tool-type'] button,
-.kb-custom-menu__overflow-item[data-tool-id='tool-select-parent-node'] {
-  display: none;
+/* Grid-style items don't need specific height overrides */
+.kb-custom-menu__overflow-item--grid[data-tool-id='tool-insert'],
+.kb-custom-menu__overflow-item--grid[data-tool-id='tool-type'] {
+  height: 36px;
 }
 
 .kb-custom-menu__overflow-item[data-tool-id='tool-text-color'] button {
@@ -323,20 +503,17 @@
   position: relative;
 }
 
-.kb-custom-menu__item[data-tool-id='tool-insert'] > div > button,
-.kb-custom-menu__item[data-tool-id='tool-type'] > div > button,
-.kb-custom-menu__item[data-tool-id='tool-table'] > div > button {
-  padding-right: 20px;
-}
-
 .kb-custom-menu__item[data-tool-id='tool-insert'] > div > button:after,
 .kb-custom-menu__item[data-tool-id='tool-type'] > div > button:after,
 .kb-custom-menu__item[data-tool-id='tool-table'] > div > button:after {
-  content: '▼';
-  font-size: 4px;
-  color: var(--kb-color-text-muted);
+  content: '';
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 3px solid currentColor;
+  opacity: 0.7;
   position: absolute;
-  right: 4px;
+  right: 2px;
+  bottom: 2px;
 }
 
 .kb-custom-menu__item[data-tool-id='tool-toggle-code-font'] button > span,
@@ -412,6 +589,20 @@
 
 .kb-custom-menu__overflow-back-button:hover {
   background: var(--kb-color-surface-hover);
+}
+
+.kb-custom-menu__overflow-back-button:focus {
+  outline: 2px solid var(--kb-color-primary);
+  outline-offset: 2px;
+}
+
+.kb-custom-menu__overflow-back-button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.kb-custom-menu__overflow-back-button:focus-visible {
+  outline: 2px solid var(--kb-color-primary);
+  outline-offset: 2px;
 }
 
 .kb-custom-menu__overflow-back-button svg {
@@ -666,48 +857,23 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
 }
 
-/* Mobile responsive (Bootstrap md breakpoint: < 768px) */
+/* Small screen adjustments - toolbar stays at top */
 @media (max-width: 767.98px) {
-  .kb-custom-menu {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    top: auto;
-    border-bottom: none;
-    border-top: 1px solid var(--kb-color-border-strong);
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
-    background: rgba(249, 249, 249, 0.95);
-  }
-
   .kb-custom-menu__overflow-menu {
-    position: fixed;
-    bottom: 60px;
-    left: 0;
-    right: 0;
-    top: auto;
+    /* Dropdown stays below toolbar */
     max-width: 100%;
-    border-radius: 0;
-    max-height: 60vh;
-    height: auto;
-    border: none;
-    border-top: 1px solid var(--kb-color-border-strong);
+    left: var(--kb-space-sm);
+    right: var(--kb-space-sm);
   }
 
-  .kb-custom-menu__overflow-content {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    max-height: calc(60vh - 80px);
+  /* Larger touch targets for overflow menu items on mobile */
+  .kb-custom-menu__overflow-item {
+    min-height: 44px;
+    padding: var(--kb-space-md);
   }
 
-  .kb-custom-menu__overflow-footer {
-    padding: 12px 0;
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .kb-custom-menu__manage-button {
+  .kb-custom-menu__overflow-item--grid {
+    min-width: 44px;
     min-height: 44px;
   }
 
@@ -718,7 +884,8 @@
     border-radius: 12px 12px 0 0;
   }
 
-  .kb-custom-menu__overflow-toggle {
+  /* Larger back button touch target */
+  .kb-custom-menu__overflow-back-button {
     min-width: 44px;
     min-height: 44px;
   }
@@ -736,7 +903,7 @@
   }
 
   .kb-custom-menu__resize-handle-bar {
-    background: var(--kb-menu-dropdown-dark-border);
+    background: var(--kb-menu-dropdown-border);
   }
 
   .kb-custom-menu__resize-handle:hover .kb-custom-menu__resize-handle-bar {
@@ -750,22 +917,22 @@
   .kb-custom-menu__item .kb-menu__button,
   .kb-custom-menu__item .kb-dropdown__label,
   .kb-custom-menu__overflow-toggle {
-    color: var(--kb-menu-dropdown-dark-text);
+    color: var(--kb-menu-dropdown-text);
   }
 
   .kb-custom-menu__item .kb-menu__button:hover,
   .kb-custom-menu__item .kb-dropdown__label:hover,
   .kb-custom-menu__overflow-toggle:hover {
-    background: rgba(232, 234, 237, 0.08);
+    background: var(--kb-menu-dropdown-hover);
   }
 
   .kb-custom-menu__separator {
-    background: var(--kb-menu-dropdown-dark-border);
+    background: var(--kb-menu-dropdown-border);
   }
 
   .kb-custom-menu__overflow-menu {
-    background: var(--kb-menu-dropdown-dark-bg);
-    border-color: var(--kb-menu-dropdown-dark-border);
+    background: var(--kb-menu-dropdown-bg);
+    border-color: var(--kb-menu-dropdown-border);
   }
 
   .kb-custom-menu__overflow-header {
@@ -774,24 +941,24 @@
 
   .kb-custom-menu__overflow-item .kb-menu__button,
   .kb-custom-menu__overflow-item .kb-dropdown__label {
-    color: var(--kb-menu-dropdown-dark-text);
+    color: var(--kb-menu-dropdown-text);
   }
 
   .kb-custom-menu__overflow-item-label {
-    color: var(--kb-menu-dropdown-dark-text);
+    color: var(--kb-menu-dropdown-text);
   }
 
   .kb-custom-menu__overflow-item:hover {
-    background: rgba(232, 234, 237, 0.08);
+    background: var(--kb-menu-dropdown-hover);
   }
 
   .kb-custom-menu__overflow-separator {
-    background: var(--kb-menu-dropdown-dark-border);
+    background: var(--kb-menu-dropdown-border);
   }
 
   .kb-custom-menu__overflow-footer {
-    background: var(--kb-menu-dropdown-dark-bg);
-    border-top-color: var(--kb-menu-dropdown-dark-border);
+    background: var(--kb-menu-dropdown-bg);
+    border-top-color: var(--kb-menu-dropdown-border);
   }
 
   .kb-custom-menu__modal {
@@ -799,11 +966,11 @@
   }
 
   .kb-custom-menu__modal-header {
-    border-bottom-color: var(--kb-menu-dropdown-dark-border);
+    border-bottom-color: var(--kb-menu-dropdown-border);
   }
 
   .kb-custom-menu__modal-header h2 {
-    color: var(--kb-menu-dropdown-dark-text);
+    color: var(--kb-menu-dropdown-text);
   }
 
   .kb-custom-menu__modal-close {
@@ -813,26 +980,154 @@
   .kb-custom-menu__modal-message {
     background: var(--kb-menu-info-bg);
     color: var(--kb-menu-info-text);
-    border-bottom-color: var(--kb-menu-dropdown-dark-border);
+    border-bottom-color: var(--kb-menu-dropdown-border);
   }
 
   .kb-custom-menu__modal-footer {
-    border-top-color: var(--kb-menu-dropdown-dark-border);
+    border-top-color: var(--kb-menu-dropdown-border);
   }
 
   .kb-custom-menu__tool-item span {
-    color: var(--kb-menu-dropdown-dark-text);
+    color: var(--kb-menu-dropdown-text);
   }
+}
+
+/* Drag and drop styles */
+.kb-custom-menu__wrapper--dragging {
+  user-select: none;
+  cursor: grabbing !important;
+}
+
+.kb-custom-menu__wrapper--dragging * {
+  cursor: grabbing !important;
+}
+
+.kb-custom-menu__item {
+  cursor: grab;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Only show grabbing cursor when wrapper has dragging class, not just on :active */
+.kb-custom-menu__wrapper--dragging .kb-custom-menu__item {
+  cursor: grabbing !important;
+}
+
+/* Ensure buttons inside items have pointer cursor for click feedback */
+.kb-custom-menu__item .kb-menu__button,
+.kb-custom-menu__item .kb-dropdown__label {
+  cursor: pointer !important;
+}
+
+/* Override to grabbing cursor only when actively dragging */
+.kb-custom-menu__wrapper--dragging .kb-custom-menu__item .kb-menu__button,
+.kb-custom-menu__wrapper--dragging .kb-custom-menu__item .kb-dropdown__label {
+  cursor: grabbing !important;
+}
+
+.kb-custom-menu__item--dragging {
+  opacity: 0.3;
+}
+
+.kb-custom-menu__overflow-item--dragging {
+  opacity: 0.3;
+}
+
+.kb-custom-menu__drag-ghost {
+  opacity: 0.9;
+  background: var(--kb-color-surface-elevated);
+  border-radius: var(--kb-radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: scale(1.05);
+}
+
+.kb-custom-menu__drop-placeholder {
+  width: 4px;
+  min-height: 32px;
+  background: var(--kb-color-primary);
+  border-radius: 2px;
+  margin: 0 2px;
+  display: inline-flex;
+  flex-shrink: 0;
 }
 
 /* Pinned dropdown menu (independent from overflow) */
 .kb-custom-menu__pinned-dropdown {
   min-width: 200px;
   max-width: 300px;
-  background: var(--kb-menu-dropdown-dark-bg) !important;
+  background: var(--kb-menu-dropdown-bg) !important;
   border: 1px solid var(--kb-color-border-strong);
   border-radius: var(--kb-radius-lg);
   box-shadow: var(--kb-shadow-lg);
   max-height: 400px;
   overflow-y: auto;
+}
+
+/* Overflow menu footer (for Reset to Default) */
+.kb-custom-menu__overflow-footer {
+  padding: var(--kb-space-sm);
+  border-top: 1px solid var(--kb-color-border);
+  display: flex;
+  justify-content: center;
+}
+
+/* Reset to Default button */
+.kb-custom-menu__reset-button {
+  display: flex;
+  align-items: center;
+  gap: var(--kb-space-sm);
+  padding: var(--kb-space-sm) var(--kb-space-md);
+  font-size: 12px;
+  color: var(--kb-color-text-muted);
+  background: transparent;
+  border: 1px solid var(--kb-color-border);
+  border-radius: var(--kb-radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.kb-custom-menu__reset-button:hover {
+  background: var(--kb-color-surface-hover);
+  color: var(--kb-color-text);
+  border-color: var(--kb-color-border-strong);
+}
+
+.kb-custom-menu__reset-button:focus {
+  outline: 2px solid var(--kb-color-primary);
+  outline-offset: 2px;
+}
+
+.kb-custom-menu__reset-button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.kb-custom-menu__reset-button:focus-visible {
+  outline: 2px solid var(--kb-color-primary);
+  outline-offset: 2px;
+}
+
+.kb-custom-menu__reset-button svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.kb-custom-menu__reset-button span {
+  white-space: nowrap;
+}
+
+/* Icon-only variant for toolbar display */
+.kb-custom-menu__reset-button--icon-only {
+  padding: var(--kb-space-sm);
+  border: none;
+  background: transparent;
+}
+
+.kb-custom-menu__reset-button--icon-only:hover {
+  background: var(--kb-color-surface-hover);
+  border: none;
+}
+
+.kb-custom-menu__reset-button--icon-only svg {
+  width: 18px;
+  height: 18px;
 }
