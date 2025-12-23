@@ -4,14 +4,11 @@ import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 import * as random from 'lib0/random';
 import { userColors } from '@kerebron/extension-yjs/userColors';
+import { ExtensionYjs } from '@kerebron/extension-yjs';
 
 import { CoreEditor } from '@kerebron/editor';
 import { ExtensionHistory } from '@kerebron/extension-basic-editor/ExtensionHistory';
 import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
-import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
-import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
-import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
-import { LspTransportGetter, Transport } from '@kerebron/extension-lsp';
 
 const MyEditor: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -19,7 +16,6 @@ const MyEditor: React.FC = () => {
   const wsProvider = useRef<WebsocketProvider | null>(null);
 
   const [md, setMd] = useState<string>('');
-  const [ydoc, setYdoc] = useState<Y.Doc | null>(null);
 
   // Public methods (equivalent to expose in Vue)
   const loadDoc = async () => {
@@ -63,35 +59,46 @@ console.log("TEST")
   useEffect(() => {
     if (!editorRef.current) return;
 
-    const getLspTransport: LspTransportGetter = (
-      lang: string,
-    ): Transport | undefined => {
-      const protocol = globalThis.location.protocol === 'http:'
-        ? 'ws:'
-        : 'wss:';
-      const uri = protocol + '//' + globalThis.location.host + '/lsp';
+    const wsProtocol = globalThis.location.protocol === 'https:'
+      ? 'wss:'
+      : 'ws:';
+    const wsBaseUrl = wsProtocol + '//' + globalThis.location.host;
+    const cdnUrl = new URL('/wasm/', globalThis.location.origin).toString();
 
-      switch (lang) {
-        case 'markdown':
-          return new LspWebSocketTransport(uri + '/mine');
-        case 'json':
-          return new LspWebSocketTransport(uri + '/deno');
-        case 'typescript':
-        case 'javascript':
-          return new LspWebSocketTransport(uri + '/typescript');
-        case 'yaml':
-          return new LspWebSocketTransport(uri + '/yaml');
-      }
-      return undefined;
-    };
+    // Get room ID from URL hash
+    const hash = window.location.hash.slice(1);
+    if (!hash.startsWith('room:')) {
+      return;
+    }
+    const roomId = hash.substring('room:'.length);
+
+    // Initialize Yjs document and WebSocket provider
+    const ydoc = new Y.Doc();
+    const provider = new WebsocketProvider(
+      wsBaseUrl + '/yjs',
+      roomId,
+      ydoc,
+      {
+        connect: true,
+      },
+    );
+
+    wsProvider.current = provider;
+
+    const userColor = userColors[random.uint32() % userColors.length];
+    provider.awareness.setLocalStateField('user', {
+      name: 'Anonymous ' + Math.floor(Math.random() * 100),
+      color: userColor.color,
+      colorLight: userColor.light,
+    });
 
     // Initialize the editor
     const editor = new CoreEditor({
       element: editorRef.current,
+      cdnUrl,
       extensions: [
         new AdvancedEditorKit(),
-        new ExtensionHistory(),
-        LspEditorKit.createFrom({ getLspTransport }),
+        new ExtensionYjs({ ydoc, provider }),
       ],
     });
 
@@ -121,6 +128,7 @@ console.log("TEST")
     return () => {
       editor.removeEventListener('transaction', onTransaction);
       editor.destroy();
+      provider.destroy();
     };
   }, []);
 
