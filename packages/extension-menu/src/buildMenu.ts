@@ -12,7 +12,7 @@ import {
   type MenuItemSpec,
 } from './menu.ts';
 import { icons } from './icons.ts';
-import { openPrompt, TextField } from './prompt.ts';
+import { FileField, openPrompt, TextField } from './prompt.ts';
 
 function canInsert(state: EditorState, nodeType: NodeType) {
   let $from = state.selection.$from;
@@ -451,8 +451,8 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
           openPrompt({
             title: 'Insert image',
             fields: {
-              src: new TextField({
-                label: 'Location',
+              src: new FileField({
+                label: 'Choose image',
                 required: true,
                 value: attrs && attrs.src,
               }),
