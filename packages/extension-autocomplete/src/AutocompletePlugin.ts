@@ -171,12 +171,10 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
           }
 
           if (meta?.type === 'deactivate') {
-            console.info('Deactivate autocomplete');
             next.active = false;
             return next;
           }
           if (meta?.type === 'activate') {
-            console.info('Trigger manual autocomplete');
             next.range = { from: selection.from, to: selection.to };
             next.active = true;
             next.manual = true;
@@ -221,7 +219,6 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
                 isActive: prev.active,
               }))
             ) {
-              console.info('Trigger matcher autocomplete', match);
               next.active = true;
               next.decorationId = prev.decorationId
                 ? prev.decorationId
@@ -259,7 +256,6 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
             const tr = view.state.tr.setMeta(AutocompletePluginKey, {
               type: 'activate',
             });
-            console.info('Manual autocomplete key');
             view.dispatch(tr);
             return true;
           }
@@ -294,7 +290,6 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
       const tr = editor.state.tr.setMeta(AutocompletePluginKey, {
         type: 'deactivate',
       });
-      console.info('Manual autocomplete deactivate');
       editor.view.dispatch(tr);
     });
   }

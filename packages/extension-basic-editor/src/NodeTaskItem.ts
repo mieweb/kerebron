@@ -92,13 +92,19 @@ export class NodeTaskItem extends Node {
       const checkbox = document.createElement('input');
       const content = document.createElement('div');
 
+      // Set data attributes for CSS targeting
+      listItem.dataset.type = 'task_item';
+
       // Style for inline checkbox and text
       listItem.style.display = 'flex';
-      listItem.style.alignItems = 'flex-start';
+      listItem.style.alignItems = 'baseline';
       listItem.style.gap = '0.5em';
+      listItem.style.listStyle = 'none';
       checkboxWrapper.style.flexShrink = '0';
-      checkboxWrapper.style.marginTop = '0.25em';
+      checkboxWrapper.style.display = 'flex';
+      checkboxWrapper.style.alignItems = 'center';
       content.style.flex = '1';
+      content.style.minWidth = '0';
 
       checkboxWrapper.contentEditable = 'false';
       checkbox.type = 'checkbox';

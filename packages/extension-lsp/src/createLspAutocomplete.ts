@@ -48,30 +48,38 @@ export function createLspAutocomplete(extensionLsp: ExtensionLsp) {
       const lspPos = mapper.toRawTextLspPos(props.range.from);
 
       const client = extensionLsp.getClient(extensionLsp.mainLang);
-      if (client) {
-        client.sync();
-        try {
-          const completions:
-            | { items: CompletionItem[] }
-            | Array<CompletionItem> = await client.request(
-              'textDocument/completion',
-              {
-                textDocument: { uri: extensionLsp.uri },
-                position: lspPos,
-                context: { triggerKind: 2, triggerCharacter: query },
-              },
-            );
+      if (!client) {
+        return [];
+      }
 
-          if (Array.isArray(completions)) {
-            return completions;
-          }
+      // Silently return empty if not connected (LSP server not running)
+      if (!client.active) {
+        return [];
+      }
 
-          return completions.items;
-        } catch (err: any) {
-          console.error(err.message);
-          return [];
+      client.sync();
+      try {
+        const completions:
+          | { items: CompletionItem[] }
+          | Array<CompletionItem> = await client.request(
+            'textDocument/completion',
+            {
+              textDocument: { uri: extensionLsp.uri },
+              position: lspPos,
+              context: { triggerKind: 2, triggerCharacter: query },
+            },
+          );
+
+        if (Array.isArray(completions)) {
+          return completions;
         }
-      } else {
+
+        return completions.items;
+      } catch (err: any) {
+        // Only log actual errors, not connection issues
+        if (err.message !== 'Not connected') {
+          console.error('LSP autocomplete error:', err.message);
+        }
         return [];
       }
     },

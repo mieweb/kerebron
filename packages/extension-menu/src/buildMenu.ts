@@ -12,7 +12,7 @@ import {
   type MenuItemSpec,
 } from './menu.ts';
 import { icons } from './icons.ts';
-import { openPrompt, TextField } from './prompt.ts';
+import { FileField, openPrompt, TextField } from './prompt.ts';
 
 function canInsert(state: EditorState, nodeType: NodeType) {
   let $from = state.selection.$from;
@@ -256,17 +256,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     }),
   );
 
-  // === 5. Increase indent ===
-  structureGroup.push(
-    new MenuItem({
-      title: 'Join with above block',
-      run: () => editor.chain().joinUp().run(),
-      select: () => editor.can().joinUp().run(),
-      icon: icons.indent,
-    }),
-  );
-
-  // === 6. Block quote ===
+  // === 5. Block quote ===
   if (schema.nodes.blockquote) {
     structureGroup.push(wrapItem(schema.nodes.blockquote, {
       title: 'Wrap in block quote',
@@ -461,8 +451,8 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
           openPrompt({
             title: 'Insert image',
             fields: {
-              src: new TextField({
-                label: 'Location',
+              src: new FileField({
+                label: 'Choose image',
                 required: true,
                 value: attrs && attrs.src,
               }),

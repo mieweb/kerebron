@@ -26,11 +26,15 @@ export class DefaultRenderer<Item> extends EventTarget
     }
     const root = ('root' in this.editor.view)
       ? this.editor.view.root
-      : document || document;
+      : document;
 
     this.wrapper = document.createElement('ul');
     this.wrapper.classList.add(CSS_PREFIX + '__wrapper');
-    root.appendChild(this.wrapper);
+    // If root is a Document, append to body; if ShadowRoot, append directly
+    const appendTarget = root.nodeType === Node.DOCUMENT_NODE
+      ? (root as Document).body
+      : root;
+    appendTarget.appendChild(this.wrapper);
 
     this.items.splice(0, this.items.length, ...props.items);
     this.recreateList(props);

@@ -118,10 +118,14 @@ function translate(view: EditorView, text: string): string {
 /// specifying a string of text that makes up the icon, with an
 /// optional `css` property giving additional CSS styling for the
 /// text. _Or_ it may contain `dom` property containing a DOM node.
-export type IconSpec = { path: string; width: number; height: number } | {
-  text: string;
-  css?: string;
-} | { dom: Node };
+type PathSpec = string | { d: string; fill?: string };
+export type IconSpec =
+  | { path: string | PathSpec[]; width: number; height: number }
+  | {
+    text: string;
+    css?: string;
+  }
+  | { dom: Node };
 
 /// The configuration object passed to the `MenuItem` constructor.
 export interface MenuItemSpec {

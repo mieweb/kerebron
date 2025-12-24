@@ -54,7 +54,8 @@ const wrapInList = (
     if (!range) return false;
     // let tr = dispatch ? state.tr : null;
     const tr = state.tr;
-    if (!wrapRangeInList(tr, range, listType, attrs)) return false;
+    // wrapRangeInList returns a Command, so we need to call it to execute and get the boolean result
+    if (!wrapRangeInList(tr, range, listType, attrs)()) return false;
     if (dispatch) dispatch(tr!.scrollIntoView());
     return true;
   };
