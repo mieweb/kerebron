@@ -24,6 +24,18 @@ function getHtmlTableTokensHandlers(): Record<string, Array<TokenHandler>> {
       },
     ],
 
+    // Headings inside table cells are rendered as HTML
+    'heading_open': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log(`<${token.tag}>`, token);
+      },
+    ],
+    'heading_close': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log(`</${token.tag}>`, token);
+      },
+    ],
+
     'table_open': [
       (token: Token, ctx: ContextStash) => {
         ctx.stash('getHtmlTableTokensHandlers.table_open');
