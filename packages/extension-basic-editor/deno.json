@@ -37,6 +37,7 @@
     "./MarkUnderline": "./src/MarkUnderline.ts",
     "./MarkSuperscript": "./src/MarkSuperscript.ts",
     "./MarkSubscript": "./src/MarkSubscript.ts",
-    "./ExtensionTextAlign": "./src/ExtensionTextAlign.ts"
+    "./ExtensionTextAlign": "./src/ExtensionTextAlign.ts",
+    "./assets/image-resize.css": "./assets/image-resize.css"
   }
 }
