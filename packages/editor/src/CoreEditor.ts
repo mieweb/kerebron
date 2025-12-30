@@ -139,15 +139,22 @@ export class CoreEditor extends EventTarget {
 
   public dispatchTransaction(transaction: Transaction) {
     this.state = this.state.apply(transaction);
-    if (this.view) {
-      this.view.updateState(this.state);
-      const event = new CustomEvent('transaction', {
-        detail: {
-          editor: this,
-          transaction,
-        },
-      });
-      this.dispatchEvent(event);
+    // Check both that view exists and its DOM is still attached
+    // Also wrap in try-catch as ProseMirror can throw if view is in invalid state
+    if (this.view && this.view.dom) {
+      try {
+        this.view.updateState(this.state);
+        const event = new CustomEvent('transaction', {
+          detail: {
+            editor: this,
+            transaction,
+          },
+        });
+        this.dispatchEvent(event);
+      } catch (e) {
+        // View may be in an invalid state (e.g., DOM removed but view not destroyed)
+        console.warn('Failed to update editor view state:', e);
+      }
     }
     if (transaction.docChanged) {
       const event = new CustomEvent('changed', {

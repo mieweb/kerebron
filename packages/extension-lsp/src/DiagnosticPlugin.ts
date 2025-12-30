@@ -145,7 +145,7 @@ export class DiagnosticPlugin extends Plugin<DiagnosticPluginState> {
 
         if (client) {
           const file = client.workspace.getFile(uri);
-          if (file) {
+          if (file && editor.view) {
             const { mapper } = file;
 
             const tr = editor.view.state.tr.setMeta(DiagnosticPluginKey, {
@@ -165,6 +165,7 @@ export class DiagnosticPlugin extends Plugin<DiagnosticPluginState> {
       }
 
       this.listenerDisconnect = (event: Event) => {
+        if (!editor.view) return;
         const tr = editor.view.state.tr.setMeta(DiagnosticPluginKey, {
           diagnostics: [],
           mapper: undefined,
@@ -180,6 +181,7 @@ export class DiagnosticPlugin extends Plugin<DiagnosticPluginState> {
       }
 
       this.listenerChange = (event: Event) => {
+        if (!editor.view) return;
         if (lastDiag === 0 && +Date() - lastDiag > 10_1000) {
           return;
         }
