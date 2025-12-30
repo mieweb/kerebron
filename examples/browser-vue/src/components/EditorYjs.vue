@@ -140,4 +140,5 @@ export default {
 @import '@kerebron/extension-tables/assets/tables.css';
 @import '@kerebron/extension-menu/assets/custom-menu.css';
 @import '@kerebron/extension-codemirror/assets/codemirror.css';
+@import '@kerebron/extension-basic-editor/assets/image-resize.css';
 </style>

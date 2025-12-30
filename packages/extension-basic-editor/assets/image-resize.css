@@ -1,0 +1,76 @@
+/* Image resize styles */
+
+.kb-image-wrapper {
+  display: inline-block;
+  position: relative;
+  line-height: 0;
+  max-width: 100%;
+}
+
+.kb-image-wrapper img {
+  display: block;
+  max-width: 100%;
+}
+
+/* Resize handles - visible when wrapper is hovered or being resized */
+.kb-image-resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: var(--kb-color-primary);
+  border: 2px solid var(--kb-color-surface);
+  border-radius: var(--kb-radius-sm);
+  box-sizing: border-box;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+
+.kb-image-wrapper:hover .kb-image-resize-handle,
+.kb-image-wrapper.kb-image-resizing .kb-image-resize-handle {
+  opacity: 1;
+}
+
+/* Handle positions */
+.kb-image-resize-handle-nw {
+  top: -5px;
+  left: -5px;
+  cursor: nw-resize;
+}
+
+.kb-image-resize-handle-ne {
+  top: -5px;
+  right: -5px;
+  cursor: ne-resize;
+}
+
+.kb-image-resize-handle-sw {
+  bottom: -5px;
+  left: -5px;
+  cursor: sw-resize;
+}
+
+.kb-image-resize-handle-se {
+  bottom: -5px;
+  right: -5px;
+  cursor: se-resize;
+}
+
+/* Selected state */
+.kb-image-wrapper.ProseMirror-selectednode {
+  outline: 2px solid var(--kb-color-primary);
+  outline-offset: 2px;
+}
+
+.kb-image-wrapper.ProseMirror-selectednode .kb-image-resize-handle {
+  opacity: 1;
+}
+
+/* During resize */
+.kb-image-wrapper.kb-image-resizing {
+  user-select: none;
+}
+
+.kb-image-wrapper.kb-image-resizing img {
+  pointer-events: none;
+}

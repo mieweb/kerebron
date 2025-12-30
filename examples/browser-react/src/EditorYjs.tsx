@@ -88,6 +88,7 @@ console.log("TEST")
     // Initialize the editor
     const editor = new CoreEditor({
       element: editorRef.current,
+      uri: 'file:///untitled.md', // Required for LSP extension
       extensions: [
         new AdvancedEditorKit(),
         new ExtensionHistory(),
@@ -96,6 +97,9 @@ console.log("TEST")
     });
 
     editorInstance.current = editor;
+
+    // Expose editor to window for testing
+    (window as unknown as { editor: CoreEditor }).editor = editor;
 
     // Listen to transactions and update markdown preview
     const onTransaction = async () => {

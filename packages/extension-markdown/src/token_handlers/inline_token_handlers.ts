@@ -342,6 +342,18 @@ export function getHtmlInlineTokensHandlers(): Record<
         ctx.current.log(`</${tag}>`, token);
       },
     ],
+    'underline_open': [
+      (token: Token, ctx: ContextStash) => {
+        const tag = token.tag || 'u';
+        ctx.current.log(`<${tag}>`, token);
+      },
+    ],
+    'underline_close': [
+      (token: Token, ctx: ContextStash) => {
+        const tag = token.tag || 'u';
+        ctx.current.log(`</${tag}>`, token);
+      },
+    ],
 
     'link_open': [
       (token: Token, ctx: ContextStash) => {

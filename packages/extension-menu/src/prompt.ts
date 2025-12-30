@@ -203,3 +203,68 @@ export class SelectField extends Field {
     return select;
   }
 }
+
+/// A field class for file/image upload fields.
+/// Uses a file input with browse button. Converts selected file to a data URL.
+export class FileField extends Field {
+  private dataUrl: string = '';
+
+  render() {
+    const wrapper = document.createElement('div');
+    wrapper.className = CSS_PREFIX + '__file-field';
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = (this.options as any).accept || 'image/*';
+    input.className = CSS_PREFIX + '__file-input';
+
+    const label = document.createElement('label');
+    label.className = CSS_PREFIX + '__file-label';
+    label.textContent = this.options.label;
+
+    const fileName = document.createElement('span');
+    fileName.className = CSS_PREFIX + '__file-name';
+    fileName.textContent = 'No file selected';
+
+    // If there's an existing value (URL), show it
+    if (this.options.value) {
+      this.dataUrl = this.options.value;
+      fileName.textContent = 'Current image';
+    }
+
+    input.addEventListener('change', () => {
+      const file = input.files?.[0];
+      if (file) {
+        fileName.textContent = file.name;
+        // Convert to data URL for embedding
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.dataUrl = e.target?.result as string;
+          // Store on wrapper for read() to access
+          (wrapper as any)._dataUrl = this.dataUrl;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    wrapper.appendChild(label);
+    wrapper.appendChild(input);
+    wrapper.appendChild(fileName);
+
+    // Store reference for reading
+    (wrapper as any)._dataUrl = this.dataUrl;
+
+    return wrapper;
+  }
+
+  read(dom: HTMLElement) {
+    return (dom as any)._dataUrl || '';
+  }
+
+  validateType(value: any): string | null {
+    if (this.options.required && !value) {
+      return 'Please select a file';
+    }
+    return null;
+  }
+}

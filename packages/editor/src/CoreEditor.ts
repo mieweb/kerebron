@@ -139,15 +139,22 @@ export class CoreEditor extends EventTarget {
 
   public dispatchTransaction(transaction: Transaction) {
     this.state = this.state.apply(transaction);
-    if (this.view) {
-      this.view.updateState(this.state);
-      const event = new CustomEvent('transaction', {
-        detail: {
-          editor: this,
-          transaction,
-        },
-      });
-      this.dispatchEvent(event);
+    // Check both that view exists and its DOM is still attached
+    // Also wrap in try-catch as ProseMirror can throw if view is in invalid state
+    if (this.view && this.view.dom) {
+      try {
+        this.view.updateState(this.state);
+        const event = new CustomEvent('transaction', {
+          detail: {
+            editor: this,
+            transaction,
+          },
+        });
+        this.dispatchEvent(event);
+      } catch (e) {
+        // View may be in an invalid state (e.g., DOM removed but view not destroyed)
+        console.warn('Failed to update editor view state:', e);
+      }
     }
     if (transaction.docChanged) {
       const event = new CustomEvent('changed', {
@@ -216,16 +223,28 @@ export class CoreEditor extends EventTarget {
     if (!converter) {
       throw new Error('Converter not found for: ' + mediaType);
     }
-    const doc = await converter.toDoc(content);
+    const parsedDoc = await converter.toDoc(content);
 
-    this.state = EditorState.create({
-      doc,
-      plugins: this.state.plugins,
-      storedMarks: this.state.storedMarks,
-    });
+    // Re-create the document using the current schema to ensure compatibility
+    // The converter may use a different schema instance (e.g., from a cloned editor)
+    const doc = ProseMirrorNode.fromJSON(this.schema, parsedDoc.toJSON());
 
     if (this.view) {
-      this.view.updateState(this.state);
+      // Use a transaction to replace the document content
+      // This ensures Yjs and other plugins can properly sync the changes
+      const tr = this.view.state.tr;
+      tr.replaceWith(0, this.view.state.doc.content.size, doc.content);
+      // Set selection to the start of the document
+      tr.setSelection(tr.selection.constructor.near(tr.doc.resolve(0)));
+      this.view.dispatch(tr);
+      this.state = this.view.state;
+    } else {
+      // Fallback when no view exists (e.g., during initialization)
+      this.state = EditorState.create({
+        doc,
+        plugins: this.state.plugins,
+        storedMarks: this.state.storedMarks,
+      });
     }
 
     const event = new CustomEvent('doc:loaded', {

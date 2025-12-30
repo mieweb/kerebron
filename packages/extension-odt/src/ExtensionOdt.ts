@@ -160,14 +160,54 @@ export class ExtensionOdt extends Extension {
         return doc;
       },
       odtToJson: (buffer: Uint8Array) => {
-        const files = unzip(buffer);
+        let files;
+        try {
+          files = unzip(buffer);
+        } catch (err) {
+          throw new Error(
+            'Failed to unzip ODT file. The file may be corrupted or not a valid ODT document.',
+          );
+        }
+
         const filesMap: Record<string, Uint8Array> = {};
         for (const k of files.keys()) {
           filesMap[k] = Uint8Array.from(files.get(k));
         }
 
-        const stylesTree = parse_styles(files.get('styles.xml'));
-        const contentTree = parse_content(files.get('content.xml'));
+        const stylesXml = files.get('styles.xml');
+        const contentXml = files.get('content.xml');
+
+        if (!contentXml) {
+          throw new Error(
+            'Invalid ODT file: missing content.xml. Available files: ' +
+              Array.from(files.keys()).join(', '),
+          );
+        }
+
+        if (!stylesXml) {
+          throw new Error(
+            'Invalid ODT file: missing styles.xml. Available files: ' +
+              Array.from(files.keys()).join(', '),
+          );
+        }
+
+        let stylesTree;
+        let contentTree;
+        try {
+          stylesTree = parse_styles(stylesXml);
+        } catch (err) {
+          throw new Error(
+            'Failed to parse styles.xml: ' + (err as Error).message,
+          );
+        }
+
+        try {
+          contentTree = parse_content(contentXml);
+        } catch (err) {
+          throw new Error(
+            'Failed to parse content.xml: ' + (err as Error).message,
+          );
+        }
 
         if (this.config.debug) {
           const event = new CustomEvent('odt:parsed', {
