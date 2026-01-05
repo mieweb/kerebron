@@ -2,10 +2,13 @@
   "name": "@kerebron/odt-wasm",
   "type": "module",
   "main": "./lib/rs_lib.js",
-  "files": ["lib/"],
+  "files": ["lib/", "lib-debug/"],
   "exports": {
     ".": {
       "import": "./lib/rs_lib.js"
+    },
+    "./debug": {
+      "import": "./lib-debug/rs_lib.js"
     }
   }
 }

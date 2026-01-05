@@ -6,9 +6,9 @@ use wasm_bindgen::prelude::*;
 
 use console_error_panic_hook;
 
-#[wasm_bindgen(start)]
-pub fn init() {
-    console_error_panic_hook::set_once();
+#[wasm_bindgen]
+pub fn init_debug() {
+  console_error_panic_hook::set_once();
 }
 
 #[wasm_bindgen]

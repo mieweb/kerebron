@@ -6,7 +6,12 @@ import {
   Extension,
   type UrlRewriter,
 } from '@kerebron/editor';
-import { parse_content, parse_styles, unzip } from '@kerebron/odt-wasm';
+import {
+  init_debug,
+  parse_content,
+  parse_styles,
+  unzip,
+} from '@kerebron/odt-wasm';
 
 import { OdtParser, OdtParserConfig } from './OdtParser.ts';
 import { getDefaultsPostProcessFilters } from './postprocess/postProcess.ts';
@@ -17,6 +22,8 @@ export interface OdtConfig extends OdtParserConfig {
   debug?: boolean;
   postProcessCommands?: Command[];
 }
+
+init_debug();
 
 export class ExtensionOdt extends Extension {
   name = 'odt';
