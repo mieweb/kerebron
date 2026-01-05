@@ -9,5 +9,5 @@
     ".": "./src/mod.ts",
     "./deno": "./src/deno.ts"
   },
-  "files": ["./assets/tree-sitter-*/*"]
+  "files": ["assets"]
 }

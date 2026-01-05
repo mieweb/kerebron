@@ -217,7 +217,7 @@ async function processModule(moduleRoot: string, json: DenoJson) {
       'import': './assets/*.css',
     };
   }
-  const files = json.files || [];
+  const files = json.files;
 
   const opts: BuildOptions = {
     entryPoints,
