@@ -1,4 +1,4 @@
-import manifest from '../wasm.json' with { type: 'json' };
+import manifest from './wasm.json' with { type: 'json' };
 
 export function getLangsList(): string[] {
   return manifest

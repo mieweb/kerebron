@@ -14,7 +14,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-import manifest from './wasm.json' with { type: 'json' };
+import manifest from './src/wasm.json' with { type: 'json' };
 
 async function getLatestRelease(repo: string) {
   console.log('Fetching latest release info...');

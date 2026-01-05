@@ -42,6 +42,7 @@ interface DenoJson {
   name: string;
   exports: string | Map<string, string>;
   workspace?: Array<string>;
+  files?: Array<string>;
 }
 
 async function getInfo(name: string): Promise<DenoInfo> {
@@ -216,6 +217,7 @@ async function processModule(moduleRoot: string, json: DenoJson) {
       'import': './assets/*.css',
     };
   }
+  const files = json.files || [];
 
   const opts: BuildOptions = {
     entryPoints,
@@ -233,6 +235,7 @@ async function processModule(moduleRoot: string, json: DenoJson) {
       description: json.description || mainJson.description,
       license: json.license || mainJson.license,
       exports: exportsObj,
+      files,
     },
     configFile,
     async postBuild() {
