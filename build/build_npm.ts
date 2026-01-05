@@ -217,7 +217,7 @@ async function processModule(moduleRoot: string, json: DenoJson) {
       'import': './assets/*.css',
     };
   }
-  const files = json.files;
+  const files = ['esm', 'src'].concat(json.files || []);
 
   const opts: BuildOptions = {
     entryPoints,
@@ -278,6 +278,7 @@ async function processModule(moduleRoot: string, json: DenoJson) {
     mappings,
     compilerOptions: {
       lib: ['ES2021'],
+      sourceMap: true,
       target: 'Latest',
     },
     typeCheck: false,
