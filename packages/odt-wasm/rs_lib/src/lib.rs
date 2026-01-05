@@ -4,6 +4,13 @@ pub mod ods_structs;
 use serde_wasm_bindgen::to_value;
 use wasm_bindgen::prelude::*;
 
+use console_error_panic_hook;
+
+#[wasm_bindgen(start)]
+pub fn init() {
+    console_error_panic_hook::set_once();
+}
+
 #[wasm_bindgen]
 pub fn echo(zip_data: Vec<u8>) -> Vec<u8> {
   zip_data
