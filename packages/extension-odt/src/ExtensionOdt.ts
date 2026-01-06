@@ -6,11 +6,7 @@ import {
   Extension,
   type UrlRewriter,
 } from '@kerebron/editor';
-import {
-  parse_content,
-  parse_styles,
-  unzip,
-} from '@kerebron/odt-wasm';
+import { parse_content, parse_styles, unzip } from '@kerebron/odt-wasm';
 
 import { OdtParser, OdtParserConfig } from './OdtParser.ts';
 import { getDefaultsPostProcessFilters } from './postprocess/postProcess.ts';
