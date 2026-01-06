@@ -9,6 +9,9 @@ Usage:
 <div id="editor"></div>
 <style>
     @import "https://cdn.jsdelivr.net/npm/@kerebron/lib-cdn@latest/dist/kerebron.css";
+/* For light only mode
+    @import "https://cdn.jsdelivr.net/npm/@kerebron/lib-cdn@latest/dist/kerebron-light.css";
+*/
 </style>
 <script type="module" defer>
     import * as Kerebron from "https://cdn.jsdelivr.net/npm/@kerebron/lib-cdn@latest/dist/kerebron.js";

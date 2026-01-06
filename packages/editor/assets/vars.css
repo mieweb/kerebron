@@ -58,27 +58,6 @@
   --kb-menu-info-text: #1967d2;
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  :root,
-  :host {
-    --kb-color-text: #f9fafb;
-    --kb-color-text-muted: #9ca3af;
-    --kb-color-surface: #1f2937;
-    --kb-color-surface-elevated: #374151;
-    --kb-color-border: #374151;
-    --kb-color-border-strong: #4b5563;
-    --kb-color-hover: rgba(59, 130, 246, 0.1);
-    --kb-color-active: rgba(59, 130, 246, 0.2);
-
-    /* Menu dropdown - Dark mode */
-    --kb-menu-dropdown-bg: #344154;
-    --kb-menu-dropdown-border: #5f6368;
-    --kb-menu-dropdown-text: #e8eaed;
-    --kb-menu-dropdown-hover: rgba(232, 234, 237, 0.08);
-  }
-}
-
 /* Theme variants */
 .kb-component--brand-corporate {
   --kb-color-primary: #1e40af;
@@ -90,21 +69,4 @@
   --kb-color-primary: #7c3aed;
   --kb-color-primary-hover: #6d28d9;
   --kb-color-primary-rgb: 124, 58, 237;
-}
-
-.kb-component--dark {
-  --kb-color-text: #f9fafb;
-  --kb-color-text-muted: #9ca3af;
-  --kb-color-surface: #1f2937;
-  --kb-color-surface-elevated: #374151;
-  --kb-color-border: #374151;
-  --kb-color-border-strong: #4b5563;
-  --kb-color-hover: rgba(59, 130, 246, 0.1);
-  --kb-color-active: rgba(59, 130, 246, 0.2);
-
-  /* Menu dropdown - Dark mode */
-  --kb-menu-dropdown-bg: #344154;
-  --kb-menu-dropdown-border: #5f6368;
-  --kb-menu-dropdown-text: #e8eaed;
-  --kb-menu-dropdown-hover: rgba(232, 234, 237, 0.08);
 }

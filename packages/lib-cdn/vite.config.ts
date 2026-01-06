@@ -26,10 +26,22 @@ export default defineConfig({
       fileName: 'kerebron',
     },
     rollupOptions: {
+      input: {
+        mod: __dirname + '/mod.ts',
+        auto: __dirname + '/kerebron-auto.css',
+        light: __dirname + '/kerebron-light.css',
+      },
       output: {
+        entryFileNames: (chunk) => {
+          if (chunk.name === 'mod') return 'kerebron.js';
+          return '[name].js';
+        },
         assetFileNames: (assetInfo) => {
-          if (assetInfo.name === 'mod.css') {
+          if (assetInfo.name === 'auto.css') {
             return 'kerebron.css';
+          }
+          if (assetInfo.name === 'light.css') {
+            return 'kerebron-light.css';
           }
           return assetInfo.name;
         },
