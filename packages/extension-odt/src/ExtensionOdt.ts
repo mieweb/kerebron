@@ -7,7 +7,6 @@ import {
   type UrlRewriter,
 } from '@kerebron/editor';
 import {
-  init_debug,
   parse_content,
   parse_styles,
   unzip,
@@ -23,7 +22,19 @@ export interface OdtConfig extends OdtParserConfig {
   postProcessCommands?: Command[];
 }
 
-init_debug();
+// WORKAROUND: The WASM module (odt-wasm) has init_debug() in Rust source but
+// the committed build doesn't export it. This makes the call optional to prevent
+// "module does not provide an export named 'init_debug'" crash on app startup.
+// TODO: Rebuild WASM with `deno task build` in packages/odt-wasm (requires Rust)
+try {
+  // deno-lint-ignore no-explicit-any
+  const odtWasm = await import('@kerebron/odt-wasm') as any;
+  if (odtWasm.init_debug) {
+    odtWasm.init_debug();
+  }
+} catch {
+  // init_debug not available in this build
+}
 
 export class ExtensionOdt extends Extension {
   name = 'odt';
