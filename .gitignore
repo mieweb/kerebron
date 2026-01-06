@@ -5,3 +5,4 @@ node_modules
 .deno
 .vite
 .playwright-mcp
+.DS_Store
