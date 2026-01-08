@@ -192,6 +192,15 @@ export class ExtensionOdt extends Extension {
 
         const doc = parser.parse({ ...filesMap, contentTree, stylesTree });
 
+        if (this.config.debug) {
+          const event = new CustomEvent('odt:pmdoc', {
+            detail: {
+              doc,
+            },
+          });
+          this.editor.dispatchEvent(event);
+        }
+
         return { doc, stylesTree, contentTree, filesMap };
       },
     };
