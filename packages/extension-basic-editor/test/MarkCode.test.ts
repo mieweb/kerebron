@@ -1,6 +1,6 @@
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
 import { CoreEditor, JSONContent } from '@kerebron/editor';
 import { assertEquals } from '@std/assert';
+import { BasicEditorKit } from '../src/BasicEditorKit.ts';
 
 Deno.test('MarkCode should handle commands', () => {
   const content: JSONContent = {
@@ -18,8 +18,8 @@ Deno.test('MarkCode should handle commands', () => {
     ],
   };
 
-  const editor = new CoreEditor({
-    extensions: [new ExtensionBasicEditor()],
+  const editor = CoreEditor.create({
+    editorKits: [new BasicEditorKit()],
     content,
   });
 

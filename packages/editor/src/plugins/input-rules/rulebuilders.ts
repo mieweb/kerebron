@@ -1,5 +1,12 @@
-import { canJoin, findWrapping } from 'prosemirror-transform';
-import { Attrs, Fragment, Node, NodeType, Slice } from 'prosemirror-model';
+import { canJoin, findWrapping, replaceStep } from 'prosemirror-transform';
+import {
+  Attrs,
+  Fragment,
+  Node,
+  NodeType,
+  ResolvedPos,
+  Slice,
+} from 'prosemirror-model';
 
 import { InputRule } from './InputRulesPlugin.ts';
 
@@ -24,9 +31,12 @@ export function wrappingInputRule(
   getAttrs: Attrs | null | ((matches: RegExpMatchArray) => Attrs | null) = null,
   joinPredicate?: (match: RegExpMatchArray, node: Node) => boolean,
 ) {
-  return new InputRule(regexp, (state, match, start, end) => {
+  return new InputRule(regexp, (tr, state, match, start, end) => {
+    if (!tr) {
+      tr = state.tr;
+    }
     const attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
-    const tr = state.tr.delete(start, end);
+    tr = tr.delete(start, end);
     const $start = tr.doc.resolve(start);
     const range = $start.blockRange();
     const wrapping = range && findWrapping(range, nodeType, attrs);
@@ -54,7 +64,10 @@ export function textblockTypeInputRule(
   nodeType: NodeType,
   getAttrs: Attrs | null | ((match: RegExpMatchArray) => Attrs | null) = null,
 ) {
-  return new InputRule(regexp, (state, match, start, end) => {
+  return new InputRule(regexp, (tr, state, match, start, end) => {
+    if (!tr) {
+      tr = state.tr;
+    }
     const $start = state.doc.resolve(start);
     const attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
     if (
@@ -64,7 +77,7 @@ export function textblockTypeInputRule(
         nodeType,
       )
     ) return null;
-    return state.tr
+    return tr
       .delete(start, end)
       .setBlockType(start, start, nodeType, attrs);
   });
@@ -75,14 +88,18 @@ export function replaceInlineNode(
   nodeType: NodeType,
   getAttrs: Attrs | null | ((matches: RegExpMatchArray) => Attrs | null) = null,
 ) {
-  return new InputRule(regexp, (state, match, start, end) => {
-    const attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
-    const node = nodeType.createAndFill(attrs);
-    const slice = new Slice(Fragment.from(node), 0, 0);
+  return new InputRule(regexp, (tr, state, match, start, end) => {
+    if (!tr) {
+      tr = state.tr;
+    }
 
-    const tr = state.tr;
+    const attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
+
+    const node = nodeType.createAndFill(attrs);
+
     const from = tr.mapping.map(start);
     const to = tr.mapping.map(end);
-    return tr.replace(from, to, slice);
+
+    return tr.replaceWith(from, to, Fragment.from(node));
   });
 }

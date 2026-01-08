@@ -111,11 +111,11 @@ export default {
         return undefined;
       }
 
-      this.editor = new CoreEditor({
+      this.editor = CoreEditor.create({
         cdnUrl: 'http://localhost:8000/wasm/',
         uri: 'file:///test.md',
         element: this.$refs.editor,
-        extensions: [
+        editorKits: [
           new DevAdvancedEditorKit(myMenu),
           YjsEditorKit.createFrom(ydoc, this.roomId),
           LspEditorKit.createFrom({ getLspTransport }),

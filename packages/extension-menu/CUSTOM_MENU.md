@@ -21,7 +21,7 @@ pinned items. Users can select which tools appear in the main toolbar
 import { CoreEditor } from '@kerebron/editor';
 import { ExtensionCustomMenu } from '@kerebron/extension-menu';
 
-const editor = new CoreEditor({
+const editor = CoreEditor.create({
   extensions: [
     new ExtensionCustomMenu(),
     // ... other extensions
@@ -43,7 +43,7 @@ import {
   MenuItem,
 } from '@kerebron/extension-menu';
 
-const editor = new CoreEditor({
+const editor = CoreEditor.create({
   extensions: [
     new ExtensionCustomMenu(),
     // ... other extensions

@@ -19,12 +19,18 @@ Deno.test('test command toggleItalic', () => {
     ],
   };
 
-  const extensions: AnyExtension[] = [
-    new ExtensionBasicEditor(),
+  const editorKits = [
+    {
+      getExtensions() {
+        return [
+          new ExtensionBasicEditor(),
+        ];
+      },
+    },
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 

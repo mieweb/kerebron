@@ -33,12 +33,12 @@ Deno.test('test command addColumnAfter', () => {
     ],
   };
 
-  const extensions: any[] = [
+  const editorKits = [
     new BrowserLessEditorKit(),
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -79,12 +79,12 @@ Deno.test('test command addColumnBefore', () => {
     ],
   };
 
-  const extensions: any[] = [
+  const editorKits = [
     new BrowserLessEditorKit(),
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -125,12 +125,12 @@ Deno.test('test command addRowAfter', () => {
     ],
   };
 
-  const extensions: any[] = [
+  const editorKits = [
     new BrowserLessEditorKit(),
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -171,12 +171,12 @@ Deno.test('test command addRowBefore', () => {
     ],
   };
 
-  const extensions: any[] = [
+  const editorKits = [
     new BrowserLessEditorKit(),
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -231,12 +231,12 @@ Deno.test('test command deleteColumn', () => {
     ],
   };
 
-  const extensions: any[] = [
+  const editorKits = [
     new BrowserLessEditorKit(),
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -296,12 +296,12 @@ Deno.test('test command deleteRow', () => {
     ],
   };
 
-  const extensions: any[] = [
+  const editorKits = [
     new BrowserLessEditorKit(),
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -342,12 +342,12 @@ Deno.test('test command deleteTable', () => {
     ],
   };
 
-  const extensions: any[] = [
+  const editorKits = [
     new BrowserLessEditorKit(),
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -402,12 +402,12 @@ Deno.test('test command goToNextCell', () => {
     ],
   };
 
-  const extensions: any[] = [
+  const editorKits = [
     new BrowserLessEditorKit(),
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -462,12 +462,12 @@ Deno.test('test command mergeCells', () => {
     ],
   };
 
-  const extensions: any[] = [
+  const editorKits = [
     new BrowserLessEditorKit(),
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -508,12 +508,12 @@ Deno.test('test command setCellAttr', () => {
     ],
   };
 
-  const extensions: any[] = [
+  const editorKits = [
     new BrowserLessEditorKit(),
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -557,12 +557,12 @@ Deno.test('test command splitCell', () => {
     ],
   };
 
-  const extensions: any[] = [
+  const editorKits = [
     new BrowserLessEditorKit(),
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -603,12 +603,12 @@ Deno.test('test command toggleHeader', () => {
     ],
   };
 
-  const extensions: any[] = [
+  const editorKits = [
     new BrowserLessEditorKit(),
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -649,12 +649,12 @@ Deno.test('test command toggleHeaderCell', () => {
     ],
   };
 
-  const extensions: any[] = [
+  const editorKits = [
     new BrowserLessEditorKit(),
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -695,12 +695,12 @@ Deno.test('test command toggleHeaderColumn', () => {
     ],
   };
 
-  const extensions: any[] = [
+  const editorKits = [
     new BrowserLessEditorKit(),
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -741,12 +741,12 @@ Deno.test('test command toggleHeaderRow', () => {
     ],
   };
 
-  const extensions: any[] = [
+  const editorKits = [
     new BrowserLessEditorKit(),
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 

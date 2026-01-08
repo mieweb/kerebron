@@ -26,7 +26,7 @@ export interface EditorContentRef {
  *
  * @example
  * ```tsx
- * const editor = useEditor({ extensions: [StarterKit] })
+ * const editor = useEditor({ editorKits: [StarterKit] })
  * return <EditorContent editor={editor} />
  * ```
  */

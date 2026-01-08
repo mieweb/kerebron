@@ -1,10 +1,20 @@
 import { CoreEditor } from '@kerebron/editor';
-import { ExtensionBasicEditor } from '../src/ExtensionBasicEditor.ts';
 import { ExtensionHistory } from '@kerebron/extension-basic-editor/ExtensionHistory';
+import { BasicEditorKit } from '../src/BasicEditorKit.ts';
+import { AnyExtensionOrReq } from '../../editor/src/types.ts';
 
 Deno.test('ExtensionHistory should handle commands', () => {
-  const editor = new CoreEditor({
-    extensions: [new ExtensionBasicEditor(), new ExtensionHistory()],
+  const editor = CoreEditor.create({
+    editorKits: [
+      new BasicEditorKit(),
+      {
+        getExtensions(): AnyExtensionOrReq[] {
+          return [
+            new ExtensionHistory(),
+          ];
+        },
+      },
+    ],
   });
 
   // Test undo command
