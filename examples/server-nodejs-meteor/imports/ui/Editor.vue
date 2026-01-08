@@ -48,18 +48,24 @@ onMounted(async () => {
   const element = document.getElementById('editor');
   const innerHTML = element.innerHTML;
   element.innerHTML = '';
-  const editor = new CoreEditor({
+  const editor = CoreEditor.create({
     element,
-    extensions: [
-      new ExtensionBasicEditor(),
-      new ExtensionMenu({
-        floating: true,
-      }),
-      new ExtensionMarkdown(),
-      new ExtensionTables(),
-      new ExtensionYjs({ ydoc, provider: meteorProvider }),
-      new ExtensionCodeMirror({ theme: [dracula] }),
-    ],
+    editorKits: [
+      {
+        getExtensions() {
+          return [
+            new ExtensionBasicEditor(),
+            new ExtensionMenu({
+              floating: true,
+            }),
+            new ExtensionMarkdown(),
+            new ExtensionTables(),
+            new ExtensionYjs({ydoc, provider: meteorProvider}),
+            new ExtensionCodeMirror({theme: [dracula]}),
+          ];
+        }
+      }
+    ]
   });
 
   const buffer = new TextEncoder().encode(innerHTML);

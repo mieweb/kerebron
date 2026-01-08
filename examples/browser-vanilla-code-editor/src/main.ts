@@ -40,11 +40,11 @@ window.addEventListener('load', async () => {
     return undefined;
   };
 
-  const editor = new CoreEditor({
+  const editor = CoreEditor.create({
     uri: 'test.yaml',
     topNode: 'doc_code',
     element: document.getElementById('editor') || undefined,
-    extensions: [
+    editorKits: [
       new CodeEditorKit('json'),
       YjsEditorKit.createFrom(ydoc, roomId),
       LspEditorKit.createFrom({ getLspTransport }),

@@ -1,5 +1,5 @@
 import { Extension } from '@kerebron/editor';
-import type { AnyExtensionOrReq } from '@kerebron/editor';
+import type { AnyExtensionOrReq, EditorKit } from '@kerebron/editor';
 
 import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
 import { ExtensionLsp, type LspTransportGetter } from '@kerebron/extension-lsp';
@@ -25,27 +25,8 @@ const defaultGetLspTransport: LspTransportGetter = (
   return undefined;
 };
 
-export class LspEditorKit extends Extension {
-  override name = 'lsp-kit';
-  requires: AnyExtensionOrReq[];
-
-  md: string = '';
-
-  static createFrom(config?: LspEditorKitConfig) {
-    return new LspEditorKit(config);
-  }
-
-  constructor(
-    config: ConstructorParameters<typeof Extension>[0],
-  ) {
-    super(config);
-
-    const getLspTransport = config?.getLspTransport || defaultGetLspTransport;
-
-    this.requires = [
-      new ExtensionLsp({ getLspTransport: getLspTransport }),
-    ];
-  }
+class ExtensionLspListeners extends Extension {
+  override name = 'lsp-listeners';
 
   override created() {
     this.editor.addEventListener('selection', async (ev: CustomEvent) => {
@@ -62,7 +43,7 @@ export class LspEditorKit extends Extension {
       async (ev: CustomEvent<any>) => {
         // this.lastValue = ev.detail.transaction.doc;
         const buffer = await this.editor.saveDocument('text/x-markdown');
-        this.md = new TextDecoder().decode(buffer);
+        // this.md = new TextDecoder().decode(buffer);
         // this.$emit('input', this.lastValue);
       },
     );
@@ -80,5 +61,29 @@ export class LspEditorKit extends Extension {
           item: meta.item,
         }));
     });
+  }
+}
+
+export class LspEditorKit implements EditorKit {
+  name = 'lsp-kit';
+
+  md: string = '';
+
+  static createFrom(config?: LspEditorKitConfig) {
+    return new LspEditorKit(config);
+  }
+
+  constructor(
+    public readonly config: ConstructorParameters<typeof Extension>[0],
+  ) {
+  }
+
+  getExtensions(): AnyExtensionOrReq[] {
+    const getLspTransport = this.config?.getLspTransport ||
+      defaultGetLspTransport;
+    return [
+      new ExtensionLsp({ getLspTransport: getLspTransport }),
+      new ExtensionLspListeners(),
+    ];
   }
 }

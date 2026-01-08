@@ -82,19 +82,25 @@ export default {
         colorLight: userColor.light,
       });
 
-      this.editor = new CoreEditor({
+      this.editor = CoreEditor.create({
         element: this.$refs.editor,
-        extensions: [
-          new ExtensionBasicEditor(),
-          new ExtensionCustomMenu(),
-          new ExtensionMarkdown(),
-          new ExtensionOdt(),
-          new ExtensionTables(),
-          new ExtensionYjs({ ydoc, provider: wsProvider }),
-          new ExtensionDevToolkit(),
-          new ExtensionCodeMirror({
-            theme: [dracula],
-          }),
+        editorKits: [
+          {
+            getExtensions() {
+              return [
+                new ExtensionBasicEditor(),
+                new ExtensionCustomMenu(),
+                new ExtensionMarkdown(),
+                new ExtensionOdt(),
+                new ExtensionTables(),
+                new ExtensionYjs({ ydoc, provider: wsProvider }),
+                new ExtensionDevToolkit(),
+                new ExtensionCodeMirror({
+                  theme: [dracula],
+                }),
+              ];
+            }
+          }
         ],
         // content: pmDoc
       });

@@ -1,6 +1,6 @@
 import { dracula } from 'thememirror';
 
-import { AnyExtensionOrReq, Extension } from '@kerebron/editor';
+import { AnyExtensionOrReq, EditorKit, Extension } from '@kerebron/editor';
 import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionOdt } from '@kerebron/extension-odt';
@@ -10,19 +10,22 @@ import { ExtensionMenuLegacy } from '@kerebron/extension-menu-legacy';
 import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
 import { ExtensionCodeJar } from '@kerebron/extension-codejar';
 
-export class DevAdvancedEditorKit extends Extension {
-  override name = 'dev-advanced-editor';
-  requires: AnyExtensionOrReq[];
+export class DevAdvancedEditorKit implements EditorKit {
+  name = 'dev-advanced-editor';
 
-  constructor(menu?: ConstructorParameters<typeof ExtensionMenuLegacy>[0]) {
-    super();
-    this.requires = [
+  constructor(
+    public readonly menu?: ConstructorParameters<typeof ExtensionMenuLegacy>[0],
+  ) {
+  }
+
+  getExtensions(): AnyExtensionOrReq[] {
+    return [
       new ExtensionBasicEditor(),
       new ExtensionMarkdown(),
       new ExtensionOdt(),
       new ExtensionTables(),
       new ExtensionDevToolkit(),
-      new ExtensionMenuLegacy(menu),
+      new ExtensionMenuLegacy(this.menu),
       // new ExtensionCodeMirror({
       //   theme: [dracula],
       // }),

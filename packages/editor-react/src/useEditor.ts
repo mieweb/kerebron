@@ -1,10 +1,10 @@
 import { type DependencyList, useEffect, useRef, useState } from 'react';
 import { CoreEditor } from '@kerebron/editor';
-import type { AnyExtensionOrReq, Content } from '@kerebron/editor';
+import type { Content, EditorKit } from '@kerebron/editor';
 
 export interface UseEditorOptions {
   /** Array of extensions to use */
-  extensions?: AnyExtensionOrReq[];
+  editorKits?: EditorKit[];
   /** Initial HTML content */
   content?: string;
   /** Initial JSON content */
@@ -29,7 +29,7 @@ export interface UseEditorOptions {
  * @example
  * ```tsx
  * const editor = useEditor({
- *   extensions: [StarterKit],
+ *   editorKits: [StarterKit],
  *   content: '<p>Hello World!</p>',
  * })
  *
@@ -54,7 +54,7 @@ export function useEditor(
     }
 
     const {
-      extensions = [],
+      editorKits = [],
       content,
       initialContent,
       cdnUrl,
@@ -68,9 +68,9 @@ export function useEditor(
     const container = document.createElement('div');
     editorContainerRef.current = container;
 
-    const editorInstance = new CoreEditor({
+    const editorInstance = CoreEditor.create({
       element: container,
-      extensions,
+      editorKits,
       content: initialContent,
       cdnUrl,
       uri,

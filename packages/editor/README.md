@@ -10,12 +10,10 @@ import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/Extension
 import { ExtensionHistory } from '@kerebron/extension-basic-editor/ExtensionHistory';
 import { ExtensionMenu } from '@kerebron/extension-menu/ExtensionMenu';
 
-this.editor = new CoreEditor({
+this.editor = CoreEditor.create({
   element: document.querySelector('div#editor'),
-  extensions: [
-    new ExtensionBasicEditor(),
-    new ExtensionHistory(),
-    new ExtensionMenu(),
+  editorKits: [
+    new AdvancedEditorKit(),
   ],
 });
 ```

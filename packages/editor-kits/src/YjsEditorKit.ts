@@ -3,12 +3,12 @@ import * as random from 'lib0/random';
 import { WebsocketProvider } from 'y-websocket';
 
 import { Extension } from '@kerebron/editor';
-import type { AnyExtensionOrReq } from '@kerebron/editor';
+import type { AnyExtensionOrReq, EditorKit } from '@kerebron/editor';
 import { userColors } from '@kerebron/extension-yjs/userColors';
 import { ExtensionYjs, YjsProvider } from '@kerebron/extension-yjs';
 
-export class YjsEditorKit extends Extension {
-  override name = 'yjs-editor';
+export class YjsEditorKit implements EditorKit {
+  name = 'yjs-editor';
   requires: AnyExtensionOrReq[];
 
   static createFrom(ydoc: Y.Doc, roomId: string) {
@@ -37,11 +37,12 @@ export class YjsEditorKit extends Extension {
     return new YjsEditorKit(wsProvider, ydoc);
   }
 
-  constructor(wsProvider: YjsProvider, private ydoc: Y.Doc) {
-    super();
+  constructor(private wsProvider: YjsProvider, private ydoc: Y.Doc) {
+  }
 
-    this.requires = [
-      new ExtensionYjs({ ydoc: this.ydoc, provider: wsProvider }),
+  getExtensions(): AnyExtensionOrReq[] {
+    return [
+      new ExtensionYjs({ ydoc: this.ydoc, provider: this.wsProvider }),
     ];
   }
 }

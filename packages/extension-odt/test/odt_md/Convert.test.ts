@@ -37,16 +37,22 @@ Deno.test('convert odt to md', async () => {
     postProcessCommands: [],
   });
 
-  const extensions = [
-    new ExtensionBasicEditor(),
-    new NodeCodeBlock(),
-    new ExtensionTables(),
-    extMd,
-    extOdt,
+  const editorKits = [
+    {
+      getExtensions() {
+        return [
+          new ExtensionBasicEditor(),
+          new NodeCodeBlock(),
+          new ExtensionTables(),
+          extMd,
+          extOdt,
+        ];
+      },
+    },
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
   });
 
   extOdt.urlFromRewriter = async (href, ctx) => {

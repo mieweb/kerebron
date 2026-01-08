@@ -8,7 +8,7 @@
  *
  * const MyEditor = () => {
  *   const editor = useEditor({
- *     extensions: [StarterKit],
+ *     editorKits: [StarterKit],
  *     content: '<p>Hello World!</p>',
  *   })
  *

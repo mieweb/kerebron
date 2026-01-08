@@ -1,8 +1,8 @@
 import { CoreEditor } from '@kerebron/editor';
 import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
 
-const editor = new CoreEditor({
-  extensions: [
+const editor = CoreEditor.create({
+  editorKits: [
     new BrowserLessEditorKit(),
   ],
 });

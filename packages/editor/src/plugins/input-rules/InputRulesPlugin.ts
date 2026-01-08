@@ -25,6 +25,7 @@ type PluginState = {
 export class InputRule {
   /// @internal
   handler: (
+    tr: Transaction,
     state: EditorState,
     match: RegExpMatchArray,
     start: number,
@@ -52,10 +53,11 @@ export class InputRule {
   /// rule's effect, or null to indicate the input was not handled.
   constructor(
     /// @internal
-    readonly match: RegExp,
+    readonly regex: RegExp,
     handler:
       | string
       | ((
+        tr: Transaction,
         state: EditorState,
         match: RegExpMatchArray,
         start: number,
@@ -72,7 +74,7 @@ export class InputRule {
       inCode?: boolean | 'only';
     } = {},
   ) {
-    this.match = match;
+    this.regex = regex;
     this.handler = typeof handler == 'string'
       ? stringHandler(handler)
       : handler;
@@ -83,11 +85,16 @@ export class InputRule {
 
 function stringHandler(string: string) {
   return function (
+    tr: Transaction,
     state: EditorState,
     match: RegExpMatchArray,
     start: number,
     end: number,
   ) {
+    if (!tr) {
+      tr = state.tr;
+    }
+
     let insert = string;
     if (match[1]) {
       const offset = match[0].lastIndexOf(match[1]);
@@ -99,7 +106,7 @@ function stringHandler(string: string) {
         start = end;
       }
     }
-    return state.tr.insertText(insert, start, end);
+    return tr.insertText(insert, start, end);
   };
 }
 
@@ -124,7 +131,7 @@ export class InputRulesPlugin extends Plugin<PluginState> {
 
       props: {
         handleTextInput(view, from, to, text) {
-          const cmd = runInputRules(from, to, text, rules);
+          const cmd = runInputRulesRange(from, to, text);
           const dispatch = (tr: Transaction) => {
             view.dispatch(tr);
           };
@@ -136,28 +143,115 @@ export class InputRulesPlugin extends Plugin<PluginState> {
             setTimeout(() => {
               const { $cursor } = view.state.selection as TextSelection;
               if ($cursor) {
-                const cmd = runInputRules($cursor.pos, $cursor.pos, '', rules);
+                const cmd = runInputRulesRange($cursor.pos, $cursor.pos, '');
                 const dispatch = (tr: Transaction) => {
                   view.dispatch(tr);
                 };
                 return cmd(view.state, dispatch, view);
-                // run(view, $cursor.pos, $cursor.pos, '', rules, this);
+                // run(view, $cursor.pos, $cursor.pos, '', this);
               }
             });
           },
         },
       },
 
+      rules,
       isInputRules: true,
     });
   }
 }
 
-export const runInputRules: CommandFactory = (
+export const runInputRulesTexts: CommandFactory = () => {
+  const cmd: Command = (
+    state: EditorState,
+    dispatch?: (tr: Transaction) => void,
+    view?: EditorView,
+  ) => {
+    const plugins = state.plugins;
+    const plugin: InputRulesPlugin | undefined = plugins.find((plugin) =>
+      (plugin.spec as any).isInputRules
+    );
+    if (!plugin) {
+      return false;
+    }
+
+    const rules: readonly InputRule[] = plugin.spec.rules;
+
+    if (view?.composing) return false;
+
+    let doc = state.doc;
+    let tr = state.tr;
+
+    for (let i = 0; i < rules.length; i++) {
+      const rule = rules[i];
+
+      const textNodePositions: { pos: number; node: ProseMirrorNode }[] = [];
+      doc.descendants((node, pos) => {
+        if (node.isText) {
+          textNodePositions.push({ pos, node });
+        }
+      });
+
+      if (textNodePositions.length === 0) {
+        return false; // Nothing to do
+      }
+
+      // Process from the end of the document to the start to avoid position invalidation
+      for (let i = textNodePositions.length - 1; i >= 0; i--) {
+        const { pos, node } = textNodePositions[i];
+        if (!node.isText || !node.text) continue;
+
+        let text = node.text;
+
+        // throw new Error('aaaaaaaaaaa');
+
+        if (node.type.spec.code) {
+          if (!rule.inCode) continue;
+        } else if (rule.inCode === 'only') {
+          continue;
+        }
+        const match = rule.regex.exec(text);
+        if (!match) {
+          continue;
+        }
+
+        const from = pos;
+        const to = pos + node.nodeSize;
+
+        let subTr = rule.handler(
+          tr,
+          state,
+          match,
+          from - (match[0].length - text.length),
+          to,
+        );
+        if (!subTr) continue;
+
+        tr = subTr;
+        doc = tr.doc;
+
+        if (rule.undoable) {
+          tr.setMeta(plugin, { transform: tr, from, to, text });
+        }
+      }
+    }
+
+    if (dispatch && tr.docChanged) {
+      dispatch(tr);
+    }
+
+    return true;
+  };
+
+  cmd.displayName = 'runInputRulesTexts';
+
+  return cmd;
+};
+
+export const runInputRulesRange: CommandFactory = (
   from: number,
   to: number,
   text: string,
-  rules: readonly InputRule[],
 ) => {
   const cmd: Command = (
     state: EditorState,
@@ -172,6 +266,8 @@ export const runInputRules: CommandFactory = (
       return false;
     }
 
+    const rules: readonly InputRule[] = plugin.spec.rules;
+
     if (view?.composing) return false;
     const $from = state.doc.resolve(from);
     const textBefore = $from.parent.textBetween(
@@ -180,6 +276,7 @@ export const runInputRules: CommandFactory = (
       null,
       '\ufffc',
     ) + text;
+    let tr = state.tr;
     for (let i = 0; i < rules.length; i++) {
       const rule = rules[i];
       if ($from.parent.type.spec.code) {
@@ -187,19 +284,33 @@ export const runInputRules: CommandFactory = (
       } else if (rule.inCode === 'only') {
         continue;
       }
-      const match = rule.match.exec(textBefore);
-      const tr = match &&
-        rule.handler(state, match, from - (match[0].length - text.length), to);
-      if (!tr) continue;
+      const match = rule.regex.exec(textBefore);
+      if (!match) {
+        continue;
+      }
+
+      const subTr = rule.handler(
+        tr,
+        state,
+        match,
+        from - (match[0].length - text.length),
+        to,
+      );
+      if (!subTr) continue;
+
+      tr = subTr;
       if (rule.undoable) {
         tr.setMeta(plugin, { transform: tr, from, to, text });
       }
-      view?.dispatch(tr);
-      return true;
     }
+
+    if (dispatch) {
+      dispatch(tr);
+    }
+
     return false;
   };
-  cmd.displayName = 'runInputRules';
+  cmd.displayName = 'runInputRulesRange';
 
   return cmd;
 };

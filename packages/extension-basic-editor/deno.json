@@ -3,6 +3,7 @@
   "tasks": {},
   "imports": {},
   "exports": {
+    "./BasicEditorKit": "./src/BasicEditorKit.ts",
     "./ExtensionBasicEditor": "./src/ExtensionBasicEditor.ts",
     "./ExtensionBasicCodeEditor": "./src/ExtensionBasicCodeEditor.ts",
     "./ExtensionSelection": "./src/ExtensionSelection.ts",

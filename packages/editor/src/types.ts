@@ -3,24 +3,16 @@ import type { Extension } from './Extension.ts';
 import type { Mark } from './Mark.ts';
 import type { Node } from './Node.ts';
 
+export interface EditorKit {
+  getExtensions(): AnyExtensionOrReq[];
+}
+
 export type AnyExtension = Extension | Node | Mark;
 export type AnyExtensionOrReq = AnyExtension | {
   requires: Array<AnyExtensionOrReq | string>;
 };
 
 export type Content = JSONContent | JSONContent[] | null;
-
-export interface EditorConfig {
-  element: HTMLElement;
-  content: Content;
-  parseOptions: ParseOptions;
-  extensions: AnyExtensionOrReq[];
-  cdnUrl?: string;
-  uri?: string;
-  languageID?: string;
-  topNode?: string;
-  readOnly?: boolean;
-}
 
 export type JSONContent = {
   type?: string;

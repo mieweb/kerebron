@@ -38,12 +38,18 @@ dolor sit amet
 
   const markdownExtension = new ExtensionMarkdown();
 
-  const editor = new CoreEditor({
+  const editor = CoreEditor.create({
     content,
-    extensions: [
-      new ExtensionBasicEditor(),
-      new ExtensionTables(),
-      markdownExtension,
+    editorKits: [
+      {
+        getExtensions() {
+          return [
+            new ExtensionBasicEditor(),
+            new ExtensionTables(),
+            markdownExtension,
+          ];
+        },
+      },
     ],
   });
 

@@ -20,13 +20,19 @@ Deno.test('test command setCodeBlock', () => {
     ],
   };
 
-  const extensions: AnyExtensionOrReq[] = [
-    new ExtensionBasicEditor(),
-    new ExtensionCodeMirror({}),
+  const editorKits = [
+    {
+      getExtensions() {
+        return [
+          new ExtensionBasicEditor(),
+          new ExtensionCodeMirror({}),
+        ];
+      },
+    },
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -52,13 +58,19 @@ Deno.test('test command ArrowLeft', () => {
     ],
   };
 
-  const extensions: AnyExtensionOrReq[] = [
-    new ExtensionBasicEditor(),
-    new ExtensionCodeMirror({}),
+  const editorKits = [
+    {
+      getExtensions() {
+        return [
+          new ExtensionBasicEditor(),
+          new ExtensionCodeMirror({}),
+        ];
+      },
+    },
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -84,13 +96,19 @@ Deno.test('test command ArrowRight', () => {
     ],
   };
 
-  const extensions: AnyExtensionOrReq[] = [
-    new ExtensionBasicEditor(),
-    new ExtensionCodeMirror({}),
+  const editorKits = [
+    {
+      getExtensions() {
+        return [
+          new ExtensionBasicEditor(),
+          new ExtensionCodeMirror({}),
+        ];
+      },
+    },
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -116,13 +134,19 @@ Deno.test('test command ArrowUp', () => {
     ],
   };
 
-  const extensions: AnyExtensionOrReq[] = [
-    new ExtensionBasicEditor(),
-    new ExtensionCodeMirror({}),
+  const editorKits = [
+    {
+      getExtensions() {
+        return [
+          new ExtensionBasicEditor(),
+          new ExtensionCodeMirror({}),
+        ];
+      },
+    },
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
@@ -148,13 +172,19 @@ Deno.test('test command ArrowDown', () => {
     ],
   };
 
-  const extensions: AnyExtensionOrReq[] = [
-    new ExtensionBasicEditor(),
-    new ExtensionCodeMirror({}),
+  const editorKits = [
+    {
+      getExtensions() {
+        return [
+          new ExtensionBasicEditor(),
+          new ExtensionCodeMirror({}),
+        ];
+      },
+    },
   ];
 
-  const editor = new CoreEditor({
-    extensions,
+  const editor = CoreEditor.create({
+    editorKits,
     content,
   });
 
