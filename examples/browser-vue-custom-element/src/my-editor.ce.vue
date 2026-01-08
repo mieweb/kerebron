@@ -119,38 +119,44 @@ export default {
         }
       });
 
-      this.editor = new CoreEditor({
+      this.editor = CoreEditor.create({
         element: this.$refs.editor,
-        extensions: [
-          new ExtensionBasicEditor(),
-          new ExtensionMenuLegacy({
-            modifyMenu: (menus: MenuElement[][]) => {
-              const fileMenu = [
-                new MenuItem({
-                  label: 'Simulate loadDoc',
-                  enable: () => true,
-                  run: () => this.loadDoc(),
+        editorKits: [
+          {
+            getExtensions() {
+              return [
+                new ExtensionBasicEditor(),
+                new ExtensionMenuLegacy({
+                  modifyMenu: (menus: MenuElement[][]) => {
+                    const fileMenu = [
+                      new MenuItem({
+                        label: 'Simulate loadDoc',
+                        enable: () => true,
+                        run: () => this.loadDoc(),
+                      }),
+                      new MenuItem({
+                        label: 'Load',
+                        enable: () => true,
+                        run: () => this.loadDoc2(),
+                      }),
+                    ];
+                    menus[0].unshift(new Dropdown(fileMenu, {label: 'File'}));
+                    return menus;
+                  },
                 }),
-                new MenuItem({
-                  label: 'Load',
-                  enable: () => true,
-                  run: () => this.loadDoc2(),
+                autocomplete,
+                new ExtensionMarkdown(),
+                new ExtensionOdt(),
+                new ExtensionTables(),
+                new ExtensionYjs({ydoc, provider: wsProvider}),
+                new ExtensionDevToolkit(),
+                new ExtensionCodeMirror({
+                  theme: [dracula],
                 }),
               ];
-              menus[0].unshift(new Dropdown(fileMenu, { label: 'File' }));
-              return menus;
-            },
-          }),
-          autocomplete,
-          new ExtensionMarkdown(),
-          new ExtensionOdt(),
-          new ExtensionTables(),
-          new ExtensionYjs({ ydoc, provider: wsProvider }),
-          new ExtensionDevToolkit(),
-          new ExtensionCodeMirror({
-            theme: [dracula],
-          }),
-        ],
+            }
+          }
+        ]
       });
 
       this.editor.addEventListener('transaction', async (ev: CustomEvent) => {

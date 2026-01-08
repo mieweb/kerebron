@@ -19,9 +19,9 @@ export function createNodeFromObject(
     }
 
     return node;
-  } catch (error) {
+  } catch (error: any) {
     if (options?.errorOnInvalidContent) {
-      throw new Error('Invalid JSON content', {
+      throw new Error('Invalid JSON content: ' + error.message, {
         cause: error as Error,
       });
     }

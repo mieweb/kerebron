@@ -17,10 +17,10 @@ Usage:
     import * as Kerebron from "https://cdn.jsdelivr.net/npm/@kerebron/lib-cdn@latest/dist/kerebron.js";
     const { CoreEditor, AdvancedEditorKit } = Kerebron;
 
-    const editor = new CoreEditor({
+    const editor = CoreEditor.create({
         uri: "test.odt",
         element: document.getElementById("editor"),
-        extensions: [new AdvancedEditorKit()],
+        editorKits: [new AdvancedEditorKit()],
     });
 
     document

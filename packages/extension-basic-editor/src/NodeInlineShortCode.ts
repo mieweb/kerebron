@@ -19,7 +19,7 @@ export function fixCharacters(text: string) {
 }
 
 export class NodeInlineShortCode extends Node {
-  override name = 'shortcode-inline';
+  override name = 'shortcode_inline';
   requires = ['doc'];
 
   override getNodeSpec(): NodeSpec {
@@ -28,12 +28,21 @@ export class NodeInlineShortCode extends Node {
       group: 'inline',
       selectable: true,
       attrs: {
-        content: {},
+        content: {
+          default: '',
+        },
       },
       atom: true,
-      parseDOM: [{ tag: 'span.kb-shortcode-inline' }],
+      parseDOM: [{
+        tag: 'span.kb-shortcode-inline',
+        getAttrs: (dom) => ({ content: dom.textContent || null }),
+      }],
       toDOM(node) {
-        return ['span', { class: 'kb-shortcode-inline' }, node.attrs.content];
+        return [
+          'span',
+          { class: 'kb-shortcode-inline' },
+          node.attrs.content || '',
+        ];
       },
     };
   }

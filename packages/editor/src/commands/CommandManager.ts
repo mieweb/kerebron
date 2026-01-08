@@ -80,10 +80,6 @@ export class CommandManager {
     };
   }
 
-  get state(): EditorState {
-    return this.editor.state;
-  }
-
   get chain(): () => ChainedCommands {
     return () => this.createChain();
   }
@@ -96,7 +92,8 @@ export class CommandManager {
     startTr?: Transaction,
     shouldDispatch = true,
   ): ChainedCommands {
-    const { commandFactories, editor, state } = this;
+    const { commandFactories, editor } = this;
+    const state = this.editor.state;
     const { view } = editor;
     const callbacks: boolean[] = [];
     const hasStartTransaction = !!startTr;

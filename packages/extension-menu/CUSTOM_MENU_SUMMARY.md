@@ -133,7 +133,7 @@ import { CoreEditor } from '@kerebron/editor';
 import { ExtensionCustomMenu } from '@kerebron/extension-menu';
 import '@kerebron/extension-menu/assets/custom-menu.css';
 
-const editor = new CoreEditor({
+const editor = CoreEditor.create({
   extensions: [
     new ExtensionCustomMenu(),
     // ... other extensions

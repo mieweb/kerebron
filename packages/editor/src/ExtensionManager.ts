@@ -3,8 +3,8 @@ import { Plugin } from 'prosemirror-state';
 import { NodeViewConstructor } from 'prosemirror-view';
 
 import { Converter, Extension } from './Extension.ts';
-import { AnyExtension, AnyExtensionOrReq } from './types.ts';
-import { CoreEditor } from './CoreEditor.ts';
+import type { AnyExtension, AnyExtensionOrReq, EditorKit } from './types.ts';
+import type { CoreEditor } from './CoreEditor.ts';
 import { Mark } from './Mark.ts';
 import { Node } from './Node.ts';
 import {
@@ -43,8 +43,6 @@ export function splitExtensions(extensions: Iterable<AnyExtension>) {
 }
 
 export class ExtensionManager {
-  public readonly schema: Schema;
-
   public readonly extensions: Set<AnyExtension> = new Set();
   readonly plugins: Plugin[] = [];
   readonly nodeViews: Record<string, NodeViewConstructor> = {};
@@ -53,21 +51,14 @@ export class ExtensionManager {
 
   private debug = true;
 
-  constructor(
-    extensions: AnyExtensionOrReq[],
-    private editor: CoreEditor,
-    private commandManager: CommandManager,
-  ) {
-    this.setupExtensions(new Set(extensions));
-    this.schema = this.getSchemaByResolvedExtensions(editor);
+  constructor(public readonly editorKits: EditorKit[]) {
+    const extensions: AnyExtensionOrReq[] = editorKits
+      .reduce(
+        (prev: AnyExtensionOrReq[], cur) => prev.concat(cur.getExtensions()),
+        [],
+      );
 
-    const event = new CustomEvent('schema:ready', {
-      detail: {
-        editor,
-        schema: this.schema,
-      },
-    });
-    editor.dispatchEvent(event);
+    this.setupExtensions(new Set(extensions));
   }
 
   getExtension<T extends Extension>(name: string): T | undefined {
@@ -82,7 +73,7 @@ export class ExtensionManager {
     }
   }
 
-  private initPlugins() {
+  private initPlugins(editor: CoreEditor, schema: Schema) {
     const inputRules: InputRule[] = [];
     const keyBindings: Map<string, Command> = new Map();
 
@@ -95,8 +86,7 @@ export class ExtensionManager {
           continue;
         }
 
-        const commandFactory =
-          this.commandManager.commandFactories[toInsert[key]];
+        const commandFactory = editor.commandFactories[toInsert[key]];
         if (!commandFactory) {
           console.warn(`No command constructor: ${toInsert[key]}`);
           continue;
@@ -115,40 +105,40 @@ export class ExtensionManager {
     let converters = {};
 
     for (const extension of this.extensions) {
-      extension.setEditor(this.editor);
+      extension.setEditor(editor);
 
       if (extension.type === 'node') {
-        const nodeType = this.schema.nodes[extension.name];
+        const nodeType = schema.nodes[extension.name];
         inputRules.push(...extension.getInputRules(nodeType));
         this.plugins.push(
           ...extension.getProseMirrorPlugins(),
         );
-        this.commandManager.mergeCommandFactories(
-          extension.getCommandFactories(this.editor, nodeType),
+        editor.mergeCommandFactories(
+          extension.getCommandFactories(editor, nodeType),
           extension.name,
         );
         mergeShortcuts(
-          extension.getKeyboardShortcuts(this.editor),
+          extension.getKeyboardShortcuts(editor),
           extension.name,
         );
         converters = {
           ...converters,
-          ...extension.getConverters(this.editor, this.schema),
+          ...extension.getConverters(editor, schema),
         };
-        const nodeView = extension.getNodeView(this.editor);
+        const nodeView = extension.getNodeView(editor);
         if (nodeView) {
           this.nodeViews[extension.name] = nodeView;
         }
       }
       if (extension.type === 'mark') {
-        const markType = this.schema.marks[extension.name];
+        const markType = schema.marks[extension.name];
         inputRules.push(...extension.getInputRules(markType));
-        this.commandManager.mergeCommandFactories(
-          extension.getCommandFactories(this.editor, markType),
+        editor.mergeCommandFactories(
+          extension.getCommandFactories(editor, markType),
           extension.name,
         );
         mergeShortcuts(
-          extension.getKeyboardShortcuts(this.editor),
+          extension.getKeyboardShortcuts(editor),
           extension.name,
         );
       }
@@ -156,17 +146,17 @@ export class ExtensionManager {
         this.plugins.push(
           ...extension.getProseMirrorPlugins(),
         );
-        this.commandManager.mergeCommandFactories(
-          extension.getCommandFactories(this.editor),
+        editor.mergeCommandFactories(
+          extension.getCommandFactories(editor),
           extension.name,
         );
         mergeShortcuts(
-          extension.getKeyboardShortcuts(this.editor),
+          extension.getKeyboardShortcuts(editor),
           extension.name,
         );
         converters = {
           ...converters,
-          ...extension.getConverters(this.editor, this.schema),
+          ...extension.getConverters(editor, schema),
         };
       }
     }
@@ -193,7 +183,7 @@ export class ExtensionManager {
 
     this.plugins.push(new InputRulesPlugin(inputRules));
     this.plugins.push(new KeymapPlugin(Object.fromEntries(keyBindings)));
-    this.plugins.push(new TrackSelecionPlugin(this.editor));
+    this.plugins.push(new TrackSelecionPlugin(editor));
   }
 
   private setupExtensions(extensions: Set<AnyExtensionOrReq>) {
@@ -202,7 +192,9 @@ export class ExtensionManager {
     const createMap = (extensions: Set<AnyExtensionOrReq>) => {
       for (const extension of extensions) {
         if ('name' in extension) {
-          allExtensions.set(extension.name, extension);
+          if (!allExtensions.has(extension.name)) {
+            allExtensions.set(extension.name, extension);
+          }
         }
         if ('requires' in extension) {
           const childExtensions = Array.from(extension.requires).filter((e) =>
@@ -268,7 +260,48 @@ export class ExtensionManager {
     }
   }
 
-  getSchemaByResolvedExtensions(editor: CoreEditor): Schema {
+  getSchemaByResolvedExtensions(): Schema {
+    const { nodeExtensions, markExtensions, baseExtensions } = splitExtensions(
+      this.extensions,
+    );
+
+    const nodes: { [name: string]: NodeSpec } = {};
+    let topNode = '';
+    for (const extension of nodeExtensions) {
+      nodes[extension.name] = extension.getNodeSpec();
+
+      if (nodes[extension.name].EMPTY_DOC) {
+        if (topNode) {
+          throw new Error(`Multiple topNodes: ${extension.name}, ${topNode}`);
+        }
+        topNode = extension.name;
+      }
+
+      addAttributesToSchema(nodes[extension.name], extension);
+    }
+
+    const marks: { [name: string]: MarkSpec } = {};
+    for (const extension of markExtensions) {
+      marks[extension.name] = extension.getMarkSpec();
+      addAttributesToSchema(marks[extension.name], extension);
+    }
+
+    const spec = {
+      topNode: topNode || 'doc',
+      nodes,
+      marks,
+    };
+
+    for (const extension of baseExtensions) {
+      if ('setupSpec' in baseExtensions) {
+        extension.setupSpec(spec);
+      }
+    }
+
+    return new Schema(spec);
+  }
+
+  created(editor: CoreEditor, schema: Schema) {
     const { nodeExtensions, markExtensions, baseExtensions } = splitExtensions(
       this.extensions,
     );
@@ -283,43 +316,7 @@ export class ExtensionManager {
       }
     }
 
-    const nodes: { [name: string]: NodeSpec } = {};
-    for (const extension of nodeExtensions) {
-      nodes[extension.name] = extension.getNodeSpec();
-      addAttributesToSchema(nodes[extension.name], extension);
-    }
-
-    const marks: { [name: string]: MarkSpec } = {};
-    for (const extension of markExtensions) {
-      marks[extension.name] = extension.getMarkSpec();
-      addAttributesToSchema(marks[extension.name], extension);
-    }
-
-    const spec = {
-      topNode: this.editor.config.topNode || 'doc',
-      nodes,
-      marks,
-    };
-
-    for (const extension of baseExtensions) {
-      if ('setupSpec' in baseExtensions) {
-        extension.setupSpec(spec);
-      }
-    }
-
-    const event = new CustomEvent('schema:spec', {
-      detail: {
-        editor,
-        spec,
-      },
-    });
-    editor.dispatchEvent(event);
-
-    return new Schema(spec);
-  }
-
-  created() {
-    this.initPlugins();
+    this.initPlugins(editor, schema);
 
     for (const extension of this.extensions) {
       extension.created();

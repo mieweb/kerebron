@@ -1,11 +1,13 @@
+import { WebsocketProvider } from 'y-websocket';
+import * as Y from 'yjs';
+
 import { CoreEditor } from '@kerebron/editor';
 import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
 import { ExtensionYjs } from '@kerebron/extension-yjs';
-import { WebsocketProvider } from 'y-websocket';
+import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
 
-import { userColors } from '@kerebron/extension-yjs/userColors';
-import * as Y from 'yjs';
 import { ExtensionSelection } from '@kerebron/extension-basic-editor/ExtensionSelection';
+import { userColors } from '@kerebron/extension-yjs/userColors';
 
 const ydoc = new Y.Doc();
 
@@ -24,10 +26,10 @@ wsProvider.awareness.setLocalStateField('user', {
   colorLight: userColor.light,
 });
 
-const editor = new CoreEditor({
-  extensions: [
+const editor = CoreEditor.create({
+  editorKits: [
     new BrowserLessEditorKit(),
-    new ExtensionYjs({ ydoc, provider: wsProvider }),
+    YjsEditorKit.createFrom(ydoc, roomId),
   ],
 });
 
@@ -59,8 +61,8 @@ ydoc.on('update', async () => {
   }
   const slice = extensionSelection.extractSelection();
 
-  const editor2 = new CoreEditor({
-    extensions: [
+  const editor2 = CoreEditor.create({
+    editorKits: [
       new BrowserLessEditorKit(),
     ],
   });

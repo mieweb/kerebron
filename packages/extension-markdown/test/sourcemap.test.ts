@@ -3,11 +3,9 @@ import { DOMParser, parseHTML } from 'npm:linkedom@latest';
 import { XMLSerializer } from 'npm:xmldom@latest';
 
 import { CoreEditor } from '@kerebron/editor';
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
+import { BasicEditorKit } from '@kerebron/extension-basic-editor/BasicEditorKit';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionTables } from '@kerebron/extension-tables';
-import { NodeDocumentCode } from '@kerebron/extension-basic-editor/NodeDocumentCode';
-import { NodeCodeBlock } from '@kerebron/extension-basic-editor/NodeCodeBlock';
 import { denoCdn } from '@kerebron/wasm/deno';
 
 globalThis.DOMParser = DOMParser as any;
@@ -28,16 +26,20 @@ Deno.test('sourcemap test', async () => {
   const markdownExtension = new ExtensionMarkdown({
     sourceMap: true,
     debugTokens: true,
-    cdnUrl: denoCdn(),
   });
 
-  const editor = new CoreEditor({
-    extensions: [
-      new ExtensionBasicEditor(),
-      new ExtensionTables(),
-      new NodeDocumentCode({ lang: 'markdown' }),
-      new NodeCodeBlock(),
-      markdownExtension,
+  const editor = CoreEditor.create({
+    cdnUrl: denoCdn(),
+    editorKits: [
+      new BasicEditorKit(),
+      {
+        getExtensions() {
+          return [
+            new ExtensionTables(),
+            markdownExtension,
+          ];
+        },
+      },
     ],
   });
 

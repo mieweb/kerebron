@@ -1,27 +1,28 @@
 import { dracula } from 'thememirror';
 
-import { AnyExtensionOrReq, Extension } from '@kerebron/editor';
+import { AnyExtensionOrReq, EditorKit, Extension } from '@kerebron/editor';
 import { ExtensionBasicCodeEditor } from '@kerebron/extension-basic-editor/ExtensionBasicCodeEditor';
-import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
+import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 // import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
 import { ExtensionCodeJar } from '@kerebron/extension-codejar';
 
-export class CodeEditorKit extends Extension {
-  override name = 'dev-advanced-editor';
-  requires: AnyExtensionOrReq[];
+export class CodeEditorKit implements EditorKit {
+  name = 'dev-advanced-editor';
 
-  constructor(lang: string) {
-    super();
-    this.requires = [
-      new ExtensionBasicCodeEditor({ lang }),
+  constructor(public readonly lang: string) {
+  }
+
+  getExtensions(): AnyExtensionOrReq[] {
+    return [
+      new ExtensionBasicCodeEditor({ lang: this.lang }),
       new ExtensionMarkdown(),
       new ExtensionDevToolkit(),
       // new ExtensionCodeMirror({
       //   languageWhitelist: [lang],
       //   readOnly: false,
       // }),
-      new ExtensionCodeJar({ lang }),
+      new ExtensionCodeJar({ lang: this.lang }),
     ];
   }
 }

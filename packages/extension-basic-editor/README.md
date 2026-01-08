@@ -12,12 +12,12 @@ Features:
 ## Usage:
 
 ```js
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor';
+import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
 
-this.editor = new CoreEditor({
+this.editor = CoreEditor.create({
   element: htmlElement,
-  extensions: [
-    new ExtensionBasicEditor(),
+  editorKits: [
+    new AdvancedEditorKit(),
   ],
 });
 ```

@@ -10,7 +10,7 @@ import {
 } from '@kerebron/extension-codemirror';
 import { NodeDocumentCode } from '@kerebron/extension-basic-editor/NodeDocumentCode';
 
-this.editor = new CoreEditor({
+this.editor = CoreEditor.create({
   topNode: 'doc_code',
   element: document.querySelector('div#editor'),
   extensions: [

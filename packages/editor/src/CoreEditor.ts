@@ -1,16 +1,21 @@
 import { EditorView } from 'prosemirror-view';
-import { Node as ProseMirrorNode, Schema } from 'prosemirror-model';
+import {
+  Node as ProseMirrorNode,
+  ParseOptions,
+  Schema,
+} from 'prosemirror-model';
 
 import { ExtensionManager } from './ExtensionManager.ts';
-import type { EditorConfig, JSONContent } from './types.ts';
+import type { Content, EditorKit, JSONContent } from './types.ts';
 import { EditorState, Transaction } from 'prosemirror-state';
 import { CommandManager } from './commands/CommandManager.ts';
 import { nodeToTreeString } from './nodeToTreeString.ts';
 import { DummyEditorView } from './DummyEditorView.ts';
-import { ChainedCommands } from '@kerebron/editor/commands';
 import { createNodeFromObject } from './utilities/createNodeFromContent.ts';
 import { Extension } from './Extension.ts';
 import { defaultUi, EditorUi } from './ui.ts';
+import { runInputRulesTexts } from './plugins/input-rules/InputRulesPlugin.ts';
+import { ChainedCommands, CommandFactories } from './commands/types.ts';
 
 function ensureDocSchema(
   doc: ProseMirrorNode,
@@ -24,54 +29,79 @@ function ensureDocSchema(
   return ProseMirrorNode.fromJSON(schema, json);
 }
 
+export interface EditorConfig {
+  element: HTMLElement;
+  content: Content;
+  parseOptions: ParseOptions;
+  // extensions: AnyExtensionOrReq[];
+  cdnUrl?: string;
+  uri?: string;
+  languageID?: string;
+  topNode?: string;
+  readOnly?: boolean;
+}
+
 export class CoreEditor extends EventTarget {
-  public readonly config: Partial<EditorConfig> = {
-    element: undefined,
-    extensions: [],
-  };
-  private extensionManager: ExtensionManager;
+  public readonly config: Partial<EditorConfig>;
   private commandManager: CommandManager;
   public view!: EditorView | DummyEditorView;
   public state!: EditorState;
   public ui: EditorUi = defaultUi(this);
 
-  constructor(config: Partial<EditorConfig> = {}) {
+  private constructor(
+    config: Partial<EditorConfig>,
+    public readonly schema: Schema,
+    private extensionManager: ExtensionManager,
+  ) {
     super();
-    this.config = {
-      ...this.config,
-      ...config,
-    };
+
+    this.config = { ...config };
 
     this.commandManager = new CommandManager(
       this,
     );
+  }
 
-    this.extensionManager = new ExtensionManager(
-      this.config.extensions || [],
-      this,
-      this.commandManager,
+  static create(config: Partial<EditorConfig> & { editorKits: EditorKit[] }) {
+    const extensionManager = new ExtensionManager(config.editorKits);
+
+    const schema = extensionManager.getSchemaByResolvedExtensions();
+
+    const instance = new CoreEditor(config, schema, extensionManager);
+    extensionManager.created(instance, schema);
+
+    const content = config.content
+      ? config.content
+      : schema.topNodeType.spec.EMPTY_DOC;
+
+    instance.createView(content);
+    instance.setupPlugins();
+
+    return instance;
+  }
+
+  public clone(config?: EditorConfig): CoreEditor {
+    const extensionManager = new ExtensionManager(
+      this.extensionManager.editorKits,
     );
 
-    this.extensionManager.created();
+    const instance = new CoreEditor(
+      config || {},
+      this.schema,
+      extensionManager,
+    );
+    extensionManager.created(instance, this.schema);
 
-    // const content = this.options.content ? this.options.content : {
-    //   type: this.extensionManager.schema.topNodeType.name,
-    //   content: this.extensionManager.schema.topNodeType.spec.EMPTY_DOC,
-    // };
-    const content = this.config.content
-      ? this.config.content
-      : this.extensionManager.schema.topNodeType.spec.EMPTY_DOC;
+    const content = this.getJSON();
 
-    this.createView(content);
-    this.setupPlugins();
+    instance.createView(content);
+    instance.setupPlugins();
+
+    return instance;
   }
 
   getExtension<T extends Extension>(name: string): T | undefined {
     return this.extensionManager.getExtension<T>(name);
-  }
-
-  public get schema() {
-    return this.extensionManager.schema;
   }
 
   public get run() {
@@ -182,8 +212,8 @@ export class CoreEditor extends EventTarget {
 
   public clearDocument() {
     const content = {
-      type: this.extensionManager.schema.topNodeType.name,
-      content: this.extensionManager.schema.topNodeType.spec.EMPTY_DOC.content,
+      type: this.schema.topNodeType.name,
+      content: this.schema.topNodeType.spec.EMPTY_DOC.content,
     };
 
     this.setDocument(content);
@@ -224,10 +254,22 @@ export class CoreEditor extends EventTarget {
       throw new Error('Converter not found for: ' + mediaType);
     }
     const parsedDoc = await converter.toDoc(content);
+    const doc = ProseMirrorNode.fromJSON(this.schema, parsedDoc.toJSON()); // TODO: WHY?!
 
     // Re-create the document using the current schema to ensure compatibility
     // The converter may use a different schema instance (e.g., from a cloned editor)
     const doc = ProseMirrorNode.fromJSON(this.schema, parsedDoc.toJSON());
+
+    const cmd = runInputRulesTexts();
+    let newState: EditorState | undefined;
+    const dispatch = (tr: Transaction) => {
+      newState = this.state.apply(tr);
+    };
+    const aa = cmd(this.state, dispatch);
+
+    if (newState) {
+      this.state = newState;
+    }
 
     if (this.view) {
       // Use a transaction to replace the document content
@@ -272,13 +314,6 @@ export class CoreEditor extends EventTarget {
     return this.state.doc.toJSON();
   }
 
-  public clone(options: Partial<EditorConfig> = {}): CoreEditor {
-    return new CoreEditor({
-      ...options,
-      extensions: [...(Array.from(this.extensionManager.extensions) || [])],
-    });
-  }
-
   public debug(doc?: ProseMirrorNode) {
     if (!doc) {
       doc = this.state.doc;
@@ -292,5 +327,9 @@ export class CoreEditor extends EventTarget {
     });
     this.dispatchEvent(event);
     this.view.destroy();
+  }
+
+  mergeCommandFactories(toInsert: Partial<CommandFactories>, name: string) {
+    this.commandManager.mergeCommandFactories(toInsert, name);
   }
 }

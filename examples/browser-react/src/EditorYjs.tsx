@@ -86,12 +86,16 @@ console.log("TEST")
     };
 
     // Initialize the editor
-    const editor = new CoreEditor({
+    const editor = CoreEditor.create({
       element: editorRef.current,
-      extensions: [
+      editorKits: [
         new AdvancedEditorKit(),
-        new ExtensionHistory(),
         LspEditorKit.createFrom({ getLspTransport }),
+        {
+          getExtensions() {
+            return [new ExtensionHistory()];
+          },
+        },
       ],
     });
 

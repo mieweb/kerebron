@@ -32,7 +32,8 @@ import { EditorView } from 'prosemirror-view';
 
 import { type Command, CommandFactory } from './types.ts';
 import {
-  runInputRules,
+  runInputRulesRange,
+  runInputRulesTexts,
   undoInputRuleCommand,
 } from '../plugins/input-rules/InputRulesPlugin.ts';
 
@@ -54,7 +55,8 @@ const wrapInList = (
     if (!range) return false;
     // let tr = dispatch ? state.tr : null;
     const tr = state.tr;
-    if (!wrapRangeInList(tr, range, listType, attrs)) return false;
+    const cmd = wrapRangeInList(tr, range, listType, attrs);
+    if (!cmd(state, dispatch)) return false;
     if (dispatch) dispatch(tr!.scrollIntoView());
     return true;
   };
@@ -1099,5 +1101,6 @@ export const baseCommandFactories: Record<string, CommandFactory> = {
   setBlockType,
   toggleMark,
   undoInputRule,
-  runInputRules,
+  runInputRulesRange,
+  runInputRulesTexts,
 };

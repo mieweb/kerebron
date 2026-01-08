@@ -1,7 +1,7 @@
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
-import { CoreEditor, debugNode, JSONContent } from '@kerebron/editor';
+import { CoreEditor, JSONContent } from '@kerebron/editor';
 import { assertEquals } from '@std/assert';
 import { ExtensionSelection } from '@kerebron/extension-basic-editor/ExtensionSelection';
+import { BasicEditorKit } from '../src/BasicEditorKit.ts';
 
 Deno.test('ExtensionSelection should handle commands', () => {
   const content: JSONContent = {
@@ -31,8 +31,8 @@ Deno.test('ExtensionSelection should handle commands', () => {
     ],
   };
 
-  const editor = new CoreEditor({
-    extensions: [new ExtensionBasicEditor()],
+  const editor = CoreEditor.create({
+    editorKits: [new BasicEditorKit()],
     content,
   });
 
