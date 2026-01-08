@@ -7,14 +7,13 @@ import {
 
 import { ExtensionManager } from './ExtensionManager.ts';
 import type { Content, EditorKit, JSONContent } from './types.ts';
-import { EditorState, Transaction } from 'prosemirror-state';
+import { EditorState, TextSelection, Transaction } from 'prosemirror-state';
 import { CommandManager } from './commands/CommandManager.ts';
 import { nodeToTreeString } from './nodeToTreeString.ts';
 import { DummyEditorView } from './DummyEditorView.ts';
 import { createNodeFromObject } from './utilities/createNodeFromContent.ts';
 import { Extension } from './Extension.ts';
 import { defaultUi, EditorUi } from './ui.ts';
-import { runInputRulesTexts } from './plugins/input-rules/InputRulesPlugin.ts';
 import { ChainedCommands, CommandFactories } from './commands/types.ts';
 
 function ensureDocSchema(
@@ -254,30 +253,18 @@ export class CoreEditor extends EventTarget {
       throw new Error('Converter not found for: ' + mediaType);
     }
     const parsedDoc = await converter.toDoc(content);
-    const doc = ProseMirrorNode.fromJSON(this.schema, parsedDoc.toJSON()); // TODO: WHY?!
 
     // Re-create the document using the current schema to ensure compatibility
     // The converter may use a different schema instance (e.g., from a cloned editor)
     const doc = ProseMirrorNode.fromJSON(this.schema, parsedDoc.toJSON());
-
-    const cmd = runInputRulesTexts();
-    let newState: EditorState | undefined;
-    const dispatch = (tr: Transaction) => {
-      newState = this.state.apply(tr);
-    };
-    const aa = cmd(this.state, dispatch);
-
-    if (newState) {
-      this.state = newState;
-    }
-
     if (this.view) {
       // Use a transaction to replace the document content
       // This ensures Yjs and other plugins can properly sync the changes
       const tr = this.view.state.tr;
       tr.replaceWith(0, this.view.state.doc.content.size, doc.content);
       // Set selection to the start of the document
-      tr.setSelection(tr.selection.constructor.near(tr.doc.resolve(0)));
+      const $start = tr.doc.resolve(0);
+      tr.setSelection(TextSelection.create(tr.doc, $start.pos));
       this.view.dispatch(tr);
       this.state = this.view.state;
     } else {
