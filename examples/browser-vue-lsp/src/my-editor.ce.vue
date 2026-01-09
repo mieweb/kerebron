@@ -164,7 +164,10 @@ export default {
       input.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         console.log('Selected file:', file);
-        await this.editor.loadDocument(file.type, await file.bytes());
+        await this.editor.loadDocument(
+            file.type,
+            new Uint8Array(await file.arrayBuffer()),
+        );
       });
       input.click();
       return true;
