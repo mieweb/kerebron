@@ -6,8 +6,8 @@ import {
   type InputRule,
   replaceInlineNode,
 } from '@kerebron/editor/plugins/input-rules';
-import { CoreEditor } from '../../editor/src/CoreEditor.ts';
-import { CommandFactories } from '../../editor/src/Node.ts';
+import { CoreEditor } from '@kerebron/editor';
+import { CommandFactories } from '@kerebron/editor';
 import { Command } from '@kerebron/editor/commands';
 
 export function fixCharacters(text: string) {
