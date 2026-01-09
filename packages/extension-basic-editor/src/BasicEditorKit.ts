@@ -1,40 +1,17 @@
-import { EditorKit } from '@kerebron/editor';
+import { AnyExtensionOrReq, EditorKit } from '@kerebron/editor';
 
-import { AnyExtensionOrReq } from '../../editor/src/types.ts';
+import { ExtensionSelection } from './ExtensionSelection.ts';
 import { ExtensionBaseKeymap } from './ExtensionBaseKeymap.ts';
 import { ExtensionDropcursor } from './ExtensionDropcursor.ts';
 import { ExtensionGapcursor } from './ExtensionGapcursor.ts';
 import { ExtensionHtml } from './ExtensionHtml.ts';
 import { ExtensionMediaUpload } from './ExtensionMediaUpload.ts';
 import { ExtensionRemoteSelection } from './remote-selection/ExtensionRemoteSelection.ts';
-import { ExtensionSelection } from './ExtensionSelection.ts';
 import { ExtensionTextAlign } from './ExtensionTextAlign.ts';
-import { NodeDocument } from './NodeDocument.ts';
-import { NodeText } from './NodeText.ts';
-import { NodeParagraph } from './NodeParagraph.ts';
-import { NodeHardBreak } from './NodeHardBreak.ts';
-import { NodeCodeBlock } from './NodeCodeBlock.ts';
-import { NodeBookmark } from './NodeBookmark.ts';
-import { NodeHorizontalRule } from './NodeHorizontalRule.ts';
-import { NodeOrderedList } from './NodeOrderedList.ts';
-import { NodeBulletList } from './NodeBulletList.ts';
-import { NodeListItem } from './NodeListItem.ts';
-import { NodeTaskList } from './NodeTaskList.ts';
-import { NodeTaskItem } from './NodeTaskItem.ts';
-import { NodeDefinitionList } from './NodeDefinitionList.ts';
-import { NodeDefinitionTerm } from './NodeDefinitionTerm.ts';
-import { NodeDefinitionDesc } from './NodeDefinitionDesc.ts';
-import { NodeFrontmatter } from './NodeFrontmatter.ts';
-import { NodeImage } from './NodeImage.ts';
-import { NodeVideo } from './NodeVideo.ts';
-import { NodeBlockquote } from './NodeBlockquote.ts';
-import { NodeAside } from './NodeAside.ts';
-import { NodeHeading } from './NodeHeading.ts';
-import { NodeMath } from './NodeMath.ts';
-import { NodeInlineShortCode } from './NodeInlineShortCode.ts';
+
 import { MarkLink } from './MarkLink.ts';
-import { MarkItalic } from './MarkItalic.ts';
 import { MarkStrong } from './MarkStrong.ts';
+import { MarkItalic } from './MarkItalic.ts';
 import { MarkUnderline } from './MarkUnderline.ts';
 import { MarkStrike } from './MarkStrike.ts';
 import { MarkCode } from './MarkCode.ts';
@@ -44,6 +21,31 @@ import { MarkTextColor } from './MarkTextColor.ts';
 import { MarkHighlight } from './MarkHighlight.ts';
 import { MarkSuperscript } from './MarkSuperscript.ts';
 import { MarkSubscript } from './MarkSubscript.ts';
+
+import { NodeDocument } from './NodeDocument.ts';
+import { NodeText } from './NodeText.ts';
+import { NodeCodeBlock } from './NodeCodeBlock.ts';
+import { NodeBookmark } from './NodeBookmark.ts';
+import { NodeParagraph } from './NodeParagraph.ts';
+import { NodeHardBreak } from './NodeHardBreak.ts';
+import { NodeHorizontalRule } from './NodeHorizontalRule.ts';
+import { NodeOrderedList } from './NodeOrderedList.ts';
+import { NodeBulletList } from './NodeBulletList.ts';
+import { NodeListItem } from './NodeListItem.ts';
+import { NodeImage } from './NodeImage.ts';
+import { NodeVideo } from './NodeVideo.ts';
+import { NodeBlockquote } from './NodeBlockquote.ts';
+import { NodeAside } from './NodeAside.ts';
+import { NodeHeading } from './NodeHeading.ts';
+import { NodeMath } from './NodeMath.ts';
+import { NodeDefinitionList } from './NodeDefinitionList.ts';
+import { NodeDefinitionTerm } from './NodeDefinitionTerm.ts';
+import { NodeDefinitionDesc } from './NodeDefinitionDesc.ts';
+import { NodeFrontmatter } from './NodeFrontmatter.ts';
+import { NodeTaskList } from './NodeTaskList.ts';
+import { NodeTaskItem } from './NodeTaskItem.ts';
+import { NodeInlineShortCode } from './NodeInlineShortCode.ts';
+import { NodeIframe } from './NodeIframe.ts';
 
 export class BasicEditorKit implements EditorKit {
   getExtensions(): AnyExtensionOrReq[] {
@@ -81,6 +83,7 @@ export class BasicEditorKit implements EditorKit {
       new NodeHeading(),
       new NodeMath(),
       new NodeInlineShortCode(),
+      new NodeIframe(),
       new MarkLink(),
       new MarkItalic(),
       new MarkStrong(),

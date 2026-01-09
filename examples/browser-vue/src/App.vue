@@ -1,5 +1,4 @@
 <template>
-  <h2>YJS + Vue demo</h2>
   <button @click="newRoom">New room</button>
   <ul>
     <li v-for="id in roomIDs">

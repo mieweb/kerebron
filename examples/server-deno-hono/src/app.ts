@@ -3,11 +3,14 @@ import { serveStatic, upgradeWebSocket } from 'hono/deno';
 import { cors } from 'hono/cors';
 
 import { HonoYjsMemAdapter } from '@kerebron/extension-server-hono/HonoYjsMemAdapter';
+
 import { proxyWs } from './proxyWs.ts';
 import { LspWsAdapter } from './lsp-server.ts';
 import { proxyTcp } from './proxyTcp.ts';
 import { proxyProcess } from './proxyProcess.ts';
 import { ventoEnv } from './vento.ts';
+
+import { markdownToHtml } from './markdown.ts';
 
 const __dirname = import.meta.dirname;
 
@@ -51,10 +54,11 @@ export class Server {
         const buffer = await Deno.readFile(
           __dirname + '/../../../docs/' + docSite,
         );
-        const md = new TextDecoder().decode(buffer);
+
+        const contentHtml = await markdownToHtml(buffer);
 
         const template = await ventoEnv.load('static.vto');
-        const result = await template({ md: md, examples });
+        const result = await template({ contentHtml, examples });
 
         return c.html(result.content);
       });
@@ -62,12 +66,26 @@ export class Server {
 
     for (const example of examples) {
       this.app.get('/examples/' + example + '/', async (c) => {
-        const template = await ventoEnv.load('example.vto');
-        const result = await template({
-          src: `/examples-frame/${example}`,
-          examples,
-        });
-        return c.html(result.content);
+        try {
+          const readmeMd = await Deno.readFile(
+            __dirname + '/../../' + example + '/README.md',
+          );
+
+          const readmeHtml = await markdownToHtml(readmeMd, { example });
+
+          const template = await ventoEnv.load('example.vto');
+          const result = await template({
+            readmeHtml,
+            examples,
+          });
+          return c.html(result.content);
+        } catch (error) {
+          const template = await ventoEnv.load('error.vto');
+          const result = await template({
+            error,
+          });
+          return c.html(result.content, 500);
+        }
       });
     }
 
@@ -168,7 +186,6 @@ export class Server {
         const subPath = c.req.path;
 
         const proxyUrl = `${devProxyUrl}${subPath}${queryString}`;
-        //console.debug(`Proxy call: ${c.req.method} ${proxyUrl}`)
 
         return proxyWs(proxyUrl, {
           ...c.req, // optional, specify only when forwarding all the request data (including credentials) is necessary.
@@ -186,9 +203,6 @@ export class Server {
       const template = await ventoEnv.load('404.vto');
       const result = await template({ examples });
 
-      // const file = Deno.readFileSync(
-      //   __dirname + '/../public/index.html',
-      // );
       return c.html(result.content);
     });
     this.app.use(
