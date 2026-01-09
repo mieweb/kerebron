@@ -221,7 +221,8 @@ export class OdtStashContext {
 
   createText(text: string) {
     if (!text) return;
-    return this.schema.text(text, this.current.marks);
+    const marks = uniqMarks(this.current.marks);
+    return this.schema.text(text, marks);
   }
 
   public styleToMarks(style: Style): Mark[] {
@@ -347,4 +348,21 @@ export class OdtParser {
     ctx.handle('body', contentTree.body);
     return ctx.closeNode('doc');
   }
+}
+
+function uniqMarks(marks: Mark[]): Mark[] {
+  const retVal: Mark[] = [];
+  for (const mark of marks) {
+    if (
+      ['strong', 'italic', 'underline', 'subscript', 'superscript', 'code']
+        .includes(mark.type.name)
+    ) {
+      if (retVal.find((m) => m.type === mark.type)) {
+        continue;
+      }
+    }
+    retVal.push(mark);
+  }
+
+  return retVal;
 }

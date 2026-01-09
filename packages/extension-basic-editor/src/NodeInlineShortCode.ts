@@ -1,11 +1,14 @@
-import { Node as PmNode, NodeSpec, NodeType } from 'prosemirror-model';
+import { Node as PmNode, NodeSpec, NodeType, Schema } from 'prosemirror-model';
+import { EditorState, Transaction } from 'prosemirror-state';
+
 import { Node } from '@kerebron/editor';
 import {
   type InputRule,
   replaceInlineNode,
-  textblockTypeInputRule,
-  wrappingInputRule,
 } from '@kerebron/editor/plugins/input-rules';
+import { CoreEditor } from '@kerebron/editor';
+import { CommandFactories } from '@kerebron/editor';
+import { Command } from '@kerebron/editor/commands';
 
 export function fixCharacters(text: string) {
   return text
@@ -16,6 +19,33 @@ export function fixCharacters(text: string) {
     .replace(/\x0b/g, ' ')
     .replace(/\u201d/g, '"')
     .replace(/\u201c/g, '"');
+}
+
+type Factory = (oldNode: PmNode, schema: Schema) => PmNode;
+
+function replaceAllNodesOfType(
+  tr: Transaction,
+  doc: PmNode,
+  oldType: NodeType,
+  factory: Factory,
+) {
+  const replacements: Array<{ node: PmNode; pos: number }> = [];
+
+  doc.descendants((node, pos) => {
+    if (node.type === oldType) {
+      replacements.push({ node, pos });
+    }
+  });
+
+  console.log('replaceAllNodesOfType', replacements.length);
+
+  for (let i = replacements.length - 1; i >= 0; i--) {
+    const { node, pos } = replacements[i];
+    const newNode = factory(node, tr.doc.type.schema);
+    tr = tr.replaceWith(pos, pos + node.nodeSize, newNode);
+  }
+
+  return tr;
 }
 
 export class NodeInlineShortCode extends Node {
@@ -60,5 +90,31 @@ export class NodeInlineShortCode extends Node {
         },
       ),
     ];
+  }
+
+  override getCommandFactories(
+    editor: CoreEditor,
+    type: NodeType,
+  ): Partial<CommandFactories> {
+    return {
+      'renderShortCode': (createReplacementNode: Factory): Command => {
+        return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+          let tr = state.tr;
+
+          tr = replaceAllNodesOfType(
+            tr,
+            state.doc,
+            type,
+            createReplacementNode,
+          );
+
+          if (tr.docChanged && dispatch) {
+            dispatch(tr);
+          }
+
+          return true;
+        };
+      },
+    };
   }
 }

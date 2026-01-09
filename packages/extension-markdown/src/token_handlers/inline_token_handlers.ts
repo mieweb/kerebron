@@ -289,6 +289,12 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
         }
       },
     ],
+
+    'shortcode_inline': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log('{{' + token.content + '}}', token);
+      },
+    ],
   };
 }
 
@@ -458,6 +464,12 @@ export function getHtmlInlineTokensHandlers(): Record<
 
     'footnote_ref': [
       (token: Token, ctx: ContextStash) => {
+      },
+    ],
+
+    'shortcode_inline': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log('{{' + token.content + '}}', token);
       },
     ],
   };

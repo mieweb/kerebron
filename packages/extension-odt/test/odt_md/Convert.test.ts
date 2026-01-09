@@ -11,7 +11,7 @@ import { ExtensionOdt } from '@kerebron/extension-odt';
 import { ExtensionTables } from '@kerebron/extension-tables';
 import { NodeCodeBlock } from '@kerebron/extension-basic-editor/NodeCodeBlock';
 import { denoCdn } from '@kerebron/wasm/deno';
-import { urlToFolderId } from './idParsers.ts';
+import { urlToFolderId } from '../wgd/idParsers.ts';
 
 globalThis.DOMParser = DOMParser as any;
 globalThis.XMLSerializer = XMLSerializer;

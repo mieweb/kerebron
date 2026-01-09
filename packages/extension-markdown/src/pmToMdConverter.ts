@@ -332,6 +332,16 @@ export async function extPmToMdConverter(
         },
       };
     },
+
+    shortcode_inline(node) {
+      return {
+        selfClose: (node: Node) => {
+          const token = new Token('shortcode_inline', 'shortcode_inline', 0);
+          token.content = node.attrs.content;
+          return Promise.resolve(token);
+        },
+      };
+    },
   }, {
     em: {
       open: 'em_open',

@@ -14,7 +14,7 @@ export interface NodeConfig {
 }
 
 export interface CommandFactories {
-  [key: string]: () => Command;
+  [key: string]: (...args: any[]) => Command;
 }
 
 export abstract class Node {
