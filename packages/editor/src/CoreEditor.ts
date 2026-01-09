@@ -15,7 +15,11 @@ import { createNodeFromObject } from './utilities/createNodeFromContent.ts';
 import { Extension } from './Extension.ts';
 import { defaultUi, EditorUi } from './ui.ts';
 import { runInputRulesTexts } from './plugins/input-rules/InputRulesPlugin.ts';
-import { ChainedCommands, CommandFactories } from './commands/types.ts';
+import {
+  ChainedCommands,
+  Command,
+  CommandFactories,
+} from './commands/types.ts';
 
 function ensureDocSchema(
   doc: ProseMirrorNode,
@@ -47,6 +51,8 @@ export class CoreEditor extends EventTarget {
   public view!: EditorView | DummyEditorView;
   public state!: EditorState;
   public ui: EditorUi = defaultUi(this);
+  private linkListener?: EventListenerOrEventListenerObject;
+  private linkSource?: CoreEditor;
 
   private constructor(
     config: Partial<EditorConfig>,
@@ -118,6 +124,63 @@ export class CoreEditor extends EventTarget {
 
   public can(): ChainedCommands {
     return this.commandManager.createCan();
+  }
+
+  public link(source: CoreEditor): ChainedCommands {
+    if (source === this) {
+      throw new Error('You cannot chain editor to itself');
+    }
+
+    this.unlink();
+
+    this.state = EditorState.create({ doc: source.getDocument() });
+
+    const { commandFactories } = this.commandManager;
+    const commands: Command[] = [];
+
+    const chain = {
+      ...Object.fromEntries(
+        Object.entries(commandFactories).map(([name, commandFactory]) => {
+          const chainedCommand = (...args: never[]) => {
+            const command = commandFactory(...args);
+            commands.push(command);
+            return chain;
+          };
+          return [name, chainedCommand];
+        }),
+      ),
+      run: () => {
+        this.linkSource = source;
+        this.linkListener = () => {
+          let state = source.state;
+          const dispatch = (tr: Transaction) => {
+            state = state.apply(tr);
+          };
+
+          for (const command of commands) {
+            if (!command(state, dispatch)) {
+              return;
+            }
+          }
+
+          this.state = state;
+          if (this.view) {
+            this.view.updateState(this.state);
+          }
+        };
+        source.addEventListener('changed', this.linkListener);
+      },
+    } as unknown as ChainedCommands;
+
+    return chain;
+  }
+
+  public unlink() {
+    if (this.linkListener && this.linkSource) {
+      this.linkSource.removeEventListener('changed', this.linkListener);
+      this.linkListener = undefined;
+      this.linkSource = undefined;
+    }
   }
 
   private createView(content: any) {

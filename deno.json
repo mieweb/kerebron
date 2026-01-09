@@ -29,6 +29,7 @@
     "examples/browser-vue",
     "examples/browser-vue-custom-element",
     "examples/browser-vue-lsp",
+    "examples/browser-vue-link",
     "examples/cli-html-generator",
     "examples/server-deno-hono",
     "examples/mcptest"
