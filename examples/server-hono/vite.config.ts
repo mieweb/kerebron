@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import ssg from '@hono/vite-ssg';
+import wasm from 'vite-plugin-wasm';
 import { defaultPlugin, SSGPlugin } from 'hono/ssg';
 import { deno } from '../../build/vite-plugins/denoPlugin.ts';
 import { generateAlias } from '../../build/vite-plugins/generateAlias.ts';
@@ -19,19 +20,28 @@ const skipApiPlugin: SSGPlugin = {
 export default defineConfig({
   base: '',
   plugins: [
+    wasm(),
+    deno(),
     ssg({
       entry: './src/honoSSG.ts',
       plugins: [defaultPlugin, skipApiPlugin],
     }),
-    // wasm(),
-    deno(),
   ],
   resolve: {
-    alias: generateAlias(),
+    preserveSymlinks: true,
+    alias: {
+      ...generateAlias(),
+    },
   },
   build: {
     target: 'es2022',
     sourcemap: true,
+  },
+  ssr: {
+    noExternal: [
+      /kerebron/,
+      /prosemirror/,
+    ],
   },
   clearScreen: false,
 });

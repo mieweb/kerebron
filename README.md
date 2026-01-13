@@ -8,7 +8,7 @@
 
 ## Playground Demo
 
-[playground](https://demo.kerebron.com) - be nice.
+[playground](https://kerebron.com) - be nice.
 
 ## Overview
 
@@ -49,7 +49,7 @@ deno task -f @kerebron build
 To start example server:
 
 ```sh
-deno task -f server-deno-hono start
+deno task dev
 ```
 
 ## Examples

@@ -1,4 +1,0 @@
-# zed symlinks ignore
-public/examples/*
-public/wasm/*
-dist

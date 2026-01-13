@@ -31,7 +31,7 @@
     "examples/browser-vue-lsp",
     "examples/browser-vue-link",
     "examples/cli-html-generator",
-    "examples/server-deno-hono",
+    "examples/server-hono",
     "examples/mcptest"
   ],
   "compilerOptions": {
@@ -40,7 +40,8 @@
   "tasks": {
     "build:cdn": "deno task -f lib-cdn build",
     "build:ext-odt": "deno task -f @kerebron/odt-wasm build",
-    "build:ext-wasm": "deno task -f @kerebron/wasm build"
+    "build:ext-wasm": "deno task -f @kerebron/wasm build",
+    "dev": "deno task -f server-hono start"
   },
   "imports": {
     "@deno/dnt": "jsr:@deno/dnt@^0.42.3",
@@ -73,7 +74,7 @@
     "thememirror": "npm:thememirror@2.0.1"
   },
   "lint": {
-    "exclude": ["examples/server-cloudflare-worker"],
+    "exclude": [],
     "rules": {
       "tags": ["recommended"],
       "exclude": ["no-explicit-any", "prefer-const", "no-unused-vars"]

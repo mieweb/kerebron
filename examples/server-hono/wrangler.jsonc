@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "kerebron-cf-worker",
+  "compatibility_date": "2025-08-03",
+  "main": "./src/cf.ts",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "dist"
+  },
+  "migrations": [
+    {
+      "new_sqlite_classes": ["YjsRoom"],
+      "tag": "v1"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "class_name": "YjsRoom",
+        "name": "YJS_ROOM"
+      }
+    ]
+  },
+  "observability": {
+    "enabled": true
+  },
+  "build": {
+    "command": "deno task build"
+  }
+}

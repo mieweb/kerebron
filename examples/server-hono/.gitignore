@@ -1,0 +1,13 @@
+# wrangler project
+
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
+.wrangler/
+
+# zed symlinks ignore
+public/examples/*
+public/examples-frame/*
+public/wasm/*
+dist

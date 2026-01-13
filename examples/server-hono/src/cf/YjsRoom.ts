@@ -14,8 +14,8 @@ export interface RemoteDoc extends Y.Doc {
   readonly awareness: Y.Awareness;
 }
 
-export class ChatRoom extends DurableObject {
-  private doc: Y.Doc = new WSSharedDoc();
+export class YjsRoom extends DurableObject {
+  private doc: Y.YjsDoc = new WSSharedDoc();
   private sessions = new Map<WebSocket, () => void>();
 
   protected storage = new YTransactionStorageImpl({

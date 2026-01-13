@@ -1,11 +1,15 @@
+import * as fs from 'node:fs';
 import { Fragment, Node as PmNode } from 'prosemirror-model';
 
 import { CoreEditor } from '@kerebron/editor';
 import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
 
-import { denoCdn } from '@kerebron/wasm/deno';
+import { nodeCdn } from '@kerebron/wasm/node';
+import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 
 const __dirname = import.meta.dirname;
+
+const examplesDir = __dirname + '/../../../';
 
 export interface MdContext {
   example?: string;
@@ -16,9 +20,16 @@ export async function markdownToHtml(
   ctx: MdContext = {},
 ): Promise<string> {
   const editor = CoreEditor.create({
-    cdnUrl: denoCdn(),
+    cdnUrl: nodeCdn(),
     editorKits: [
       new BrowserLessEditorKit(),
+      {
+        getExtensions() {
+          return [
+            new ExtensionMarkdown(),
+          ];
+        },
+      },
     ],
   });
 
@@ -57,8 +68,8 @@ export async function markdownToHtml(
               editor.schema.text(fileName),
             )!,
           );
-          const buffer = Deno.readFileSync(
-            __dirname + '/../../' + ctx.example + '/' + fileName,
+          const buffer = fs.readFileSync(
+            examplesDir + ctx.example + '/' + fileName,
           );
           const content = new TextDecoder().decode(buffer);
 
