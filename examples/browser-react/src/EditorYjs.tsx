@@ -1,64 +1,18 @@
 // App.tsx or MyEditor.tsx
 import React, { useEffect, useRef, useState } from 'react';
-import * as Y from 'yjs';
-import { WebsocketProvider } from 'y-websocket';
-import * as random from 'lib0/random';
-import { userColors } from '@kerebron/extension-yjs/userColors';
 
 import { CoreEditor } from '@kerebron/editor';
 import { ExtensionHistory } from '@kerebron/extension-basic-editor/ExtensionHistory';
 import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
 import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
-import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
 import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
 import { LspTransportGetter, Transport } from '@kerebron/extension-lsp';
 
 const MyEditor: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
   const editorInstance = useRef<CoreEditor | null>(null);
-  const wsProvider = useRef<WebsocketProvider | null>(null);
 
   const [md, setMd] = useState<string>('');
-  const [ydoc, setYdoc] = useState<Y.Doc | null>(null);
-
-  // Public methods (equivalent to expose in Vue)
-  const loadDoc = async () => {
-    if (!editorInstance.current) return;
-
-    const content = `# TEST
-
-1. aaa **bold**
-2. bbb
-
-\`\`\`js
-console.log("TEST")
-\`\`\`
-`;
-
-    const buffer = new TextEncoder().encode(content);
-    await editorInstance.current.loadDocument('text/x-markdown', buffer);
-  };
-
-  const loadDoc2 = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.md,.odt,.docx';
-
-    input.onchange = async (e: any) => {
-      const file: File = e.target.files[0];
-      if (!file || !editorInstance.current) return;
-
-      const arrayBuffer = await file.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-
-      await editorInstance.current.loadDocument(
-        file.type || 'application/octet-stream',
-        uint8Array,
-      );
-    };
-
-    input.click();
-  };
 
   useEffect(() => {
     if (!editorRef.current) return;
@@ -88,6 +42,7 @@ console.log("TEST")
     // Initialize the editor
     const editor = CoreEditor.create({
       element: editorRef.current,
+      uri: 'file:///untitled.md',
       editorKits: [
         new AdvancedEditorKit(),
         LspEditorKit.createFrom({ getLspTransport }),
@@ -100,6 +55,9 @@ console.log("TEST")
     });
 
     editorInstance.current = editor;
+
+    // Expose editor to window for testing
+    (window as unknown as { editor: CoreEditor }).editor = editor;
 
     // Listen to transactions and update markdown preview
     const onTransaction = async () => {
@@ -117,9 +75,6 @@ console.log("TEST")
     };
 
     editor.addEventListener('transaction', onTransaction);
-
-    // Optional: Load initial document
-    // loadDoc();
 
     // Cleanup on unmount
     return () => {
