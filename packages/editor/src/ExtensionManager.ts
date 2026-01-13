@@ -192,9 +192,7 @@ export class ExtensionManager {
     const createMap = (extensions: Set<AnyExtensionOrReq>) => {
       for (const extension of extensions) {
         if ('name' in extension) {
-          if (!allExtensions.has(extension.name)) {
-            allExtensions.set(extension.name, extension);
-          }
+          allExtensions.set(extension.name, extension);
         }
         if ('requires' in extension) {
           const childExtensions = Array.from(extension.requires).filter((e) =>

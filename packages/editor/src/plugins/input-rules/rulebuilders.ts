@@ -9,6 +9,8 @@ import {
 } from 'prosemirror-model';
 
 import { InputRule } from './InputRulesPlugin.ts';
+import { Command } from '../../commands/types.ts';
+import { Transaction } from 'prosemirror-state';
 
 /// Build an input rule for automatically wrapping a textblock when a
 /// given string is typed. The `regexp` argument is
@@ -80,6 +82,29 @@ export function textblockTypeInputRule(
     return tr
       .delete(start, end)
       .setBlockType(start, start, nodeType, attrs);
+  });
+}
+
+export function commandInputRule(
+  regexp: RegExp,
+  command: Command,
+  getAttrs: Attrs | null | ((match: RegExpMatchArray) => Attrs | null) = null,
+) {
+  return new InputRule(regexp, (tr, state, match, start, end) => {
+    if (!tr) {
+      tr = state.tr;
+    }
+    const $start = state.doc.resolve(start);
+
+    const dispatch = (newTr: Transaction) => {
+      tr = newTr;
+      state = state.apply(tr);
+    };
+
+    dispatch(tr.delete(start, end));
+    command(state, dispatch);
+
+    return tr;
   });
 }
 

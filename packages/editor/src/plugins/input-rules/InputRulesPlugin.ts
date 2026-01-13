@@ -1,7 +1,8 @@
-import { Fragment, Node as ProseMirrorNode } from 'prosemirror-model';
+import { Node as ProseMirrorNode } from 'prosemirror-model';
 import {
   EditorState,
   Plugin,
+  PluginKey,
   TextSelection,
   Transaction,
 } from 'prosemirror-state';
@@ -116,6 +117,7 @@ function stringHandler(string: string) {
 export class InputRulesPlugin extends Plugin<PluginState> {
   constructor(rules: readonly InputRule[]) {
     super({
+      key: new PluginKey('input-rules'),
       state: {
         init() {
           return null;
@@ -269,6 +271,7 @@ export const runInputRulesRange: CommandFactory = (
     const rules: readonly InputRule[] = plugin.spec.rules;
 
     if (view?.composing) return false;
+
     const $from = state.doc.resolve(from);
     const textBefore = $from.parent.textBetween(
       Math.max(0, $from.parentOffset - MAX_MATCH),
@@ -277,6 +280,7 @@ export const runInputRulesRange: CommandFactory = (
       '\ufffc',
     ) + text;
     let tr = state.tr;
+
     for (let i = 0; i < rules.length; i++) {
       const rule = rules[i];
       if ($from.parent.type.spec.code) {
@@ -293,8 +297,8 @@ export const runInputRulesRange: CommandFactory = (
         tr,
         state,
         match,
-        from - (match[0].length - text.length),
-        to,
+        tr.mapping.map(from - (match[0].length - text.length)),
+        tr.mapping.map(to),
       );
       if (!subTr) continue;
 
@@ -302,10 +306,12 @@ export const runInputRulesRange: CommandFactory = (
       if (rule.undoable) {
         tr.setMeta(plugin, { transform: tr, from, to, text });
       }
+      break;
     }
 
-    if (dispatch) {
-      dispatch(tr);
+    if (tr.docChanged) {
+      dispatch?.(tr);
+      return true;
     }
 
     return false;

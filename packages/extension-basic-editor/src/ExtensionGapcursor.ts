@@ -2,6 +2,7 @@ import {
   EditorState,
   NodeSelection,
   Plugin,
+  PluginKey,
   Selection,
   TextSelection,
 } from 'prosemirror-state';
@@ -171,6 +172,7 @@ function closedAfter($pos: ResolvedPos) {
 /// styles to make it visible.
 function gapCursor(): Plugin {
   return new Plugin({
+    key: new PluginKey('gap-cursor'),
     props: {
       decorations: drawGapCursor,
 

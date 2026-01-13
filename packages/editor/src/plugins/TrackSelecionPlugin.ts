@@ -1,9 +1,10 @@
-import { Plugin } from 'prosemirror-state';
+import { Plugin, PluginKey } from 'prosemirror-state';
 import type { CoreEditor } from '@kerebron/editor';
 
 export class TrackSelecionPlugin extends Plugin {
   constructor(editor: CoreEditor) {
     super({
+      key: new PluginKey('track-selection'),
       view(editorView) {
         return {
           update(view, prevState) {

@@ -1,5 +1,5 @@
 import { EditorView } from 'prosemirror-view';
-import { EditorState, Plugin, Selection } from 'prosemirror-state';
+import { EditorState, Plugin, PluginKey, Selection } from 'prosemirror-state';
 
 import { MenuElement, renderGrouped } from './menu.ts';
 
@@ -198,6 +198,7 @@ export class MenuPlugin extends Plugin {
     floating?: boolean;
   }) {
     super({
+      key: new PluginKey('menu'),
       view(editorView) {
         return new MenuBarView(editorView, options);
       },

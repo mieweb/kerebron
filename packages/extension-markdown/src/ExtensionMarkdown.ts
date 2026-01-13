@@ -31,7 +31,7 @@ export class ExtensionMarkdown extends Extension {
   urlFromRewriter?: UrlRewriter;
   urlToRewriter?: UrlRewriter;
 
-  public constructor(protected override config: Partial<MdConfig> = {}) {
+  public constructor(public override config: Partial<MdConfig> = {}) {
     super(config);
   }
 

@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-window
 
-import { EditorState, Plugin } from 'prosemirror-state';
+import { EditorState, Plugin, PluginKey } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 
 import type { CoreEditor } from '@kerebron/editor';
@@ -1988,6 +1988,7 @@ export class CustomMenuView {
 export class CustomMenuPlugin extends Plugin {
   constructor(editor: CoreEditor, options: CustomMenuOptions) {
     super({
+      key: new PluginKey('custom-menu'),
       view(editorView) {
         return new CustomMenuView(editorView, editor, options.content);
       },

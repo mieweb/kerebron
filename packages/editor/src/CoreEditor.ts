@@ -92,7 +92,10 @@ export class CoreEditor extends EventTarget {
     );
 
     const instance = new CoreEditor(
-      config || {},
+      {
+        ...config,
+        element: undefined,
+      },
       this.schema,
       extensionManager,
     );
@@ -163,10 +166,19 @@ export class CoreEditor extends EventTarget {
             }
           }
 
-          this.state = state;
+          this.state = state.reconfigure({
+            plugins: this.extensionManager.plugins,
+          });
           if (this.view) {
             this.view.updateState(this.state);
           }
+
+          const event = new CustomEvent('changed', {
+            detail: {
+              editor: this,
+            },
+          });
+          this.dispatchEvent(event);
         };
         source.addEventListener('changed', this.linkListener);
       },

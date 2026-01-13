@@ -1,4 +1,4 @@
-import { EditorState, Plugin } from 'prosemirror-state';
+import { EditorState, Plugin, PluginKey } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { dropPoint } from 'prosemirror-transform';
 
@@ -25,6 +25,7 @@ interface DropCursorOptions {
 /// position, and should return a boolean.
 export function dropCursor(options: DropCursorOptions = {}): Plugin {
   return new Plugin({
+    key: new PluginKey('drop-cursor'),
     view(editorView) {
       return new DropCursorView(editorView, options);
     },

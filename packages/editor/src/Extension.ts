@@ -24,7 +24,7 @@ export abstract class Extension {
 
   readonly conflicts?: Array<string>;
 
-  public constructor(protected config: Partial<ExtensionConfig> = {}) {
+  public constructor(public config: Partial<ExtensionConfig> = {}) {
   }
 
   setEditor(editor: CoreEditor) {

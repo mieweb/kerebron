@@ -1,4 +1,4 @@
-import { Plugin } from 'prosemirror-state';
+import { Plugin, PluginKey } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 
 import type { Command } from '../../commands/types.ts';
@@ -76,7 +76,10 @@ function modifiers(name: string, event: KeyboardEvent, shift = true) {
 /// the array get to dispatch first).
 export class KeymapPlugin extends Plugin {
   constructor(bindings: { [key: string]: Command }) {
-    super({ props: { handleKeyDown: keydownHandler(bindings) } });
+    super({
+      key: new PluginKey('keymap'),
+      props: { handleKeyDown: keydownHandler(bindings) },
+    });
   }
 }
 
