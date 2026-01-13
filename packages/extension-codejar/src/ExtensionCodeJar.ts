@@ -1,10 +1,5 @@
 import { Node, Schema } from 'prosemirror-model';
-import {
-  AnyExtensionOrReq,
-  type Converter,
-  type CoreEditor,
-  Extension,
-} from '@kerebron/editor';
+import { type Converter, type CoreEditor, Extension } from '@kerebron/editor';
 import { createNodeFromObject } from '@kerebron/editor/utilities';
 import { NodeCodeJar, NodeCodeJarConfig } from './NodeCodeJar.ts';
 
@@ -17,17 +12,19 @@ export interface ExtensionCodeJarConfig {
 
 export class ExtensionCodeJar extends Extension {
   override name = 'code-jar';
-  requires: AnyExtensionOrReq[];
+
+  nodeCodeJar = new NodeCodeJar({});
+  requires = [
+    this.nodeCodeJar,
+  ];
 
   constructor(protected override config: ExtensionCodeJarConfig = {}) {
     super(config);
+  }
 
-    this.requires = [
-      new NodeCodeJar({
-        languageWhitelist: config.languageWhitelist,
-        // theme: config.theme,
-      }),
-    ];
+  override created(): void {
+    this.nodeCodeJar.config.languageWhitelist = this.config.languageWhitelist;
+    // theme: config.theme,
   }
 
   override getConverters(

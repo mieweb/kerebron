@@ -17,6 +17,10 @@ import {
 
 import { getLangsList } from '@kerebron/wasm';
 import { NodeCodeBlock } from '@kerebron/extension-basic-editor/NodeCodeBlock';
+import {
+  InputRule,
+  textblockTypeInputRule,
+} from '@kerebron/editor/plugins/input-rules';
 
 import { codeJarBlockNodeView } from './codeJarBlockNodeView.ts';
 

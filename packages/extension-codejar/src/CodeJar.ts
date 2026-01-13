@@ -144,15 +144,18 @@ export class CodeJar extends EventTarget {
       : 0;
 
     let isLegacy = false; // true if plaintext-only is not supported
-    if (
-      editor.contentEditable !== 'plaintext-only' || firefoxVersion >= 136
-    ) {
-      isLegacy = true;
-    }
-    if (isLegacy) editor.setAttribute('contenteditable', 'true');
 
     if (!opt.readOnly) {
       editor.setAttribute('contenteditable', 'plaintext-only');
+
+      if (
+        editor.contentEditable !== 'plaintext-only' || firefoxVersion >= 136
+      ) {
+        console.log('editor.contentEditable', editor.contentEditable);
+        isLegacy = true;
+      }
+
+      if (isLegacy) editor.setAttribute('contenteditable', 'true');
       editor.setAttribute(
         'spellcheck',
         this.options.spellcheck ? 'true' : 'false',
@@ -297,8 +300,10 @@ export class CodeJar extends EventTarget {
         if (afterCursor() == '') {
           insert('\n ');
           const pos = this.save();
-          pos.start = --pos.end;
-          this.restore(pos);
+          if (pos) {
+            pos.start = --pos.end;
+            this.restore(pos);
+          }
         } else {
           insert('\n');
         }
@@ -378,6 +383,7 @@ export class CodeJar extends EventTarget {
       );
       const pos = this.save();
       insert(text);
+      console.log('ttt', text);
       this.doHighlight(editor);
       this.restore({
         start: Math.min(pos.start, pos.end) + text.length,
@@ -520,7 +526,10 @@ export class CodeJar extends EventTarget {
     return pos;
   }
 
-  restore(pos: Position) {
+  restore(pos?: Position) {
+    if (!pos) {
+      return;
+    }
     const s = this.getSelection();
     if (!s) {
       return;
