@@ -1,5 +1,13 @@
 [
   {
+    "repo": "ggodlewski/tree-sitter-mermaid",
+    "version": "latest",
+    "files": ["tree-sitter-mermaid.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm"
+    }
+  },
+  {
     "repo": "tree-sitter-grammars/tree-sitter-markdown",
     "version": "latest",
     "files": ["tree-sitter-markdown.wasm", "tree-sitter-markdown_inline.wasm"],
