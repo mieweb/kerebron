@@ -2,7 +2,6 @@ import { EditorState, Plugin, TextSelection } from 'prosemirror-state';
 import * as Y from 'yjs';
 
 // import { DOMParser } from 'jsr:@b-fuze/deno-dom'; // No xml support (mathML) https://github.com/b-fuze/deno-dom/issues?q=is%3Aissue%20state%3Aopen%20xml
-import { DOMParser, Node, parseHTML } from 'npm:linkedom@latest';
 
 import { DummyEditorView } from '@kerebron/editor/DummyEditorView';
 import { ProsemirrorBinding, ySyncPlugin } from '../src/ySyncPlugin.ts';
