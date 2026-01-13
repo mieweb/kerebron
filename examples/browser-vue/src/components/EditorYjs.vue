@@ -15,21 +15,10 @@
 </template>
 <script lang="ts">
 import { CoreEditor } from '@kerebron/editor';
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
-import { ExtensionMarkdown } from '@kerebron/extension-markdown';
-import { ExtensionOdt } from '@kerebron/extension-odt';
-import { ExtensionTables } from '@kerebron/extension-tables';
-import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
-import { ExtensionCustomMenu } from '@kerebron/extension-menu/ExtensionCustomMenu';
-
-import { ExtensionYjs } from '@kerebron/extension-yjs';
-import { userColors } from '@kerebron/extension-yjs/userColors';
-import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
+import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
+import {AdvancedEditorKit} from '@kerebron/editor-kits//AdvancedEditorKit';
 
 import * as Y from 'yjs';
-import * as random from 'lib0/random';
-import { WebsocketProvider } from 'y-websocket';
-import { dracula } from 'thememirror';
 
 export default {
   name: 'my-editor',
@@ -37,12 +26,8 @@ export default {
   expose: ['loadDoc', 'loadDoc2'],
   data() {
     return {
-      peerId: '',
       lastValue: null,
-      doc: {},
       ydoc: {},
-      spans: [],
-      marks: [],
       md: '',
       editor: null,
     };
@@ -58,49 +43,14 @@ export default {
         globalThis.location.hash = 'room:' + roomId;
       }
 
-      const userColor = userColors[random.uint32() % userColors.length];
-
       const ydoc = new Y.Doc();
       this.ydoc = ydoc;
-
-      const protocol = globalThis.location.protocol === 'http:'
-        ? 'ws:'
-        : 'wss:';
-      const wsProvider = new WebsocketProvider(
-        protocol + '//' + globalThis.location.host + '/yjs',
-        roomId,
-        ydoc,
-      );
-
-      wsProvider.on('status', (event) => {
-        console.log('wsProvider status', event.status); // logs "connected" or "disconnected"
-      });
-
-      wsProvider.awareness.setLocalStateField('user', {
-        name: 'Anonymous ' + Math.floor(Math.random() * 100),
-        color: userColor.color,
-        colorLight: userColor.light,
-      });
 
       this.editor = CoreEditor.create({
         element: this.$refs.editor,
         editorKits: [
-          {
-            getExtensions() {
-              return [
-                new ExtensionBasicEditor(),
-                new ExtensionCustomMenu(),
-                new ExtensionMarkdown(),
-                new ExtensionOdt(),
-                new ExtensionTables(),
-                new ExtensionYjs({ ydoc, provider: wsProvider }),
-                new ExtensionDevToolkit(),
-                new ExtensionCodeMirror({
-                  theme: [dracula],
-                }),
-              ];
-            }
-          }
+          new AdvancedEditorKit(),
+          YjsEditorKit.createFrom(ydoc, roomId)
         ],
         // content: pmDoc
       });

@@ -33,7 +33,6 @@ export default {
   expose: ['loadDoc', 'loadDoc2'],
   data() {
     return {
-      peerId: '',
       lastValue: null,
       doc: {},
       ydoc: {},
