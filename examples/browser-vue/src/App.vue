@@ -57,6 +57,3 @@ export default {
   },
 };
 </script>
-<style>
-@import '@kerebron/editor/assets/vars.css';
-</style>

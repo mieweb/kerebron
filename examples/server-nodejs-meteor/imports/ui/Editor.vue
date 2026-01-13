@@ -21,6 +21,7 @@ import { userColors } from '@kerebron/extension-yjs/userColors';
 import { dracula } from 'thememirror';
 
 import { onMounted } from 'vue';
+import {AdvancedEditorKit} from "../../../../packages/editor-kits/src/AdvancedEditorKit";
 
 onMounted(async () => {
   const ydoc = new Y.Doc();
@@ -51,20 +52,7 @@ onMounted(async () => {
   const editor = CoreEditor.create({
     element,
     editorKits: [
-      {
-        getExtensions() {
-          return [
-            new ExtensionBasicEditor(),
-            new ExtensionMenu({
-              floating: true,
-            }),
-            new ExtensionMarkdown(),
-            new ExtensionTables(),
-            new ExtensionYjs({ydoc, provider: meteorProvider}),
-            new ExtensionCodeMirror({theme: [dracula]}),
-          ];
-        }
-      }
+      new AdvancedEditorKit()
     ]
   });
 
