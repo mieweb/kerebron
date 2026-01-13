@@ -85,6 +85,7 @@
       "**/*.md",
       "**/*.odt.xml",
       "**/*.xml",
+      "**/dist",
       "packages/tree-sitter/deno-tree-sitter"
     ]
   },
