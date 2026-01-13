@@ -1,4 +1,4 @@
-import { MathMLToLaTeX } from 'mathml-to-latex';
+import MathMl2LaTeX from 'mathml2latex';
 
 import { Token } from '../types.ts';
 
@@ -132,7 +132,7 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
 
         if (lang === 'mathml') {
           lang = 'math';
-          content = MathMLToLaTeX.convert(content);
+          content = MathMl2LaTeX.convert(content);
         }
 
         if (!content.endsWith('\n')) {
@@ -162,7 +162,7 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
         if (indent === 0) {
           if (lang === 'mathml') {
             lang = 'math';
-            content = MathMLToLaTeX.convert(content);
+            content = MathMl2LaTeX.convert(content);
           }
 
           if (!content.endsWith('\n')) {

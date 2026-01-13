@@ -1,4 +1,4 @@
-import { MathMLToLaTeX } from 'mathml-to-latex';
+import MathMl2LaTeX from 'mathml2latex';
 
 import type { Token } from '../types.ts';
 
@@ -226,7 +226,7 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
       (token: Token, ctx: ContextStash) => {
         let content = token.content;
         if (token.attrGet('lang') === 'mathml') {
-          content = MathMLToLaTeX.convert(content);
+          content = MathMl2LaTeX.convert(content);
         }
         ctx.current.log('$' + content + '$', token);
       },
