@@ -1,0 +1,8 @@
+{
+  "name": "@kerebron/custom-elements",
+  "tasks": {},
+  "imports": {},
+  "exports": {
+    "./KerebronEditor": "./src/KerebronEditor.ts"
+  }
+}

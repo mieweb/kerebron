@@ -23,6 +23,7 @@
     "packages/test-utils",
     "packages/tree-sitter",
     "packages/lib-cdn",
+    "packages/custom-elements",
 
     "examples/browser-vanilla-code-editor",
     "examples/browser-react",
@@ -30,6 +31,8 @@
     "examples/browser-vue-custom-element",
     "examples/browser-vue-lsp",
     "examples/browser-vue-link",
+    "examples/browser-custom-element",
+    "examples/browser-link-mermaid",
     "examples/cli-html-generator",
     "examples/server-hono",
     "examples/mcptest"

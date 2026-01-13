@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cutom element</title>
+  </head>
+  <body>
+    <script type="module">
+      import KerebronEditor from '@kerebron/custom-elements/KerebronEditor';
+      KerebronEditor.register();
+    </script>
+
+    <kerebron-editor>
+      <p><strong>Hello</strong> world!</p>
+    </kerebron-editor>
+
+    <kerebron-editor media-type="text/x-markdown" cdn-url="/wasm/" readonly>#
+      Title
+    </kerebron-editor>
+  </body>
+</html>
