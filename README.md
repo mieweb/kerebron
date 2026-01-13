@@ -26,8 +26,16 @@ number of output npm modules.
 
 **Work in progress**
 
-
 ## Build
+
+###
+
+Update git submodules
+
+```sh
+git submodule init
+git submodule update
+```
 
 ### Build static examples and `.wasm` files
 
@@ -72,12 +80,12 @@ docker run -it -p 8000:8000 -v $PWD:/usr/src/app editor-test
 
 Install deno
 
-```
+```sh
 npm install -g deno
 ```
 
 Install rust
 
-```
+```sh
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
