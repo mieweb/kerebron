@@ -1,4 +1,3 @@
-import { ListNumbering } from '../lists.ts';
 import {
   iterateChildren,
   NodeHandler,
@@ -6,91 +5,70 @@ import {
   resolveStyle,
 } from '../OdtParser.ts';
 
+// https://docs.oasis-open.org/office/OpenDocument/v1.4/OpenDocument-v1.4-part3-schema.html#a_19_880_22__text_list_
+// The text:style-name attribute specifies the name of a list style that is applied to a list.
+// If this attribute is not included and therefore no list style is specified, one of the following actions is taken:
+//     •If a list is contained within another list, the list style defaults to the style of the surrounding list.
+//     •If there is no list style specified for the surrounding list, but the list's list items contain paragraphs that have paragraph styles attached specifying a list style, that list style is used.
+//     •An implementation-dependent default list style is used.
+// To determine which formatting properties are applied to a list, the list level and list style name are taken into account.
+function processListStyle(ctx: OdtStashContext, level: number) {
+  const listTracker = ctx.listTracker;
+  const attrs: Record<string, string> = {};
+
+  let style = {};
+  for (let i = listTracker.listStack.length - 1; i >= 0; i--) {
+    const list = listTracker.listStack[i];
+    if (!style['@style-name']) {
+      style = (list.styleName)
+        ? resolveStyle(
+          ctx.stylesTree,
+          ctx.automaticStyles,
+          list.styleName,
+        )
+        : {};
+    }
+  }
+
+  let nodeTypeName = 'bullet_list';
+  if (style) {
+    const numLevelStyle = style['list-level-style-number'].find(
+      (levelStyle) => parseInt(levelStyle['@level']) === level,
+    );
+    if (numLevelStyle) {
+      attrs['type'] = numLevelStyle['@num-format'] || '1';
+      nodeTypeName = 'ordered_list';
+    }
+  }
+
+  return {
+    attrs,
+    nodeTypeName,
+  };
+}
+
+// https://docs.oasis-open.org/office/OpenDocument/v1.4/OpenDocument-v1.4-part3-schema.html#element-text_list
 export function getListNodesHandlers(): Record<string, NodeHandler> {
   return {
     'list': (ctx: OdtStashContext, odtElement: any) => {
       const listTracker = ctx.listTracker;
-      const list = {
-        level: listTracker.listStack.length + 1,
-        odtElement,
-      };
-      listTracker.listStack.push(list);
+      listTracker.pushList(odtElement['@id'], odtElement['@style-name']);
 
-      let style = {};
-      let listId = null;
-      for (let i = listTracker.listStack.length - 1; i >= 0; i--) {
-        const element = listTracker.listStack[i].odtElement;
-        if (!listId) {
-          if (element['@id']) {
-            listId = element['@id'];
-          }
-        }
-        if (!style['@style-name']) {
-          style = ('object' === typeof element && element['@style-name'])
-            ? resolveStyle(
-              ctx.stylesTree,
-              ctx.automaticStyles,
-              element['@style-name'],
-            )
-            : {};
-        }
-      }
-
-      let nodeTypeName = 'bullet_list';
-      const attrs = {};
-      if (style) {
-        const numLevelStyle = style['list-level-style-number'].find(
-          (levelStyle) => parseInt(levelStyle['@level']) === list.level,
-        );
-        if (numLevelStyle) {
-          attrs['type'] = numLevelStyle['@num-format'] || '1';
-          nodeTypeName = 'ordered_list';
-        }
-      }
+      const { nodeTypeName, attrs } = processListStyle(
+        ctx,
+        listTracker.getCurrentList().level,
+      );
 
       ctx.current.meta['list_type'] = nodeTypeName;
 
-      let listNumbering = null;
-
-      if (listId && listTracker.listNumberings.has(listId)) {
-        listNumbering = listTracker.listNumberings.get(listId);
+      if (odtElement['@id']) {
+        attrs['id'] = odtElement['@id'];
       }
-
-      let isContinue = false;
-      if (
-        odtElement['@continue-list'] &&
-        listTracker.listNumberings.has(odtElement['@continue-list'])
-      ) {
-        listNumbering = listTracker.listNumberings.get(
-          odtElement['@continue-list'],
-        );
-        isContinue = true;
+      if (odtElement['@continue-list']) {
+        attrs['continue'] = odtElement['@continue-list'];
       }
       if (odtElement['@continue-numbering']) {
-        listNumbering = listTracker.lastNumbering;
-        isContinue = true;
-      }
-
-      if (!listNumbering) {
-        listNumbering = new ListNumbering();
-      }
-
-      if (isContinue) {
-        listTracker.preserveMinLevel = 999;
-      }
-
-      if (listId) {
-        listTracker.listNumberings.set(listId, listNumbering);
-      }
-
-      listTracker.lastNumbering = listNumbering;
-
-      if (listTracker.preserveMinLevel <= list.level) {
-        listNumbering.clearAbove(list.level - 1);
-      }
-
-      if (nodeTypeName === 'ordered_list') {
-        attrs['start'] = listNumbering.levels[list.level] || 1;
+        attrs['continue'] = '_last';
       }
 
       ctx.openNode();
@@ -99,18 +77,14 @@ export function getListNodesHandlers(): Record<string, NodeHandler> {
         'list-item': item,
       }));
 
-      if (children) {
-        iterateChildren(children, (child) => {
-          ctx.handle(child.tag, child.value);
-        });
+      iterateChildren(children, (child) => {
+        ctx.handle(child.tag, child.value);
+      });
 
-        listNumbering.levels[list.level] += children.length;
-      }
-
-      ctx.closeNode(nodeTypeName, attrs);
-
-      if (listTracker.preserveMinLevel >= list.level) {
-        listTracker.preserveMinLevel = list.level;
+      if (ctx.current.content.length === 0) {
+        ctx.dropNode();
+      } else {
+        ctx.closeNode(nodeTypeName, attrs);
       }
 
       listTracker.listStack.pop();
@@ -122,7 +96,7 @@ export function getListNodesHandlers(): Record<string, NodeHandler> {
         (child) => ctx.handle(child.tag, child.value),
       );
 
-      const attrs = {};
+      const attrs: Record<string, string> = {};
       attrs.markup = '* ';
 
       ctx.closeNode('list_item', attrs);

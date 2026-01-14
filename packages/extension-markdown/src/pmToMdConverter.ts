@@ -214,6 +214,7 @@ export async function extPmToMdConverter(
             '1';
           const token = new Token('ordered_list_open', 'ol', 1);
           token.attrSet('symbol', node.attrs['type'] || '1');
+          token.attrSet('start', node.attrs['start']);
           return token;
         },
         close: async (node) => {
@@ -226,6 +227,12 @@ export async function extPmToMdConverter(
       return {
         open: async (node) => {
           const token = new Token('list_item_open', 'li', 1);
+          if (node.attrs['value']) {
+            token.attrSet('value', node.attrs['value']);
+          }
+          if (node.attrs['type']) {
+            token.attrSet('type', node.attrs['type']);
+          }
           if (ctx.current.meta['list_type'] === 'ul') {
             token.markup = ctx.current.meta['list_type_symbol'] || '-';
           }

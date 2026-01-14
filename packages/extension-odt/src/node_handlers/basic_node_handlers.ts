@@ -33,8 +33,6 @@ export function getInlineNodesHandlers(): Record<string, NodeHandler> {
       ctx.closeNode('br');
     },
     'soft-page-break': (ctx: OdtStashContext, odtElement: any) => {
-      ctx.openNode();
-      ctx.closeNode('br');
     },
 
     'bookmark': (ctx: OdtStashContext, element: any) => { // bookmark for parent para

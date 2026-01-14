@@ -1,10 +1,8 @@
-import { OdtElement } from './OdtParser.ts';
-
 export class ListNumbering {
   levels: { [level: number]: number } = {};
-  levelNodes: { [level: number]: Node } = {};
+  forceStart: { [level: number]: boolean } = {};
 
-  constructor() {
+  constructor(public readonly id: string) {
     for (let i = 0; i < 20; i++) {
       this.levels[i] = 1;
     }
@@ -16,20 +14,36 @@ export class ListNumbering {
     }
   }
 
-  setLevelNode(level: number, node: Node) {
-    this.levelNodes[level] = node;
+  clone(id: string): ListNumbering {
+    const retVal = new ListNumbering(id);
+
+    retVal.levels = structuredClone(retVal.levels);
+    retVal.forceStart = structuredClone(retVal.forceStart);
+
+    return retVal;
   }
 }
 
 export interface List {
   level: number;
-  odtElement: OdtElement;
+  id?: string;
+  styleName: string;
 }
 
 export class ListTracker {
   listStack: List[] = [];
 
-  listNumberings: Map<string, ListNumbering> = new Map<string, ListNumbering>();
-  lastNumbering?: ListNumbering;
-  preserveMinLevel = 999;
+  pushList(id?: string, styleName = ''): List {
+    const list: List = {
+      id,
+      styleName,
+      level: this.listStack.length + 1,
+    };
+    this.listStack.push(list);
+    return list;
+  }
+
+  getCurrentList(): List {
+    return this.listStack[this.listStack.length - 1];
+  }
 }

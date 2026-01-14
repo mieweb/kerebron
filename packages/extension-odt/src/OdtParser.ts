@@ -6,7 +6,6 @@ import {
 import { getListNodesHandlers } from './node_handlers/list_node_handlers.ts';
 import { getTableNodesHandlers } from './node_handlers/table_node_handlers.ts';
 import { ListTracker } from './lists.ts';
-import { type UrlRewriter } from '@kerebron/editor';
 
 const COURIER_FONTS = ['Courier New', 'Courier', 'Roboto Mono'];
 
@@ -16,24 +15,24 @@ export interface OdtElement {
 
 export type NodeHandler = (ctx: OdtStashContext, value: any) => void;
 
-interface ListStyle {
+export interface ListStyle {
   '@name': string;
 }
 
-interface Style {
+export interface Style {
   '@name': string;
   '@parent-style-name'?: string;
   styles: string[];
 }
 
-interface StylesTree {
+export interface StylesTree {
   styles: {
     'list-style': Array<ListStyle>;
     'style': Array<Style>;
   };
 }
 
-interface AutomaticStyles {
+export interface AutomaticStyles {
   'style': Array<Style>;
 }
 
@@ -196,6 +195,10 @@ export class OdtStashContext {
   public openNode() {
     this.stash();
     this.current.content = [];
+  }
+
+  public dropNode() {
+    this.unstash();
   }
 
   public closeNode(type: string, attrs = {}, marks = Mark.none) {

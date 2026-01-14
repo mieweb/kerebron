@@ -36,6 +36,12 @@ export class NodeOrderedList extends Node {
           : 1;
       },
     },
+    id: {
+      default: undefined,
+    },
+    continue: {
+      default: undefined,
+    },
   };
 
   override getNodeSpec(): NodeSpec {

@@ -1,6 +1,7 @@
 import {
   type Attrs,
   Fragment,
+  Node as PMNode,
   NodeRange,
   NodeSpec,
   type NodeType,
@@ -12,18 +13,23 @@ import type {
   Transaction,
 } from 'prosemirror-state';
 import { Selection } from 'prosemirror-state';
-import { type CoreEditor, Node } from '@kerebron/editor';
-import {
-  type Command,
-  type CommandFactories,
-  type CommandShortcuts,
-} from '@kerebron/editor/commands';
 import {
   canJoin,
   canSplit,
   liftTarget,
   ReplaceAroundStep,
 } from 'prosemirror-transform';
+
+import { type CoreEditor, Node } from '@kerebron/editor';
+import type {
+  Command,
+  CommandFactories,
+  CommandShortcuts,
+} from '@kerebron/editor/commands';
+import {
+  getHtmlAttributes,
+  setHtmlAttributes,
+} from '@kerebron/editor/utilities';
 
 /// Build a command that splits a non-empty textblock at the top level
 /// of a list item by also splitting that list item.
@@ -288,13 +294,33 @@ export class NodeListItem extends Node {
   override name = 'list_item';
   requires = ['doc'];
 
+  override attributes = {
+    value: {
+      default: undefined,
+    },
+    type: {
+      default: undefined,
+      fromDom(element: HTMLElement) {
+        return element.hasAttribute('type')
+          ? element.getAttribute('type')
+          : undefined;
+      },
+      toDom(node: PMNode) {
+        return node.attrs.type;
+      },
+    },
+  };
+
   override getNodeSpec(): NodeSpec {
     return {
       content: 'paragraph block*',
-      parseDOM: [{ tag: 'li' }],
+      parseDOM: [{
+        tag: 'li',
+        getAttrs: (element) => setHtmlAttributes(this, element),
+      }],
       defining: true,
-      toDOM() {
-        return ['li', 0];
+      toDOM: (node) => {
+        return ['li', getHtmlAttributes(this, node), 0];
       },
     };
   }

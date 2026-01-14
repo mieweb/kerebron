@@ -348,7 +348,9 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
     'list_item_open': [
       (token: Token, ctx: ContextStash) => {
         ctx.current.itemRow = 0;
-        ctx.current.itemNumber++;
+        if (token.attrGet('type') !== 'none') {
+          ctx.current.itemNumber++;
+        }
 
         ctx.current.itemSymbol = token.info || token.markup;
         if (!ctx.current.itemSymbol) {

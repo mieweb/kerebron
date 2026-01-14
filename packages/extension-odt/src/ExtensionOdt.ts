@@ -17,6 +17,7 @@ import { OdtParser, OdtParserConfig } from './OdtParser.ts';
 import { getDefaultsPostProcessFilters } from './postprocess/postProcess.ts';
 import { Command } from '@kerebron/editor/commands';
 import { InputRulesPlugin } from '@kerebron/editor/plugins/input-rules';
+import { EditorState, Transaction } from 'prosemirror-state';
 
 export interface OdtConfig extends OdtParserConfig {
   debug?: boolean;
@@ -53,33 +54,28 @@ export class ExtensionOdt extends Extension {
           this.config.postProcessCommands || [],
         );
 
-        const plugin = editor.state.plugins.find((plugin) =>
-          plugin instanceof InputRulesPlugin
-        );
-        if (plugin) {
-          // plugin.props.
-        }
-
-        const subEditor = editor.clone();
-        subEditor.setDocument(doc.toJSON());
+        let state = EditorState.create({ doc });
+        const dispatch = (tr: Transaction) => {
+          state = state.apply(tr);
+        };
 
         let modified = false;
         if (this.urlFromRewriter) {
           const imageNodes: Array<{ node: Node; pos: number }> = [];
-          subEditor.getDocument().descendants((node, pos) => {
+          state.doc.descendants((node, pos) => {
             if (node.type.name === 'image') {
               imageNodes.push({ node, pos });
             }
           });
 
           const linkNodes: Array<{ node: Node; pos: number }> = [];
-          subEditor.getDocument().descendants((node, pos) => {
+          state.doc.descendants((node, pos) => {
             if (node.marks.find((mark) => mark.type.name === 'link')) {
               linkNodes.push({ node, pos });
             }
           });
 
-          const tr = subEditor.state.tr;
+          const tr = state.tr;
 
           for (const { node, pos } of linkNodes) {
             const linkMark = node.marks.find((mark) =>
@@ -147,24 +143,19 @@ export class ExtensionOdt extends Extension {
               );
             }
           }
-          subEditor.dispatchTransaction(tr), modified = true;
+          dispatch(tr);
         }
 
         if (filterCommands.length > 0) {
           for (const filter of filterCommands) {
             filter(
-              subEditor.state,
-              (tr) => subEditor.dispatchTransaction(tr),
+              state,
+              (tr) => dispatch(tr),
             );
           }
-          modified = true;
         }
 
-        if (modified) {
-          return subEditor.getDocument();
-        }
-
-        return doc;
+        return state.doc;
       },
       odtToJson: (buffer: Uint8Array) => {
         const files = unzip(buffer);

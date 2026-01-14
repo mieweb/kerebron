@@ -1,11 +1,12 @@
 import MathMl2LaTeX from 'mathml2latex';
 
-import type { Token } from '../types.ts';
-
 import type {
   ContextStash,
   TokenHandler,
 } from '@kerebron/extension-markdown/MarkdownSerializer';
+
+import type { Token } from '../types.ts';
+import { fixCharacters } from '../utils.ts';
 
 export function escapeMarkdown(token: Token): Array<[string, Token]> {
   const markdownChars = [
@@ -35,7 +36,7 @@ export function escapeMarkdown(token: Token): Array<[string, Token]> {
 
   const startPos = token.map && token.map.length > 0 ? token.map[0] : 0;
   if (!startPos) {
-    let escapedText = token.content;
+    let escapedText = fixCharacters(token.content);
     for (const { char, escape } of markdownChars) {
       escapedText = escapedText.replaceAll(char, escape);
     }
@@ -43,7 +44,7 @@ export function escapeMarkdown(token: Token): Array<[string, Token]> {
     return [[escapedText, token]];
   }
 
-  const charArr = token.content.split('');
+  const charArr = fixCharacters(token.content).split('');
   const retVal: Array<[string, Token]> = [];
 
   const markdownCharsMap: Record<string, string> = Object.fromEntries(
