@@ -37,6 +37,9 @@ function processListStyle(ctx: OdtStashContext, level: number) {
     );
     if (numLevelStyle) {
       attrs['type'] = numLevelStyle['@num-format'] || '1';
+      if (numLevelStyle['@start-value']) {
+        attrs['start'] = numLevelStyle['@start-value'];
+      }
       nodeTypeName = 'ordered_list';
     }
   }

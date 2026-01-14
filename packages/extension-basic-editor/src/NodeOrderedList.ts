@@ -29,11 +29,11 @@ export class NodeOrderedList extends Node {
       },
     },
     start: {
-      default: 1,
+      default: undefined,
       fromDom(element: HTMLElement) {
         return element.hasAttribute('start')
           ? +element.getAttribute('start')!
-          : 1;
+          : undefined;
       },
     },
     id: {

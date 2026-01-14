@@ -93,6 +93,10 @@ export const fixContinuedLists: Command = (state, dispatch): boolean => {
         listNumbering.levels[level] = 1;
       }
 
+      if (node.attrs.start) {
+        listNumbering.levels[level] = node.attrs.start;
+      }
+
       if ('ordered_list' === node.type.name) {
         if (1 < listNumbering.levels[level]) {
           tr = tr.setNodeMarkup(tr.mapping.map(pos - 1), node.type, {
