@@ -1,9 +1,7 @@
 {
   "name": "server-hono",
   "tasks": {
-    "dev": "deno test --allow-net --allow-ffi --allow-read --watch ./src/*.ts",
-    "build": "deno task update_symlinks",
-    "build2": "deno task update_symlinks ; deno task build:vite",
+    "build": "deno task update_symlinks ; deno task build:vite",
     "update_symlinks": "./update_symlinks.sh",
     "build:vite": "deno run -A npm:vite build",
     "start": "deno run --allow-net --allow-ffi --allow-read --allow-env --allow-sys --allow-write --allow-run --node-modules-dir ./src/main.ts",
