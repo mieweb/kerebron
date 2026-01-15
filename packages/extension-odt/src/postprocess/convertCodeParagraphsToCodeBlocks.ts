@@ -1,35 +1,7 @@
-import { Fragment, MarkType, Node } from 'prosemirror-model';
+import { Node } from 'prosemirror-model';
 import { Transaction } from 'prosemirror-state';
 
 import type { Command } from '@kerebron/editor/commands';
-
-function onlyHasCodeMarkedText(
-  paragraph: Node,
-  codeMarkType: MarkType,
-): boolean {
-  if (paragraph.content.size === 0) {
-    return paragraph.marks.some((mark) => mark.type.name === codeMarkType.name);
-  }
-
-  let allAreCodeMarked = true;
-
-  paragraph.content.forEach((child) => {
-    if (
-      !child.isText ||
-      !child.marks.some((mark) => mark.type.name === codeMarkType.name)
-    ) {
-      allAreCodeMarked = false;
-    }
-  });
-
-  return allAreCodeMarked;
-}
-
-interface ParagraphsToMerge {
-  startPos: number;
-  endPos: number;
-  innerText: string;
-}
 
 export const convertCodeParagraphsToCodeBlocks: Command = (
   state,
@@ -39,80 +11,53 @@ export const convertCodeParagraphsToCodeBlocks: Command = (
   const schema = state.schema;
   let tr: Transaction = state.tr;
 
-  let paragraphsToMerge: ParagraphsToMerge | null = null;
+  const markCodeType = schema.marks.code;
 
-  function flushCodeBlock() {
-    if (paragraphsToMerge === null) {
-      return;
-    }
-
-    const textNode = schema.text(paragraphsToMerge.innerText);
-    const codeBlock = schema.nodes.code_block.createAndFill(null, [textNode]);
-
-    const startPos = tr.mapping.map(paragraphsToMerge.startPos);
-    const endPos = tr.mapping.map(paragraphsToMerge.endPos);
-
-    if (codeBlock) {
-      tr.replaceRangeWith(startPos, endPos, codeBlock);
-    }
-
-    paragraphsToMerge = null;
-  }
-
-  function nodesToText(fragment: Fragment) {
-    if (fragment.content.length === 0) {
-      return '';
-    }
-
-    let retVal = '';
-
-    fragment.content.forEach((node) => {
-      if (node.isText) {
-        retVal += node.text;
-      } else {
-        retVal = '@TODO: node.type ' + node.type;
-      }
-    });
-
-    return retVal;
-  }
-
-  doc.forEach((node, pos) => {
+  doc.descendants((node, pos) => {
     if (node.type.name === 'paragraph') {
-      const isCodeOnly = onlyHasCodeMarkedText(node, schema.marks.code);
-      const isEmpty = node.content.size === 0;
+      let codeText = '';
+      let codeSize = 0;
+      for (let childNo = 0; childNo < node.childCount; childNo++) {
+        const child = node.child(childNo);
 
-      if (isCodeOnly) {
-        if (paragraphsToMerge === null) {
-          paragraphsToMerge = {
-            startPos: pos,
-            endPos: pos + node.nodeSize,
-            innerText: nodesToText(node.content),
-          };
-        } else {
-          paragraphsToMerge = {
-            startPos: paragraphsToMerge.startPos,
-            endPos: pos + node.nodeSize,
-            innerText: paragraphsToMerge.innerText + '\n' +
-              nodesToText(node.content),
-          };
+        if (child.type.name === 'br') {
+          codeText += '\n';
+          codeSize += child.nodeSize;
+          continue;
         }
-        return;
-      }
-    }
 
-    if (paragraphsToMerge !== null) {
-      flushCodeBlock();
+        if (child.marks.some((mark) => mark.type === markCodeType)) {
+          codeText += child.text || child.textBetween(0, child.content.size);
+          codeSize += child.nodeSize;
+          continue;
+        }
+
+        break;
+      }
+
+      if (codeSize > 0) {
+        const startPos = tr.mapping.map(pos);
+        const endPos = tr.mapping.map(pos + 1 + codeSize);
+
+        const textNode = schema.text(codeText);
+        const codeBlock = schema.nodes.code_block.createAndFill(null, [
+          textNode,
+        ]);
+
+        if (codeBlock) {
+          tr = tr.replaceRangeWith(startPos, endPos, codeBlock);
+        }
+      }
+
+      if (codeSize > 0 && codeSize + 2 === node.nodeSize) {
+        // tr = tr.deleteRange(tr.mapping.map(pos), tr.mapping.map(pos))
+      }
     }
   });
-
-  if (paragraphsToMerge !== null) {
-    flushCodeBlock();
-  }
 
   if (dispatch) {
     dispatch(tr);
   }
 
-  return tr.steps.length > 0;
+  return tr.docChanged;
 };

@@ -155,6 +155,15 @@ export class ExtensionOdt extends Extension {
           }
         }
 
+        if (this.config.debug) {
+          const event = new CustomEvent('odt:pmdoc:filtered', {
+            detail: {
+              doc: state.doc,
+            },
+          });
+          this.editor.dispatchEvent(event);
+        }
+
         return state.doc;
       },
       odtToJson: (buffer: Uint8Array) => {

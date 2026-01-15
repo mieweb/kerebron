@@ -5,6 +5,7 @@ import { convertCodeParagraphsToCodeBlocks } from './convertCodeParagraphsToCode
 import { removeUnusedBookmarks } from './removeUnusedBookmarks.ts';
 import { fixContinuedLists } from './fixContinuedLists.ts';
 import { convertMathMl } from './convertMathMl.ts';
+import { mergeCodeBlocks } from './mergeCodeBlocks.ts';
 
 export interface PostProcessConfig {
   doc: Node;
@@ -19,5 +20,6 @@ export function getDefaultsPostProcessFilters(
     removeUnusedBookmarks,
     fixContinuedLists,
     convertMathMl,
+    mergeCodeBlocks,
   ];
 }
