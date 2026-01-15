@@ -310,6 +310,9 @@ export class OdtParser {
         //   );
         // },
       },
+      'g': () => { // Test is: embedded-diagram-example.odt
+        // DrawG draw:g
+      },
       'frame': (ctx: OdtStashContext, odtElement: any) => {
         if (odtElement.object && odtElement.object['@href']) {
           const fullPath = odtElement.object['@href'].replace(/^\.\//, '') +

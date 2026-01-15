@@ -261,10 +261,10 @@ pub struct DrawCustomShape {
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct DrawG {
   #[serde(rename = "draw:custom-shape")]
-  list: Vec<DrawCustomShape>,
+  list: Option<Vec<DrawCustomShape>>,
 
   #[serde(rename = "@draw:style-name")]
-  style_name: String,
+  style_name: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
