@@ -234,7 +234,7 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
     ],
     'hardbreak': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('\n', token);
+        ctx.current.log('  \n', token);
       },
     ],
     'softbreak': [

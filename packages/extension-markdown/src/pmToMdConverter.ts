@@ -1,5 +1,4 @@
-import { Mark, MarkType, Node, Schema } from 'prosemirror-model';
-import { Fragment } from 'prosemirror-model';
+import { Mark, Node, Schema } from 'prosemirror-model';
 import { Token } from './types.ts';
 
 import {
@@ -15,28 +14,8 @@ import { MarkdownSerializer } from './MarkdownSerializer.ts';
 import { DocumentMarkdownTokenizer } from './DocumentMarkdownTokenizer.ts';
 import { SmartOutput } from '@kerebron/editor/utilities';
 import { MdConfig } from '@kerebron/extension-markdown';
-
-function removeMarkedContent(node: Node, markType: MarkType) {
-  if (node.isText) {
-    const hasMark = node.marks.some((mark) => mark.type === markType);
-    return hasMark ? null : node;
-  }
-
-  if (node.isLeaf) {
-    return node;
-  }
-
-  const newContent: Node[] = [];
-
-  node.content.forEach((child) => {
-    const cleaned = removeMarkedContent(child, markType);
-    if (cleaned) {
-      newContent.push(cleaned);
-    }
-  });
-
-  return node.copy(Fragment.fromArray(newContent));
-}
+import { getDefaultsPreProcessFilters } from './preprocess/preProcess.ts';
+import { EditorState, Transaction } from 'prosemirror-state';
 
 // function convertDomToLowerCase(node: Node) {
 //   // If the node is an element, change its tag name and attributes
@@ -449,10 +428,23 @@ export async function extPmToMdConverter(
     // },
   });
 
-  document = removeMarkedContent(document, schema.marks.change)!;
-  // deleteAllMarkedText('change', state, dispatch)
+  const filterCommands = getDefaultsPreProcessFilters({});
 
-  const tokens = await defaultMarkdownTokenizer.serialize(document);
+  let state = EditorState.create({ doc: document });
+  const dispatch = (tr: Transaction) => {
+    state = state.apply(tr);
+  };
+
+  if (filterCommands.length > 0) {
+    for (const filter of filterCommands) {
+      filter(
+        state,
+        (tr) => dispatch(tr),
+      );
+    }
+  }
+
+  const tokens = await defaultMarkdownTokenizer.serialize(state.doc);
 
   if (config.debugTokens) {
     const event = new CustomEvent('md:tokens', {

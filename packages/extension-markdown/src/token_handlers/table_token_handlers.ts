@@ -14,15 +14,15 @@ function getHtmlTableTokensHandlers(): Record<string, Array<TokenHandler>> {
     // ...getHtmlBasicTokensHandlers(), // TODO html
     ...getHtmlInlineTokensHandlers(),
 
-    'paragraph_open': [],
-    'paragraph_close': [
+    'paragraph_open': [
       (token: Token, ctx: ContextStash) => {
-        // TODO only if not at the end of TD
-        // if (ctx.output.colPos !== 0) {
-        //   ctx.current.log('<br/ >\n', token);
-        // }
+        if (ctx.current.meta['not_first_para']) {
+          ctx.current.log('<br />\n', token);
+        }
+        ctx.current.meta['not_first_para'] = true;
       },
     ],
+    'paragraph_close': [],
 
     'table_open': [
       (token: Token, ctx: ContextStash) => {
@@ -65,6 +65,7 @@ function getHtmlTableTokensHandlers(): Record<string, Array<TokenHandler>> {
     'th_close': [
       (token: Token, ctx: ContextStash) => {
         ctx.current.log('</th>\n', token);
+        delete ctx.current.meta['not_first_para'];
       },
     ],
     'tbody_open': [
@@ -85,6 +86,7 @@ function getHtmlTableTokensHandlers(): Record<string, Array<TokenHandler>> {
     'td_close': [
       (token: Token, ctx: ContextStash) => {
         ctx.current.log('</td>\n', token);
+        delete ctx.current.meta['not_first_para'];
       },
     ],
   };
