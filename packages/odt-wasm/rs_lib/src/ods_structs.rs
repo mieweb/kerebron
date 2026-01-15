@@ -122,6 +122,9 @@ pub enum TextLinkItem {
 
   #[serde(rename = "$text")]
   Text(String),
+
+  #[serde(rename = "frame")]
+  DrawFrame(DrawFrame),
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -132,7 +135,7 @@ pub struct TextLink {
 
   //     #[serde(rename = "@text:style-name")]
   #[serde(rename = "@style-name")]
-  pub style_name: String,
+  pub style_name: Option<String>,
 
   #[serde(default)]
   #[serde(rename = "$value")]
