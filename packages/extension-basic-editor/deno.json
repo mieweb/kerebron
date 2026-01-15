@@ -21,6 +21,7 @@
     "./NodeText": "./src/NodeText.ts",
     "./NodeParagraph": "./src/NodeParagraph.ts",
     "./NodeHardBreak": "./src/NodeHardBreak.ts",
+    "./NodeSoftBreak": "./src/NodeSoftBreak.ts",
     "./NodeHorizontalRule": "./src/NodeHorizontalRule.ts",
     "./NodeOrderedList": "./src/NodeOrderedList.ts",
     "./NodeBulletList": "./src/NodeBulletList.ts",

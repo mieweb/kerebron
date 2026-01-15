@@ -265,6 +265,12 @@ export async function extPmToMdConverter(
       };
     },
 
+    softbreak(node) {
+      return {
+        selfClose: 'softbreak',
+      };
+    },
+
     text(node) {
       return {
         selfClose: (node: Node) => {

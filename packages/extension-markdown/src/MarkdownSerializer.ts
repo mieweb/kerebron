@@ -14,7 +14,8 @@ export function writeIndented(
   currentCtx: SerializerContext,
   token?: Token,
 ) {
-  const lines = text.split('\n');
+  const lines = text
+    .split('\n');
 
   const typeIndent: Record<ListType, number> = {
     ul: 2,
@@ -99,9 +100,23 @@ export function writeIndented(
       }
     }
 
-    output.log(line, tok);
-    offset += line.length;
-    if (lineNo < lines.length - 1) {
+    const isLastLine = lineNo >= lines.length - 1;
+
+    if (isLastLine) {
+      output.log(line, tok);
+      offset += line.length;
+    } else {
+      const regex = new RegExp(currentCtx.lineBreak + '$');
+      const hasBreak = line.match(new RegExp(currentCtx.lineBreak + '$'));
+      const rightTrimmed = line
+        .replace(regex, '')
+        .replace(/[ \t]+$/, '');
+
+      output.log(rightTrimmed + (hasBreak ? '  ' : ''), tok);
+      offset += line.length;
+    }
+
+    if (!isLastLine) {
       currentCtx.itemRow++;
       const tok = structuredClone(token);
       if (startPos && tok) {
@@ -116,6 +131,7 @@ export function writeIndented(
 type ListType = 'ul' | 'ol' | 'dl' | 'tl';
 
 export interface SerializerContext {
+  lineBreak: string;
   meta: Record<string, any>;
   metaObj: Record<string, any>;
   blockquoteCnt: number;
@@ -139,6 +155,7 @@ export class ContextStash {
   constructor(handlers: Record<string, Array<TokenHandler>>) {
     this.output = new SmartOutput();
     this.currentCtx = {
+      lineBreak: '\r',
       meta: {},
       metaObj: {},
       blockquoteCnt: 0,
@@ -357,6 +374,7 @@ export class MarkdownSerializer {
 
           try {
             serializeInlineTokens(this.ctx, tokenSource, token.children);
+            this.ctx.output.rtrim();
             this.ctx.unstash('serializeInlineTokens()');
           } catch (err: any) {
             this.ctx.current.debug(err.message);

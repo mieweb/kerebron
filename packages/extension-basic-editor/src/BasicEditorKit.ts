@@ -28,6 +28,7 @@ import { NodeCodeBlock } from './NodeCodeBlock.ts';
 import { NodeBookmark } from './NodeBookmark.ts';
 import { NodeParagraph } from './NodeParagraph.ts';
 import { NodeHardBreak } from './NodeHardBreak.ts';
+import { NodeSoftBreak } from './NodeSoftBreak.ts';
 import { NodeHorizontalRule } from './NodeHorizontalRule.ts';
 import { NodeOrderedList } from './NodeOrderedList.ts';
 import { NodeBulletList } from './NodeBulletList.ts';
@@ -62,6 +63,7 @@ export class BasicEditorKit implements EditorKit {
       new NodeText(),
       new NodeParagraph(),
       new NodeHardBreak(),
+      new NodeSoftBreak(),
       new NodeCodeBlock(),
       new NodeBookmark(),
       new NodeHorizontalRule(),

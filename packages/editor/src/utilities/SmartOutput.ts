@@ -29,6 +29,17 @@ export class SmartOutput<K> {
   private chunks: Array<string> = [];
   private metas: Array<OutputMeta<K>> = [];
 
+  rtrim() {
+    if (this.chunks.length === 0) {
+      return;
+    }
+    const lastText = this.chunks[this.chunks.length - 1];
+    this.chunks[this.chunks.length - 1] = lastText.replace(/[ \t]+$/, '');
+    const delta = lastText.length - this.chunks[this.chunks.length - 1].length;
+    this._colPos -= delta;
+    this._pos -= delta;
+  }
+
   log(text: string, item?: K) {
     if (text.length === 0) {
       return;
