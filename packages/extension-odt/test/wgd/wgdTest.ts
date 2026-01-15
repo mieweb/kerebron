@@ -1,6 +1,6 @@
 import { assertEquals } from '@std/assert';
 
-import { CoreEditor } from '@kerebron/editor';
+import { CoreEditor, nodeToTreeString } from '@kerebron/editor';
 import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionOdt } from '@kerebron/extension-odt';
@@ -13,7 +13,7 @@ interface Opts {
   debug?: boolean;
 }
 
-export function wgdTest(odtName: string, opts: Opts) {
+export function wgdTest(odtName: string, opts: Opts = {}) {
   Deno.test(odtName, async (ctx: Deno.TestContext) => {
     try {
       const mdName = odtName.replace(/\.odt$/, '.md');
@@ -32,6 +32,7 @@ export function wgdTest(odtName: string, opts: Opts) {
 
       const editor = CoreEditor.create({
         editorKits: [
+          new BrowserLessEditorKit(),
           {
             getExtensions() {
               return [
@@ -40,7 +41,6 @@ export function wgdTest(odtName: string, opts: Opts) {
               ];
             },
           },
-          new BrowserLessEditorKit(),
         ],
       });
 
@@ -98,10 +98,15 @@ export function wgdTest(odtName: string, opts: Opts) {
       );
 
       if (opts.debug) {
-        const json = editor.getDocument().toJSON();
+        const doc = editor.getDocument();
+        const json = doc.toJSON();
         Deno.writeTextFileSync(
           __dirname + '/' + pmName + '.debug.json',
           JSON.stringify(json, null, 2),
+        );
+        Deno.writeTextFileSync(
+          __dirname + '/' + pmName + '.debug.txt',
+          nodeToTreeString(doc),
         );
       }
 
