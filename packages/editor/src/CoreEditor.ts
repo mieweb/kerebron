@@ -322,24 +322,20 @@ export class CoreEditor extends EventTarget {
       throw new Error('Converter not found for: ' + mediaType);
     }
     const parsedDoc = await converter.toDoc(content);
-    const doc = ProseMirrorNode.fromJSON(this.schema, parsedDoc.toJSON()); // TODO: WHY?!
 
-    this.state = EditorState.create({
-      doc,
+    let newState = EditorState.create({
+      doc: parsedDoc,
       plugins: this.state.plugins,
       storedMarks: this.state.storedMarks,
     });
+    const dispatch = (tr: Transaction) => {
+      newState = newState.apply(tr);
+    };
 
     const cmd = runInputRulesTexts();
-    let newState: EditorState | undefined;
-    const dispatch = (tr: Transaction) => {
-      newState = this.state.apply(tr);
-    };
-    const aa = cmd(this.state, dispatch);
+    cmd(newState, dispatch);
 
-    if (newState) {
-      this.state = newState;
-    }
+    this.state = newState;
 
     if (this.view) {
       this.view.updateState(this.state);
@@ -348,7 +344,7 @@ export class CoreEditor extends EventTarget {
     const event = new CustomEvent('doc:loaded', {
       detail: {
         editor: this,
-        doc,
+        doc: this.state.doc,
       },
     });
     this.dispatchEvent(event);

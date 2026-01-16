@@ -37,8 +37,6 @@ function replaceAllNodesOfType(
     }
   });
 
-  console.log('replaceAllNodesOfType', replacements.length);
-
   for (let i = replacements.length - 1; i >= 0; i--) {
     const { node, pos } = replacements[i];
     const newNode = factory(node, tr.doc.type.schema);

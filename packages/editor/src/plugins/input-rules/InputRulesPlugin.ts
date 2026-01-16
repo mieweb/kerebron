@@ -205,8 +205,6 @@ export const runInputRulesTexts: CommandFactory = () => {
 
         let text = node.text;
 
-        // throw new Error('aaaaaaaaaaa');
-
         if (node.type.spec.code) {
           if (!rule.inCode) continue;
         } else if (rule.inCode === 'only') {
@@ -217,14 +215,16 @@ export const runInputRulesTexts: CommandFactory = () => {
           continue;
         }
 
-        const from = pos;
-        const to = pos + node.nodeSize;
+        const index = match.index;
+
+        const from = pos + index;
+        const to = pos + index + match[0].length;
 
         let subTr = rule.handler(
           tr,
           state,
           match,
-          from - (match[0].length - text.length),
+          from,
           to,
         );
         if (!subTr) continue;
@@ -238,11 +238,11 @@ export const runInputRulesTexts: CommandFactory = () => {
       }
     }
 
-    if (dispatch && tr.docChanged) {
+    if (dispatch) {
       dispatch(tr);
     }
 
-    return true;
+    return tr.docChanged;
   };
 
   cmd.displayName = 'runInputRulesTexts';
