@@ -52,7 +52,7 @@ export class DocumentMarkdownTokenizer {
         token.map = [currentPos];
         this.tokens.push(token);
       } else {
-        const token = await nodeSpec.open(node);
+        const token = await nodeSpec.open(node, currentPos);
         token.level = level;
         token.meta = 'nodeSpec.open()';
         token.map = [currentPos];
@@ -67,7 +67,7 @@ export class DocumentMarkdownTokenizer {
         token.map = [currentPos];
         this.tokens.push(token);
       } else {
-        const token = await nodeSpec.selfClose(node);
+        const token = await nodeSpec.selfClose(node, currentPos);
         token.level = level;
         token.map = [currentPos];
         this.tokens.push(token);
@@ -103,7 +103,7 @@ export class DocumentMarkdownTokenizer {
         // token.map = [currentPos];
         this.tokens.push(token);
       } else {
-        const token = await nodeSpec.close(node);
+        const token = await nodeSpec.close(node, currentPos);
         token.meta = 'nodeSpec.close()';
         token.level = level;
         // token.map = [currentPos];

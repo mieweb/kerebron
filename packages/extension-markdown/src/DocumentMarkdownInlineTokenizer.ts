@@ -10,9 +10,9 @@ export type MarkTokenizerSpec = {
 };
 
 export type DocumentMarkdownTokenizerSpec = {
-  open?: string | ((node: Node) => Promise<Token>);
-  close?: string | ((node: Node) => Promise<Token>);
-  selfClose?: string | ((node: Node) => Promise<Token>);
+  open?: string | ((node: Node, pos: number) => Promise<Token>);
+  close?: string | ((node: Node, pos: number) => Promise<Token>);
+  selfClose?: string | ((node: Node, pos: number) => Promise<Token>);
 };
 
 const blankMark: MarkTokenizerSpec = { open: '', close: '', mixable: true };
