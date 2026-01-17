@@ -1,4 +1,4 @@
-import { NESTING_CLOSING, type Token } from './types.ts';
+import { NESTING_CLOSING, Token } from './types.ts';
 
 import { getTableTokensHandlers } from './token_handlers/table_token_handlers.ts';
 import { getBasicTokensHandlers } from './token_handlers/basic_token_handlers.ts';
@@ -18,7 +18,7 @@ export function writeIndented(
     .split('\n');
 
   const typeIndent: Record<ListType, number> = {
-    ul: 2,
+    ul: 4,
     ol: 4,
     dl: 2,
     tl: 4,
@@ -295,7 +295,7 @@ export class MarkdownSerializer {
   }
 
   serialize(tokens: Token[]): SmartOutput<Token> {
-    const prevLevelTokenType: Record<number, string> = {};
+    const prevLevelTokenType: Record<number, Token> = {};
 
     const tokenSource = new TokenSource(tokens);
     tokenSource.iterate(0, (token, i) => {
@@ -308,7 +308,8 @@ export class MarkdownSerializer {
 
         if (!this.endsWithEmptyLine) {
           if (token.nesting !== NESTING_CLOSING && token.level === 0) {
-            const prevTopTokenType = prevLevelTokenType[token.level] || '';
+            const prevTopToken = prevLevelTokenType[token.level];
+            const prevTopTokenType = prevTopToken?.type || '';
             if (
               [
                 'hr',
@@ -324,11 +325,20 @@ export class MarkdownSerializer {
                 'html_block',
               ].includes(prevTopTokenType)
             ) {
-              this.ctx.current.log('\n');
+              const listNone = token.attrGet('first_level_type') === 'none';
+              const prevListNone =
+                prevTopToken?.attrGet('first_level_type') === 'none';
+
+              if (!listNone && !prevListNone) {
+                this.ctx.current.log('\n');
+              }
+              if (prevListNone && !token.type.endsWith('_list_open')) {
+                this.ctx.current.log('\n');
+              }
             }
             if (
               'heading_close' === prevTopTokenType &&
-              token.tag !== 'heading_open'
+              'heading_open' !== token.tag
             ) {
               this.ctx.current.log('\n');
             }
@@ -336,7 +346,8 @@ export class MarkdownSerializer {
             token.nesting !== NESTING_CLOSING && token.level === 1 &&
             'dt_open' === token.type
           ) {
-            const prevTokenType = prevLevelTokenType[token.level] || '';
+            const prevToken = prevLevelTokenType[token.level];
+            const prevTokenType = prevToken?.type || '';
             if (
               [
                 'dt_close',
@@ -350,7 +361,8 @@ export class MarkdownSerializer {
       }
 
       if (token.nesting !== NESTING_CLOSING && token.level > 0) {
-        const prevTopTokenType = prevLevelTokenType[token.level] || '';
+        const prevTopToken = prevLevelTokenType[token.level];
+        const prevTopTokenType = prevTopToken?.type || '';
         if (
           [
             'paragraph_close',
@@ -400,9 +412,9 @@ export class MarkdownSerializer {
         }
       }
 
-      prevLevelTokenType[token.level] = token.type;
+      prevLevelTokenType[token.level] = token;
       if (token.nesting === NESTING_CLOSING) {
-        prevLevelTokenType[token.level + 1] = '';
+        prevLevelTokenType[token.level + 1] = new Token('', '', token.nesting);
       }
     });
 

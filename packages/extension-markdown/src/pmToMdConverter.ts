@@ -170,23 +170,34 @@ export async function extPmToMdConverter(
     },
     bullet_list(node) {
       return {
-        open: async (node) => {
+        open: async (node, pos) => {
           ctx.stash();
           ctx.current.meta['list_type'] = 'ul';
           ctx.current.meta['list_type_symbol'] = '*';
           const token = new Token('bullet_list_open', 'ul', 1);
           token.attrSet('symbol', '*');
+
+          const firstChild = document.nodeAt(pos + 1);
+          if (firstChild?.type.name === 'list_item') {
+            token.attrSet('first_level_type', firstChild.attrs.type);
+          }
           return token;
         },
-        close: async (node) => {
+        close: async (node, pos) => {
           ctx.unstash();
-          return new Token('bullet_list_close', 'ul', -1);
+          const token = new Token('bullet_list_close', 'ul', -1);
+
+          const firstChild = document.nodeAt(pos + 1);
+          if (firstChild?.type.name === 'list_item') {
+            token.attrSet('first_level_type', firstChild.attrs.type);
+          }
+          return token;
         },
       };
     },
     ordered_list(node) {
       return {
-        open: async (node) => {
+        open: async (node, pos) => {
           ctx.stash();
           ctx.current.meta['list_type'] = 'ol';
           ctx.current.meta['list_type_symbol'] = node.attrs['type'] ||
@@ -194,11 +205,22 @@ export async function extPmToMdConverter(
           const token = new Token('ordered_list_open', 'ol', 1);
           token.attrSet('symbol', node.attrs['type'] || '1');
           token.attrSet('start', node.attrs['start']);
+
+          const firstChild = document.nodeAt(pos + 1);
+          if (firstChild?.type.name === 'list_item') {
+            token.attrSet('first_level_type', firstChild.attrs.type);
+          }
           return token;
         },
-        close: async (node) => {
+        close: async (node, pos) => {
           ctx.unstash();
-          return new Token('ordered_list_close', 'ol', -1);
+          const token = new Token('ordered_list_close', 'ol', -1);
+
+          const firstChild = document.nodeAt(pos + 1);
+          if (firstChild?.type.name === 'list_item') {
+            token.attrSet('first_level_type', firstChild.attrs.type);
+          }
+          return token;
         },
       };
     },
@@ -285,6 +307,7 @@ export async function extPmToMdConverter(
       return {
         selfClose: (node: Node) => {
           const token = new Token('code_block', 'code', 0);
+          token.meta = 'noEscText';
           token.attrSet('lang', node.attrs.lang);
           token.content = '';
           node.forEach((child, offset) => {

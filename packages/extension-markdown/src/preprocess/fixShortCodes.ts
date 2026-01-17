@@ -1,11 +1,19 @@
 import { Node } from 'prosemirror-model';
 import { Command } from 'prosemirror-state';
 
-export const addEmptyLines: Command = (state, dispatch): boolean => {
+export const fixShortCodes: Command = (state, dispatch): boolean => {
+  const doc: Node = state.doc;
   let tr = state.tr;
 
   const hardbreakType = state.schema.nodes.br;
   const softbreakType = state.schema.nodes.softbreak;
+
+  if (!hardbreakType) {
+    throw new Error('No hardbreak type in schema');
+  }
+  if (!softbreakType) {
+    throw new Error('No softbreak type in schema');
+  }
 
   function walk(
     parent: Node,
@@ -13,7 +21,7 @@ export const addEmptyLines: Command = (state, dispatch): boolean => {
     depth = 0,
   ) {
     parent.forEach((child, offset, index) => {
-      if ('image' === child.type.name) {
+      if ('shortcode_inline' === child.type.name) {
         if (index > 1) {
           const prevNode = parent.child(index - 1);
           if (prevNode.type === hardbreakType) {
@@ -21,14 +29,12 @@ export const addEmptyLines: Command = (state, dispatch): boolean => {
               pos + offset - prevNode.nodeSize,
               softbreakType,
             );
-          } else {
-            const wbr = softbreakType.createAndFill();
-            if (wbr) {
-              tr = tr.insert(
-                tr.mapping.map(pos),
-                wbr,
-              );
-            }
+          }
+        }
+        if (index < parent.childCount - 1) {
+          const nextNode = parent.child(index + 1);
+          if (nextNode.type === hardbreakType) {
+            tr = tr.setNodeMarkup(pos + offset + child.nodeSize, softbreakType);
           }
         }
       }
@@ -36,11 +42,11 @@ export const addEmptyLines: Command = (state, dispatch): boolean => {
     });
   }
 
-  walk(state.doc);
+  walk(doc);
 
   if (dispatch) {
     dispatch(tr);
   }
 
-  return tr.docChanged;
+  return tr.steps.length > 0;
 };
