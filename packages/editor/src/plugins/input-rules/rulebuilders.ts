@@ -1,12 +1,5 @@
-import { canJoin, findWrapping, replaceStep } from 'prosemirror-transform';
-import {
-  Attrs,
-  Fragment,
-  Node,
-  NodeType,
-  ResolvedPos,
-  Slice,
-} from 'prosemirror-model';
+import { Attrs, Fragment, Node, NodeType } from 'prosemirror-model';
+import { canJoin, findWrapping } from 'prosemirror-transform';
 
 import { InputRule } from './InputRulesPlugin.ts';
 import { Command } from '../../commands/types.ts';
@@ -119,6 +112,11 @@ export function replaceInlineNode(
     }
 
     const attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
+
+    const $pos = state.doc.resolve(start);
+    if ($pos.parent.type === state.schema.nodes.code_block) {
+      return false;
+    }
 
     const node = nodeType.createAndFill(attrs);
 
