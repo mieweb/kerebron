@@ -10,9 +10,11 @@ export type MarkTokenizerSpec = {
 };
 
 export type DocumentMarkdownTokenizerSpec = {
-  open?: string | ((node: Node, pos: number) => Promise<Token>);
-  close?: string | ((node: Node, pos: number) => Promise<Token>);
-  selfClose?: string | ((node: Node, pos: number) => Promise<Token>);
+  open?: string | ((node: Node, pos: number, idx: number) => Promise<Token>);
+  close?: string | ((node: Node, pos: number, idx: number) => Promise<Token>);
+  selfClose?:
+    | string
+    | ((node: Node, pos: number, idx: number) => Promise<Token>);
 };
 
 const blankMark: MarkTokenizerSpec = { open: '', close: '', mixable: true };
@@ -224,7 +226,7 @@ export class DocumentMarkdownInlineTokenizer {
             token.map = [inlinePos];
             inlineTokens.push(token);
           } else {
-            const token = await nodeSpec.selfClose(node);
+            const token = await nodeSpec.selfClose(node, inlinePos, index);
             token.meta = '!nodeSpec.selfClose';
             token.level = level;
             token.map = [inlinePos];

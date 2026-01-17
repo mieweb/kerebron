@@ -398,6 +398,9 @@ export function getHtmlListsTokensHandlers(): Record<
   return {
     'bullet_list_open': [
       (token: Token, ctx: ContextStash) => {
+        if (token.attrGet('not_first_para')) {
+          ctx.current.log('<br />\n', token);
+        }
         ctx.current.log('<ul>\n', token);
       },
     ],
@@ -410,6 +413,9 @@ export function getHtmlListsTokensHandlers(): Record<
     'ordered_list_open': [
       (token: Token, ctx: ContextStash) => {
         {
+          if (token.attrGet('not_first_para')) {
+            ctx.current.log('<br />\n', token);
+          }
           ctx.current.listPath.push('ol');
           ctx.current.listType = 'ol';
 

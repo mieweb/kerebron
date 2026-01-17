@@ -132,6 +132,7 @@ type ListType = 'ul' | 'ol' | 'dl' | 'tl';
 
 export interface SerializerContext {
   lineBreak: string;
+  level: number;
   meta: Record<string, any>;
   metaObj: Record<string, any>;
   blockquoteCnt: number;
@@ -168,6 +169,7 @@ export class ContextStash {
       handlers,
       log: (txt: string, token?: Token) => this.output.log(txt, token),
       debug: () => {},
+      level: 0,
     };
     this.stash('ContextStash.constructor()');
   }
@@ -193,6 +195,7 @@ export class ContextStash {
       metaObj,
       ...funcs,
       handlers: handlers,
+      level: this.currentCtx.level + 1,
     };
 
     const rollbackPos = this.ctxStash.length - 1;

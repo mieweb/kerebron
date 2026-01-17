@@ -20,10 +20,9 @@ function getHtmlTableTokensHandlers(): Record<string, Array<TokenHandler>> {
 
     'paragraph_open': [
       (token: Token, ctx: ContextStash) => {
-        if (ctx.current.meta['not_first_para']) {
+        if (token.attrGet('not_first_para')) {
           ctx.current.log('<br />\n', token);
         }
-        ctx.current.meta['not_first_para'] = true;
       },
     ],
     'paragraph_close': [],
@@ -69,7 +68,6 @@ function getHtmlTableTokensHandlers(): Record<string, Array<TokenHandler>> {
     'th_close': [
       (token: Token, ctx: ContextStash) => {
         ctx.current.log('</th>\n', token);
-        delete ctx.current.meta['not_first_para'];
       },
     ],
     'tbody_open': [
@@ -90,7 +88,6 @@ function getHtmlTableTokensHandlers(): Record<string, Array<TokenHandler>> {
     'td_close': [
       (token: Token, ctx: ContextStash) => {
         ctx.current.log('</td>\n', token);
-        delete ctx.current.meta['not_first_para'];
       },
     ],
   };

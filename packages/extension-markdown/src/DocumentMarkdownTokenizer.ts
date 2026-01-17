@@ -31,7 +31,7 @@ export class DocumentMarkdownTokenizer {
     );
   }
 
-  async iterateNode(node: Node, currentPos: number, level = -1) {
+  async iterateNode(node: Node, currentPos: number, idx = 0, level = -1) {
     const nodeSpec = this.nodes[node.type.name]
       ? this.nodes[node.type.name](node, currentPos)
       : blankNode;
@@ -52,7 +52,7 @@ export class DocumentMarkdownTokenizer {
         token.map = [currentPos];
         this.tokens.push(token);
       } else {
-        const token = await nodeSpec.open(node, currentPos);
+        const token = await nodeSpec.open(node, currentPos, idx);
         token.level = level;
         token.meta = 'nodeSpec.open()';
         token.map = [currentPos];
@@ -67,7 +67,7 @@ export class DocumentMarkdownTokenizer {
         token.map = [currentPos];
         this.tokens.push(token);
       } else {
-        const token = await nodeSpec.selfClose(node, currentPos);
+        const token = await nodeSpec.selfClose(node, currentPos, idx);
         token.level = level;
         token.map = [currentPos];
         this.tokens.push(token);
@@ -90,7 +90,7 @@ export class DocumentMarkdownTokenizer {
       let offset = 0;
       for (let idx = 0; idx < node.childCount; idx++) {
         const child = node.child(idx);
-        await this.iterateNode(child, currentPos + offset + 1, level + 1);
+        await this.iterateNode(child, currentPos + offset + 1, idx, level + 1);
         offset += child.nodeSize;
       }
     }
@@ -103,7 +103,7 @@ export class DocumentMarkdownTokenizer {
         // token.map = [currentPos];
         this.tokens.push(token);
       } else {
-        const token = await nodeSpec.close(node, currentPos);
+        const token = await nodeSpec.close(node, currentPos, idx);
         token.meta = 'nodeSpec.close()';
         token.level = level;
         // token.map = [currentPos];
@@ -113,7 +113,7 @@ export class DocumentMarkdownTokenizer {
   }
 
   async serialize(content: Node, options: {} = {}): Promise<Token[]> {
-    await this.iterateNode(content, -1); // doc does not have index, so I put -1 for correct calculation
+    await this.iterateNode(content, -1, 0); // doc does not have index, so I put -1 for correct calculation
     return this.tokens;
   }
 }

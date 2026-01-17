@@ -103,7 +103,15 @@ export async function extPmToMdConverter(
   const defaultMarkdownTokenizer = new DocumentMarkdownTokenizer({
     paragraph(node) {
       return {
-        open: 'paragraph_open',
+        open: async (node, pos, idx) => {
+          const token = new Token('paragraph_open', 'p', 1);
+          const $pos = document.resolve(pos);
+          const parent = $pos.parent;
+          if (parent?.type.name === 'table_cell' && idx > 0) {
+            token.attrSet('not_first_para', '1');
+          }
+          return token;
+        },
         close: 'paragraph_close',
       };
     },
@@ -170,7 +178,7 @@ export async function extPmToMdConverter(
     },
     bullet_list(node) {
       return {
-        open: async (node, pos) => {
+        open: async (node, pos, idx) => {
           ctx.stash();
           ctx.current.meta['list_type'] = 'ul';
           ctx.current.meta['list_type_symbol'] = '*';
@@ -180,6 +188,11 @@ export async function extPmToMdConverter(
           const firstChild = document.nodeAt(pos + 1);
           if (firstChild?.type.name === 'list_item') {
             token.attrSet('first_level_type', firstChild.attrs.type);
+          }
+          const $pos = document.resolve(pos);
+          const parent = $pos.parent;
+          if (parent?.type.name === 'table_cell' && idx > 0) {
+            token.attrSet('not_first_para', '1');
           }
           return token;
         },
@@ -197,7 +210,7 @@ export async function extPmToMdConverter(
     },
     ordered_list(node) {
       return {
-        open: async (node, pos) => {
+        open: async (node, pos, idx) => {
           ctx.stash();
           ctx.current.meta['list_type'] = 'ol';
           ctx.current.meta['list_type_symbol'] = node.attrs['type'] ||
@@ -209,6 +222,11 @@ export async function extPmToMdConverter(
           const firstChild = document.nodeAt(pos + 1);
           if (firstChild?.type.name === 'list_item') {
             token.attrSet('first_level_type', firstChild.attrs.type);
+          }
+          const $pos = document.resolve(pos);
+          const parent = $pos.parent;
+          if (parent?.type.name === 'table_cell' && idx > 0) {
+            token.attrSet('not_first_para', '1');
           }
           return token;
         },
