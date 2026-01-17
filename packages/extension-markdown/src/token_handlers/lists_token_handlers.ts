@@ -389,3 +389,76 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
     ],
   };
 }
+
+export function getHtmlListsTokensHandlers(): Record<
+  string,
+  Array<TokenHandler>
+> {
+  // 'dl_open': getShortDefinitionTokensHandlers()['dl_open'],
+  return {
+    'bullet_list_open': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log('<ul>\n', token);
+      },
+    ],
+    'bullet_list_close': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log('</ul>\n', token);
+      },
+    ],
+
+    'ordered_list_open': [
+      (token: Token, ctx: ContextStash) => {
+        {
+          ctx.current.listPath.push('ol');
+          ctx.current.listType = 'ol';
+
+          ctx.current.itemSymbol = '';
+          const symbol = token.attrGet('symbol');
+          if (symbol) {
+            ctx.current.meta['list_symbol'] = symbol;
+          } else {
+            ctx.current.meta['list_symbol'] = '1';
+          }
+
+          const start = token.attrGet('start');
+          if (start) {
+            ctx.current.itemNumber = (+start || 1) - 1;
+            ctx.current.log(`<ol start="${start}">\n`, token);
+          } else {
+            ctx.current.itemNumber = 0;
+            ctx.current.log('<ol>\n', token);
+          }
+        }
+      },
+    ],
+    'ordered_list_close': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log('</ol>\n', token);
+      },
+    ],
+
+    'list_item_open': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.itemSymbol = token.info || token.markup;
+        if (!ctx.current.itemSymbol) { // TODO
+          ctx.current.itemSymbol = numberString(
+            ctx.current.itemNumber,
+            ctx.current.meta['list_symbol'] || '1',
+          );
+        }
+
+        ctx.current.log('<li>\n', token);
+
+        if (token.attrGet('type') !== 'none') {
+          ctx.current.itemNumber++;
+        }
+      },
+    ],
+    'list_item_close': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log('</li>\n', token);
+      },
+    ],
+  };
+}

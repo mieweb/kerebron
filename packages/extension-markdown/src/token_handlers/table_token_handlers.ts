@@ -6,13 +6,17 @@ import type {
 } from '@kerebron/extension-markdown/MarkdownSerializer';
 import { getHtmlInlineTokensHandlers } from './inline_token_handlers.ts';
 import { TokenSource } from '../TokenSource.ts';
+import { getHtmlBasicTokensHandlers } from './basic_token_handlers.ts';
+import { getHtmlListsTokensHandlers } from './lists_token_handlers.ts';
 
 export type TextAlign = 'left' | 'right';
 
 function getHtmlTableTokensHandlers(): Record<string, Array<TokenHandler>> {
   return {
-    // ...getHtmlBasicTokensHandlers(), // TODO html
     ...getHtmlInlineTokensHandlers(),
+    ...getHtmlBasicTokensHandlers(),
+    // ...getHtmlFootnoteTokensHandlers(),
+    ...getHtmlListsTokensHandlers(),
 
     'paragraph_open': [
       (token: Token, ctx: ContextStash) => {
