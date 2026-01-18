@@ -98,7 +98,9 @@ for (let i = 65; i <= 90; i++) {
 
 // For each code that doesn't have a shift-equivalent, copy the base name
 for (const code in base) {
-  if (!shift.hasOwnProperty(code)) shift[code] = base[code];
+  if (!Object.prototype.hasOwnProperty.call(shift, code)) {
+    shift[code] = base[code];
+  }
 }
 
 export function keyName(event: KeyboardEvent) {

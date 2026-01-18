@@ -80,10 +80,28 @@
     "thememirror": "npm:thememirror@2.0.1"
   },
   "lint": {
-    "exclude": [],
+    "exclude": [
+      "**/deno-tree-sitter",
+      "**/extension-markdown",
+      "**/extension-odt",
+      "**/extension-lsp",
+      "**/extension-codemirror",
+      "**/extension-codejar",
+      "**/extension-basic-editor",
+      "**/editor-kits",
+      "**/server-hono/src/lsp",
+      "**/browser-react",
+      "**/browser-vanilla-code-editor",
+      "KEEP REMOVING THOSE!"
+    ],
     "rules": {
       "tags": ["recommended"],
-      "exclude": ["no-explicit-any", "prefer-const", "no-unused-vars"]
+      "exclude": [
+        "no-explicit-any",
+        "prefer-const",
+        "no-unused-vars",
+        "no-empty-interface"
+      ]
     }
   },
   "fmt": {

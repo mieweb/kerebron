@@ -5,7 +5,7 @@ export function install(
 ) {
   app.get(
     '/yjs/:room',
-    async (c) => {
+    (c) => {
       const roomName = c.req.param('room');
       const id = c.env.YJS_ROOM.idFromName(roomName);
       const room = c.env.YJS_ROOM.get(id);

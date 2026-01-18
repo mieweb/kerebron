@@ -157,8 +157,11 @@ export class DummyEditorView {
   }
 
   private destroyPluginViews() {
-    let view;
-    while (view = this.pluginViews.pop()) if (view.destroy) view.destroy();
+    let view = this.pluginViews.pop();
+    while (view) {
+      if (view.destroy) view.destroy();
+      view = this.pluginViews.pop();
+    }
   }
 
   private updatePluginViews(prevState?: EditorState) {

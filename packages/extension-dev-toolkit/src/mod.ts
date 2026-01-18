@@ -12,7 +12,7 @@ export class ExtensionDevToolkit extends Extension {
 
   private visible = false;
 
-  constructor(protected override config: DevToolkitConfig = {}) {
+  constructor(public override config: DevToolkitConfig = {}) {
     super(config);
   }
 

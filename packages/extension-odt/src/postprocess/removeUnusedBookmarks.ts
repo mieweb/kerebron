@@ -1,36 +1,37 @@
-import { Fragment, MarkType, Node, Schema } from 'prosemirror-model';
-import { Command } from 'prosemirror-state';
+import type { Node } from 'prosemirror-model';
+import type { Command } from 'prosemirror-state';
 
 export const removeUnusedBookmarks: Command = (state, dispatch): boolean => {
-  return false;
-  function condition(mark) {
-    console.log('rrrr', mark.type.name);
-    return mark.type.name === 'bookmark';
-  }
+  const schema = state.schema;
+  let tr = state.tr;
 
-  if (node.marks) {
-    // For text nodes, filter out the marks that match the condition
-    const newMarks = node.marks.filter((mark) => !condition(mark));
+  const bookmarkType = schema.marks.bookmark;
 
-    // If marks were removed, return a new text node with the remaining marks
+  function walk(
+    node: Node,
+    pos = 0,
+    depth = 0,
+  ) {
+    const newMarks = node.marks.filter((mark) => mark.type !== bookmarkType);
     if (newMarks.length !== node.marks.length) {
-      return node.mark(newMarks);
+      tr = tr.setNodeMarkup(
+        tr.mapping.map(pos),
+        null,
+        null,
+        newMarks,
+      );
     }
 
-    // Otherwise, return the original text node
-    return node;
+    node.forEach((child, offset, index) => {
+      walk(child, pos + offset + 1, depth + 1);
+    });
   }
 
-  // if (Array.isArray(node.content)) {
-  //   const content: Node[] = node.content.content.map(childNode => removeUnusedBookmarks(childNode));
-  // return node.copy(content);
-  // } else {
-  // console.log('node.content', node.content);
-  // }
+  walk(state.doc);
 
   if (dispatch) {
     dispatch(tr);
   }
 
-  return tr.steps.length > 0;
+  return tr.docChanged;
 };

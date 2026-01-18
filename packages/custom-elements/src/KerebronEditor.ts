@@ -84,7 +84,7 @@ export default class KerebronEditor extends HTMLElement {
   }
 
   static register() {
-    if (window.customElements.get(this.tagName.toLowerCase())) return false;
-    window.customElements.define(this.tagName.toLowerCase(), this);
+    if (globalThis.customElements.get(this.tagName.toLowerCase())) return false;
+    globalThis.customElements.define(this.tagName.toLowerCase(), this);
   }
 }

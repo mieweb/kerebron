@@ -72,7 +72,7 @@ export function getBasicNodesHandlers(): Record<string, NodeHandler> {
       );
     },
     'p': (ctx: OdtStashContext, value: any) => {
-      const attrs = {};
+      const attrs: Record<string, any> = {};
 
       const style = ctx.getElementStyle(value);
       const heading = style.styles.find((item) =>

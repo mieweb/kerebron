@@ -115,7 +115,7 @@ export function replaceInlineNode(
 
     const $pos = state.doc.resolve(start);
     if ($pos.parent.type === state.schema.nodes.code_block) {
-      return false;
+      return tr;
     }
 
     const node = nodeType.createAndFill(attrs);

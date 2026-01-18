@@ -1,4 +1,4 @@
-import { type Loader, transform } from 'npm:esbuild';
+import { type Loader, transform } from 'npm:esbuild@latest';
 import * as fsp from 'node:fs/promises';
 import process from 'node:process';
 import { Plugin } from 'vite';

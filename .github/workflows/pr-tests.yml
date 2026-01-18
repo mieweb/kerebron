@@ -29,14 +29,14 @@ jobs:
       - name: Check format
         run: deno fmt --check
 
-      #      # Optional: Add linting for style and syntax checks
       #      - name: Lint code
       #        run: deno lint
-      #
+
       - run: deno task -f @kerebron/odt-wasm build # Future Deno versions may add cross-package task dependencies
       - run: deno task -f @kerebron build
       #      - run: deno task -f browser- build
 
-      - name: Run tests
+      - name: Run tests md
         run: deno test -A --no-check packages/extension-markdown/test/
-#        run: deno test -A
+      - name: Run tests odt
+        run: deno test -A --no-check packages/extension-odt/test/

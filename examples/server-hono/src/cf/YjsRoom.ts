@@ -22,8 +22,7 @@ export class YjsRoom extends DurableObject {
     get: (key) => this.ctx.storage.get(key),
     list: (options) => this.ctx.storage.list(options),
     put: (key, value) => this.ctx.storage.put(key, value),
-    delete: async (key) =>
-      this.ctx.storage.delete(Array.isArray(key) ? key : [key]),
+    delete: (key) => this.ctx.storage.delete(Array.isArray(key) ? key : [key]),
     transaction: (closure) => this.ctx.storage.transaction(closure),
   });
 
@@ -47,7 +46,7 @@ export class YjsRoom extends DurableObject {
     });
     this.doc.awareness.on(
       'update',
-      async ({ added, removed, updated }) => {
+      ({ added, removed, updated }) => {
         for (const client of [...added, ...updated]) {
           this.awarenessClients.add(client);
         }
@@ -58,7 +57,7 @@ export class YjsRoom extends DurableObject {
     );
   }
 
-  override async fetch(request: Request) {
+  override fetch(request: Request) {
     if (request.headers.get('Upgrade') !== 'websocket') {
       return new Response('Expected WebSocket', { status: 400 });
     }
@@ -97,12 +96,12 @@ export class YjsRoom extends DurableObject {
   }
 
   override async webSocketError(ws: WebSocket): Promise<void> {
-    await this.unregisterWebSocket(ws);
+    this.unregisterWebSocket(ws);
     await this.cleanup();
   }
 
   override async webSocketClose(ws: WebSocket): Promise<void> {
-    await this.unregisterWebSocket(ws);
+    this.unregisterWebSocket(ws);
     await this.cleanup();
   }
 
@@ -131,7 +130,7 @@ export class YjsRoom extends DurableObject {
     this.sessions.set(ws, s);
   }
 
-  protected async unregisterWebSocket(ws: WebSocket) {
+  protected unregisterWebSocket(ws: WebSocket) {
     try {
       const dispose = this.sessions.get(ws);
       dispose?.();

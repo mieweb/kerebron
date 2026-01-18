@@ -185,26 +185,30 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
       switch (status.status) {
         // 'connecting' | 'failed' | 'waiting'
         case 'connected':
-          this.wsconnected = true;
-          this.emit('status', [{
-            status: 'connected',
-          }]);
-          // always send sync step 1 when connected
-          const encoder = encoding.createEncoder();
-          encoding.writeVarUint(encoder, messageSync);
-          syncProtocol.writeSyncStep1(encoder, this.doc);
-          this.broadcastMessage(encoding.toUint8Array(encoder));
-          // broadcast local awareness state
-          if (this.awareness.getLocalState() !== null) {
-            const encoderAwarenessState = encoding.createEncoder();
-            encoding.writeVarUint(encoderAwarenessState, messageAwareness);
-            encoding.writeVarUint8Array(
-              encoderAwarenessState,
-              awarenessProtocol.encodeAwarenessUpdate(this.awareness, [
-                this.doc.clientID,
-              ]),
-            );
-            this.broadcastMessage(encoding.toUint8Array(encoderAwarenessState));
+          {
+            this.wsconnected = true;
+            this.emit('status', [{
+              status: 'connected',
+            }]);
+            // always send sync step 1 when connected
+            const encoder = encoding.createEncoder();
+            encoding.writeVarUint(encoder, messageSync);
+            syncProtocol.writeSyncStep1(encoder, this.doc);
+            this.broadcastMessage(encoding.toUint8Array(encoder));
+            // broadcast local awareness state
+            if (this.awareness.getLocalState() !== null) {
+              const encoderAwarenessState = encoding.createEncoder();
+              encoding.writeVarUint(encoderAwarenessState, messageAwareness);
+              encoding.writeVarUint8Array(
+                encoderAwarenessState,
+                awarenessProtocol.encodeAwarenessUpdate(this.awareness, [
+                  this.doc.clientID,
+                ]),
+              );
+              this.broadcastMessage(
+                encoding.toUint8Array(encoderAwarenessState),
+              );
+            }
           }
           break;
         case 'offline':

@@ -41,7 +41,7 @@ export function resolveStyle(
   automaticStyles: AutomaticStyles,
   name: string,
 ): Style {
-  let style: Style;
+  let style: Style | undefined;
 
   if (!style) {
     style = stylesTree.styles['list-style'].find((item) =>
@@ -58,6 +58,7 @@ export function resolveStyle(
   if (!style) {
     style = {
       '@name': name,
+      styles: [],
     };
   }
 
@@ -295,7 +296,7 @@ export class OdtParser {
       ...getListNodesHandlers(),
       ...getTableNodesHandlers(),
 
-      'change-start': {
+      'change-start': () => {
         // custom(state) {
         //   state.textMarks.add({
         //     markName: 'change',
@@ -303,7 +304,7 @@ export class OdtParser {
         //   });
         // },
       },
-      'change-end': {
+      'change-end': () => {
         // custom(state) {
         //   state.textMarks.forEach((x) =>
         //     x.markName === 'change' ? state.textMarks.delete(x) : x

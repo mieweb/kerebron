@@ -32,7 +32,6 @@ Meteor.publish(collectionName, function (channelId) {
 
 Meteor.methods({
   [collectionName + 'SendMessage'](channelId, text) {
-    const senderSub = this;
     const messageId = Random.id();
     const message = {
       _id: messageId,
@@ -46,7 +45,7 @@ Meteor.methods({
     if (!subs) return;
 
     subs.forEach((sub) => {
-      if (sub !== senderSub) { // <-- skip the sender
+      if (sub !== this) { // <-- skip the sender
         sub.added(collectionName + 'Messages', messageId, message);
         sub.changed(collectionName + 'Messages', messageId, message);
       }

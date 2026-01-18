@@ -38,8 +38,6 @@ export class ExtensionOdt extends Extension {
     editor: CoreEditor,
     schema: Schema,
   ): Record<string, Converter> {
-    const config = this.config;
-
     const odtConverter = {
       fromDoc: async (document: Node): Promise<Uint8Array> => {
         throw new Error('Not implemented');

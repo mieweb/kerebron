@@ -45,7 +45,7 @@ interface DenoJson {
   files?: Array<string>;
 }
 
-async function getInfo(name: string): Promise<DenoInfo> {
+function getInfo(name: string): Promise<DenoInfo> {
   const cmd = new Deno.Command(Deno.execPath(), {
     args: ['info', '--json', name],
     stdout: 'piped',
@@ -56,7 +56,7 @@ async function getInfo(name: string): Promise<DenoInfo> {
 }
 
 async function readDenoJson(workspaceRoot: string): Promise<DenoJson> {
-  const content = Deno.readFileSync(path.resolve(workspaceRoot, 'deno.json'));
+  const content = await Deno.readFile(path.resolve(workspaceRoot, 'deno.json'));
   return JSON.parse(new TextDecoder().decode(content));
 }
 
@@ -137,6 +137,10 @@ async function processModule(moduleRoot: string, json: DenoJson) {
         );
       }
     }
+    return;
+  }
+
+  if (moduleRoot.endsWith('packages/custom-elements')) { // TODO: Inline css issue
     return;
   }
 
@@ -309,7 +313,7 @@ const workspaceRoot = path.resolve(__dirname, '..');
 const mainJson = await readDenoJson(workspaceRoot);
 
 const allModuleSet: Set<string> = new Set();
-await iterateWorkspaces(workspaceRoot, async (moduleRoot, json) => {
+await iterateWorkspaces(workspaceRoot, (moduleRoot, json) => {
   if (!json.name.startsWith('@kerebron')) {
     return;
   }

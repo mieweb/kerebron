@@ -1,6 +1,7 @@
-import { type NodeSpec } from 'prosemirror-model';
-import type { Node as PmNode } from 'prosemirror-model';
+import type { Node as PmNode, NodeSpec } from 'prosemirror-model';
+import { Selection } from 'prosemirror-state';
 import type { EditorView, NodeViewConstructor } from 'prosemirror-view';
+
 import { Node } from '@kerebron/editor';
 import type { CoreEditor } from '@kerebron/editor';
 
@@ -194,7 +195,7 @@ export class NodeImage extends Node {
         const pos = getPos();
         if (typeof pos === 'number') {
           const $pos = view.state.doc.resolve(pos);
-          const selection = view.state.selection.constructor.near($pos);
+          const selection = Selection.near($pos);
           view.dispatch(view.state.tr.setSelection(selection));
         }
       });

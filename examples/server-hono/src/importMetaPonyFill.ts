@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL, URL } from 'node:url';
 import path, { dirname as path_dirname, resolve } from 'node:path';
@@ -217,7 +218,7 @@ export const import_meta_ponyfill_esmodule = /*@__PURE__*/ ((globalThis as any)[
         try {
           im.resolve(`./${Date.now()}${Math.random()}`);
           isSupportPathResolve = true;
-        } catch {}
+        } catch { /* ignore */ }
       }
 
       let nodeResolve: PonyfillImportMeta['nodeResolve'] = isSupportResolve
