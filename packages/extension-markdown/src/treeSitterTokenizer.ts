@@ -99,7 +99,6 @@ function treeToTokens(
             token.meta = 'noEscText';
             token.content = nodeText(node) ?? '';
             pushInlineNode(token, 'text');
-            break;
           }
           break;
 
@@ -121,6 +120,7 @@ function treeToTokens(
               );
               token.level = blockLevel;
               token.markup = '$$';
+              token.meta = 'noEscText';
               token.attrSet('lang', 'latex');
 
               token.content = content.trim();
@@ -141,18 +141,30 @@ function treeToTokens(
           {
             const text = nodeText(node) || '';
             if (text === '\n') {
-              const token = new Token('hardbreak', 'br', NESTING_SELF_CLOSING);
+              const token = new Token('softbreak', 'br', NESTING_SELF_CLOSING);
               token.map = map;
               token.content = text ?? '';
               pushInlineNode(token, 'whitespace \n');
               break;
             }
             if (text && text.match(/^\s+$/)) {
-              const token = new Token('text', 'br', NESTING_SELF_CLOSING);
-              token.map = map;
-              token.meta = 'noEscText';
-              token.content = text ?? '';
-              pushInlineNode(token, 'whitespace space');
+              if (text.endsWith('  \n')) {
+                const token = new Token(
+                  'hardbreak',
+                  'wbr',
+                  NESTING_SELF_CLOSING,
+                );
+                token.map = map;
+                token.meta = 'noEscText';
+                token.content = text ?? '';
+                pushInlineNode(token, 'whitespace hardbreak');
+              } else {
+                const token = new Token('text', 'br', NESTING_SELF_CLOSING);
+                token.map = map;
+                token.meta = 'noEscText';
+                token.content = text ?? '';
+                pushInlineNode(token, 'whitespace space');
+              }
               break;
             }
             if (text?.trim().length > 0) {
@@ -164,7 +176,6 @@ function treeToTokens(
               break;
             }
           }
-
           break;
 
         case 'shortcut_link':

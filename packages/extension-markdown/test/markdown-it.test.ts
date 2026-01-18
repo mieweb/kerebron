@@ -65,5 +65,5 @@ Deno.test('md test 4', async () => {
     serializedMarkdown,
   );
 
-  assertEquals(serializedMarkdown, sampleMarkdown);
+  assertEquals(sampleMarkdown, serializedMarkdown);
 });

@@ -2,7 +2,6 @@ import { CoreEditor, JSONContent } from '@kerebron/editor';
 import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionTables } from '@kerebron/extension-tables';
-import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
 import { assertEquals, trimLines } from '@kerebron/test-utils';
 
 Deno.test('Two paragraphs', async () => {

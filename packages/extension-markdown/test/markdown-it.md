@@ -71,11 +71,11 @@ Unordered
 
 - Create a list by starting a line with `+`, `-`, or `*`
 - Sub-lists are made by indenting 2 spaces:
-  - Marker character change forces new list start:
-    - Ac tristique libero volutpat at
-    * Facilisis in pretium nisl aliquet
-    - Nulla volutpat aliquam velit
-- Very easy!
+    - Marker character change forces new list start:
+        - Ac tristique libero volutpat at
+        * Facilisis in pretium nisl aliquet
+        - Nulla volutpat aliquam velit
+    - Very easy!
 
 Ordered
 
@@ -157,7 +157,7 @@ The killer feature of `markdown-it` is very effective support of
 >
 > Shortcuts (emoticons): :-) :-( 8-) ;)
 
-see
+see  
 [how to change output](https://github.com/markdown-it/markdown-it-emoji#change-output)
 with twemoji.
 

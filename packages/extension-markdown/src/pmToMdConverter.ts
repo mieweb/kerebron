@@ -155,6 +155,7 @@ export async function extPmToMdConverter(
           const token = new Token('math', 'math', 0);
           token.content = node.attrs.content;
           token.attrSet('lang', node.attrs.lang);
+          token.meta = 'noEscText';
           return token;
         },
       };
