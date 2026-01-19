@@ -64,7 +64,8 @@ export const mergeCodeBlocks: Command = (state, dispatch): boolean => {
       const startPos = tr.mapping.map(offset);
       const endPos = tr.mapping.map(offset + codeSize);
 
-      const textNode = schema.text(codeTexts.join(''));
+      const codeText = codeTexts.join('').replace(/\n+$/gm, '\n');
+      const textNode = schema.text(codeText);
       const codeBlock = schema.nodes.code_block.createAndFill(null, [textNode]);
 
       if (codeBlock) {

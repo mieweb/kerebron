@@ -5,14 +5,26 @@ export const removeUnusedBookmarks: Command = (state, dispatch): boolean => {
   const schema = state.schema;
   let tr = state.tr;
 
-  const bookmarkType = schema.marks.bookmark;
+  const bookmarkNodeType = schema.nodes.node_bookmark;
+  const bookmarkMarkType = schema.marks.bookmark;
 
   function walk(
     node: Node,
     pos = 0,
     depth = 0,
   ) {
-    const newMarks = node.marks.filter((mark) => mark.type !== bookmarkType);
+    if (node.type === bookmarkNodeType) {
+      console.log('del');
+      tr = tr.delete(
+        tr.mapping.map(pos - 1),
+        tr.mapping.map(pos + node.nodeSize - 1),
+      );
+      return;
+    }
+
+    const newMarks = node.marks.filter((mark) =>
+      mark.type !== bookmarkMarkType
+    );
     if (newMarks.length !== node.marks.length) {
       tr = tr.setNodeMarkup(
         tr.mapping.map(pos),

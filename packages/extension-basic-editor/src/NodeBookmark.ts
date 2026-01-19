@@ -3,7 +3,7 @@ import { NodeSpec } from 'prosemirror-model';
 import { Node } from '@kerebron/editor';
 
 export class NodeBookmark extends Node {
-  override name = 'bookmark-node';
+  override name = 'node_bookmark';
   requires = ['doc'];
 
   override getNodeSpec(): NodeSpec {

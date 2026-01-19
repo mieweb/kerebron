@@ -82,6 +82,17 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
       );
 
       editor.addEventListener(
+        'odt:pmdoc:filtered',
+        ((event: CustomEvent) => {
+          const { doc } = event.detail;
+          Deno.writeTextFileSync(
+            __dirname + '/' + pmName + '.9.debug.json',
+            JSON.stringify(doc, null, 2),
+          );
+        }) as EventListener,
+      );
+
+      editor.addEventListener(
         'md:tokens',
         ((event: CustomEvent) => {
           const { tokens } = event.detail;

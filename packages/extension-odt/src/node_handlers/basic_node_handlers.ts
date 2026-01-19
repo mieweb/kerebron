@@ -37,7 +37,7 @@ export function getInlineNodesHandlers(): Record<string, NodeHandler> {
 
     'bookmark': (ctx: OdtStashContext, element: any) => { // bookmark for parent para
       ctx.openNode();
-      ctx.closeNode('bookmark-node', {
+      ctx.closeNode('node_bookmark', {
         id: element['@name'],
       });
     },
