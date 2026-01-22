@@ -216,12 +216,15 @@ async function processModule(moduleRoot: string, json: DenoJson) {
 
   const hasAssets = await exists(path.resolve(moduleRoot, 'assets'));
   const exportsObj: Record<string, Record<string, string>> = {};
+
+  const files = ['esm', 'src'].concat(json.files || []);
+
   if (hasAssets) {
+    files.push('assets');
     exportsObj['./assets/*.css'] = {
       'import': './assets/*.css',
     };
   }
-  const files = ['esm', 'src'].concat(json.files || []);
 
   const opts: BuildOptions = {
     entryPoints,
