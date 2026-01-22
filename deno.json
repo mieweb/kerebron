@@ -33,6 +33,7 @@
     "examples/browser-vue-link",
     "examples/browser-custom-element",
     "examples/browser-link-mermaid",
+    "examples/browser-two-sides",
     "examples/cli-html-generator",
     "examples/server-hono",
     "examples/mcptest"
