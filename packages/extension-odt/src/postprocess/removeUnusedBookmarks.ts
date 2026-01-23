@@ -14,7 +14,6 @@ export const removeUnusedBookmarks: Command = (state, dispatch): boolean => {
     depth = 0,
   ) {
     if (node.type === bookmarkNodeType) {
-      console.log('del');
       tr = tr.delete(
         tr.mapping.map(pos - 1),
         tr.mapping.map(pos + node.nodeSize - 1),
