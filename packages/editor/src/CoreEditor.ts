@@ -94,7 +94,6 @@ export class CoreEditor extends EventTarget {
     const instance = new CoreEditor(
       {
         ...config,
-        element: undefined,
       },
       this.schema,
       extensionManager,
