@@ -2,3 +2,21 @@
   width: 100%;
   min-height: 30em;
 }
+
+/* https://github.com/hlotvonen/FontWithASyntaxHighlighter */
+@font-face {
+  font-family: 'FontWithASyntaxHighlighter';
+  src: url('/assets/FontWithASyntaxHighlighterLightOwl-Regular.woff2')
+    format('woff2');
+}
+@media (prefers-color-scheme: dark) {
+  @font-face {
+    font-family: 'FontWithASyntaxHighlighter';
+    src: url('/assets/FontWithASyntaxHighlighterNightOwl-Regular.woff2')
+      format('woff2');
+  }
+}
+
+code {
+  font-family: 'FontWithASyntaxHighlighter', monospace;
+}
