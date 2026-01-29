@@ -3,8 +3,8 @@ import { ContentType, Item, Text, UndoManager, XmlElement } from 'yjs';
 
 import type { Command } from '@kerebron/editor/commands';
 
-import { getRelativeSelection } from './ySyncPlugin.ts';
 import { ySyncPluginKey, yUndoPluginKey } from './keys.ts';
+import { getRelativeSelection } from './ProsemirrorBinding.ts';
 
 export interface UndoPluginState {
   undoManager: UndoManager;

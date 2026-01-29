@@ -13,7 +13,7 @@ import {
 } from '../src/lib.ts';
 
 import { schema as codeSchema } from './codeSchema.ts';
-import { initProseMirrorDoc } from '../src/convertUtils.ts';
+import { initProseMirrorDoc } from './convertUtils.ts';
 
 const createNewProsemirrorViewWithSchema = (y, schema, undoManager = false) => {
   const view = new DummyEditorView({
@@ -77,7 +77,7 @@ Deno.test('position conversion', () => {
 
   const yXmlFragment = yxml;
 
-  const { doc, meta, mapping } = initProseMirrorDoc(yXmlFragment, codeSchema);
+  const mapping = initProseMirrorDoc(yXmlFragment, codeSchema);
 
   const binding = new ProsemirrorBinding(yXmlFragment, mapping);
 

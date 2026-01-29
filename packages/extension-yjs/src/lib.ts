@@ -7,7 +7,7 @@ import { ySyncPluginKey } from './keys.ts';
 /**
  * Either a node if type is YXmlElement or an Array of text nodes if YXmlText
  */
-type ProsemirrorMapping = Map<Y.AbstractType<any>, Node>;
+export type ProsemirrorMapping = Map<Y.AbstractType<any>, Node | Array<Node>>;
 
 /**
  * Is null if no timeout is in progress.
@@ -192,7 +192,11 @@ export const relativePositionToAbsolutePosition = (
           pos += t._length;
         } else {
           const node = mapping.get(t);
-          pos += node?.nodeSize || 0;
+          if (Array.isArray(node)) {
+            pos += node.reduce((prev, curr) => prev + curr?.nodeSize || 0, 0);
+          } else {
+            pos += node?.nodeSize || 0;
+          }
         }
       }
       n = n.right;
@@ -218,7 +222,11 @@ export const relativePositionToAbsolutePosition = (
             pos += contentType._length;
           } else {
             const node = mapping.get(contentType);
-            pos += node?.nodeSize || 0;
+            if (Array.isArray(node)) {
+              pos += node.reduce((prev, curr) => prev + curr?.nodeSize || 0, 0);
+            } else {
+              pos += node?.nodeSize || 0;
+            }
           }
         }
         n = n.right;

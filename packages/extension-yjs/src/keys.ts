@@ -1,14 +1,14 @@
 import { PluginKey } from 'prosemirror-state';
-import { UndoPluginState } from './yUndoPlugin.ts';
+import { type UndoPluginState } from './yUndoPlugin.ts';
+import { type YSyncPluginState } from './ySyncPlugin.ts';
+import { type YPositionPluginState } from './yPositionPlugin.ts';
 
-/**
- * The unique prosemirror plugin key for syncPlugin
- */
-export const ySyncPluginKey = new PluginKey('y-sync');
+export const ySyncPluginKey = new PluginKey<YSyncPluginState>('y-sync');
 
-/**
- * The unique prosemirror plugin key for undoPlugin
- */
-export const yUndoPluginKey: PluginKey<UndoPluginState> = new PluginKey(
+export const yPositionPluginKey = new PluginKey<YPositionPluginState>(
+  'yjs-position',
+);
+
+export const yUndoPluginKey = new PluginKey<UndoPluginState>(
   'y-undo',
 );

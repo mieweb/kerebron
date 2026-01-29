@@ -1,7 +1,8 @@
 import * as Y from 'yjs';
-import * as awarenessProtocol from 'y-protocols/awareness';
+import { Awareness } from 'y-protocols/awareness';
 
-import { EditorState, Plugin, PluginKey } from 'prosemirror-state';
+import { EditorState, Plugin, Transaction } from 'prosemirror-state';
+import { EditorView } from 'prosemirror-view';
 
 import type { CoreEditor } from '@kerebron/editor';
 import type {
@@ -15,9 +16,8 @@ import {
   relativePositionToAbsolutePosition,
   setMeta,
 } from './lib.ts';
-import { ySyncPluginKey } from './keys.ts';
-
-export const yPositionPluginKey = new PluginKey('yjs-position');
+import { yPositionPluginKey, ySyncPluginKey } from './keys.ts';
+import type { YSyncPluginState } from './ySyncPlugin.ts';
 
 type AwarenessListener = (
   { added, updated, removed }: {
@@ -33,6 +33,108 @@ interface PositionPluginConfig {
   getSelection?: (arg0: any) => any;
 }
 
+export interface YPositionPluginState {
+  awareness?: Awareness;
+  awarenessListener?: AwarenessListener;
+}
+
+function destroyAwareness(
+  state: YPositionPluginState,
+  cursorStateField: string,
+) {
+  if (!state.awareness) {
+    return;
+  }
+  const awareness = state.awareness;
+  if (state.awarenessListener) {
+    awareness.off('change', state.awarenessListener);
+  }
+  awareness.setLocalStateField(cursorStateField, null);
+}
+
+function initAwareness(state: YPositionPluginState, editor: CoreEditor) {
+  console.log('initAwareness', state.awareness);
+  if (!state.awareness) {
+    return;
+  }
+  const awareness = state.awareness;
+  const view = editor.view as EditorView;
+
+  state.awarenessListener = (
+    { added, updated, removed },
+  ) => {
+    console.log('state.awarenessListener');
+    const ystate: YSyncPluginState = ySyncPluginKey.getState(view.state)!;
+    if (!ystate.provider) {
+      return;
+    }
+    const awareness = ystate.provider.awareness;
+    const clients = added.concat(updated).concat(removed);
+    if (
+      clients.findIndex((id: number) => id !== awareness.doc.clientID) ===
+        -1
+    ) {
+      return;
+    }
+
+    if (view.docView) {
+      setMeta(view, remoteSelectionPluginKey, {
+        remotePositionUpdated: true,
+      });
+    }
+
+    const remoteStates: SelectionState[] = [];
+
+    const ydoc = ystate.ydoc;
+
+    awareness.getStates().forEach((aw, clientId) => {
+      if (!defaultAwarenessStateFilter(ydoc.clientID, clientId, aw)) {
+        return;
+      }
+
+      if (!aw.cursor) {
+        return;
+      }
+
+      const anchor = relativePositionToAbsolutePosition(
+        ydoc,
+        ystate.type,
+        Y.createRelativePositionFromJSON(aw.cursor.anchor),
+        ystate.binding.mapping,
+      );
+      const head = relativePositionToAbsolutePosition(
+        ydoc,
+        ystate.type,
+        Y.createRelativePositionFromJSON(aw.cursor.head),
+        ystate.binding.mapping,
+      );
+
+      if (anchor !== null && head !== null) {
+        remoteStates.push({
+          clientId,
+          user: {
+            name: aw.user?.name,
+            color: aw.user?.color,
+            colorLight: aw.user?.colorLight,
+          },
+          cursor: {
+            anchor,
+            head,
+          },
+        });
+      }
+    });
+    const extension: ExtensionRemoteSelection = editor.getExtension(
+      'remote-selection',
+    )!;
+
+    extension.setRemoteStates(remoteStates);
+    // view.dispatch({ annotations: [yRemoteSelectionsAnnotation.of([])] });
+  };
+
+  awareness.on('change', state.awarenessListener);
+}
+
 /**
  * Default awareness state filter
  */
@@ -43,100 +145,58 @@ export const defaultAwarenessStateFilter = (
 ): boolean => currentClientId !== userClientId;
 
 export const yPositionPlugin = (
-  awareness: awarenessProtocol.Awareness,
   editor: CoreEditor,
   {
     getSelection = (state: EditorState) => state.selection,
   }: PositionPluginConfig = {},
   cursorStateField: string = 'cursor',
 ) => {
-  return new Plugin({
+  return new Plugin<YPositionPluginState>({
     key: yPositionPluginKey,
-    view: (view) => {
-      const extension: ExtensionRemoteSelection = editor.getExtension(
-        'remote-selection',
-      )!;
-
-      const awarenessListener: AwarenessListener = (
-        { added, updated, removed },
-      ) => {
-        const clients = added.concat(updated).concat(removed);
-        if (
-          clients.findIndex((id: number) => id !== awareness.doc.clientID) ===
-            -1
-        ) {
-          return;
+    state: {
+      init: (_initargs, state): YPositionPluginState => {
+        return {
+          awareness: undefined,
+        };
+      },
+      apply: (tr: Transaction, pluginState: YPositionPluginState) => {
+        const awareness = tr.getMeta('yjs:awareness');
+        if (awareness) {
+          if (pluginState.awareness) {
+            destroyAwareness(pluginState, cursorStateField);
+          }
+          pluginState.awareness = awareness;
+          if (pluginState.awareness) {
+            initAwareness(pluginState, editor);
+          }
         }
-
-        if (view.docView) {
-          setMeta(view, remoteSelectionPluginKey, {
-            remotePositionUpdated: true,
-          });
-        }
-
-        const remoteStates: SelectionState[] = [];
-
-        const ystate = ySyncPluginKey.getState(view.state);
-        const y = ystate.doc;
-
-        awareness.getStates().forEach((aw, clientId) => {
-          if (!defaultAwarenessStateFilter(y.clientID, clientId, aw)) {
-            return;
-          }
-
-          if (!aw.cursor) {
-            return;
-          }
-
-          let anchor = relativePositionToAbsolutePosition(
-            y,
-            ystate.type,
-            Y.createRelativePositionFromJSON(aw.cursor.anchor),
-            ystate.binding.mapping,
-          );
-          let head = relativePositionToAbsolutePosition(
-            y,
-            ystate.type,
-            Y.createRelativePositionFromJSON(aw.cursor.head),
-            ystate.binding.mapping,
-          );
-
-          if (anchor !== null && head !== null) {
-            remoteStates.push({
-              clientId,
-              user: {
-                name: aw.user?.name,
-                color: aw.user?.color,
-                colorLight: aw.user?.colorLight,
-              },
-              cursor: {
-                anchor,
-                head,
-              },
-            });
-          }
-        });
-
-        extension.setRemoteStates(remoteStates);
-        // view.dispatch({ annotations: [yRemoteSelectionsAnnotation.of([])] });
-      };
-
-      {
-        // if (
-        //   ystate.snapshot != null || ystate.prevSnapshot != null ||
-        //   ystate.binding.mapping.size === 0
-        // ) {
-        //   // do not render cursors while snapshot is active
-        //   return DecorationSet.create(state.doc, []);
-        // }
-      }
+        return pluginState;
+      },
+    },
+    view: (view: EditorView) => {
+      // const ystate: YSyncPluginState = ySyncPluginKey.getState(view.state)!;
+      // if (
+      //   ystate.snapshot != null || ystate.prevSnapshot != null ||
+      //   ystate.binding.mapping.size === 0
+      // ) {
+      //   // do not render cursors while snapshot is active
+      //   return DecorationSet.empty;
+      // }
 
       const updateAwareness = (
         selectionAnchor: number,
         selectionHead: number,
       ) => {
-        const ystate = ySyncPluginKey.getState(view.state);
+        const state: YPositionPluginState = yPositionPluginKey.getState(
+          view.state,
+        )!;
+        if (!state.awareness) {
+          return;
+        }
+        const awareness = state.awareness;
         const current = awareness.getLocalState() || {};
+
+        const ystate: YSyncPluginState = ySyncPluginKey.getState(view.state)!;
 
         const anchor: Y.RelativePosition = absolutePositionToRelativePosition(
           selectionAnchor,
@@ -168,13 +228,21 @@ export const yPositionPlugin = (
       };
 
       const clearAwareness = () => {
-        const ystate = ySyncPluginKey.getState(view.state);
+        const state: YPositionPluginState = yPositionPluginKey.getState(
+          view.state,
+        )!;
+        if (!state.awareness) {
+          return;
+        }
+        const awareness = state.awareness;
+
+        const ystate = ySyncPluginKey.getState(view.state)!;
         const current = awareness.getLocalState() || {};
 
         if (
           current.cursor != null &&
           relativePositionToAbsolutePosition(
-              ystate.doc,
+              ystate.ydoc,
               ystate.type,
               Y.createRelativePositionFromJSON(current.cursor.anchor),
               ystate.binding.mapping,
@@ -194,9 +262,11 @@ export const yPositionPlugin = (
         }
       };
 
-      const localPositionChangedListener = (event: CustomEvent) => {
-        const { detail } = event;
-        updateAwareness(detail.anchor, detail.head);
+      const localPositionChangedListener = (event: Event) => {
+        if ('detail' in event) {
+          const { detail } = event as CustomEvent;
+          updateAwareness(detail.anchor, detail.head);
+        }
       };
 
       editor.addEventListener(
@@ -204,16 +274,23 @@ export const yPositionPlugin = (
         localPositionChangedListener,
       );
 
-      awareness.on('change', awarenessListener);
       view.dom.addEventListener('focusin', updateCursorInfo);
       view.dom.addEventListener('focusout', updateCursorInfo);
+
       return {
         update: updateCursorInfo,
         destroy: () => {
           view.dom.removeEventListener('focusin', updateCursorInfo);
           view.dom.removeEventListener('focusout', updateCursorInfo);
-          awareness.off('change', awarenessListener);
-          awareness.setLocalStateField(cursorStateField, null);
+
+          const pluginState: YPositionPluginState | undefined =
+            yPositionPluginKey.getState(
+              view.state,
+            );
+          if (pluginState) {
+            destroyAwareness(pluginState, cursorStateField);
+          }
+
           editor.removeEventListener(
             'localPositionChanged',
             localPositionChangedListener,

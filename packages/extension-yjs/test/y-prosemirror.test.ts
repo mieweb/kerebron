@@ -20,7 +20,7 @@ import {
   prosemirrorJSONToYDoc,
   prosemirrorJSONToYXmlFragment,
   yXmlFragmentToProseMirrorRootNode,
-} from '../src/convertUtils.ts';
+} from './convertUtils.ts';
 import { ySyncPluginKey, yUndoPluginKey } from '../src/keys.ts';
 
 const schema = new Schema({
