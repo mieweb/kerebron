@@ -53,33 +53,29 @@ export async function markdownToHtml(
         ].filter((a) => !!a));
       }
 
-      if (content.startsWith('SOURCES ')) {
-        const files = content.substring('SOURCES '.length)
-          .replace(/^\[/, '').replace(/\]$/, '')
-          .split(',')
-          .map((name) => name.trim().replaceAll('"', ''));
+      if (content.startsWith('SOURCE ')) {
+        const fileName = content.substring('SOURCE '.length)
+          .replaceAll('"', '');
 
         const retVal: PmNode[] = [];
 
-        for (const fileName of files) {
-          retVal.push(
-            editor.schema.nodes.heading?.createAndFill(
-              { level: 3 },
-              editor.schema.text(fileName),
-            )!,
-          );
-          const buffer = fs.readFileSync(
-            examplesDir + ctx.example + '/' + fileName,
-          );
-          const content = new TextDecoder().decode(buffer);
+        retVal.push(
+          editor.schema.nodes.heading?.createAndFill(
+            { level: 3 },
+            editor.schema.text(fileName),
+          )!,
+        );
+        const buffer = fs.readFileSync(
+          examplesDir + ctx.example + '/' + fileName,
+        );
+        const codeText = new TextDecoder().decode(buffer);
 
-          retVal.push(
-            editor.schema.nodes.code_block.createAndFill(
-              {},
-              editor.schema.text(content),
-            )!,
-          );
-        }
+        retVal.push(
+          editor.schema.nodes.code_block.createAndFill(
+            {},
+            editor.schema.text(codeText),
+          )!,
+        );
 
         return Fragment.from(retVal);
       }

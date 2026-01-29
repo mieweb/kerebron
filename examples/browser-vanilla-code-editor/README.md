@@ -6,4 +6,4 @@ You can use Kerebron as Code editor without any HTML/JS framework.
 
 ## Sources:
 
-{{ SOURCES ["src/main.ts"] }}
+{{ SOURCE "src/main.ts" }}

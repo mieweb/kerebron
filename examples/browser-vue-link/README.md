@@ -4,4 +4,4 @@
 
 ## Sources:
 
-{{ SOURCES ["src/App.vue"] }}
+{{ SOURCE "src/App.vue" }}

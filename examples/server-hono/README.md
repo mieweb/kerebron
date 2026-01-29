@@ -9,5 +9,6 @@ Features:
 ## Cloudflare deploy
 
 ```sh
+deno task -f browser build
 deno task -f server-hono cf:deploy
 ```

@@ -4,4 +4,4 @@
 
 ## Sources:
 
-{{ SOURCES ["index.html"] }}
+{{ SOURCE "index.html" }}

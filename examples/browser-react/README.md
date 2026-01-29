@@ -4,4 +4,4 @@
 
 ## Sources:
 
-{{ SOURCES ["src/EditorYjs.tsx"] }}
+{{ SOURCE "src/EditorYjs.tsx" }}

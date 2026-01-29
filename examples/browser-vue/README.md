@@ -4,4 +4,4 @@
 
 ## Sources:
 
-{{ SOURCES ["src/components/EditorYjs.vue"] }}
+{{ SOURCE "src/components/EditorYjs.vue" }}

@@ -4,4 +4,4 @@
 
 ## Sources:
 
-{{ SOURCES ["src/my-editor.ce.vue"] }}
+{{ SOURCE "src/my-editor.ce.vue" }}
