@@ -46,11 +46,6 @@ export default class KerebronEditor extends HTMLElement {
     });
 
     if (this.getAttribute('media-type')) {
-      console.log(
-        'mmdmdmdmdmdmdmmdddd',
-        this.getAttribute('media-type'),
-        this.innerHTML,
-      );
       this.editor.loadDocument(
         this.getAttribute('media-type'),
         new TextEncoder().encode(this.innerHTML),

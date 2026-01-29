@@ -10,7 +10,7 @@ import { DevAdvancedEditorKit } from '@kerebron/editor-kits/DevAdvancedEditorKit
 import { BasicEditorKit } from '@kerebron/extension-basic-editor/BasicEditorKit';
 
 import { Fragment, Node as PmNode, Schema } from 'prosemirror-model';
-import { Parser } from "https://esm.sh/expr-eval";
+import { Parser } from 'https://esm.sh/expr-eval';
 
 const parser = new Parser();
 

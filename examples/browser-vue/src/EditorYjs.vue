@@ -18,11 +18,9 @@ import { CoreEditor } from '@kerebron/editor';
 import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
 import {AdvancedEditorKit} from '@kerebron/editor-kits//AdvancedEditorKit';
 
-import * as Y from 'yjs';
-
 export default {
   name: 'my-editor',
-  props: ['modelValue'],
+  props: ['modelValue', 'roomId'],
   expose: ['loadDoc', 'loadDoc2'],
   data() {
     return {
@@ -43,14 +41,16 @@ export default {
         globalThis.location.hash = 'room:' + roomId;
       }
 
-      const ydoc = new Y.Doc();
-      this.ydoc = ydoc;
+      let userName = '';
+      if (!userName) {
+        userName = 'TODO ' + Math.floor(Math.random() * 100);
+      }
 
       this.editor = CoreEditor.create({
         element: this.$refs.editor,
         editorKits: [
           new AdvancedEditorKit(),
-          YjsEditorKit.createFrom(ydoc, roomId)
+          YjsEditorKit.createFrom(userName)
         ],
         // content: pmDoc
       });
@@ -70,6 +70,9 @@ export default {
         // this.view.updateState(this.state);
       }
     },
+    async roomId() {
+      await this.editor.loadDocumentText('yjs', this.roomId);
+    }
   },
   methods: {
     async loadDoc() {

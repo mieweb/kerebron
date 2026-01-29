@@ -110,13 +110,18 @@ const rooms: Map<string, Room> = new Map();
 export class HonoYjsMemAdapter implements HonoWsAdapter {
   readonly sockets: Map<WebSocket, SocketContext> = new Map();
   readonly rooms: Map<string, Room>;
+  readonly roomNames: Set<string> = new Set();
 
   constructor() {
     this.rooms = rooms;
   }
 
   getRoomNames() {
-    return Array.from(rooms.keys());
+    return Array.from(this.roomNames);
+  }
+
+  addRoom(roomName: string) {
+    this.roomNames.add(roomName);
   }
 
   upgradeWebSocket(roomName: string): WSEvents<WebSocket> {
@@ -131,6 +136,7 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
         if (!this.rooms.has(roomName)) {
           this.rooms.set(roomName, new Room(roomName, doc));
         }
+        this.addRoom(roomName);
         const room = this.rooms.get(roomName)!;
 
         const socketContext = new SocketContext(room, wsContext.raw);

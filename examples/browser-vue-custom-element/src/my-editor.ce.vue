@@ -8,14 +8,14 @@
         <h5>Markdown</h5>
         <pre>{{ md }}</pre>
       </div>
-      <div>
-        <h5>ydoc</h5>
-        <pre>{{ JSON.stringify(ydoc, null, 2) }}</pre>
-      </div>
     </div>
   </div>
 </template>
 <script lang="ts">
+import * as random from 'lib0/random';
+import { WebsocketProvider } from 'y-websocket';
+import { dracula } from 'thememirror';
+
 import { CoreEditor, type TextRange } from '@kerebron/editor';
 import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
@@ -34,11 +34,7 @@ import {
 import { ExtensionYjs } from '@kerebron/extension-yjs';
 import { userColors } from '@kerebron/extension-yjs/userColors';
 import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
-
-import * as Y from 'yjs';
-import * as random from 'lib0/random';
-import { WebsocketProvider } from 'y-websocket';
-import { dracula } from 'thememirror';
+import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
 
 export default {
   name: 'my-editor',
@@ -48,7 +44,6 @@ export default {
     return {
       lastValue: null,
       doc: {},
-      ydoc: {},
       spans: [],
       marks: [],
       md: '',
@@ -67,39 +62,12 @@ export default {
         // this.view.updateState(this.state);
       }
     },
-    roomId() {
-      this.init();
+    async roomId() {
+      await this.editor.loadDocumentText('yjs', this.roomId);
     }
   },
   methods: {
     async init() {
-      if (!this.roomId) {
-        return;
-      }
-      const userColor = userColors[random.uint32() % userColors.length];
-
-      const ydoc = new Y.Doc();
-      this.ydoc = ydoc;
-
-      const protocol = globalThis.location.protocol === 'http:'
-        ? 'ws:'
-        : 'wss:';
-      const wsProvider = new WebsocketProvider(
-        protocol + '//' + globalThis.location.host + '/yjs',
-        this.roomId,
-        ydoc,
-      );
-
-      wsProvider.on('status', (event) => {
-        console.log('wsProvider status', event.status); // logs "connected" or "disconnected"
-      });
-
-      wsProvider.awareness.setLocalStateField('user', {
-        name: 'Anonymous ' + Math.floor(Math.random() * 100),
-        color: userColor.color,
-        colorLight: userColor.light,
-      });
-
       this.$refs.editor.innerHTML = '';
 
       const autocomplete = new ExtensionAutocomplete({
@@ -118,9 +86,15 @@ export default {
         }
       });
 
+      let userName = '';
+      if (!userName) {
+        userName = 'TODO ' + Math.floor(Math.random() * 100);
+      }
+
       this.editor = CoreEditor.create({
         element: this.$refs.editor,
         editorKits: [
+          YjsEditorKit.createFrom(userName),
           {
             getExtensions() {
               return [
@@ -147,7 +121,6 @@ export default {
                 new ExtensionMarkdown(),
                 new ExtensionOdt(),
                 new ExtensionTables(),
-                new ExtensionYjs({ydoc, provider: wsProvider}),
                 new ExtensionDevToolkit(),
                 new ExtensionCodeMirror({
                   theme: [dracula],

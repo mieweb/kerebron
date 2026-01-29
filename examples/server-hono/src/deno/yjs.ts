@@ -18,4 +18,10 @@ export function install(
     const retVal = yjsAdapter.getRoomNames();
     return c.json(retVal);
   });
+
+  app.post('/api/rooms', (c) => {
+    const roomId = String(Math.floor(100000 / Math.random()));
+    yjsAdapter.addRoom(roomId);
+    return c.json(roomId);
+  });
 }

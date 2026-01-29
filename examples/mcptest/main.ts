@@ -3,7 +3,6 @@ import * as Y from 'yjs';
 
 import { CoreEditor } from '@kerebron/editor';
 import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
-import { ExtensionYjs } from '@kerebron/extension-yjs';
 import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
 
 import { ExtensionSelection } from '@kerebron/extension-basic-editor/ExtensionSelection';
@@ -26,10 +25,15 @@ wsProvider.awareness.setLocalStateField('user', {
   colorLight: userColor.light,
 });
 
+let userName = '';
+if (!userName) {
+  userName = 'TODO ' + Math.floor(Math.random() * 100);
+}
+
 const editor = CoreEditor.create({
   editorKits: [
     new BrowserLessEditorKit(),
-    YjsEditorKit.createFrom(ydoc, roomId),
+    YjsEditorKit.createFrom(userName),
   ],
 });
 

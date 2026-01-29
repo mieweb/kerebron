@@ -14,6 +14,7 @@ export function install(
   );
 
   // You cannot enumerate CF durable objects
-  // app.get('/api/rooms', (c) => {
-  // });
+  app.get('/api/rooms', (c) => {
+    return c.json([]);
+  });
 }

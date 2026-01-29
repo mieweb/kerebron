@@ -1,16 +1,13 @@
 <template>
-  <button @click="newRoom">New room</button>
-  <ul>
-    <li v-for="id in roomIDs">
-      <a :href="'#room:' + id">{{ id }}</a>
-    </li>
-  </ul>
-
-  <EditorYjs />
+  <my-yjs-room @change-room="setRoom" />
+  <EditorYjs :roomId="roomId" />
 </template>
 
 <script>
-import EditorYjs from './components/EditorYjs.vue';
+import EditorYjs from './EditorYjs.vue';
+
+import YjsRoom from '@kerebron/custom-elements/YjsRoom';
+YjsRoom.register();
 
 export default {
   name: 'App',
@@ -19,40 +16,15 @@ export default {
   },
   data() {
     return {
-      roomId: null,
-      roomIDs: [],
-      docs: [],
+      roomId: null
     };
   },
-  created() {
-    this.fetch();
-    const docUrl = globalThis.location.hash.slice(1);
-    if (docUrl.startsWith('room:')) {
-      this.roomId = docUrl.substring('room:'.length);
-    } else {
-      this.roomId = null;
-    }
-  },
-  watch: {
-    $route() {
-      const docUrl = globalThis.location.hash.slice(1);
-      if (docUrl.startsWith('room:')) {
-        this.roomId = docUrl.substring('room:'.length);
-      } else {
-        this.roomId = null;
-      }
-    }
-  },
   methods: {
-    async fetch() {
-      const response = await fetch('/api/rooms');
-      this.roomIDs = await response.json();
-    },
-    newRoom() {
-      const roomId = String(Math.random());
-      globalThis.location.hash = 'room:' + roomId;
-      this.roomId = roomId;
-      this.fetch();
+    setRoom(event) {
+      if (!event.detail) {
+        return;
+      }
+      this.roomId = event.detail;
     }
   },
 };

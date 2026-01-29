@@ -53,7 +53,6 @@ function destroyAwareness(
 }
 
 function initAwareness(state: YPositionPluginState, editor: CoreEditor) {
-  console.log('initAwareness', state.awareness);
   if (!state.awareness) {
     return;
   }
@@ -63,7 +62,6 @@ function initAwareness(state: YPositionPluginState, editor: CoreEditor) {
   state.awarenessListener = (
     { added, updated, removed },
   ) => {
-    console.log('state.awarenessListener');
     const ystate: YSyncPluginState = ySyncPluginKey.getState(view.state)!;
     if (!ystate.provider) {
       return;

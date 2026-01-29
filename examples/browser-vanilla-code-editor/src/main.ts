@@ -1,5 +1,3 @@
-import * as Y from 'yjs';
-
 import { CoreEditor } from '@kerebron/editor';
 import { CodeEditorKit } from '@kerebron/editor-kits/CodeEditorKit';
 import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
@@ -18,7 +16,6 @@ window.addEventListener('load', async () => {
     roomId = String(Math.random());
     globalThis.location.hash = 'room:' + roomId;
   }
-  const ydoc = new Y.Doc();
 
   const getLspTransport: LspTransportGetter = (
     lang: string,
@@ -40,13 +37,18 @@ window.addEventListener('load', async () => {
     return undefined;
   };
 
+  let userName = '';
+  if (!userName) {
+    userName = 'TODO ' + Math.floor(Math.random() * 100);
+  }
+
   const editor = CoreEditor.create({
     uri: 'test.yaml',
     topNode: 'doc_code',
     element: document.getElementById('editor') || undefined,
     editorKits: [
       new CodeEditorKit('json'),
-      YjsEditorKit.createFrom(ydoc, roomId),
+      YjsEditorKit.createFrom(userName),
       LspEditorKit.createFrom({ getLspTransport }),
       // lsp-ws-proxy --listen 9991 -- npx yaml-language-server --stdio
       // lsp-ws-proxy --listen 9991 -- npx vscode-json-languageserver --stdio

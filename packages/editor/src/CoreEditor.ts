@@ -315,6 +315,10 @@ export class CoreEditor extends EventTarget {
     return this.state.doc;
   }
 
+  public loadDocumentText(mediaType: string, content: string) {
+    return this.loadDocument(mediaType, new TextEncoder().encode(content));
+  }
+
   public async loadDocument(mediaType: string, content: Uint8Array) {
     const converter = this.extensionManager.converters[mediaType];
     if (!converter) {
@@ -377,6 +381,13 @@ export class CoreEditor extends EventTarget {
       detail: {},
     });
     this.dispatchEvent(event);
+
+    if (this.config.element) {
+      const oldEl = this.config.element;
+      const newEl = oldEl.cloneNode(true);
+      oldEl.replaceWith(newEl);
+    }
+
     this.view.destroy();
   }
 

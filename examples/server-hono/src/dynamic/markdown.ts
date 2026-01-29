@@ -65,19 +65,30 @@ export async function markdownToHtml(
             editor.schema.text(fileName),
           )!,
         );
-        const buffer = fs.readFileSync(
-          examplesDir + ctx.example + '/' + fileName,
-        );
-        const codeText = new TextDecoder().decode(buffer);
+        try {
+          const buffer = fs.readFileSync(
+            examplesDir + ctx.example + '/' + fileName,
+          );
+          const codeText = new TextDecoder().decode(buffer);
 
-        retVal.push(
-          editor.schema.nodes.code_block.createAndFill(
-            {},
-            editor.schema.text(codeText),
-          )!,
-        );
+          retVal.push(
+            editor.schema.nodes.code_block.createAndFill(
+              {},
+              editor.schema.text(codeText),
+            )!,
+          );
 
-        return Fragment.from(retVal);
+          return Fragment.from(retVal);
+        } catch (err: any) {
+          retVal.push(
+            editor.schema.nodes.code_block.createAndFill(
+              {},
+              editor.schema.text(err.message),
+            )!,
+          );
+
+          return Fragment.from(retVal);
+        }
       }
     }
 

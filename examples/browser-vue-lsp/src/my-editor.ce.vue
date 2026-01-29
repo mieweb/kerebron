@@ -35,7 +35,6 @@ export default {
     return {
       lastValue: null,
       doc: {},
-      ydoc: {},
       spans: [],
       marks: [],
       md: '',
@@ -56,17 +55,12 @@ export default {
         // this.view.updateState(this.state);
       }
     },
-    roomId() {
-      this.init();
+    async roomId() {
+      await this.editor.loadDocumentText('yjs', this.roomId);
     }
   },
   methods: {
     async init() {
-      if (!this.roomId) {
-        return;
-      }
-      const ydoc = new Y.Doc();
-      this.ydoc = ydoc;
 
       const myMenu = {
         modifyMenu: (menus: MenuElement[][]) => {
@@ -110,17 +104,31 @@ export default {
         return undefined;
       }
 
+      if (this.editor) {
+        this.editor.destroy();
+      }
+
+      let userName = '';
+      if (!userName) {
+        userName = 'TODO ' + Math.floor(Math.random() * 100);
+      }
+
       this.editor = CoreEditor.create({
         cdnUrl: 'http://localhost:8000/wasm/',
         uri: 'file:///test.md',
         element: this.$refs.editor,
         editorKits: [
           new DevAdvancedEditorKit(myMenu),
-          YjsEditorKit.createFrom(ydoc, this.roomId),
-          LspEditorKit.createFrom({ getLspTransport }),
+          YjsEditorKit.createFrom(userName),
+          // LspEditorKit.createFrom({ getLspTransport }),
         ]
       });
 
+      if (this.roomId) {
+        await this.editor.loadDocumentText('yjs', this.roomId);
+      }
+
+      if (false)
       this.editor.addEventListener('selection', (event: CustomEvent) => {
         const selection = event.detail.selection;
         const extensionMarkdown: ExtensionMarkdown | undefined = this.editor.getExtension('markdown');

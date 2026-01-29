@@ -3,6 +3,7 @@
   "tasks": {},
   "imports": {},
   "exports": {
-    "./KerebronEditor": "./src/KerebronEditor.ts"
+    "./KerebronEditor": "./src/KerebronEditor.ts",
+    "./YjsRoom": "./src/YjsRoom.ts"
   }
 }
