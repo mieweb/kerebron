@@ -12,6 +12,11 @@ export default defineConfig({
     wasm(),
     deno(),
   ],
+  define: {
+    // Eliminate import.meta.url fallback in the WASM loader.
+    // Browser consumers must provide cdnUrl / locateFile config instead.
+    'import.meta.url': JSON.stringify(''),
+  },
   resolve: {
     alias: generateAlias(),
   },
@@ -32,6 +37,14 @@ export default defineConfig({
         light: __dirname + '/kerebron-light.css',
       },
       output: {
+        // Stable chunk name for the core bundle (no content hashes)
+        chunkFileNames: (chunkInfo) => {
+          if (chunkInfo.name === '__vite-browser-external') {
+            return 'kerebron-core.js';
+          }
+          // Language mode chunks keep readable names
+          return '[name].js';
+        },
         entryFileNames: (chunk) => {
           if (chunk.name === 'mod') return 'kerebron.js';
           return '[name].js';
