@@ -43,6 +43,7 @@ export interface EditorConfig {
   languageID?: string;
   topNode?: string;
   readOnly?: boolean;
+  debug?: boolean;
 }
 
 export class CoreEditor extends EventTarget {
@@ -69,7 +70,10 @@ export class CoreEditor extends EventTarget {
   }
 
   static create(config: Partial<EditorConfig> & { editorKits: EditorKit[] }) {
-    const extensionManager = new ExtensionManager(config.editorKits);
+    const extensionManager = new ExtensionManager(
+      config.editorKits,
+      config.debug,
+    );
 
     const schema = extensionManager.getSchemaByResolvedExtensions();
 
@@ -89,6 +93,7 @@ export class CoreEditor extends EventTarget {
   public clone(config?: EditorConfig): CoreEditor {
     const extensionManager = new ExtensionManager(
       this.extensionManager.editorKits,
+      (config || this.config).debug,
     );
 
     const instance = new CoreEditor(
@@ -270,7 +275,6 @@ export class CoreEditor extends EventTarget {
 
     if (this.view) {
       this.view.updateState(this.state);
-
       this.view.setProps({
         nodeViews: this.extensionManager.nodeViews,
       });

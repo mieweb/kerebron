@@ -1,7 +1,5 @@
 import { Schema } from 'prosemirror-model';
 
-const brDOM = ['br'];
-
 const calcYchangeDomAttrs = (attrs, domAttrs = {}) => {
   domAttrs = Object.assign({}, domAttrs);
   if (attrs.ychange !== null) {
@@ -150,7 +148,7 @@ export const nodes = {
     selectable: false,
     parseDOM: [{ tag: 'br' }],
     toDOM() {
-      return brDOM;
+      return ['br'];
     },
   },
 };

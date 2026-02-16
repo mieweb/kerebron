@@ -11,11 +11,6 @@ export type TransactFunc<T> = (
   origin?: any,
 ) => T;
 
-export const isVisible = (item: Y.Item, snapshot: Y.Snapshot) =>
-  snapshot === undefined ? !item.deleted : (snapshot.sv.has(item.id.client) &&
-    (snapshot.sv.get(item.id.client)!) > item.id.clock &&
-    !Y.isDeleted(snapshot.ds, item.id));
-
 export interface ColorDef {
   light: string;
   dark: string;
@@ -75,8 +70,7 @@ export const ySyncPlugin = (
       init: (_initargs, state): YSyncPluginState => {
         const ydoc = new Y.Doc();
         const yXmlFragment: Y.XmlFragment = ydoc.getXmlFragment('prosemirror');
-        const mapping = new Map();
-        const binding = new ProsemirrorBinding(yXmlFragment, mapping);
+        const binding = new ProsemirrorBinding(yXmlFragment, new Map());
 
         return {
           roomId: '',
@@ -202,7 +196,7 @@ export const ySyncPlugin = (
       const binding = pluginState.binding;
 
       binding.initView(view);
-      if (binding.mapping == null) {
+      if (binding.mapping.size === 0) {
         // force rerender to update the bindings mapping
         binding._forceRerender();
       }

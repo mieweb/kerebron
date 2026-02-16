@@ -40,3 +40,5 @@ jobs:
         run: deno test -A --no-check packages/extension-markdown/test/
       - name: Run tests odt
         run: deno test -A --no-check packages/extension-odt/test/
+      - name: Run tests odt
+        run: deno test -A --no-check packages/extension-yjs/test/

@@ -1,34 +1,30 @@
-import { EditorState, Plugin, TextSelection } from 'prosemirror-state';
+import { EditorState } from 'prosemirror-state';
 import * as Y from 'yjs';
 
-// import { DOMParser } from 'jsr:@b-fuze/deno-dom'; // No xml support (mathML) https://github.com/b-fuze/deno-dom/issues?q=is%3Aissue%20state%3Aopen%20xml
-
 import { DummyEditorView } from '@kerebron/editor/DummyEditorView';
-import { ProsemirrorBinding, ySyncPlugin } from '../src/ySyncPlugin.ts';
-import { yUndoPlugin } from '../src/yUndoPlugin.ts';
-import { ySyncPluginKey } from '../src/keys.ts';
 import {
   absolutePositionToRelativePosition,
   relativePositionToAbsolutePosition,
 } from '../src/lib.ts';
+import { ySyncPlugin } from '../src/ySyncPlugin.ts';
+import { yUndoPlugin } from '../src/yUndoPlugin.ts';
 
 import { schema as codeSchema } from './codeSchema.ts';
-import { initProseMirrorDoc } from './convertUtils.ts';
+import { createEmptyMeta } from './convertUtils.ts';
+import { ProsemirrorBinding } from '../src/ProsemirrorBinding.ts';
+import { debugYDoc } from '@kerebron/extension-yjs/debug';
 
-const createNewProsemirrorViewWithSchema = (y, schema, undoManager = false) => {
+const createNewComplexProsemirrorView = (y: Y.Doc, undoManager = false) => {
   const view = new DummyEditorView({
     state: EditorState.create({
-      schema,
-      plugins: [ySyncPlugin(y.get('prosemirror', Y.XmlFragment))].concat(
-        undoManager ? [yUndoPlugin()] : [],
-      ),
+      schema: codeSchema,
+      // plugins: [ySyncPlugin(codeSchema)].concat(
+      //   undoManager ? [yUndoPlugin()] : [],
+      // ),
     }),
   });
   return view;
 };
-
-const createNewComplexProsemirrorView = (y: Y.Doc, undoManager = false) =>
-  createNewProsemirrorViewWithSchema(y, codeSchema, undoManager);
 
 Deno.test('position conversion', () => {
   // <code_block>bbbbb2</code_block>
@@ -77,7 +73,8 @@ Deno.test('position conversion', () => {
 
   const yXmlFragment = yxml;
 
-  const mapping = initProseMirrorDoc(yXmlFragment, codeSchema);
+  const meta = createEmptyMeta();
+  const mapping = meta.mapping;
 
   const binding = new ProsemirrorBinding(yXmlFragment, mapping);
 
@@ -117,19 +114,5 @@ Deno.test('position conversion', () => {
   );
 
   console.log('pdoc', JSON.stringify(view.state.doc.toJSON()));
-  console.log('ydoc', JSON.stringify(ydoc));
-
-  if (anchor !== null && head !== null) {
-    console.log('ahead', anchor, head, relSel);
-    // console.log("tr.doc", binding.doc, binding.doc.toJSON());
-
-    const aaa = view.state.doc.resolve(anchor);
-    console.log(aaa);
-
-    // const sel = TextSelection.between(
-    //   tr.doc.resolve(anchor),
-    //   tr.doc.resolve(head)
-    // );
-    // tr.setSelection(sel);
-  }
+  console.log('ydoc', debugYDoc(ydoc));
 });

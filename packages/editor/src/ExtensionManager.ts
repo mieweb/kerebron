@@ -49,9 +49,7 @@ export class ExtensionManager {
 
   public converters: Record<string, Converter> = {};
 
-  private debug = true;
-
-  constructor(public readonly editorKits: EditorKit[]) {
+  constructor(public readonly editorKits: EditorKit[], private debug = false) {
     const extensions: AnyExtensionOrReq[] = editorKits
       .reduce(
         (prev: AnyExtensionOrReq[], cur) => prev.concat(cur.getExtensions()),
@@ -192,6 +190,12 @@ export class ExtensionManager {
     const createMap = (extensions: Set<AnyExtensionOrReq>) => {
       for (const extension of extensions) {
         if ('name' in extension) {
+          const existing = allExtensions.get(extension.name);
+          if (
+            existing && 'type' in existing && extension.type !== existing.type
+          ) {
+            throw new Error(`Duplicate mark/node: ${extension.name}`);
+          }
           allExtensions.set(extension.name, extension);
         }
         if ('requires' in extension) {
@@ -208,7 +212,9 @@ export class ExtensionManager {
     const initialized: Set<string> = new Set();
 
     const initializeExtension = (extension: AnyExtension) => {
-      console.info(`Initialize ${extension.type} ${extension.name}`);
+      if (this.debug) {
+        console.info(`Initialize ${extension.type} ${extension.name}`);
+      }
       this.extensions.add(extension);
     };
 

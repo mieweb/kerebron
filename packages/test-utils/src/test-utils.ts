@@ -1,4 +1,4 @@
-export { assertEquals } from '@std/assert';
+export { assert, assertEquals, assertObjectMatch } from '@std/assert';
 
 export function trimLines(args: TemplateStringsArray) {
   const lines = args[0].split('\n');

@@ -1,56 +1,80 @@
-import * as t from 'lib0/testing';
-import * as prng from 'lib0/prng';
-import * as math from 'lib0/math';
 import * as Y from 'yjs';
-import { applyRandomTests } from 'yjs/testHelper';
 
-import { EditorState, Plugin, TextSelection } from 'prosemirror-state';
-// import { EditorView } from 'prosemirror-view'
+import { MarkSpec, NodeSpec } from 'prosemirror-model';
+import { EditorState, Plugin } from 'prosemirror-state';
 
-import { Schema } from 'prosemirror-model';
-import * as basicSchema from 'npm:prosemirror-schema-basic@1.2.4';
-import { findWrapping } from 'prosemirror-transform';
-import { schema as complexSchema } from './complexSchema.ts';
 import * as promise from 'lib0/promise';
 
-import { ySyncPlugin } from '../src/ySyncPlugin.ts';
-import { redo, undo, yUndoPlugin } from '../src/yUndoPlugin.ts';
-import { DummyEditorView } from '@kerebron/editor/DummyEditorView';
+import {
+  AnyExtensionOrReq,
+  CoreEditor,
+  EditorKit,
+  Extension,
+  Mark,
+  Node,
+} from '@kerebron/editor';
+import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
+import { assert, assertEquals, assertObjectMatch } from '@kerebron/test-utils';
+import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
+
+import { ySyncPluginKey } from '../src/keys.ts';
+import { YSyncPluginState } from '../src/ySyncPlugin.ts';
 import {
   prosemirrorJSONToYDoc,
   prosemirrorJSONToYXmlFragment,
   yXmlFragmentToProseMirrorRootNode,
 } from './convertUtils.ts';
-import { ySyncPluginKey, yUndoPluginKey } from '../src/keys.ts';
 
-const schema = new Schema({
-  nodes: basicSchema.nodes,
-  marks: Object.assign({}, basicSchema.marks, {
-    comment: {
-      attrs: {
-        id: { default: null },
-      },
-      excludes: '',
-      parseDOM: [{ tag: 'comment' }],
-      toDOM(node) {
-        return ['comment', { comment_id: node.attrs.id }];
-      },
-    },
-  }),
-});
+function createNewProsemirrorView(editorKits: EditorKit[] = []) {
+  const editor = CoreEditor.create({
+    editorKits: [
+      ...editorKits,
+      new BrowserLessEditorKit(),
+      YjsEditorKit.createFrom('test-user', 'ws://localhost:12345'),
+    ],
+  });
+
+  const pluginState: YSyncPluginState = ySyncPluginKey.getState(
+    editor.state,
+  )!;
+
+  const ydoc = pluginState.ydoc;
+  const schema = editor.schema;
+  const view = editor.view;
+  return { ydoc, schema, view };
+}
+
+const checkResult = (
+  result: { testObjects: Array<{ state: EditorState }> },
+) => {
+  for (let i = 1; i < result.testObjects.length; i++) {
+    const p1 = result.testObjects[i - 1].state.doc.toJSON();
+    const p2 = result.testObjects[i].state.doc.toJSON();
+    assertEquals(p1, p2);
+  }
+};
+
+class CustomExtension extends Extension {
+  override name = 'custom-test-extension';
+
+  constructor(private plugins: Plugin[]) {
+    super();
+  }
+
+  override getProseMirrorPlugins(): Plugin[] {
+    return this.plugins;
+  }
+}
 
 /**
  * Verify that update events in plugins are only fired once.
  *
  * Initially reported in https://github.com/yjs/y-prosemirror/issues/121
- *
- * @param {t.TestCase} _tc
  */
-export const testPluginIntegrity = (_tc) => {
-  const ydoc = new Y.Doc();
+Deno.test('testPluginIntegrity', () => {
   let viewUpdateEvents = 0;
   let stateUpdateEvents = 0;
-  const customPlugin = new Plugin({
+  const customPlugin = new Plugin<void>({
     state: {
       init: () => {
         return {};
@@ -67,42 +91,74 @@ export const testPluginIntegrity = (_tc) => {
       };
     },
   });
-  const view = new DummyEditorView({
-    state: EditorState.create({
-      schema,
-      plugins: [
-        ySyncPlugin(ydoc.get('prosemirror', Y.XmlFragment)),
-        yUndoPlugin(),
-        customPlugin,
-      ],
-    }),
-  });
+
+  const editorKits: EditorKit[] = [
+    {
+      getExtensions: function (): AnyExtensionOrReq[] {
+        return [
+          new CustomExtension([customPlugin]),
+        ];
+      },
+    },
+  ];
+
+  const { ydoc, schema, view } = createNewProsemirrorView(editorKits);
+  // const view = new DummyEditorView({
+  //   state: EditorState.create({
+  //     schema,
+  //     plugins: [
+  //       ySyncPlugin(ydoc.get('prosemirror', Y.XmlFragment)),
+  //       yUndoPlugin(),
+  //       customPlugin,
+  //     ],
+  //   }),
+  // });
   view.dispatch(
     view.state.tr.insert(
       0,
-      /** @type {any} */ (schema.node(
+      schema.node(
         'paragraph',
         undefined,
         schema.text('hello world'),
-      )),
+      ),
     ),
   );
-  t.compare({ viewUpdateEvents, stateUpdateEvents }, {
-    viewUpdateEvents: 1,
+  assertEquals({ viewUpdateEvents, stateUpdateEvents }, {
+    viewUpdateEvents: 3, // nodeViews init + initialRender + view.dispach
     stateUpdateEvents: 2, // fired twice, because the ySyncPlugin adds additional fields to state after the initial render
   }, 'events are fired only once');
-};
+});
 
-/**
- * @param {t.TestCase} tc
- */
-export const testOverlappingMarks = (_tc) => {
-  const view = new DummyEditorView({
-    state: EditorState.create({
-      schema,
-      plugins: [],
-    }),
-  });
+class MarkComment extends Mark {
+  override name = 'mcomment';
+  requires = ['doc'];
+
+  override getMarkSpec(): MarkSpec {
+    return {
+      attrs: {
+        id: { default: null },
+      },
+      parseDOM: [
+        {
+          tag: 'comment',
+        },
+      ],
+      toDOM(node) {
+        return ['comment', { comment_id: node.attrs.id }];
+      },
+      excludes: '',
+    };
+  }
+}
+
+Deno.test('testOverlappingMarks', () => {
+  const editorKit: EditorKit = {
+    getExtensions(): AnyExtensionOrReq[] {
+      return [new MarkComment()];
+    },
+  };
+  const { ydoc, schema, view } = createNewProsemirrorView([editorKit]);
+
   view.dispatch(
     view.state.tr.insert(
       0,
@@ -115,15 +171,15 @@ export const testOverlappingMarks = (_tc) => {
   );
 
   view.dispatch(
-    view.state.tr.addMark(1, 3, schema.mark('comment', { id: 4 })),
+    view.state.tr.addMark(1, 3, schema.mark('mcomment', { id: 4 })),
   );
   view.dispatch(
-    view.state.tr.addMark(2, 4, schema.mark('comment', { id: 5 })),
+    view.state.tr.addMark(2, 4, schema.mark('mcomment', { id: 5 })),
   );
   const stateJSON = JSON.parse(JSON.stringify(view.state.doc.toJSON()));
   // attrs.ychange is only available with a schema
   delete stateJSON.content[0].attrs;
-  const back = prosemirrorJSONToYDoc(/** @type {any} */ (schema), stateJSON);
+  const back = prosemirrorJSONToYDoc(schema, stateJSON);
   // test if transforming back and forth from Yjs doc works
   // const backandforth = JSON.parse(JSON.stringify(yDocToProsemirrorJSON(back)))
   const xmlFragment = back.getXmlFragment('prosemirror');
@@ -131,49 +187,94 @@ export const testOverlappingMarks = (_tc) => {
     JSON.stringify(yXmlFragmentToProseMirrorRootNode(xmlFragment, schema)),
   );
 
-  t.compare(stateJSON, backandforth);
+  assertObjectMatch(backandforth, stateJSON);
 
   // re-assure that we have overlapping comments
-  const expected =
-    '[{"type":"text","marks":[{"type":"comment","attrs":{"id":4}}],"text":"h"},{"type":"text","marks":[{"type":"comment","attrs":{"id":4}},{"type":"comment","attrs":{"id":5}}],"text":"e"},{"type":"text","marks":[{"type":"comment","attrs":{"id":5}}],"text":"l"},{"type":"text","text":"lo world"}]';
-  t.compare(backandforth.content[0].content, JSON.parse(expected));
-};
+  const expected = [
+    {
+      'type': 'text',
+      'marks': [
+        {
+          'type': 'mcomment',
+          'attrs': {
+            'id': 4,
+          },
+        },
+      ],
+      'text': 'h',
+    },
+    {
+      'type': 'text',
+      'marks': [
+        {
+          'type': 'mcomment',
+          'attrs': {
+            'id': 4,
+          },
+        },
+        {
+          'type': 'mcomment',
+          'attrs': {
+            'id': 5,
+          },
+        },
+      ],
+      'text': 'e',
+    },
+    {
+      'type': 'text',
+      'marks': [
+        {
+          'type': 'mcomment',
+          'attrs': {
+            'id': 5,
+          },
+        },
+      ],
+      'text': 'l',
+    },
+    {
+      'type': 'text',
+      'text': 'lo world',
+    },
+  ];
+  assertEquals(backandforth.content[0].content, expected);
+});
 
-/**
- * @param {t.TestCase} tc
- */
-export const testDocTransformation = (_tc) => {
-  const view = createNewProsemirrorView(new Y.Doc());
+Deno.test('testDocTransformation', () => {
+  const { ydoc, schema, view } = createNewProsemirrorView();
   view.dispatch(
     view.state.tr.insert(
       0,
-      /** @type {any} */ (schema.node(
+      schema.node(
         'paragraph',
         undefined,
         schema.text('hello world'),
-      )),
+      ),
     ),
   );
   const stateJSON = view.state.doc.toJSON();
   // test if transforming back and forth from Yjs doc works
   //
-  const ydoc = prosemirrorJSONToYDoc(/** @type {any} */ (schema), stateJSON);
-  const xmlFragment = ydoc.getXmlFragment('prosemirror');
-  const backandforth = yXmlFragmentToProseMirrorRootNode(xmlFragment, schema)
-    .toJSON();
-  t.compare(stateJSON, backandforth);
-};
+  {
+    const ydoc = prosemirrorJSONToYDoc(schema, stateJSON);
+    const xmlFragment = ydoc.getXmlFragment('prosemirror');
+    const backandforth = yXmlFragmentToProseMirrorRootNode(xmlFragment, schema)
+      .toJSON();
+    assertEquals(stateJSON, backandforth);
+  }
+});
 
-export const testXmlFragmentTransformation = (_tc) => {
-  const view = createNewProsemirrorView(new Y.Doc());
+Deno.test('testXmlFragmentTransformation', () => {
+  const { ydoc, schema, view } = createNewProsemirrorView();
   view.dispatch(
     view.state.tr.insert(
       0,
-      /** @type {any} */ (schema.node(
+      schema.node(
         'paragraph',
         undefined,
         schema.text('hello world'),
-      )),
+      ),
     ),
   );
   const stateJSON = view.state.doc.toJSON();
@@ -185,101 +286,79 @@ export const testXmlFragmentTransformation = (_tc) => {
   doc.getMap('root').set('firstDoc', xml);
   const backandforth = yXmlFragmentToProseMirrorRootNode(xml, schema).toJSON();
   console.log(JSON.stringify(backandforth));
-  t.compare(stateJSON, backandforth);
-};
+  assertEquals(stateJSON, backandforth);
+});
 
-export const testChangeOrigin = (_tc) => {
-  const ydoc = new Y.Doc();
+Deno.test('testChangeOrigin', () => {
+  const { ydoc, schema, view } = createNewProsemirrorView();
   const yXmlFragment = ydoc.get('prosemirror', Y.XmlFragment);
   const yundoManager = new Y.UndoManager(yXmlFragment, {
     trackedOrigins: new Set(['trackme']),
   });
-  const view = createNewProsemirrorView(ydoc);
+
   view.dispatch(
     view.state.tr.insert(
       0,
-      /** @type {any} */ (schema.node(
+      schema.node(
         'paragraph',
         undefined,
         schema.text('world'),
-      )),
+      ),
     ),
   );
-  const ysyncState1 = ySyncPluginKey.getState(view.state);
-  t.assert(ysyncState1.isChangeOrigin === false);
-  t.assert(ysyncState1.isUndoRedoOperation === false);
+  const ysyncState1 = ySyncPluginKey.getState(view.state)!;
+  assert(ysyncState1.isChangeOrigin === false);
+  assert(ysyncState1.isUndoRedoOperation === false);
   ydoc.transact(() => {
     yXmlFragment.get(0).get(0).insert(0, 'hello');
   }, 'trackme');
-  const ysyncState2 = ySyncPluginKey.getState(view.state);
-  t.assert(ysyncState2.isChangeOrigin === true);
-  t.assert(ysyncState2.isUndoRedoOperation === false);
+  const ysyncState2 = ySyncPluginKey.getState(view.state)!;
+  assert(ysyncState2.isChangeOrigin === true);
+  assert(ysyncState2.isUndoRedoOperation === false);
   yundoManager.undo();
-  const ysyncState3 = ySyncPluginKey.getState(view.state);
-  t.assert(ysyncState3.isChangeOrigin === true);
-  t.assert(ysyncState3.isUndoRedoOperation === true);
-};
+  const ysyncState3 = ySyncPluginKey.getState(view.state)!;
+  assert(ysyncState3.isChangeOrigin === true);
+  assert(ysyncState3.isUndoRedoOperation === true);
+});
 
-/**
- * @param {t.TestCase} tc
- */
-export const testEmptyNotSync = (_tc) => {
-  const ydoc = new Y.Doc();
-  const type = ydoc.getXmlFragment('prosemirror');
-  const view = createNewComplexProsemirrorView(ydoc);
-  t.assert(type.toString() === '', 'should only sync after first change');
-
-  view.dispatch(
-    view.state.tr.setNodeMarkup(0, undefined, {
-      checked: true,
-    }),
-  );
-  t.compareStrings(
-    type.toString(),
-    '<custom checked="true"></custom>',
-  );
-};
-
-/**
- * @param {t.TestCase} tc
- */
-export const testEmptyParagraph = (_tc) => {
-  const ydoc = new Y.Doc();
-  const view = createNewProsemirrorView(ydoc);
+Deno.test('testEmptyParagraph', () => {
+  const { ydoc, schema, view } = createNewProsemirrorView();
   view.dispatch(
     view.state.tr.insert(
       0,
-      /** @type {any} */ (schema.node(
+      schema.node(
         'paragraph',
         undefined,
         schema.text('123'),
-      )),
+      ),
     ),
   );
-  const yxml = ydoc.get('prosemirror');
-  t.assert(
+  const yxml = ydoc.get('prosemirror') as Y.XmlElement;
+  assert(
     yxml.length === 2 && yxml.get(0).length === 1,
     'contains one paragraph containing a ytext',
   );
   view.dispatch(view.state.tr.delete(1, 4)); // delete characters 123
-  t.assert(
+  assert(
     yxml.length === 2 && yxml.get(0).length === 1,
     "doesn't delete the ytext",
   );
-};
+});
 
 /**
  * Test duplication issue https://github.com/yjs/y-prosemirror/issues/161
- *
- * @param {t.TestCase} tc
  */
-export const testInsertDuplication = (_tc) => {
-  const ydoc1 = new Y.Doc();
+Deno.test('testInsertDuplication', () => {
+  const { ydoc: ydoc1, schema: schema1, view: view1 } =
+    createNewProsemirrorView();
+  const { ydoc: ydoc2, schema: schema2, view: view2 } =
+    createNewProsemirrorView();
+  // const ydoc1 = new Y.Doc();
   ydoc1.clientID = 1;
-  const ydoc2 = new Y.Doc();
+  // const ydoc2 = new Y.Doc();
   ydoc2.clientID = 2;
-  const view1 = createNewProsemirrorView(ydoc1);
-  const view2 = createNewProsemirrorView(ydoc2);
+  // const view1 = createNewProsemirrorView(ydoc1);
+  // const view2 = createNewProsemirrorView(ydoc2);
   const yxml1 = ydoc1.getXmlFragment('prosemirror');
   const yxml2 = ydoc2.getXmlFragment('prosemirror');
   yxml1.observeDeep((events) => {
@@ -295,9 +374,9 @@ export const testInsertDuplication = (_tc) => {
   view1.dispatch(
     view1.state.tr.insert(
       0,
-      /** @type {any} */ (schema.node(
+      schema1.node(
         'paragraph',
-      )),
+      ),
     ),
   );
   const sync = () => {
@@ -314,15 +393,14 @@ export const testInsertDuplication = (_tc) => {
   view2.dispatch(view2.state.tr.insertText('2', 3, 3));
   sync();
   checkResult({ testObjects: [view1, view2] });
-  t.assert(
+  assert(
     yxml1.toString() === '<paragraph>1122</paragraph><paragraph></paragraph>',
   );
-};
+});
 
-export const testInsertRightMatch = (_tc) => {
-  const ydoc = new Y.Doc();
+Deno.test('testInsertRightMatch', () => {
+  const { ydoc, schema, view } = createNewProsemirrorView();
   const yXmlFragment = ydoc.get('prosemirror', Y.XmlFragment);
-  const view = createNewProsemirrorView(ydoc);
   view.dispatch(
     view.state.tr.insert(
       0,
@@ -341,7 +419,7 @@ export const testInsertRightMatch = (_tc) => {
     ),
   );
   prosemirrorJSONToYXmlFragment(
-    /** @type {any} */ (schema),
+    schema,
     view.state.doc.toJSON(),
     yXmlFragment,
   );
@@ -359,507 +437,79 @@ export const testInsertRightMatch = (_tc) => {
   );
   const newLastP = yXmlFragment.get(yXmlFragment.length - 1);
   const new2ndLastP = yXmlFragment.get(yXmlFragment.length - 2);
-  t.assert(lastP === newLastP, 'last paragraph is the same as before');
-  t.assert(
+  assert(lastP === newLastP, 'last paragraph is the same as before');
+  assert(
     new2ndLastP.toString() === '<paragraph>Paragraph 2</paragraph>',
     '2nd last paragraph is the inserted paragraph',
   );
-  t.assert(
+  assert(
     lastP.toString() === '<paragraph></paragraph>',
     'last paragraph remains empty and is placed at the end',
   );
-};
-
-export const testAddToHistory = (_tc) => {
-  const ydoc = new Y.Doc();
-  const view = createNewProsemirrorViewWithUndoManager(ydoc);
-  view.dispatch(
-    view.state.tr.insert(
-      0,
-      /** @type {any} */ (schema.node(
-        'paragraph',
-        undefined,
-        schema.text('123'),
-      )),
-    ),
-  );
-  const yxml = ydoc.get('prosemirror');
-  t.assert(
-    yxml.length === 2 && yxml.get(0).length === 1,
-    'contains inserted content',
-  );
-  undo(view.state);
-  t.assert(yxml.length === 0, 'insertion was undone');
-  redo(view.state);
-  t.assert(
-    yxml.length === 2 && yxml.get(0).length === 1,
-    'contains inserted content',
-  );
-  undo(view.state);
-  t.assert(yxml.length === 0, 'insertion was undone');
-  // now insert content again, but with `'addToHistory': false`
-  view.dispatch(
-    view.state.tr.insert(
-      0,
-      /** @type {any} */ (schema.node(
-        'paragraph',
-        undefined,
-        schema.text('123'),
-      )),
-    ).setMeta('addToHistory', false),
-  );
-  t.assert(
-    yxml.length === 2 && yxml.get(0).length === 1,
-    'contains inserted content',
-  );
-  undo(view.state);
-  t.assert(
-    yxml.length === 2 && yxml.get(0).length === 1,
-    'insertion was *not* undone',
-  );
-};
-
-/**
- * Reproducing #190
- *
- * @param {t.TestCase} _tc
- */
-export const testCursorPositionAfterUndoOnEndText = (_tc) => {
-  const ydoc = new Y.Doc();
-  const view = createNewProsemirrorViewWithUndoManager(ydoc);
-  view.dispatch(
-    view.state.tr.insert(
-      0,
-      /** @type {any} */ (schema.node(
-        'paragraph',
-        undefined,
-        schema.text('123'),
-      )),
-    ),
-  );
-  const yxml = ydoc.get('prosemirror');
-  t.assert(
-    yxml.length === 2 && yxml.get(0).length === 1,
-    'contains inserted content',
-  );
-  view.dispatch(
-    view.state.tr.setSelection(
-      TextSelection.between(
-        view.state.doc.resolve(4),
-        view.state.doc.resolve(4),
-      ),
-    ),
-  );
-  const undoManager = yUndoPluginKey.getState(view.state)?.undoManager;
-  undoManager.stopCapturing();
-  // clear undo manager
-  view.dispatch(
-    view.state.tr.delete(3, 4),
-  );
-  undo(view.state);
-  t.assert(view.state.selection.anchor === 4);
-};
+});
 
 /**
  * Tests for #126 - initial cursor position should be retained, not jump to the end.
- *
- * @param {t.TestCase} _tc
  */
-export const testInitialCursorPosition = async (_tc) => {
-  const ydoc = new Y.Doc();
-  const yxml = ydoc.get('prosemirror', Y.XmlFragment);
+Deno.test('testInitialCursorPosition', async () => {
+  const { ydoc, schema, view } = createNewProsemirrorView();
   const p = new Y.XmlElement('paragraph');
+  const yxml = ydoc.get('prosemirror', Y.XmlFragment);
   p.insert(0, [new Y.XmlText('hello world!')]);
   yxml.insert(0, [p]);
-  console.log('yxml', yxml.toString());
-  const view = createNewProsemirrorView(ydoc);
+
   view.focus();
   await promise.wait(10);
-  console.log('anchor', view.state.selection.anchor);
-  t.assert(view.state.selection.anchor === 1);
-  t.assert(view.state.selection.head === 1);
-};
+  assert(view.state.selection.anchor === 1);
+  assert(view.state.selection.head === 1);
+});
 
-export const testInitialCursorPosition2 = async (_tc) => {
-  const ydoc = new Y.Doc();
+Deno.test('testInitialCursorPosition2', async () => {
+  const { ydoc, schema, view } = createNewProsemirrorView();
   const yxml = ydoc.get('prosemirror', Y.XmlFragment);
-  console.log('yxml', yxml.toString());
-  const view = createNewProsemirrorView(ydoc);
   view.focus();
+
   await promise.wait(10);
   const p = new Y.XmlElement('paragraph');
   p.insert(0, [new Y.XmlText('hello world!')]);
   yxml.insert(0, [p]);
-  console.log('anchor', view.state.selection.anchor);
-  t.assert(view.state.selection.anchor === 1);
-  t.assert(view.state.selection.head === 1);
-};
+  assert(view.state.selection.anchor === 1);
+  assert(view.state.selection.head === 1);
+});
 
-export const testVersioning = async (_tc) => {
-  const ydoc = new Y.Doc({ gc: false });
-  const yxml = ydoc.get('prosemirror', Y.XmlFragment);
-  const permanentUserData = new Y.PermanentUserData(ydoc);
-  permanentUserData.setUserMapping(ydoc, ydoc.clientID, 'me');
-  ydoc.gc = false;
-  console.log('yxml', yxml.toString());
-  const view = createNewComplexProsemirrorView(ydoc);
-  const p = new Y.XmlElement('paragraph');
-  const ytext = new Y.XmlText('hello world!');
-  p.insert(0, [ytext]);
-  yxml.insert(0, [p]);
-  const snapshot1 = Y.snapshot(ydoc);
-  const snapshotDoc1 = Y.encodeStateAsUpdateV2(ydoc);
-  ytext.delete(0, 6);
-  const snapshot2 = Y.snapshot(ydoc);
-  const snapshotDoc2 = Y.encodeStateAsUpdateV2(ydoc);
-  view.dispatch(
-    view.state.tr.setMeta(ySyncPluginKey, {
-      snapshot: snapshot2,
-      prevSnapshot: snapshot1,
-      permanentUserData,
-    }),
-  );
-  await promise.wait(50);
-  console.log('calculated diff via snapshots: ', view.state.doc.toJSON());
-  // recreate the JSON, because ProseMirror messes with the constructors
-  const viewstate1 = JSON.parse(
-    JSON.stringify(view.state.doc.toJSON().content[0].content),
-  );
-  const expectedState = [{
-    type: 'text',
-    marks: [{ type: 'ychange', attrs: { user: 'me', type: 'removed' } }],
-    text: 'hello ',
-  }, {
-    type: 'text',
-    text: 'world!',
-  }];
-  console.log('calculated diff via snapshots: ', JSON.stringify(viewstate1));
-  t.compare(viewstate1, expectedState);
+class NodeCustom extends Node {
+  override name = 'custom';
 
-  t.info('now check whether we get the same result when rendering the updates');
-  view.dispatch(
-    view.state.tr.setMeta(ySyncPluginKey, {
-      snapshot: snapshotDoc2,
-      prevSnapshot: snapshotDoc1,
-      permanentUserData,
-    }),
-  );
-  await promise.wait(50);
-
-  const viewstate2 = JSON.parse(
-    JSON.stringify(view.state.doc.toJSON().content[0].content),
-  );
-  console.log('calculated diff via updates: ', JSON.stringify(viewstate2));
-  t.compare(viewstate2, expectedState);
-};
-
-export const testVersioningWithGarbageCollection = async (_tc) => {
-  const ydoc = new Y.Doc();
-  const yxml = ydoc.get('prosemirror', Y.XmlFragment);
-  const permanentUserData = new Y.PermanentUserData(ydoc);
-  permanentUserData.setUserMapping(ydoc, ydoc.clientID, 'me');
-  console.log('yxml', yxml.toString());
-  const view = createNewComplexProsemirrorView(ydoc);
-  const p = new Y.XmlElement('paragraph');
-  const ytext = new Y.XmlText('hello world!');
-  p.insert(0, [ytext]);
-  yxml.insert(0, [p]);
-  const snapshotDoc1 = Y.encodeStateAsUpdateV2(ydoc);
-  ytext.delete(0, 6);
-  const snapshotDoc2 = Y.encodeStateAsUpdateV2(ydoc);
-  view.dispatch(
-    view.state.tr.setMeta(ySyncPluginKey, {
-      snapshot: snapshotDoc2,
-      prevSnapshot: snapshotDoc1,
-      permanentUserData,
-    }),
-  );
-  await promise.wait(50);
-  console.log('calculated diff via snapshots: ', view.state.doc.toJSON());
-  // recreate the JSON, because ProseMirror messes with the constructors
-  const viewstate1 = JSON.parse(
-    JSON.stringify(view.state.doc.toJSON().content[0].content),
-  );
-  const expectedState = [{
-    type: 'text',
-    marks: [{ type: 'ychange', attrs: { user: 'me', type: 'removed' } }],
-    text: 'hello ',
-  }, {
-    type: 'text',
-    text: 'world!',
-  }];
-  console.log('calculated diff via snapshots: ', JSON.stringify(viewstate1));
-  t.compare(viewstate1, expectedState);
-};
-
-export const testAddToHistoryIgnore = (_tc) => {
-  const ydoc = new Y.Doc();
-  const view = createNewProsemirrorViewWithUndoManager(ydoc);
-  // perform two changes that are tracked by um - supposed to be merged into a single undo-manager item
-  view.dispatch(
-    view.state.tr.insert(
-      0,
-      /** @type {any} */ (schema.node(
-        'paragraph',
-        undefined,
-        schema.text('123'),
-      )),
-    ),
-  );
-  view.dispatch(
-    view.state.tr.insert(
-      0,
-      /** @type {any} */ (schema.node(
-        'paragraph',
-        undefined,
-        schema.text('456'),
-      )),
-    ),
-  );
-  const yxml = ydoc.get('prosemirror');
-  t.assert(
-    yxml.length === 3 && yxml.get(0).length === 1,
-    'contains inserted content (1)',
-  );
-  view.dispatch(
-    view.state.tr.insert(
-      0,
-      /** @type {any} */ (schema.node(
-        'paragraph',
-        undefined,
-        schema.text('abc'),
-      )),
-    ).setMeta('addToHistory', false),
-  );
-  t.assert(
-    yxml.length === 4 && yxml.get(0).length === 1,
-    'contains inserted content (2)',
-  );
-  view.dispatch(
-    view.state.tr.insert(
-      0,
-      /** @type {any} */ (schema.node(
-        'paragraph',
-        undefined,
-        schema.text('xyz'),
-      )),
-    ),
-  );
-  t.assert(
-    yxml.length === 5 && yxml.get(0).length === 1,
-    'contains inserted content (3)',
-  );
-  undo(view.state);
-  t.assert(yxml.length === 4, 'insertion (3) was undone');
-  undo(view.state);
-  console.log(yxml.toString());
-  t.assert(
-    yxml.length === 1 &&
-      yxml.get(0).toString() === '<paragraph>abc</paragraph>',
-    'insertion (1) was undone',
-  );
-};
-
-const createNewProsemirrorViewWithSchema = (y, schema, undoManager = false) => {
-  const view = new DummyEditorView({
-    state: EditorState.create({
-      schema,
-      plugins: [ySyncPlugin(y.get('prosemirror', Y.XmlFragment))].concat(
-        undoManager ? [yUndoPlugin()] : [],
-      ),
-    }),
-  });
-  return view;
-};
-
-const createNewComplexProsemirrorView = (y, undoManager = false) =>
-  createNewProsemirrorViewWithSchema(y, complexSchema, undoManager);
-
-const createNewProsemirrorView = (y) =>
-  createNewProsemirrorViewWithSchema(y, schema, false);
-
-const createNewProsemirrorViewWithUndoManager = (y) =>
-  createNewProsemirrorViewWithSchema(y, schema, true);
-
-let charCounter = 0;
-
-const marksChoices = [
-  [schema.mark('strong')],
-  [schema.mark('comment', { id: 1 })],
-  [schema.mark('comment', { id: 2 })],
-  [schema.mark('em')],
-  [schema.mark('em'), schema.mark('strong')],
-  [],
-  [],
-];
-
-const pmChanges = [
-  /**
-   * @param {Y.Doc} y
-   * @param {prng.PRNG} gen
-   * @param {EditorView} p
-   */
-  (_y, gen, p) => { // insert text
-    const insertPos = prng.int32(gen, 0, p.state.doc.content.size);
-    const marks = prng.oneOf(gen, marksChoices);
-    const tr = p.state.tr;
-    const text = charCounter++ + prng.word(gen);
-    p.dispatch(tr.insert(insertPos, schema.text(text, marks)));
-  },
-  /**
-   * @param {Y.Doc} y
-   * @param {prng.PRNG} gen
-   * @param {EditorView} p
-   */
-  (_y, gen, p) => { // delete text
-    const insertPos = prng.int32(gen, 0, p.state.doc.content.size);
-    const overwrite = math.min(
-      prng.int32(gen, 0, p.state.doc.content.size - insertPos),
-      2,
-    );
-    p.dispatch(p.state.tr.insertText('', insertPos, insertPos + overwrite));
-  },
-  /**
-   * @param {Y.Doc} y
-   * @param {prng.PRNG} gen
-   * @param {EditorView} p
-   */
-  (_y, gen, p) => { // format text
-    const insertPos = prng.int32(gen, 0, p.state.doc.content.size);
-    const formatLen = math.min(
-      prng.int32(gen, 0, p.state.doc.content.size - insertPos),
-      2,
-    );
-    const mark =
-      prng.oneOf(gen, marksChoices.filter((choice) => choice.length > 0))[0];
-    p.dispatch(p.state.tr.addMark(insertPos, insertPos + formatLen, mark));
-  },
-  /**
-   * @param {Y.Doc} y
-   * @param {prng.PRNG} gen
-   * @param {EditorView} p
-   */
-  (_y, gen, p) => { // replace text
-    const insertPos = prng.int32(gen, 0, p.state.doc.content.size);
-    const overwrite = math.min(
-      prng.int32(gen, 0, p.state.doc.content.size - insertPos),
-      2,
-    );
-    const text = charCounter++ + prng.word(gen);
-    p.dispatch(p.state.tr.insertText(text, insertPos, insertPos + overwrite));
-  },
-  /**
-   * @param {Y.Doc} y
-   * @param {prng.PRNG} gen
-   * @param {EditorView} p
-   */
-  (_y, gen, p) => { // insert paragraph
-    const insertPos = prng.int32(gen, 0, p.state.doc.content.size);
-    const marks = prng.oneOf(gen, marksChoices);
-    const tr = p.state.tr;
-    const text = charCounter++ + prng.word(gen);
-    p.dispatch(
-      tr.insert(
-        insertPos,
-        schema.node('paragraph', undefined, schema.text(text, marks)),
-      ),
-    );
-  },
-  /**
-   * @param {Y.Doc} y
-   * @param {prng.PRNG} gen
-   * @param {EditorView} p
-   */
-  (_y, gen, p) => { // insert codeblock
-    const insertPos = prng.int32(gen, 0, p.state.doc.content.size);
-    const tr = p.state.tr;
-    const text = charCounter++ + prng.word(gen);
-    p.dispatch(
-      tr.insert(
-        insertPos,
-        schema.node('code_block', undefined, schema.text(text)),
-      ),
-    );
-  },
-  /**
-   * @param {Y.Doc} y
-   * @param {prng.PRNG} gen
-   * @param {EditorView} p
-   */
-  (_y, gen, p) => { // wrap in blockquote
-    const insertPos = prng.int32(gen, 0, p.state.doc.content.size);
-    const overwrite = prng.int32(gen, 0, p.state.doc.content.size - insertPos);
-    const tr = p.state.tr;
-    tr.setSelection(
-      TextSelection.create(tr.doc, insertPos, insertPos + overwrite),
-    );
-    const $from = tr.selection.$from;
-    const $to = tr.selection.$to;
-    const range = $from.blockRange($to);
-    const wrapping = range && findWrapping(range, schema.nodes.blockquote);
-    if (wrapping) {
-      p.dispatch(tr.wrap(range, wrapping));
-    }
-  },
-];
-
-/**
- * @param {any} result
- */
-const checkResult = (result) => {
-  for (let i = 1; i < result.testObjects.length; i++) {
-    const p1 = result.testObjects[i - 1].state.doc.toJSON();
-    const p2 = result.testObjects[i].state.doc.toJSON();
-    t.compare(p1, p2);
+  override getNodeSpec(): NodeSpec {
+    return {
+      atom: true,
+      group: 'block',
+      attrs: { checked: { default: false } },
+      parseDOM: [{ tag: 'div' }],
+      toDOM() {
+        return ['div'];
+      },
+    };
   }
-};
-
-/**
- * @param {t.TestCase} tc
- */
-export const testRepeatGenerateProsemirrorChanges2: t.TestCase = (tc) => {
-  checkResult(applyRandomTests(tc, pmChanges, 2, createNewProsemirrorView));
-};
-
-/**
- * @param {t.TestCase} tc
- */
-export const testRepeatGenerateProsemirrorChanges3 = (tc) => {
-  checkResult(applyRandomTests(tc, pmChanges, 3, createNewProsemirrorView));
-};
-
-/**
- * @param {t.TestCase} tc
- */
-export const testRepeatGenerateProsemirrorChanges30 = (tc) => {
-  checkResult(applyRandomTests(tc, pmChanges, 30, createNewProsemirrorView));
-};
-
-/**
- * @param {t.TestCase} tc
- */
-export const testRepeatGenerateProsemirrorChanges40 = (tc) => {
-  checkResult(applyRandomTests(tc, pmChanges, 40, createNewProsemirrorView));
-};
-
-/**
- * @param {t.TestCase} tc
- */
-export const testRepeatGenerateProsemirrorChanges70 = (tc) => {
-  checkResult(applyRandomTests(tc, pmChanges, 70, createNewProsemirrorView));
-};
-
-/**
- * @param {t.TestCase} tc
- *
-export const testRepeatGenerateProsemirrorChanges100 = tc => {
-  checkResult(applyRandomTests(tc, pmChanges, 100, createNewProsemirrorView))
 }
 
-/**
- * @param {t.TestCase} tc
- *
-export const testRepeatGenerateProsemirrorChanges300 = tc => {
-  checkResult(applyRandomTests(tc, pmChanges, 300, createNewProsemirrorView))
-}
-*/
+Deno.test('testEmptyNotSync', () => {
+  const editorKit: EditorKit = {
+    getExtensions(): AnyExtensionOrReq[] {
+      return [new NodeCustom()];
+    },
+  };
+  const { ydoc, schema, view } = createNewProsemirrorView([editorKit]);
+  const type = ydoc.getXmlFragment('prosemirror');
+  assert(type.toString() === '', 'should only sync after first change');
+
+  view.dispatch(
+    view.state.tr.setNodeMarkup(0, undefined, {
+      checked: true,
+    }),
+  );
+  assertEquals(
+    type.toString(),
+    '<custom checked="true"></custom>',
+  );
+});

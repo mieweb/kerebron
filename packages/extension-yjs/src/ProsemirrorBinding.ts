@@ -1,23 +1,23 @@
 // deno-lint-ignore-file no-window
-import * as Y from 'yjs';
+import * as dom from 'lib0/dom';
+import * as environment from 'lib0/environment';
+import * as error from 'lib0/error';
+import * as eventloop from 'lib0/eventloop';
+import * as math from 'lib0/math';
 import { createMutex, mutex } from 'lib0/mutex';
+import * as random from 'lib0/random';
+import * as set from 'lib0/set';
 import * as PModel from 'prosemirror-model';
+import { Node } from 'prosemirror-model';
 import {
   AllSelection,
+  EditorState,
   NodeSelection,
   Selection,
   TextSelection,
   Transaction,
 } from 'prosemirror-state';
-import { MarkType, Node } from 'prosemirror-model';
-import { EditorState } from 'prosemirror-state';
-import * as math from 'lib0/math';
-import * as set from 'lib0/set';
-import * as error from 'lib0/error';
-import * as random from 'lib0/random';
-import * as environment from 'lib0/environment';
-import * as dom from 'lib0/dom';
-import * as eventloop from 'lib0/eventloop';
+import * as Y from 'yjs';
 
 import { remoteSelectionPluginKey } from '@kerebron/extension-basic-editor/ExtensionRemoteSelection';
 
@@ -27,16 +27,13 @@ import {
   ProsemirrorMapping,
   relativePositionToAbsolutePosition,
 } from './lib.ts';
+import { updateYFragment } from './updateYFragment.ts';
 import {
   createNodeFromYElement,
   createNodeIfNotExists,
-  updateYFragment,
-} from './updateYFragment.ts';
-import {
-  type ColorDef,
-  isVisible,
-  type YSyncPluginState,
-} from './ySyncPlugin.ts';
+} from './createNodeFromYElement.ts';
+import { type ColorDef, type YSyncPluginState } from './ySyncPlugin.ts';
+import { isVisible } from './utils.ts';
 
 export const defaultColors: Array<ColorDef> = [{
   light: '#ecd44433',
@@ -62,7 +59,7 @@ const getUserColor = (
 
 export interface BindingMetadata {
   mapping: ProsemirrorMapping;
-  isOMark: Map<MarkType, boolean>;
+  isOMark: Map<string, boolean>;
 }
 
 interface TransactionSelection {
@@ -156,7 +153,7 @@ interface IEditorView {
  */
 export class ProsemirrorBinding implements BindingMetadata {
   public ydoc: Y.Doc;
-  public isOMark: Map<MarkType, boolean>;
+  public isOMark: Map<string, boolean>;
   public type: Y.XmlFragment;
   public readonly mux: mutex;
   public prosemirrorView?: IEditorView;
@@ -269,7 +266,10 @@ export class ProsemirrorBinding implements BindingMetadata {
       bounding.top <= (window.innerHeight || documentElement.clientHeight || 0);
   }
 
-  renderSnapshot(snapshot: Y.Snapshot, prevSnapshot: Y.Snapshot) {
+  renderSnapshot(
+    snapshot: Y.Snapshot | undefined,
+    prevSnapshot: Y.Snapshot | undefined,
+  ) {
     if (!prevSnapshot) {
       prevSnapshot = Y.createSnapshot(Y.createDeleteSet(), new Map());
     }
@@ -371,17 +371,19 @@ export class ProsemirrorBinding implements BindingMetadata {
 
   _renderSnapshot(
     snapshot: Y.Snapshot | Uint8Array | undefined,
-    prevSnapshot: Y.Snapshot | Uint8Array | undefined,
+    prevSnapshot: Y.Snapshot | Uint8Array,
     pluginState: YSyncPluginState,
   ) {
+    if (!snapshot) {
+      snapshot = Y.snapshot(this.ydoc);
+    }
+
     /**
      * The document that contains the full history of this document.
      */
     let historyDoc = this.ydoc;
-    let historyType = this.type;
-    if (!snapshot) {
-      snapshot = Y.snapshot(this.ydoc);
-    }
+    let historyType: Y.AbstractType<any> = this.type;
+
     if (snapshot instanceof Uint8Array || prevSnapshot instanceof Uint8Array) {
       if (
         !(snapshot instanceof Uint8Array) ||
@@ -400,8 +402,10 @@ export class ProsemirrorBinding implements BindingMetadata {
          * If is a root type, we need to find the root key in the initial document
          * and use it to get the history type.
          */
-        const rootKey = Array.from(this.ydoc.share.keys()).find(
-          (key) => this.ydoc.share.get(key) === this.type,
+        const share: Map<string, Y.AbstractType<Y.YEvent<any>>> =
+          this.ydoc.share;
+        const rootKey = Array.from(share.keys()).find(
+          (key) => share.get(key) === this.type as Y.AbstractType<any>,
         );
         historyType = historyDoc.getXmlFragment(rootKey);
       } else {
@@ -414,9 +418,12 @@ export class ProsemirrorBinding implements BindingMetadata {
           historyStructs,
           historyType._item.id.clock,
         );
-        const item = /** @type {Y.Item} */ (historyStructs[itemIndex]);
-        const content = /** @type {Y.ContentType} */ (item.content);
-        historyType = /** @type {Y.XmlFragment} */ (content.type);
+        if (historyStructs[itemIndex] instanceof Y.GC) {
+          throw new Error('Incorrect type Y.GC');
+        }
+        const item: Y.Item = historyStructs[itemIndex];
+        const content: Y.ContentType = item.content;
+        historyType = content.type;
       }
     }
     // clear mapping because we are going to rerender
@@ -439,9 +446,11 @@ export class ProsemirrorBinding implements BindingMetadata {
           });
         }
         const computeYChange = (type: 'removed' | 'added', id: Y.ID) => {
-          const user = type === 'added'
-            ? pud.getUserByClientId(id.client)
-            : pud.getUserByDeletedId(id);
+          const user = pud
+            ? (type === 'added'
+              ? pud.getUserByClientId(id.client)
+              : pud.getUserByDeletedId(id))
+            : undefined;
           return {
             user,
             type,
@@ -452,6 +461,7 @@ export class ProsemirrorBinding implements BindingMetadata {
             ),
           };
         };
+
         // Create document fragment and render
         const fragmentContent = Y.typeListToArraySnapshot(
           historyType,
@@ -517,7 +527,7 @@ export class ProsemirrorBinding implements BindingMetadata {
         transaction.deleteSet,
         (struct) => {
           if (struct.constructor === Y.Item) {
-            const type: Y.ContentType = (struct as Y.Item).content.type;
+            const type = (struct as Y.Item).content.type;
             type && this.mapping.delete(type);
           }
         },
@@ -532,25 +542,21 @@ export class ProsemirrorBinding implements BindingMetadata {
           this,
         )
       ).filter((n) => n !== null);
-      const tr = state.tr.setMeta('addToHistory', false);
-      tr.replace(
+
+      const tr = state.tr.replace(
         0,
-        state.doc.content.size,
+        this.prosemirrorView.state.doc.content.size,
         new PModel.Slice(PModel.Fragment.from(fragmentContent), 0, 0),
       );
-      try {
-        if (this._beforeTransactionSelection) {
-          restoreRelativeSelection(tr, this._beforeTransactionSelection, this);
-        }
-      } catch (err) {
-        console.warn(err);
+      if (this._beforeTransactionSelection) {
+        restoreRelativeSelection(tr, this._beforeTransactionSelection, this);
       }
       tr.setMeta(ySyncPluginKey, {
         isChangeOrigin: true,
         isUndoRedoOperation: transaction.origin instanceof Y.UndoManager,
       });
       if (
-        this._beforeTransactionSelection && this._isLocalCursorInView()
+        this.beforeTransactionSelection !== null && this._isLocalCursorInView()
       ) {
         tr.scrollIntoView();
       }

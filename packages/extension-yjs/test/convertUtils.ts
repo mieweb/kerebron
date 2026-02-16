@@ -1,63 +1,49 @@
 import { Fragment, Node, type Schema } from 'prosemirror-model';
 import * as Y from 'yjs';
-import { TransactFunc } from './ySyncPlugin.ts';
-import { BindingMetadata } from './ProsemirrorBinding.ts';
-import { createNodeFromYElement, updateYFragment } from './updateYFragment.ts';
+import { updateYFragment } from '../src/updateYFragment.ts';
+import { createNodeFromYElement } from '../src/createNodeFromYElement.ts';
+import { TransactFunc } from '../src/ySyncPlugin.ts';
+import { BindingMetadata } from '../src/ProsemirrorBinding.ts';
+// import { TransactFunc } from './ySyncPlugin.ts';
+// import { BindingMetadata } from './ProsemirrorBinding.ts';
+// import { createNodeFromYElement, updateYFragment } from './updateYFragment.ts';
 
-// export const createEmptyMeta = (): BindingMetadata => ({
-//   mapping: new Map(),
-//   isOMark: new Map(),
-// });
+export const createEmptyMeta = (): BindingMetadata => ({
+  mapping: new Map(),
+  isOMark: new Map(),
+});
 
-// /**
-//  * Utility function for converting an Y.Fragment to a ProseMirror fragment.
-//  */
-// export const yXmlFragmentToProseMirrorFragment = (
-//   yXmlFragment: Y.XmlFragment,
-//   schema: Schema,
-// ) => {
-//   const fragmentContent = yXmlFragment.toArray().map((t) =>
-//     createNodeFromYElement(
-//       /** @type {Y.XmlElement} */ (t),
-//       schema,
-//       createEmptyMeta(),
-//     )
-//   ).filter((n) => n !== null);
-//   return Fragment.fromArray(fragmentContent);
-// };
+/**
+ * Utility function for converting an Y.Fragment to a ProseMirror fragment.
+ */
+export const yXmlFragmentToProseMirrorFragment = (
+  yXmlFragment: Y.XmlFragment,
+  schema: Schema,
+) => {
+  const elements: Y.XmlElement[] = yXmlFragment.toArray().filter((i) =>
+    i instanceof Y.XmlElement
+  );
+  const fragmentContent = elements.map((t) =>
+    createNodeFromYElement(
+      t,
+      schema,
+      createEmptyMeta(),
+    )
+  ).filter((n) => n !== null);
+  return Fragment.fromArray(fragmentContent);
+};
 
-// /**
-//  * Utility function for converting an Y.Fragment to a ProseMirror node.
-//  */
-// export const yXmlFragmentToProseMirrorRootNode = (
-//   yXmlFragment: Y.XmlFragment,
-//   schema: Schema,
-// ) =>
-//   schema.topNodeType.create(
-//     null,
-//     yXmlFragmentToProseMirrorFragment(yXmlFragment, schema),
-//   );
-
-// /**
-//  * The initial ProseMirror content should be supplied by Yjs. This function transforms a Y.Fragment
-//  * to a ProseMirror Doc node and creates a mapping that is used by the sync plugin.
-//  *
-//  * @todo deprecate mapping property
-//  */
-// export const initProseMirrorDoc = (
-//   yXmlFragment: Y.XmlFragment,
-//   schema: Schema,
-// ) => {
-//   const meta = createEmptyMeta();
-//   const fragmentContent = yXmlFragment.toArray().map((t) =>
-//     createNodeFromYElement(
-//       t,
-//       schema,
-//       meta,
-//     )
-//   ).filter((n) => n !== null);
-//   return meta.mapping;
-// };
+/**
+ * Utility function for converting an Y.Fragment to a ProseMirror node.
+ */
+export const yXmlFragmentToProseMirrorRootNode = (
+  yXmlFragment: Y.XmlFragment,
+  schema: Schema,
+) =>
+  schema.topNodeType.create(
+    null,
+    yXmlFragmentToProseMirrorFragment(yXmlFragment, schema),
+  );
 
 /**
  * Utility method to convert a Prosemirror Doc Node into a Y.Doc.
@@ -71,8 +57,7 @@ export function prosemirrorToYDoc(
   xmlFragment: string = 'prosemirror',
 ): Y.Doc {
   const ydoc = new Y.Doc();
-  const type =
-    /** @type {Y.XmlFragment} */ (ydoc.get(xmlFragment, Y.XmlFragment));
+  const type: Y.XmlFragment = ydoc.get(xmlFragment, Y.XmlFragment);
   if (!type.doc) {
     return ydoc;
   }
