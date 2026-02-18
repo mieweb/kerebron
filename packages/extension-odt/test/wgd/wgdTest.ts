@@ -1,16 +1,131 @@
 import { assertEquals } from '@std/assert';
+import { Plugin, Transaction } from 'prosemirror-state';
 
-import { CoreEditor, nodeToTreeString } from '@kerebron/editor';
+import {
+  CoreEditor,
+  Extension,
+  nodeToTreeString,
+  UrlRewriteContext,
+} from '@kerebron/editor';
 import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionOdt } from '@kerebron/extension-odt';
 import { denoCdn } from '@kerebron/wasm/deno';
+
 import { urlToFolderId } from './idParsers.ts';
+import { Schema } from 'prosemirror-model';
 
 const __dirname = import.meta.dirname;
 
+export interface RewriteRule {
+  tag?: string;
+  match: RegExp;
+  replace?: string;
+  // template: string;
+  // mode?: string;
+}
+
 interface Opts {
   debug?: boolean;
+  rewriteRules?: RewriteRule[];
+}
+
+function extractShortcodesFromCodeblock(tr: Transaction, schema: Schema) {
+  const codeblockType = schema.nodes.code_block;
+  const paragraphType = schema.nodes.paragraph;
+  const shortcodeType = schema.nodes.shortcode_inline;
+
+  tr.doc.descendants((node, pos) => {
+    if (node.type !== codeblockType) return true;
+
+    const lines = node.textContent.split('\n');
+    const emptyEnding = [];
+    for (let i = lines.length - 1; i >= 0; i--) {
+      if (lines[i] !== '') {
+        break;
+      }
+      emptyEnding.push(lines[i]);
+    }
+    emptyEnding.reverse();
+    lines.splice(lines.length - emptyEnding.length);
+
+    let firstShortcode = undefined;
+    let lastShortcode = undefined;
+
+    if (/^\s*\{\{[^}]+}\}\s*$/.test(lines[0])) {
+      firstShortcode = lines.shift()!.trim();
+    }
+
+    if (lines.length && /^\s*\{\{[^}]+}\}\s*$/.test(lines[lines.length - 1])) {
+      lastShortcode = lines.pop()!.trim();
+    }
+
+    if (!firstShortcode && !lastShortcode) return true;
+
+    const newCodeblock = codeblockType.create(
+      node.attrs,
+      schema.text(lines.concat(emptyEnding).join('\n')),
+    );
+
+    const nodesToInsert = [];
+
+    if (firstShortcode) {
+      nodesToInsert.push(
+        paragraphType.create(
+          {},
+          shortcodeType.create({
+            content: firstShortcode.substring(2, firstShortcode.length - 2),
+          }),
+        ),
+      );
+    }
+
+    nodesToInsert.push(newCodeblock);
+
+    if (lastShortcode) {
+      nodesToInsert.push(
+        paragraphType.create(
+          {},
+          shortcodeType.create({
+            content: lastShortcode.substring(2, lastShortcode.length - 2),
+          }),
+        ),
+      );
+    }
+
+    tr.replaceWith(
+      // pos, node.nodeSize,
+      tr.mapping.map(pos),
+      tr.mapping.map(pos + node.nodeSize),
+      nodesToInsert,
+    );
+
+    return true;
+  });
+
+  return tr;
+}
+
+export const createMiePlugin = () => {
+  return new Plugin({
+    appendTransaction(
+      transactions: readonly Transaction[],
+      oldState,
+      newState,
+    ) {
+      return extractShortcodesFromCodeblock(newState.tr, newState.schema);
+    },
+  });
+};
+
+class MieExtension extends Extension {
+  name = 'mie';
+
+  override getProseMirrorPlugins(): Plugin[] {
+    return [
+      createMiePlugin(),
+    ];
+  }
 }
 
 export function wgdTest(odtName: string, opts: Opts = {}) {
@@ -25,6 +140,32 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
         serializerDebug,
         cdnUrl: denoCdn(),
       });
+
+      extMd.urlToRewriter = async (url: string, ctx: UrlRewriteContext) => {
+        if (!opts.rewriteRules) {
+          return url;
+        }
+
+        for (const rule of opts.rewriteRules) {
+          if (!rule.tag || ctx.type === rule.tag) {
+            if (rule.match) {
+              const matchRegExp = new RegExp(rule.match);
+              const matches = matchRegExp.exec(url);
+              if (matches && rule.replace) {
+                let newUrl = rule.replace;
+                const vals = Array.from(matches.values());
+                for (let i = vals.length - 1; i >= 1; i--) {
+                  newUrl = newUrl.replace('$' + i, vals[i]);
+                }
+                return newUrl;
+              }
+            }
+          }
+        }
+
+        return url;
+      };
+
       const extOdt = new ExtensionOdt({
         debug: opts.debug,
         postProcessCommands: [],
@@ -38,6 +179,7 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
               return [
                 extMd,
                 extOdt,
+                new MieExtension(),
               ];
             },
           },

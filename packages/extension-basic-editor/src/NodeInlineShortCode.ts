@@ -7,7 +7,7 @@ import {
   replaceInlineNode,
 } from '@kerebron/editor/plugins/input-rules';
 import { CoreEditor } from '@kerebron/editor';
-import { CommandFactories } from '@kerebron/editor';
+import { CommandFactories, NESTING_SELF_CLOSING } from '@kerebron/editor';
 import { Command } from '@kerebron/editor/commands';
 
 export function fixCharacters(text: string) {
@@ -55,12 +55,18 @@ export class NodeInlineShortCode extends Node {
       inline: true,
       group: 'inline',
       selectable: true,
+      atom: true,
       attrs: {
         content: {
           default: '',
         },
+        nesting: {
+          default: NESTING_SELF_CLOSING,
+        },
+        error: {
+          default: '',
+        },
       },
-      atom: true,
       parseDOM: [{
         tag: 'span.kb-shortcode-inline',
         getAttrs: (dom) => ({ content: dom.textContent || null }),

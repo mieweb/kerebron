@@ -103,20 +103,26 @@ function getLinkTokensHandlers(): Record<string, Array<TokenHandler>> {
           const lastStackToken: Token = ctx.current.meta['link_open_token'];
           const href: string = lastStackToken.attrGet('href') || '';
           const title: string = lastStackToken.attrGet('title') || '';
+          const origUrl: string = lastStackToken.attrGet('origUrl') || href;
 
-          if (!title && ctx.current.meta['link_text'] === href) {
+          let link_text = ctx.current.meta['link_text'];
+          if (origUrl === link_text) {
+            link_text = href;
+          }
+
+          if (!title && link_text === href) {
             ctx.current.log(href, token);
           } else if (!title && !href) {
             ctx.current.log('[', token);
             ctx.current.log(
-              ctx.current.meta['link_text'],
+              link_text,
               ctx.current.meta['link_token_token'],
             );
             ctx.current.log(`]${title}`, token);
           } else {
             ctx.current.log('[', token);
             ctx.current.log(
-              ctx.current.meta['link_text'],
+              link_text,
               ctx.current.meta['link_token_token'],
             );
             if (title) {
@@ -296,6 +302,12 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
         ctx.current.log('{{' + token.content + '}}', token);
       },
     ],
+
+    'bookmark': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log(`<a id="${token.attrGet('id')}"></a>`, token);
+      },
+    ],
   };
 }
 
@@ -471,6 +483,12 @@ export function getHtmlInlineTokensHandlers(): Record<
     'shortcode_inline': [
       (token: Token, ctx: ContextStash) => {
         ctx.current.log('{{' + token.content + '}}', token);
+      },
+    ],
+
+    'bookmark': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log(`<a id="${token.attrGet('id')}"></a>`, token);
       },
     ],
   };

@@ -346,6 +346,7 @@ export class CoreEditor extends EventTarget {
 
     if (this.view) {
       this.view.updateState(this.state);
+      this.view.dispatch(this.view.state.tr);
     }
 
     const event = new CustomEvent('doc:loaded', {

@@ -1,4 +1,9 @@
-import type { Command as PmCommand } from 'prosemirror-state';
+import type {
+  Command as PmCommand,
+  EditorState,
+  Transaction,
+} from 'prosemirror-state';
+import { EditorView } from 'prosemirror-view';
 
 interface Command extends PmCommand {
   displayName?: string;
@@ -8,6 +13,13 @@ interface Command extends PmCommand {
 export type { Command };
 
 export type CommandFactory = (...args: any[]) => Command;
+
+export type AsyncCommand = (
+  state: EditorState,
+  dispatch?: (tr: Transaction) => void,
+  view?: EditorView,
+) => Promise<boolean>;
+export type AsyncCommandFactory = (...args: any[]) => AsyncCommand;
 
 export interface Commands {
   [name: string]: Command;

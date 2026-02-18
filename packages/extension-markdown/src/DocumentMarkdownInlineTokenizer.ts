@@ -11,10 +11,18 @@ export type MarkTokenizerSpec = {
 
 export type DocumentMarkdownTokenizerSpec = {
   open?: string | ((node: Node, pos: number, idx: number) => Promise<Token>);
-  close?: string | ((node: Node, pos: number, idx: number) => Promise<Token>);
+  close?:
+    | string
+    | ((
+      node: Node,
+      pos: number,
+      idx: number,
+      openToken: Token,
+    ) => Promise<Token>);
   selfClose?:
     | string
     | ((node: Node, pos: number, idx: number) => Promise<Token>);
+  margin?: 'before' | 'after' | 'both';
 };
 
 const blankMark: MarkTokenizerSpec = { open: '', close: '', mixable: true };

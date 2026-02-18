@@ -16,7 +16,7 @@ export function getDefaultsPostProcessFilters(
   { doc, filesMap }: PostProcessConfig,
 ): Array<Command> {
   return [
-    removeUnusedBookmarks,
+    // removeUnusedBookmarks,
     convertCodeParagraphsToCodeBlocks,
     fixContinuedLists,
     convertMathMl,

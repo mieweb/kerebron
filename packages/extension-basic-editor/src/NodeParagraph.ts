@@ -5,7 +5,7 @@ import {
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
 
-type TextAlign = 'left' | 'center' | 'right' | 'justify';
+export type TextAlign = 'left' | 'center' | 'right' | 'justify' | undefined;
 
 export class NodeParagraph extends Node {
   override name = 'paragraph';
@@ -16,7 +16,7 @@ export class NodeParagraph extends Node {
       content: 'inline*',
       group: 'block',
       attrs: {
-        textAlign: { default: null },
+        textAlign: { default: undefined },
       },
       parseDOM: [
         {
@@ -29,13 +29,13 @@ export class NodeParagraph extends Node {
             ) {
               return { textAlign: style };
             }
-            return { textAlign: null };
+            return false;
           },
         },
       ],
       toDOM(node) {
-        const align = node.attrs.textAlign as TextAlign | null;
-        if (align && align !== 'left') {
+        const align = node.attrs.textAlign || 'left';
+        if (['center', 'right', 'justify'].includes(align)) {
           return ['p', { style: `text-align: ${align}` }, 0];
         }
         return ['p', 0];

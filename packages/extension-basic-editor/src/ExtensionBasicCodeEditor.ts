@@ -6,15 +6,16 @@ import {
   RawTextMapEntry,
   RawTextResult,
 } from '@kerebron/editor';
-import { NodeDocumentCode } from '@kerebron/extension-basic-editor/NodeDocumentCode';
 
 import { ExtensionSelection } from './ExtensionSelection.ts';
 import { ExtensionBaseKeymap } from './ExtensionBaseKeymap.ts';
 import { ExtensionDropcursor } from './ExtensionDropcursor.ts';
 import { ExtensionGapcursor } from './ExtensionGapcursor.ts';
 import { ExtensionHtml } from './ExtensionHtml.ts';
-import { NodeText } from './NodeText.ts';
 import { ExtensionRemoteSelection } from './remote-selection/ExtensionRemoteSelection.ts';
+import { NodeText } from './NodeText.ts';
+import { NodeDocumentCode } from './NodeDocumentCode.ts';
+import { NodeCodeBlock } from './NodeCodeBlock.ts';
 
 export class ExtensionBasicCodeEditor extends Extension {
   name = 'basic-code-editor';
@@ -31,6 +32,7 @@ export class ExtensionBasicCodeEditor extends Extension {
       new ExtensionRemoteSelection(),
       new ExtensionSelection(),
       new NodeDocumentCode({ lang }),
+      new NodeCodeBlock(),
       new NodeText(),
     ];
   }

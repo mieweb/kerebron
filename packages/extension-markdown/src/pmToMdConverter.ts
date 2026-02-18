@@ -1,5 +1,10 @@
 import { Mark, Node, Schema } from 'prosemirror-model';
-import { Token } from './types.ts';
+import {
+  NESTING_CLOSING,
+  NESTING_OPENING,
+  NESTING_SELF_CLOSING,
+  Token,
+} from './types.ts';
 
 import {
   type CoreEditor,
@@ -92,32 +97,57 @@ export interface MarkdownResult extends RawTextResult {
 }
 
 export async function extPmToMdConverter(
-  document: Node,
+  origDocument: Node,
   config: MdConfig,
   schema: Schema,
   editor: CoreEditor,
 ): Promise<MarkdownResult> {
   const ctx = new MdStashContext();
 
+  let filteredDoc: Node;
+
   // TODO: refactor to Tokenizer
   const defaultMarkdownTokenizer = new DocumentMarkdownTokenizer({
     paragraph(node) {
       return {
         open: async (node, pos, idx) => {
-          const token = new Token('paragraph_open', 'p', 1);
-          const $pos = document.resolve(pos);
+          const token = new Token('paragraph_open', 'p', NESTING_OPENING);
+          const $pos = filteredDoc.resolve(pos);
           const parent = $pos.parent;
           if (parent?.type.name === 'table_cell' && idx > 0) {
             token.attrSet('not_first_para', '1');
           }
           return token;
         },
-        close: 'paragraph_close',
+        close: async (node, pos, idx, openToken) => {
+          const token = new Token('paragraph_close', 'p', NESTING_CLOSING);
+
+          let singleChild: Node | undefined;
+          if (node.children.length === 1) {
+            if (node.children[0].type.name === 'shortcode_inline') {
+              singleChild = node.children[0];
+            }
+          }
+          if (singleChild) {
+            if (singleChild.attrs.nesting !== NESTING_CLOSING) {
+              openToken.attrSet('margin_before', '1');
+            }
+            if (singleChild.attrs.nesting !== NESTING_OPENING) {
+              token.attrSet('margin_after', '1');
+            }
+          } else {
+            openToken.attrSet('margin_before', '1');
+            token.attrSet('margin_after', '1');
+          }
+
+          return token;
+        },
       };
     },
     hr(node) {
       return {
         selfClose: 'hr',
+        margin: 'both',
       };
     },
 
@@ -136,10 +166,8 @@ export async function extPmToMdConverter(
         },
         ///////
         close: 'heading_close',
+        margin: 'both',
       };
-      // state.write(state.repeat('#', node.attrs.level) + ' ');
-      // state.renderInline(node, false);
-      // state.closeBlock(node);
     },
 
     blockquote(node) {
@@ -175,6 +203,7 @@ export async function extPmToMdConverter(
           ctx.unstash();
           return new Token('task_list_close', 'ul', -1);
         },
+        margin: 'both',
       };
     },
     bullet_list(node) {
@@ -186,12 +215,14 @@ export async function extPmToMdConverter(
           const token = new Token('bullet_list_open', 'ul', 1);
           token.attrSet('symbol', '*');
 
-          const firstChild = document.nodeAt(pos + 1);
+          const firstChild = filteredDoc.nodeAt(pos + 1);
           if (firstChild?.type.name === 'list_item') {
             token.attrSet('first_level_type', firstChild.attrs.type);
           }
-          const $pos = document.resolve(pos);
+          const $pos = filteredDoc.resolve(pos);
           const parent = $pos.parent;
+          const parent2 = $pos.node($pos.depth - 1);
+
           if (parent?.type.name === 'table_cell' && idx > 0) {
             token.attrSet('not_first_para', '1');
           }
@@ -201,12 +232,13 @@ export async function extPmToMdConverter(
           ctx.unstash();
           const token = new Token('bullet_list_close', 'ul', -1);
 
-          const firstChild = document.nodeAt(pos + 1);
+          const firstChild = filteredDoc.nodeAt(pos + 1);
           if (firstChild?.type.name === 'list_item') {
             token.attrSet('first_level_type', firstChild.attrs.type);
           }
           return token;
         },
+        margin: 'both',
       };
     },
     ordered_list(node) {
@@ -220,11 +252,11 @@ export async function extPmToMdConverter(
           token.attrSet('symbol', node.attrs['type'] || '1');
           token.attrSet('start', node.attrs['start']);
 
-          const firstChild = document.nodeAt(pos + 1);
+          const firstChild = filteredDoc.nodeAt(pos + 1);
           if (firstChild?.type.name === 'list_item') {
             token.attrSet('first_level_type', firstChild.attrs.type);
           }
-          const $pos = document.resolve(pos);
+          const $pos = filteredDoc.resolve(pos);
           const parent = $pos.parent;
           if (parent?.type.name === 'table_cell' && idx > 0) {
             token.attrSet('not_first_para', '1');
@@ -235,12 +267,13 @@ export async function extPmToMdConverter(
           ctx.unstash();
           const token = new Token('ordered_list_close', 'ol', -1);
 
-          const firstChild = document.nodeAt(pos + 1);
+          const firstChild = filteredDoc.nodeAt(pos + 1);
           if (firstChild?.type.name === 'list_item') {
             token.attrSet('first_level_type', firstChild.attrs.type);
           }
           return token;
         },
+        margin: 'both',
       };
     },
     list_item(node) {
@@ -276,6 +309,7 @@ export async function extPmToMdConverter(
       return {
         open: 'table_open',
         close: 'table_close',
+        margin: 'both',
       };
     },
 
@@ -334,6 +368,7 @@ export async function extPmToMdConverter(
           });
           return Promise.resolve(token);
         },
+        margin: 'both',
       };
     },
 
@@ -359,6 +394,7 @@ export async function extPmToMdConverter(
           }
           const token = new Token('image', 'img', 0);
           token.attrSet('src', src);
+          token.attrSet('origUrl', node.attrs.origUrl);
           if (node.attrs.title) {
             token.attrSet('title', node.attrs.title);
           }
@@ -372,6 +408,16 @@ export async function extPmToMdConverter(
         selfClose: (node: Node) => {
           const token = new Token('shortcode_inline', 'shortcode_inline', 0);
           token.content = node.attrs.content;
+          return Promise.resolve(token);
+        },
+      };
+    },
+    node_bookmark(node) {
+      return {
+        selfClose: (node: Node) => {
+          const token = new Token('bookmark', 'bookmark', NESTING_SELF_CLOSING);
+          token.content = node.attrs.content;
+          token.attrSet('id', node.attrs.id);
           return Promise.resolve(token);
         },
       };
@@ -417,13 +463,8 @@ export async function extPmToMdConverter(
     link: {
       open: async (mark: Mark) => {
         const token = new Token('link_open', 'a', 1);
-
-        let href = mark.attrs.href;
-        if (config.urlRewriter) {
-          // href = config.urlRewriter(href, { type: 'A', dest: 'md' });
-        }
-
-        token.attrSet('href', href);
+        token.attrSet('href', mark.attrs.href);
+        token.attrSet('origUrl', mark.attrs.origUrl);
         return token;
       },
       close: 'link_close',
@@ -452,47 +493,29 @@ export async function extPmToMdConverter(
       close: 'code_close',
       escape: false,
     },
-    // code: {
-    //   open(_state, _mark, parent, index) {
-    //     return backticksFor(parent.child(index), -1);
-    //   },
-    //   close(_state, _mark, parent, index) {
-    //     return backticksFor(parent.child(index - 1), 1);
-    //   },
-    //   escape: false,
-    // },            // bookmark: {
-    //   open(state, mark) {
-    //     const id = mark.attrs.id;
-    //     if (state.alreadyOutputedIds.has(id)) {
-    //       return '';
-    //     }
-
-    //     state.alreadyOutputedIds.add(id);
-    //     return `<a id="${id}"></a>`;
-    //   },
-    //   close() {
-    //     return '';
-    //   },
-    // },
   });
 
-  const filterCommands = getDefaultsPreProcessFilters({});
+  const filterCommands = getDefaultsPreProcessFilters({
+    urlRewriter: config.urlRewriter,
+  });
 
-  let state = EditorState.create({ doc: document });
+  let state = EditorState.create({ doc: origDocument });
   const dispatch = (tr: Transaction) => {
     state = state.apply(tr);
   };
 
   if (filterCommands.length > 0) {
     for (const filter of filterCommands) {
-      filter(
+      await filter(
         state,
         (tr) => dispatch(tr),
       );
     }
   }
 
-  const tokens = await defaultMarkdownTokenizer.serialize(state.doc);
+  filteredDoc = state.doc;
+
+  const tokens = await defaultMarkdownTokenizer.serialize(filteredDoc);
 
   if (config.debugTokens) {
     const event = new CustomEvent('md:tokens', {
@@ -540,7 +563,7 @@ export async function extPmToMdConverter(
     // https://github.com/evanw/source-map-visualization/blob/gh-pages/code.js
 
     const debugOutput = new SmartOutput<NodeAndPos>();
-    nodeToTreeStringOutput(debugOutput, document);
+    nodeToTreeStringOutput(debugOutput, origDocument);
 
     debugOutput.getSourceMap(
       (

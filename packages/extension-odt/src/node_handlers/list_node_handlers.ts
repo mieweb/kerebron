@@ -1,8 +1,9 @@
 import {
   iterateChildren,
+  ListStyle,
   NodeHandler,
   OdtStashContext,
-  resolveStyle,
+  resolveListStyle,
 } from '../OdtParser.ts';
 
 // https://docs.oasis-open.org/office/OpenDocument/v1.4/OpenDocument-v1.4-part3-schema.html#a_19_880_22__text_list_
@@ -16,29 +17,32 @@ function processListStyle(ctx: OdtStashContext, level: number) {
   const listTracker = ctx.listTracker;
   const attrs: Record<string, string> = {};
 
-  let style = {};
+  let style: ListStyle = resolveListStyle(
+    ctx.stylesTree,
+    ctx.automaticStyles,
+    '',
+  );
+
   for (let i = listTracker.listStack.length - 1; i >= 0; i--) {
     const list = listTracker.listStack[i];
-    if (!style['@style-name']) {
-      style = (list.styleName)
-        ? resolveStyle(
-          ctx.stylesTree,
-          ctx.automaticStyles,
-          list.styleName,
-        )
-        : {};
+    if (!style['@name']) {
+      style = resolveListStyle(
+        ctx.stylesTree,
+        ctx.automaticStyles,
+        list.styleName,
+      );
     }
   }
 
   let nodeTypeName = 'bullet_list';
   if (style) {
     const numLevelStyle = style['list-level-style-number'].find(
-      (levelStyle) => parseInt(levelStyle['@level']) === level,
+      (levelStyle) => parseInt(String(levelStyle['@level'])) === level,
     );
     if (numLevelStyle) {
       attrs['type'] = numLevelStyle['@num-format'] || '1';
       if (numLevelStyle['@start-value']) {
-        attrs['start'] = numLevelStyle['@start-value'];
+        attrs['start'] = String(numLevelStyle['@start-value']);
       }
       nodeTypeName = 'ordered_list';
     }
@@ -53,7 +57,7 @@ function processListStyle(ctx: OdtStashContext, level: number) {
 // https://docs.oasis-open.org/office/OpenDocument/v1.4/OpenDocument-v1.4-part3-schema.html#element-text_list
 export function getListNodesHandlers(): Record<string, NodeHandler> {
   return {
-    'list': (ctx: OdtStashContext, odtElement: any) => {
+    'list': (ctx: OdtStashContext, odtElement: TextList) => {
       const listTracker = ctx.listTracker;
       listTracker.pushList(odtElement['@id'], odtElement['@style-name']);
 

@@ -44,6 +44,31 @@ export class DocumentMarkdownTokenizer {
       }
     }
 
+    if (nodeSpec.selfClose) {
+      let selfCloseToken;
+      if (typeof nodeSpec.selfClose === 'string') {
+        const token = new Token(nodeSpec.selfClose, tag, 0);
+        token.level = level;
+        token.map = [currentPos];
+        this.tokens.push(token);
+        selfCloseToken = token;
+      } else {
+        const token = await nodeSpec.selfClose(node, currentPos, idx);
+        token.level = level;
+        token.map = [currentPos];
+        this.tokens.push(token);
+        selfCloseToken = token;
+      }
+      if (['before', 'both'].includes(nodeSpec.margin || '')) {
+        selfCloseToken.attrSet('margin_before', '1');
+      }
+      if (['after', 'both'].includes(nodeSpec.margin || '')) {
+        selfCloseToken.attrSet('margin_after', '1');
+      }
+      return;
+    }
+
+    let openToken: Token | undefined = undefined;
     if (nodeSpec.open) {
       if (typeof nodeSpec.open === 'string') {
         const token = new Token(nodeSpec.open, tag, 1);
@@ -51,28 +76,18 @@ export class DocumentMarkdownTokenizer {
         token.meta = 'nodeSpec.open';
         token.map = [currentPos];
         this.tokens.push(token);
+        openToken = token;
       } else {
         const token = await nodeSpec.open(node, currentPos, idx);
         token.level = level;
         token.meta = 'nodeSpec.open()';
         token.map = [currentPos];
         this.tokens.push(token);
+        openToken = token;
       }
-    }
-
-    if (nodeSpec.selfClose) {
-      if (typeof nodeSpec.selfClose === 'string') {
-        const token = new Token(nodeSpec.selfClose, tag, 0);
-        token.level = level;
-        token.map = [currentPos];
-        this.tokens.push(token);
-      } else {
-        const token = await nodeSpec.selfClose(node, currentPos, idx);
-        token.level = level;
-        token.map = [currentPos];
-        this.tokens.push(token);
+      if (['before', 'both'].includes(nodeSpec.margin || '')) {
+        openToken.attrSet('margin_before', '1');
       }
-      return;
     }
 
     if (node.inlineContent) {
@@ -96,18 +111,27 @@ export class DocumentMarkdownTokenizer {
     }
 
     if (nodeSpec.close) {
+      if (!openToken) {
+        throw new Error('No openToken');
+      }
+      let closeToken;
       if (typeof nodeSpec.close === 'string') {
         const token = new Token(nodeSpec.close, tag, -1);
         token.meta = 'nodeSpec.close';
         token.level = level;
         // token.map = [currentPos];
         this.tokens.push(token);
+        closeToken = token;
       } else {
-        const token = await nodeSpec.close(node, currentPos, idx);
+        const token = await nodeSpec.close(node, currentPos, idx, openToken);
         token.meta = 'nodeSpec.close()';
         token.level = level;
         // token.map = [currentPos];
         this.tokens.push(token);
+        closeToken = token;
+      }
+      if (['after', 'both'].includes(nodeSpec.margin || '')) {
+        closeToken.attrSet('margin_after', '1');
       }
     }
   }

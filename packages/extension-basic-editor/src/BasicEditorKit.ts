@@ -6,8 +6,9 @@ import { ExtensionDropcursor } from './ExtensionDropcursor.ts';
 import { ExtensionGapcursor } from './ExtensionGapcursor.ts';
 import { ExtensionHtml } from './ExtensionHtml.ts';
 import { ExtensionMediaUpload } from './ExtensionMediaUpload.ts';
-import { ExtensionRemoteSelection } from './remote-selection/ExtensionRemoteSelection.ts';
 import { ExtensionTextAlign } from './ExtensionTextAlign.ts';
+import { ExtensionRemoteSelection } from './remote-selection/ExtensionRemoteSelection.ts';
+import { ExtensionPairing } from './pairing/ExtensionPairing.ts';
 
 import { MarkLink } from './MarkLink.ts';
 import { MarkStrong } from './MarkStrong.ts';
@@ -47,6 +48,7 @@ import { NodeTaskList } from './NodeTaskList.ts';
 import { NodeTaskItem } from './NodeTaskItem.ts';
 import { NodeInlineShortCode } from './NodeInlineShortCode.ts';
 import { NodeIframe } from './NodeIframe.ts';
+import { NodeCommentAnchor } from './NodeCommentAnchor.ts';
 
 export class BasicEditorKit implements EditorKit {
   getExtensions(): AnyExtensionOrReq[] {
@@ -59,6 +61,7 @@ export class BasicEditorKit implements EditorKit {
       new ExtensionRemoteSelection(),
       new ExtensionSelection(),
       new ExtensionTextAlign(),
+      new ExtensionPairing(),
       new NodeDocument(),
       new NodeText(),
       new NodeParagraph(),
@@ -86,6 +89,7 @@ export class BasicEditorKit implements EditorKit {
       new NodeMath(),
       new NodeInlineShortCode(),
       new NodeIframe(),
+      new NodeCommentAnchor(),
       new MarkLink(),
       new MarkItalic(),
       new MarkStrong(),

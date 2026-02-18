@@ -18,6 +18,7 @@ export class NodeImage extends Node {
         title: { default: null },
         width: { default: null },
         height: { default: null },
+        origUrl: { default: undefined },
       },
       group: 'inline',
       draggable: true,

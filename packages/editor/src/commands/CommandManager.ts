@@ -1,5 +1,5 @@
 import { EditorView } from 'prosemirror-view';
-import type { EditorState, Transaction } from 'prosemirror-state';
+import type { Transaction } from 'prosemirror-state';
 
 import type { CoreEditor } from '../CoreEditor.ts';
 import { createChainableState } from './createChainableState.ts';

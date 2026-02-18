@@ -15,14 +15,36 @@ export interface OdtElement {
 
 export type NodeHandler = (ctx: OdtStashContext, value: any) => void;
 
+export interface ListLevelStyleBullet {
+  '@level': number;
+}
+
+export interface ListLevelStyleNumber {
+  '@level': number;
+  '@start-value'?: number;
+  '@num-format': string;
+}
+
 export interface ListStyle {
-  '@name': string;
+  '@name'?: string;
+  'list-level-style-bullet': ListLevelStyleBullet[];
+  'list-level-style-number': ListLevelStyleNumber[];
+}
+
+export interface TextProperty {
+  '@font-name'?: string;
+  '@font-weight'?: string;
+  '@font-style'?: string;
+  '@font-size'?: string;
+  '@text-underline-style'?: string;
+  '@color'?: string;
 }
 
 export interface Style {
-  '@name': string;
+  '@name'?: string;
   '@parent-style-name'?: string;
   styles: string[];
+  'text-properties'?: TextProperty;
 }
 
 export interface StylesTree {
@@ -36,6 +58,28 @@ export interface AutomaticStyles {
   'style': Array<Style>;
 }
 
+export function resolveListStyle(
+  stylesTree: StylesTree,
+  automaticStyles: AutomaticStyles,
+  name: string,
+): ListStyle {
+  let style: ListStyle | undefined;
+
+  style = stylesTree.styles['list-style'].find((item) =>
+    item['@name'] === name
+  );
+
+  if (!style) {
+    style = {
+      '@name': name,
+      'list-level-style-number': [],
+      'list-level-style-bullet': [],
+    };
+  }
+
+  return style;
+}
+
 export function resolveStyle(
   stylesTree: StylesTree,
   automaticStyles: AutomaticStyles,
@@ -43,11 +87,6 @@ export function resolveStyle(
 ): Style {
   let style: Style | undefined;
 
-  if (!style) {
-    style = stylesTree.styles['list-style'].find((item) =>
-      item['@name'] === name
-    );
-  }
   if (!style) {
     style = stylesTree.styles['style'].find((item) => item['@name'] === name);
   }
@@ -72,7 +111,7 @@ export function resolveStyle(
     );
     if (parentStyle) {
       const styles = [...style['styles'], ...parentStyle['styles']];
-      for (const key in style) {
+      for (const key of Object.keys(style) as (keyof Style)[]) {
         if (typeof style[key] === 'undefined') {
           delete style[key];
         }
@@ -268,7 +307,9 @@ export class OdtStashContext {
         this.automaticStyles,
         element['@style-name'],
       )
-      : {};
+      : {
+        styles: [],
+      };
 
     return style;
   }

@@ -176,7 +176,7 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
             );
           } else {
             ctx.current.log(
-              '```' + lang + '\n' + content + '```\n\n',
+              '```' + lang + '\n' + content + '```\n',
               token,
             );
           }

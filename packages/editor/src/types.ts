@@ -3,6 +3,10 @@ import type { Extension } from './Extension.ts';
 import type { Mark } from './Mark.ts';
 import type { Node } from './Node.ts';
 
+export const NESTING_OPENING = 1;
+export const NESTING_SELF_CLOSING = 0;
+export const NESTING_CLOSING = -1;
+
 export interface EditorKit {
   getExtensions(): AnyExtensionOrReq[];
 }

@@ -1,6 +1,6 @@
 import { NodeSpec } from 'prosemirror-model';
 
-import { Node } from '@kerebron/editor';
+import { NESTING_SELF_CLOSING, Node } from '@kerebron/editor';
 
 export class NodeBookmark extends Node {
   override name = 'node_bookmark';
@@ -11,8 +11,12 @@ export class NodeBookmark extends Node {
       inline: true,
       group: 'inline',
       selectable: false,
+      atom: true,
       attrs: {
         id: {},
+        nesting: {
+          default: NESTING_SELF_CLOSING,
+        },
       },
       parseDOM: [],
       toDOM(mark) {

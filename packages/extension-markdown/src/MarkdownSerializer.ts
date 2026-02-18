@@ -333,7 +333,12 @@ export class MarkdownSerializer {
                 prevTopToken?.attrGet('first_level_type') === 'none';
 
               if (!listNone && !prevListNone) {
-                this.ctx.current.log('\n');
+                if (
+                  prevTopToken.attrGet('margin_after') &&
+                  token.attrGet('margin_before')
+                ) {
+                  this.ctx.current.log('\n');
+                }
               }
               if (prevListNone && !token.type.endsWith('_list_open')) {
                 this.ctx.current.log('\n');

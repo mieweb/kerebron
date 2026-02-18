@@ -15,13 +15,6 @@ export class MarkUnderline extends Mark {
         {
           tag: 'u',
         },
-        {
-          style: 'text-decoration',
-          consuming: false,
-          getAttrs: (
-            style,
-          ) => ((style as string).includes('underline') ? {} : false),
-        },
       ],
       toDOM() {
         return ['u', 0];

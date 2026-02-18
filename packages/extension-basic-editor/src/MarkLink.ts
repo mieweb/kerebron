@@ -9,7 +9,8 @@ export class MarkLink extends Mark {
     return {
       attrs: {
         href: {},
-        title: { default: null },
+        title: { default: undefined },
+        origUrl: { default: undefined },
       },
       inclusive: false,
       parseDOM: [
