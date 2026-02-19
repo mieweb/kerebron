@@ -1,9 +1,14 @@
 {
   "name": "@kerebron/lib-cdn",
   "type": "module",
-  "main": "./dist/kerebron.mjs",
+  "main": "./dist/kerebron.js",
   "files": ["dist/"],
   "exports": {
+    ".": {
+      "browser": "./dist/kerebron.js",
+      "import": "./dist/kerebron.js",
+      "default": "./dist/kerebron.js"
+    },
     "./assets/*.css": {
       "import": "./dist/*.css"
     }
