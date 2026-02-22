@@ -411,8 +411,7 @@ pub struct TextList {
   #[serde(rename = "list-item")]
   pub list: Vec<TextListItem>,
 
-  //     #[serde(rename = "@xml:id")]
-  #[serde(rename = "@id")]
+  #[serde(rename = "@xml:id")] // https://github.com/tafia/quick-xml/issues/841
   pub id: Option<String>,
   //     #[serde(rename = "@text:continue-numbering")]
   #[serde(rename = "@continue-numbering")]
