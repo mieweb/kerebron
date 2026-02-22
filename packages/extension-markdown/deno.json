@@ -1,11 +1,11 @@
 {
   "name": "@kerebron/extension-markdown",
   "tasks": {},
-  "imports": {
-  },
+  "imports": {},
   "exports": {
     ".": "./src/ExtensionMarkdown.ts",
     "./MarkdownSerializer": "./src/MarkdownSerializer.ts",
-    "./PositionMapper": "./src/PositionMapper.ts"
+    "./PositionMapper": "./src/PositionMapper.ts",
+    "./preProcess": "./src/preprocess/preProcess.ts"
   }
 }

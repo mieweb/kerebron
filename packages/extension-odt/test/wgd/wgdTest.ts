@@ -1,9 +1,11 @@
 import { assertEquals } from '@std/assert';
-import { Plugin, Transaction } from 'prosemirror-state';
+import { EditorState, Plugin, Transaction } from 'prosemirror-state';
 
 import {
   CoreEditor,
   Extension,
+  NESTING_OPENING,
+  NodeAndPos,
   nodeToTreeString,
   UrlRewriteContext,
 } from '@kerebron/editor';
@@ -14,8 +16,159 @@ import { denoCdn } from '@kerebron/wasm/deno';
 
 import { urlToFolderId } from './idParsers.ts';
 import { Schema } from 'prosemirror-model';
+import { getDefaultsPreProcessFilters } from '@kerebron/extension-markdown/preProcess';
+import { Command } from '@kerebron/editor/commands';
+import { NESTING_CLOSING } from '../../../extension-markdown/src/types.ts';
 
 const __dirname = import.meta.dirname;
+
+function rawHtmlMacro(): Command {
+  return (state: EditorState, dispatch) => {
+    const pairs: Record<string, [NodeAndPos?, NodeAndPos?]> = {};
+
+    const tr = state.tr;
+    const schema = state.schema;
+
+    const doc = state.doc;
+    const type = 'shortcode_inline';
+
+    doc.descendants((node, pos) => {
+      if (
+        node.type.name === type &&
+        ['rawhtml', '/rawhtml'].includes(node.attrs.content) && node.attrs.id
+      ) {
+        const id = node.attrs.id;
+        if (!pairs[id]) {
+          pairs[id] = [];
+        }
+        if (node.attrs.nesting === NESTING_OPENING) {
+          pairs[id][0] = { node, pos };
+        }
+        if (node.attrs.nesting === NESTING_CLOSING) {
+          pairs[id][1] = { node, pos };
+        }
+      }
+    });
+
+    for (const id in pairs) {
+      const open = pairs[id][0];
+      const close = pairs[id][1];
+
+      if (open && close) {
+        const from = open.pos + open.node.nodeSize;
+        const to = close.pos;
+
+        const text = state.doc.textBetween(from, to, '\n').replace(/^\n/g, '');
+        const codeBlockNode = schema.nodes.code_block.create(
+          {
+            lang: 'rawmd',
+          },
+          schema.text(text),
+        );
+        tr.replaceRangeWith(
+          tr.mapping.map(from),
+          tr.mapping.map(to),
+          codeBlockNode,
+        );
+      }
+    }
+
+    if (dispatch) {
+      dispatch(tr);
+    }
+
+    return tr.docChanged;
+  };
+}
+
+function rawMarkdownMacro(): Command {
+  return (state: EditorState, dispatch) => {
+    const tr = state.tr;
+    const schema = state.schema;
+
+    const doc = state.doc;
+    const type = 'code_block';
+
+    doc.descendants((node, pos) => {
+      if (node.type.name === type) {
+        let textContent = node.textContent;
+
+        let emptyStart = textContent.match(/^([\s]*)/m);
+        if (emptyStart) {
+          textContent = textContent.substring(emptyStart[0].length);
+        }
+
+        let rawMd = '';
+
+        let retry = true;
+        while (retry) {
+          retry = false;
+
+          let pos1 = textContent.indexOf('{{markdown}}');
+          if (pos1 === 0) {
+            let pos2 = textContent.indexOf('{{/markdown}}', pos1);
+            if (pos2 > -1) {
+              const text = textContent.substring(
+                pos1 + '{{markdown}}'.length,
+                pos2,
+              );
+              rawMd += (rawMd ? ' ' : '') + text;
+
+              textContent = textContent.substring(pos2 + '{{/markdown}}'.length)
+                .trim();
+              retry = true;
+            }
+          }
+        }
+
+        if (rawMd) {
+          const codeBlockNode = schema.nodes.code_block.create(
+            {
+              lang: 'rawmd',
+            },
+            schema.text(rawMd),
+          );
+          tr.insert(tr.mapping.map(pos), codeBlockNode);
+        }
+
+        if (textContent !== node.textContent) {
+          if (!textContent.trim()) {
+            tr.replace(
+              tr.mapping.map(pos),
+              tr.mapping.map(pos + node.nodeSize),
+            );
+          } else {
+            const from = pos + 1;
+            const to = from + node.content.size;
+            if (emptyStart) {
+              textContent = emptyStart[1] + textContent;
+            }
+            tr.replaceRangeWith(
+              tr.mapping.map(from),
+              tr.mapping.map(to),
+              schema.text(textContent),
+            );
+          }
+        }
+      }
+    });
+
+    if (dispatch) {
+      dispatch(tr);
+    }
+
+    return tr.docChanged;
+  };
+}
+
+export function replaceUrlsWithIds(text: string): string {
+  text = text.replaceAll(
+    'https://drive.google.com/open?id%3D',
+    'https://drive.google.com/open?id=',
+  );
+  text = text.replaceAll('https://drive.google.com/open?id=', 'gdoc:');
+  return text;
+}
 
 export interface RewriteRule {
   tag?: string;
@@ -154,7 +307,7 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
               if (matches && rule.replace) {
                 let newUrl = rule.replace;
                 const vals = Array.from(matches.values());
-                for (let i = vals.length - 1; i >= 1; i--) {
+                for (let i = vals.length - 1; i >= 0; i--) {
                   newUrl = newUrl.replace('$' + i, vals[i]);
                 }
                 return newUrl;
@@ -171,6 +324,17 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
         postProcessCommands: [],
       });
 
+      extOdt.urlFromRewriter = async (href, ctx) => {
+        const id = urlToFolderId(href);
+        if (id) {
+          href = 'gdoc:' + id;
+        }
+        if (ctx.type === 'IMG') {
+          href = href.replace(/^Pictures\//, '');
+        }
+        return href;
+      };
+
       const editor = CoreEditor.create({
         editorKits: [
           new BrowserLessEditorKit(),
@@ -184,20 +348,16 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
             },
           },
         ],
+        hooks: {
+          'pm2md.pre': [
+            ...getDefaultsPreProcessFilters({
+              urlRewriter: extMd.urlToRewriter,
+            }),
+            rawHtmlMacro(),
+            rawMarkdownMacro(),
+          ],
+        },
       });
-
-      extOdt.urlFromRewriter = async (href, ctx) => {
-        if (ctx.type === 'A') {
-          const id = urlToFolderId(href);
-          if (id) {
-            href = 'gdoc:' + id;
-          }
-        }
-        if (ctx.type === 'IMG') {
-          href = href.replace(/^Pictures\//, '');
-        }
-        return href;
-      };
 
       const input = Deno.readFileSync(__dirname + '/' + odtName);
 
@@ -228,7 +388,7 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
         ((event: CustomEvent) => {
           const { doc } = event.detail;
           Deno.writeTextFileSync(
-            __dirname + '/' + pmName + '.9.debug.json',
+            __dirname + '/' + pmName + '.odtfiltered.debug.json',
             JSON.stringify(doc, null, 2),
           );
         }) as EventListener,

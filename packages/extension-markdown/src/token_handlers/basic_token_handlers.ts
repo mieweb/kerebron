@@ -169,7 +169,9 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
             content += '\n';
           }
 
-          if (lang === 'latex') {
+          if (lang === 'rawmd') {
+            ctx.current.log(content, token);
+          } else if (lang === 'latex') {
             ctx.current.log(
               '$$' + '\n' + content + '$$\n\n',
               token,

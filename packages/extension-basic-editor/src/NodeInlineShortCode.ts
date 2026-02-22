@@ -1,14 +1,17 @@
 import { Node as PmNode, NodeSpec, NodeType, Schema } from 'prosemirror-model';
 import { EditorState, Transaction } from 'prosemirror-state';
 
-import { Node } from '@kerebron/editor';
+import {
+  CommandFactories,
+  CoreEditor,
+  NESTING_SELF_CLOSING,
+  Node,
+} from '@kerebron/editor';
+import { Command } from '@kerebron/editor/commands';
 import {
   type InputRule,
   replaceInlineNode,
 } from '@kerebron/editor/plugins/input-rules';
-import { CoreEditor } from '@kerebron/editor';
-import { CommandFactories, NESTING_SELF_CLOSING } from '@kerebron/editor';
-import { Command } from '@kerebron/editor/commands';
 
 export function fixCharacters(text: string) {
   return text
@@ -57,6 +60,9 @@ export class NodeInlineShortCode extends Node {
       selectable: true,
       atom: true,
       attrs: {
+        id: {
+          default: undefined,
+        },
         content: {
           default: '',
         },

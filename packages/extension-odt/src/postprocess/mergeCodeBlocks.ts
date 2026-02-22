@@ -40,7 +40,6 @@ export const mergeCodeBlocks: Command = (state, dispatch): boolean => {
         break;
       }
 
-      const currentPos = nextPos;
       nextPos += next.nodeSize;
 
       if (next.type === paraBlockType && next.childCount === 0) {
@@ -64,7 +63,19 @@ export const mergeCodeBlocks: Command = (state, dispatch): boolean => {
       const startPos = tr.mapping.map(offset);
       const endPos = tr.mapping.map(offset + codeSize);
 
-      const codeText = codeTexts.join('').replace(/\n+$/gm, '\n');
+      let codeText = codeTexts.join('').replace(/\n+$/gm, '\n');
+
+      const lines = codeText.split('\n');
+      let emptyCount = 0;
+      for (emptyCount = 0; emptyCount < lines.length; emptyCount++) {
+        if (lines[emptyCount].trim()) {
+          break;
+        }
+      }
+      lines.splice(0, emptyCount);
+
+      codeText = lines.join('\n');
+
       const textNode = schema.text(codeText);
       const codeBlock = schema.nodes.code_block.createAndFill(null, [textNode]);
 

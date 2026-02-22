@@ -57,9 +57,9 @@ function processListStyle(ctx: OdtStashContext, level: number) {
 // https://docs.oasis-open.org/office/OpenDocument/v1.4/OpenDocument-v1.4-part3-schema.html#element-text_list
 export function getListNodesHandlers(): Record<string, NodeHandler> {
   return {
-    'list': (ctx: OdtStashContext, odtElement: TextList) => {
+    'list': (ctx: OdtStashContext, odtElement) => {
       const listTracker = ctx.listTracker;
-      listTracker.pushList(odtElement['@id'], odtElement['@style-name']);
+      listTracker.pushList(odtElement['@xml:id'], odtElement['@style-name']);
 
       const { nodeTypeName, attrs } = processListStyle(
         ctx,
@@ -68,8 +68,8 @@ export function getListNodesHandlers(): Record<string, NodeHandler> {
 
       ctx.current.meta['list_type'] = nodeTypeName;
 
-      if (odtElement['@id']) {
-        attrs['id'] = odtElement['@id'];
+      if (odtElement['@xml:id']) {
+        attrs['id'] = odtElement['@xml:id'];
       }
       if (odtElement['@continue-list']) {
         attrs['continue'] = odtElement['@continue-list'];

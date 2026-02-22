@@ -20,6 +20,7 @@ import {
   Command,
   CommandFactories,
 } from './commands/types.ts';
+import { AsyncCommand } from '@kerebron/editor/commands';
 
 function ensureDocSchema(
   doc: ProseMirrorNode,
@@ -44,7 +45,10 @@ export interface EditorConfig {
   topNode?: string;
   readOnly?: boolean;
   debug?: boolean;
+  hooks?: HookMap;
 }
+
+type HookMap = Record<string, Array<Command | AsyncCommand>>;
 
 export class CoreEditor extends EventTarget {
   public readonly config: Partial<EditorConfig>;
@@ -55,6 +59,8 @@ export class CoreEditor extends EventTarget {
   private linkListener?: EventListenerOrEventListenerObject;
   private linkSource?: CoreEditor;
 
+  public readonly hooks: HookMap;
+
   private constructor(
     config: Partial<EditorConfig>,
     public readonly schema: Schema,
@@ -63,6 +69,7 @@ export class CoreEditor extends EventTarget {
     super();
 
     this.config = { ...config };
+    this.hooks = { ...this.config.hooks };
 
     this.commandManager = new CommandManager(
       this,

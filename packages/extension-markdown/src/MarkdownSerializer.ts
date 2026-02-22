@@ -313,42 +313,21 @@ export class MarkdownSerializer {
           if (token.nesting !== NESTING_CLOSING && token.level === 0) {
             const prevTopToken = prevLevelTokenType[token.level];
             const prevTopTokenType = prevTopToken?.type || '';
+
             if (
-              [
-                'hr',
-                'paragraph_close',
-                'ordered_list_close',
-                'bullet_list_close',
-                'task_list_close',
-                'dl_close',
-                'table_close',
-                'blockquote_close',
-                'footnote_close',
-                'code_block',
-                'html_block',
-              ].includes(prevTopTokenType)
+              prevTopTokenType &&
+              prevTopToken.attrGet('margin_after') &&
+              token.attrGet('margin_before')
             ) {
+              const bothLists = prevTopToken.type.endsWith('_list_close') &&
+                token.type.endsWith('_list_open');
               const listNone = token.attrGet('first_level_type') === 'none';
               const prevListNone =
                 prevTopToken?.attrGet('first_level_type') === 'none';
 
-              if (!listNone && !prevListNone) {
-                if (
-                  prevTopToken.attrGet('margin_after') &&
-                  token.attrGet('margin_before')
-                ) {
-                  this.ctx.current.log('\n');
-                }
-              }
-              if (prevListNone && !token.type.endsWith('_list_open')) {
+              if ((!listNone && !prevListNone) || !bothLists) {
                 this.ctx.current.log('\n');
               }
-            }
-            if (
-              'heading_close' === prevTopTokenType &&
-              'heading_open' !== token.tag
-            ) {
-              this.ctx.current.log('\n');
             }
           } else if (
             token.nesting !== NESTING_CLOSING && token.level === 1 &&

@@ -1,5 +1,5 @@
 import type { Node } from 'prosemirror-model';
-import { SmartOutput } from './utilities/SmartOutput.ts';
+import { SmartOutput } from '@kerebron/editor';
 
 function trimText(str: string, maxLen = 20): string {
   str = str.replaceAll('\n', '\\n');

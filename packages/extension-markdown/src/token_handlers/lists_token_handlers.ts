@@ -6,7 +6,7 @@ import {
   writeIndented,
 } from '@kerebron/extension-markdown/MarkdownSerializer';
 import {
-  getHtmlInlineTokensHandlers,
+  getHtmlInlineFormatTokensHandlers,
   getInlineTokensHandlers,
 } from './inline_token_handlers.ts';
 import { TokenSource } from '../TokenSource.ts';
@@ -278,6 +278,12 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
         ctx.stash('getListsTokensHandlers.bullet_list_open');
         ctx.current.listPath.push('ul');
         ctx.current.listType = 'ul';
+
+        ctx.current.handlers = {
+          ...ctx.current.handlers,
+          ...getHtmlInlineFormatTokensHandlers(),
+        };
+
         ctx.current.itemSymbol = '';
         ctx.current.itemNumber = 0;
       },
@@ -297,27 +303,9 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
           ctx.current.listPath.push('ol');
           ctx.current.listType = 'ol';
 
-          const htmlInlineHandlers = Object.entries(
-            getHtmlInlineTokensHandlers(),
-          )
-            .filter((a) =>
-              [
-                'strong_open',
-                'strong_close',
-                'em_open',
-                'em_close',
-                'underline_open',
-                'underline_close',
-                'strike_open',
-                'strike_close',
-              ].includes(
-                a[0],
-              )
-            );
-
           ctx.current.handlers = {
             ...ctx.current.handlers,
-            ...Object.fromEntries(htmlInlineHandlers),
+            ...getHtmlInlineFormatTokensHandlers(),
           };
 
           ctx.current.itemSymbol = '';

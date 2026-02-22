@@ -1,3 +1,4 @@
+import { NESTING_CLOSING, NESTING_OPENING } from '@kerebron/editor';
 import { iterateChildren, NodeHandler, OdtStashContext } from '../OdtParser.ts';
 
 export function getInlineNodesHandlers(): Record<string, NodeHandler> {
@@ -56,6 +57,20 @@ export function getInlineNodesHandlers(): Record<string, NodeHandler> {
       //     ? state.textMarks.delete(x)
       //     : x
       // );
+    },
+    'change-start': (ctx: OdtStashContext, element: any) => {
+      ctx.openNode();
+      ctx.closeNode('comment', {
+        id: element['@change-id'],
+        nesting: NESTING_OPENING,
+      });
+    },
+    'change-end': (ctx: OdtStashContext, element: any) => {
+      ctx.openNode();
+      ctx.closeNode('comment', {
+        id: element['@change-id'],
+        nesting: NESTING_CLOSING,
+      });
     },
   };
 }

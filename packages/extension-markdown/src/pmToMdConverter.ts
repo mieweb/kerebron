@@ -362,10 +362,7 @@ export async function extPmToMdConverter(
           const token = new Token('code_block', 'code', 0);
           token.meta = 'noEscText';
           token.attrSet('lang', node.attrs.lang);
-          token.content = '';
-          node.forEach((child, offset) => {
-            token.content += child.text || '';
-          });
+          token.content = node.textContent;
           return Promise.resolve(token);
         },
         margin: 'both',
@@ -495,10 +492,7 @@ export async function extPmToMdConverter(
     },
   });
 
-  const filterCommands = getDefaultsPreProcessFilters({
-    urlRewriter: config.urlRewriter,
-  });
-
+  const filterCommands = [...editor.hooks['pm2md.pre']];
   let state = EditorState.create({ doc: origDocument });
   const dispatch = (tr: Transaction) => {
     state = state.apply(tr);

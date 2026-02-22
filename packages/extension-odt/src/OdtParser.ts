@@ -336,22 +336,6 @@ export class OdtParser {
       ...getBasicNodesHandlers(),
       ...getListNodesHandlers(),
       ...getTableNodesHandlers(),
-
-      'change-start': () => {
-        // custom(state) {
-        //   state.textMarks.add({
-        //     markName: 'change',
-        //     markAttributes: {},
-        //   });
-        // },
-      },
-      'change-end': () => {
-        // custom(state) {
-        //   state.textMarks.forEach((x) =>
-        //     x.markName === 'change' ? state.textMarks.delete(x) : x
-        //   );
-        // },
-      },
       'g': () => { // Test is: embedded-diagram-example.odt
         // DrawG draw:g
       },

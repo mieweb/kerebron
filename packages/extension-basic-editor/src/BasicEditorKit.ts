@@ -48,6 +48,7 @@ import { NodeTaskList } from './NodeTaskList.ts';
 import { NodeTaskItem } from './NodeTaskItem.ts';
 import { NodeInlineShortCode } from './NodeInlineShortCode.ts';
 import { NodeIframe } from './NodeIframe.ts';
+import { NodeCommentAnchor } from './NodeCommentAnchor.ts';
 
 export class BasicEditorKit implements EditorKit {
   getExtensions(): AnyExtensionOrReq[] {
@@ -88,6 +89,7 @@ export class BasicEditorKit implements EditorKit {
       new NodeMath(),
       new NodeInlineShortCode(),
       new NodeIframe(),
+      new NodeCommentAnchor(),
       new MarkLink(),
       new MarkItalic(),
       new MarkStrong(),

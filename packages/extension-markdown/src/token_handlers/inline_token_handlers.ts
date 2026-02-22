@@ -315,16 +315,11 @@ function escapeHtml(text: string) {
   return text; // TODO
 }
 
-export function getHtmlInlineTokensHandlers(): Record<
+export function getHtmlInlineFormatTokensHandlers(): Record<
   string,
   Array<TokenHandler>
 > {
   return {
-    'text': [
-      (token: Token, ctx: ContextStash) => {
-        ctx.current.log(escapeHtml(token.content), token);
-      },
-    ],
     'strong_open': [
       (token: Token, ctx: ContextStash) => {
         const tag = token.tag || 'strong';
@@ -373,7 +368,20 @@ export function getHtmlInlineTokensHandlers(): Record<
         ctx.current.log(`</${tag}>`, token);
       },
     ],
+  };
+}
 
+export function getHtmlInlineTokensHandlers(): Record<
+  string,
+  Array<TokenHandler>
+> {
+  return {
+    'text': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log(escapeHtml(token.content), token);
+      },
+    ],
+    ...getHtmlInlineFormatTokensHandlers(),
     'link_open': [
       (token: Token, ctx: ContextStash) => {
         ctx.stash('getHtmlInlineTokensHandlers.link_open');

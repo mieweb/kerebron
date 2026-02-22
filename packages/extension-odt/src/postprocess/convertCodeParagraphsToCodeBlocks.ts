@@ -19,6 +19,15 @@ export const convertCodeParagraphsToCodeBlocks: Command = (
       let codeSize = 0;
       for (let childNo = 0; childNo < node.childCount; childNo++) {
         const child = node.child(childNo);
+        const monospaced = child.marks.some((mark) =>
+          mark.type === markCodeType
+        );
+
+        if (child.type.name === 'node_bookmark') {
+          codeText += '\n';
+          codeSize += child.nodeSize;
+          continue;
+        }
 
         if (child.type.name === 'br') {
           codeText += '\n';
@@ -26,7 +35,7 @@ export const convertCodeParagraphsToCodeBlocks: Command = (
           continue;
         }
 
-        if (child.marks.some((mark) => mark.type === markCodeType)) {
+        if (monospaced) {
           codeText += child.text || child.textBetween(0, child.content.size);
           codeSize += child.nodeSize;
           continue;
@@ -39,18 +48,22 @@ export const convertCodeParagraphsToCodeBlocks: Command = (
         const startPos = tr.mapping.map(pos);
         const endPos = tr.mapping.map(pos + 1 + codeSize);
 
-        const textNode = schema.text(codeText);
-        const codeBlock = schema.nodes.code_block.createAndFill(null, [
-          textNode,
-        ]);
+        if (codeText) {
+          const textNode = schema.text(codeText);
+          const codeBlock = schema.nodes.code_block.createAndFill(null, [
+            textNode,
+          ]);
 
-        if (codeBlock) {
-          tr = tr.replaceRangeWith(startPos, endPos, codeBlock);
+          if (codeBlock) {
+            tr.replaceRangeWith(startPos, endPos, codeBlock);
+          }
+        } else {
+          tr.replace(startPos, endPos);
         }
       }
 
       if (codeSize > 0 && codeSize + 2 === node.nodeSize) {
-        // tr = tr.deleteRange(tr.mapping.map(pos), tr.mapping.map(pos))
+        // tr.deleteRange(tr.mapping.map(pos), tr.mapping.map(pos))
       }
     }
   });

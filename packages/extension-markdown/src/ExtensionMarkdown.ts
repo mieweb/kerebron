@@ -14,6 +14,7 @@ import {
 } from './pmToMdConverter.ts';
 import { mdToPmConverter, mdToPmConverterText } from './mdToPmConverter.ts';
 import type { Token } from './types.ts';
+import { getDefaultsPreProcessFilters } from './preprocess/preProcess.ts';
 
 export interface MdConfig {
   sourceMap?: boolean;
@@ -89,5 +90,13 @@ export class ExtensionMarkdown extends Extension {
     }
 
     return new Slice(fragment, 0, 0);
+  }
+
+  override created(): void {
+    if (!this.editor.hooks['pm2md.pre']) {
+      this.editor.hooks['pm2md.pre'] = getDefaultsPreProcessFilters({
+        urlRewriter: this.config.urlRewriter,
+      });
+    }
   }
 }
