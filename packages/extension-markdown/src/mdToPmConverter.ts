@@ -74,7 +74,11 @@ export async function mdToPmConverterText(
         block: 'heading',
         getAttrs: (tok) => ({ level: +tok.tag.slice(1) }),
       },
-      code_block: { block: 'code_block', noCloseToken: true },
+      code_block: {
+        block: 'code_block',
+        getAttrs: (tok) => ({ lang: tok.attrGet('lang') || undefined }),
+        noCloseToken: true,
+      },
       fence: {
         block: 'code_block',
         getAttrs: (tok) => ({ lang: tok.attrGet('lang') || undefined }),

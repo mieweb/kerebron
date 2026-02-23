@@ -1,6 +1,22 @@
 import { NESTING_CLOSING, NESTING_OPENING } from '@kerebron/editor';
 import { iterateChildren, NodeHandler, OdtStashContext } from '../OdtParser.ts';
 
+export function inchesToMm(value: string): number {
+  if (!value) {
+    return 0;
+  }
+  if (value.endsWith('pt')) {
+    return parseFloat(value.substring(0, value.length - 2)) * 0.3528;
+  }
+  if (value.endsWith('in')) {
+    return parseFloat(value.substring(0, value.length - 2)) * 25.4;
+  }
+  if (value.endsWith('em')) {
+    return parseFloat(value.substring(0, value.length - 2)) / 0.125 * 25.4;
+  }
+  return 0;
+}
+
 export function getInlineNodesHandlers(): Record<string, NodeHandler> {
   return {
     '$text': (ctx: OdtStashContext, value: any) => {
@@ -24,10 +40,10 @@ export function getInlineNodesHandlers(): Record<string, NodeHandler> {
       }
     },
     'rect': (ctx: OdtStashContext, odtElement: any) => {
-      // if (odtElement['@rel-width'] === '100%') {
-      //   ctx.openNode();
-      //   ctx.closeNode('hr');
-      // }
+      if (odtElement['@rel-width'] === '100%') {
+        ctx.openNode();
+        ctx.closeNode('hr');
+      }
     },
     'line-break': (ctx: OdtStashContext, odtElement: any) => {
       ctx.openNode();
@@ -116,13 +132,53 @@ export function getBasicNodesHandlers(): Record<string, NodeHandler> {
     },
 
     'table-of-content': (ctx: OdtStashContext, value: any) => {
-      ctx.openNode();
+      const levels: number[] = [];
+
+      let prevMarginLeft = -1;
       for (const pElem of value['index-body']['p']) {
+        const style = ctx.getElementStyle(pElem) as any;
+        let marginLeft = 0;
+        if ('paragraph-properties' in style) {
+          marginLeft = inchesToMm(
+            style['paragraph-properties']['@margin-left'],
+          );
+        }
+
+        if (prevMarginLeft < marginLeft) {
+          if (levels.length > 0) {
+            ctx.openNode(); // list_item
+          }
+          ctx.openNode(); // bullet_list
+          levels.push(marginLeft);
+        } else {
+          for (let i = levels.length - 1; i >= 0; i--) {
+            if (levels[i] > marginLeft) {
+              ctx.closeNode('bullet_list');
+              if (i > 0) {
+                ctx.closeNode('list_item');
+              }
+              levels.pop();
+            } else {
+              break;
+            }
+          }
+        }
         ctx.openNode();
         ctx.handle('p', pElem);
         ctx.closeNode('list_item');
+
+        prevMarginLeft = marginLeft;
       }
-      ctx.closeNode('bullet_list');
+
+      for (let i = levels.length - 1; i >= 0; i--) {
+        levels.pop();
+        if (i > 0) {
+          ctx.closeNode('bullet_list');
+          ctx.closeNode('list_item');
+        } else {
+          ctx.closeNode('bullet_list', { toc: true });
+        }
+      }
     },
 
     'span': (ctx: OdtStashContext, value: any) => {

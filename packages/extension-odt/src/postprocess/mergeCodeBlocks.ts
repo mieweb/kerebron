@@ -48,7 +48,10 @@ export const mergeCodeBlocks: Command = (state, dispatch): boolean => {
         continue;
       }
 
-      if (next.type === codeBlockType && node.attrs.lang === next.attrs.lang) {
+      if (
+        next.type === codeBlockType && node.attrs.lang === next.attrs.lang &&
+        node.attrs.lang !== 'mathml'
+      ) {
         const text = next.text || next.textBetween(0, next.content.size);
         codeTexts.push(text.endsWith('\n') ? text : text + '\n');
 
@@ -77,7 +80,9 @@ export const mergeCodeBlocks: Command = (state, dispatch): boolean => {
       codeText = lines.join('\n');
 
       const textNode = schema.text(codeText);
-      const codeBlock = schema.nodes.code_block.createAndFill(null, [textNode]);
+      const codeBlock = schema.nodes.code_block.createAndFill({
+        lang: node.attrs.lang,
+      }, [textNode]);
 
       if (codeBlock) {
         tr = tr.replaceRangeWith(startPos, endPos, codeBlock);

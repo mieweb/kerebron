@@ -18,7 +18,7 @@ export function writeIndented(
     .split('\n');
 
   const typeIndent: Record<ListType, number> = {
-    ul: 4,
+    ul: 2,
     ol: 4,
     dl: 2,
     tl: 4,
@@ -35,54 +35,61 @@ export function writeIndented(
       continue;
     }
 
+    let prefix = '';
+
     if (output.colPos === 0) {
-      output.log('> '.repeat(currentCtx.blockquoteCnt).trim());
+      prefix += '> '.repeat(currentCtx.blockquoteCnt).trim();
     }
     if (output.colPos === 0 && line.length > 0) {
-      output.log('    '.repeat(currentCtx.footnoteCnt));
+      prefix += '    '.repeat(currentCtx.footnoteCnt);
 
       const indent = currentCtx.listPath
         .slice(0, currentCtx.listPath.length - 1)
         .map((type) => typeIndent[type])
         .reduce((p, c) => p + c, 0);
-      if (currentCtx.listType === 'tl') {
-        output.log(' '.repeat(indent));
-        if (currentCtx.itemRow === 0) {
-          output.log('- ');
-          if (currentCtx.itemSymbol) {
-            output.log('[x] ');
-          } else {
-            output.log('[ ] ');
-          }
-        } else {
-          output.log('  ');
-        }
-      }
-      if (currentCtx.listType === 'ul') {
-        output.log(' '.repeat(indent));
-        if (currentCtx.itemRow === 0) {
-          output.log(currentCtx.itemSymbol + ' ');
-        } else {
-          output.log('  ');
-        }
-      }
-      if (currentCtx.listType === 'ol') {
-        const no = currentCtx.itemSymbol;
-        output.log(' '.repeat(indent));
-        if (currentCtx.itemRow === 0) {
-          output.log(no);
-        } else {
-          output.log(' '.repeat(4));
-        }
-      }
-      if (currentCtx.listType === 'dl') {
-        if (currentCtx.itemSymbol) {
+
+      switch (currentCtx.listType) {
+        case 'tl':
+          prefix += ' '.repeat(indent);
           if (currentCtx.itemRow === 0) {
-            output.log(`${currentCtx.itemSymbol}`);
+            prefix += '- ';
+            if (currentCtx.itemSymbol) {
+              prefix += '[x] ';
+            } else {
+              prefix += '[ ] ';
+            }
           } else {
-            output.log(' '.repeat(currentCtx.itemSymbol.length));
+            prefix += '  ';
           }
-        }
+          break;
+
+        case 'ul':
+          prefix += ' '.repeat(indent);
+          if (currentCtx.itemRow === 0) {
+            prefix += currentCtx.itemSymbol + ' ';
+          } else {
+            prefix += '  ';
+          }
+          break;
+
+        case 'ol':
+          prefix += ' '.repeat(indent);
+          if (currentCtx.itemRow === 0) {
+            prefix += currentCtx.itemSymbol;
+          } else {
+            prefix += ' '.repeat(4);
+          }
+          break;
+
+        case 'dl':
+          if (currentCtx.itemSymbol) {
+            if (currentCtx.itemRow === 0) {
+              prefix += `${currentCtx.itemSymbol}`;
+            } else {
+              prefix += ' '.repeat(currentCtx.itemSymbol.length);
+            }
+          }
+          break;
       }
     }
 
@@ -96,24 +103,31 @@ export function writeIndented(
         currentCtx.blockquoteCnt > 0 &&
         output.colPos === currentCtx.blockquoteCnt * 2 - 1
       ) {
-        output.log(' ');
+        prefix += ' ';
       }
     }
 
     const isLastLine = lineNo >= lines.length - 1;
 
-    if (isLastLine) {
-      output.log(line, tok);
-      offset += line.length;
-    } else {
-      const regex = new RegExp(currentCtx.lineBreak + '$');
-      const hasBreak = line.match(new RegExp(currentCtx.lineBreak + '$'));
-      const rightTrimmed = line
-        .replace(regex, '')
-        .replace(/[ \t]+$/, '');
+    const regex = new RegExp(currentCtx.lineBreak + '$');
+    const hasBreak = line.match(new RegExp(currentCtx.lineBreak + '$'));
+    const rightTrimmed = line
+      .replace(regex, '')
+      .replace(/[ \t\u00A0]+$/g, '');
 
+    output.log(prefix);
+
+    if (isLastLine) {
+      if (hasBreak) {
+        output.log(rightTrimmed + (hasBreak ? '  ' : ''), tok);
+        offset += (rightTrimmed + (hasBreak ? '  ' : '')).length;
+      } else {
+        output.log(line, tok);
+        offset += line.length;
+      }
+    } else {
       output.log(rightTrimmed + (hasBreak ? '  ' : ''), tok);
-      offset += line.length;
+      offset += (rightTrimmed + (hasBreak ? '  ' : '')).length;
     }
 
     if (!isLastLine) {
@@ -321,11 +335,16 @@ export class MarkdownSerializer {
             ) {
               const bothLists = prevTopToken.type.endsWith('_list_close') &&
                 token.type.endsWith('_list_open');
+              const bothBulletLists =
+                prevTopToken.type === 'bullet_list_close' &&
+                token.type === 'bullet_list_open';
               const listNone = token.attrGet('first_level_type') === 'none';
               const prevListNone =
                 prevTopToken?.attrGet('first_level_type') === 'none';
 
-              if ((!listNone && !prevListNone) || !bothLists) {
+              if (
+                (!listNone && !prevListNone && !bothBulletLists) || !bothLists
+              ) {
                 this.ctx.current.log('\n');
               }
             }

@@ -110,25 +110,39 @@ function getLinkTokensHandlers(): Record<string, Array<TokenHandler>> {
             link_text = href;
           }
 
-          if (!title && link_text === href) {
-            ctx.current.log(href, token);
-          } else if (!title && !href) {
-            ctx.current.log('[', token);
-            ctx.current.log(
-              link_text,
-              ctx.current.meta['link_token_token'],
+          let mdTemplate = lastStackToken.attrGet('mdTemplate');
+          if (mdTemplate) {
+            const basename = href.split('/').pop();
+            mdTemplate = mdTemplate.replaceAll('$href', href);
+            mdTemplate = mdTemplate.replaceAll('$basename', basename || '');
+            mdTemplate = mdTemplate.replaceAll(
+              '$label',
+              ctx.current.meta['link_text'],
             );
-            ctx.current.log(`]${title}`, token);
+            mdTemplate = mdTemplate.replaceAll('$title', title || '');
+
+            ctx.current.log(mdTemplate, token);
           } else {
-            ctx.current.log('[', token);
-            ctx.current.log(
-              link_text,
-              ctx.current.meta['link_token_token'],
-            );
-            if (title) {
-              ctx.current.log(`](${href} ${title})`, token);
+            if (!title && link_text === href) {
+              ctx.current.log(href, token);
+            } else if (!title && !href) {
+              ctx.current.log('[', token);
+              ctx.current.log(
+                link_text,
+                ctx.current.meta['link_token_token'],
+              );
+              ctx.current.log(`]${title}`, token);
             } else {
-              ctx.current.log(`](${href})`, token);
+              ctx.current.log('[', token);
+              ctx.current.log(
+                link_text,
+                ctx.current.meta['link_token_token'],
+              );
+              if (title) {
+                ctx.current.log(`](${href} ${title})`, token);
+              } else {
+                ctx.current.log(`](${href})`, token);
+              }
             }
           }
 
@@ -233,7 +247,11 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
       (token: Token, ctx: ContextStash) => {
         let content = token.content;
         if (token.attrGet('lang') === 'mathml') {
-          content = MathMl2LaTeX.convert(content);
+          const cleaned = content.replace(
+            /<annotation[\s\S]*?<\/annotation>/g,
+            '',
+          );
+          content = MathMl2LaTeX.convert(cleaned);
         }
         ctx.current.log('$' + content + '$', token);
       },
@@ -264,19 +282,27 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
             }
           }
 
-          ctx.current.log(`![${alt}]`, token);
-          // ctx.current.log(
-          //   `(${src})`,
-          //   token,
-          // );
-
+          let mdTemplate = '![$alt]';
           const title = token.attrGet('title');
           if (src) {
-            ctx.current.log(
-              `(${src}${title ? ' ' + title : ''})`,
-              token,
-            );
+            if (title) {
+              mdTemplate += '($src $title)';
+            } else {
+              mdTemplate += '($src)';
+            }
           }
+
+          mdTemplate = token.attrGet('mdTemplate') || mdTemplate;
+
+          mdTemplate = mdTemplate.replaceAll('$alt', alt);
+          mdTemplate = mdTemplate.replaceAll('$label', alt);
+          mdTemplate = mdTemplate.replaceAll('$src', src || '');
+          mdTemplate = mdTemplate.replaceAll('$title', title || '');
+
+          ctx.current.log(
+            mdTemplate,
+            token,
+          );
         }
       },
     ],

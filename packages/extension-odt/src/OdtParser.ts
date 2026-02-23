@@ -15,14 +15,24 @@ export interface OdtElement {
 
 export type NodeHandler = (ctx: OdtStashContext, value: any) => void;
 
+export interface ListLLevelLabelAlignment {
+  '@margin-left'?: string;
+}
+
+export interface ListLevelProperties {
+  'list-level-label-alignment': ListLLevelLabelAlignment;
+}
+
 export interface ListLevelStyleBullet {
   '@level': number;
+  'list-level-properties': ListLevelProperties;
 }
 
 export interface ListLevelStyleNumber {
   '@level': number;
   '@start-value'?: number;
   '@num-format': string;
+  'list-level-properties': ListLevelProperties;
 }
 
 export interface ListStyle {
@@ -40,11 +50,18 @@ export interface TextProperty {
   '@color'?: string;
 }
 
+export interface ParagraphProperty {
+  '@break-before'?: string;
+  '@break-after'?: string;
+  '@margin-left'?: string;
+}
+
 export interface Style {
   '@name'?: string;
   '@parent-style-name'?: string;
   styles: string[];
   'text-properties'?: TextProperty;
+  'paragraph-properties'?: TextProperty;
 }
 
 export interface StylesTree {

@@ -14,6 +14,12 @@ export class NodeBulletList extends Node {
   override name = 'bullet_list';
   requires = ['doc'];
 
+  override attributes = {
+    toc: {
+      default: undefined,
+    },
+  };
+
   override getNodeSpec(): NodeSpec {
     return {
       content: 'list_item+',

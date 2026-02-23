@@ -15,9 +15,9 @@ With a "Shared Drive" as the key, WikiGDrive:
 * Reads all the files from a Google "Shared Drive"
 * Builds a map of the driveId (URL) to the pathname in the "Shared Drive"
 * For each Google Document:
-    * Converts to a Markdown file with the path (instead of the driveId for the file)
-    * Changes driveId to the path (eg: 12lvdxKgGsD.../edit would be changed to /filename
-    * Support diagrams as SVG (and map the URLs in the diagram)
+  * Converts to a Markdown file with the path (instead of the driveId for the file)
+  * Changes driveId to the path (eg: 12lvdxKgGsD.../edit would be changed to /filename
+  * Support diagrams as SVG (and map the URLs in the diagram)
 
 WikiGDrive scans for changes in the drive and then refresh the local converted files.
 

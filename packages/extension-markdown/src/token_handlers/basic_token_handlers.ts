@@ -132,7 +132,11 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
 
         if (lang === 'mathml') {
           lang = 'math';
-          content = MathMl2LaTeX.convert(content);
+          const cleaned = content.replace(
+            /<annotation[\s\S]*?<\/annotation>/g,
+            '',
+          );
+          content = MathMl2LaTeX.convert(cleaned);
         }
 
         if (!content.endsWith('\n')) {
@@ -162,7 +166,11 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
         if (indent === 0) {
           if (lang === 'mathml') {
             lang = 'math';
-            content = MathMl2LaTeX.convert(content);
+            const cleaned = content.replace(
+              /<annotation[\s\S]*?<\/annotation>/g,
+              '',
+            );
+            content = MathMl2LaTeX.convert(cleaned);
           }
 
           if (!content.endsWith('\n')) {
@@ -197,7 +205,7 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
 
     'hr': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log((token.markup || '---') + '\n', token);
+        ctx.current.log((token.markup || '___') + '\n', token);
       },
     ],
 

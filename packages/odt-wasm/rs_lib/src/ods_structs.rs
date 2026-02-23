@@ -578,10 +578,25 @@ pub struct DocumentContent {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct ListLLevelLabelAlignment {
+  //     #[serde(rename = "@fo:margin-left")]
+  #[serde(rename = "@margin-left")]
+  pub margin_left: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct ListLevelProperties {
+  #[serde(rename = "list-level-label-alignment")]
+  pub list_level_alignment: ListLLevelLabelAlignment,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct ListLevelStyleBullet {
   //     #[serde(rename = "@text:level")]
   #[serde(rename = "@level")]
   pub level: u32,
+  #[serde(rename = "list-level-properties")]
+  pub list_level_properties: ListLevelProperties,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -595,6 +610,8 @@ pub struct ListLevelStyleNumber {
   //     #[serde(rename = "@style:num-format")]
   #[serde(rename = "@num-format")]
   pub num_format: String, // = 1
+  #[serde(rename = "list-level-properties")]
+  pub list_level_properties: ListLevelProperties,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]

@@ -395,6 +395,7 @@ export async function extPmToMdConverter(
           if (node.attrs.title) {
             token.attrSet('title', node.attrs.title);
           }
+          token.attrSet('mdTemplate', node.attrs.mdTemplate);
           return Promise.resolve(token);
         },
       };
@@ -462,6 +463,7 @@ export async function extPmToMdConverter(
         const token = new Token('link_open', 'a', 1);
         token.attrSet('href', mark.attrs.href);
         token.attrSet('origUrl', mark.attrs.origUrl);
+        token.attrSet('mdTemplate', mark.attrs.mdTemplate);
         return token;
       },
       close: 'link_close',

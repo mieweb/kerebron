@@ -11,7 +11,8 @@ export class NodeHorizontalRule extends Node {
 
   override getNodeSpec(): NodeSpec {
     return {
-      group: 'block',
+      inline: true,
+      group: 'inline',
       parseDOM: [{ tag: 'hr' }],
       toDOM() {
         return ['hr'];

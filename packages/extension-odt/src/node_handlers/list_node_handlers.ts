@@ -45,6 +45,25 @@ function processListStyle(ctx: OdtStashContext, level: number) {
         attrs['start'] = String(numLevelStyle['@start-value']);
       }
       nodeTypeName = 'ordered_list';
+      const marginLeft =
+        numLevelStyle['list-level-properties']['list-level-label-alignment'][
+          '@margin-left'
+        ];
+      if (marginLeft) {
+        attrs['odtMarginLefts'] = marginLeft;
+      }
+    }
+    const bulletLevelStyle = style['list-level-style-bullet'].find(
+      (levelStyle) => parseInt(String(levelStyle['@level'])) === level,
+    );
+    if (bulletLevelStyle) {
+      const marginLeft =
+        bulletLevelStyle['list-level-properties']['list-level-label-alignment'][
+          '@margin-left'
+        ];
+      if (marginLeft) {
+        attrs['odtMarginLeft'] = marginLeft;
+      }
     }
   }
 

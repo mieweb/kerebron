@@ -17,6 +17,7 @@ export class NodeCodeBlock extends Node {
       group: 'block',
       code: true,
       defining: true,
+      attrs: { lang: { default: undefined } },
       parseDOM: [
         {
           tag: 'pre',
@@ -42,7 +43,6 @@ export class NodeCodeBlock extends Node {
           },
         },
       ],
-      attrs: { lang: { default: null } },
       toDOM(node) {
         const { lang } = node.attrs;
         return ['pre', { lang }, ['code', 0]];

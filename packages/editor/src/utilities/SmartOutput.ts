@@ -90,6 +90,25 @@ export class SmartOutput<K> {
     return this._pos;
   }
 
+  backspace(count: number) {
+    const metasToRestore: Array<OutputMeta<K>> = [];
+    const chunksToRestore: Array<string> = [];
+    while (count > 0 && this.chunks[0].length > 0) {
+      const lastMeta = this.metas.pop();
+      let lastChunk = this.chunks.pop();
+      if (!lastChunk || !lastMeta) {
+        break;
+      }
+      const origLen = lastChunk.length;
+      lastChunk = lastChunk.substring(0, Math.max(0, lastChunk.length - count));
+      metasToRestore.unshift(lastMeta);
+      chunksToRestore.unshift(lastChunk);
+      count -= origLen - lastChunk.length;
+    }
+    this.chunks.push(...chunksToRestore);
+    this.metas.push(...metasToRestore);
+  }
+
   endsWith(text: string) {
     return this.chunks.join('').endsWith(text);
   }

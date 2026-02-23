@@ -174,7 +174,7 @@ export interface RewriteRule {
   tag?: string;
   match: RegExp;
   replace?: string;
-  // template: string;
+  mdTemplate?: string;
   // mode?: string;
 }
 
@@ -304,13 +304,18 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
             if (rule.match) {
               const matchRegExp = new RegExp(rule.match);
               const matches = matchRegExp.exec(url);
-              if (matches && rule.replace) {
-                let newUrl = rule.replace;
-                const vals = Array.from(matches.values());
-                for (let i = vals.length - 1; i >= 0; i--) {
-                  newUrl = newUrl.replace('$' + i, vals[i]);
+              if (matches) {
+                if (rule.mdTemplate) {
+                  ctx.setMeta?.('mdTemplate', rule.mdTemplate);
                 }
-                return newUrl;
+                if (rule.replace) {
+                  let newUrl = rule.replace;
+                  const vals = Array.from(matches.values());
+                  for (let i = vals.length - 1; i >= 0; i--) {
+                    newUrl = newUrl.replace('$' + i, vals[i]);
+                  }
+                  return newUrl;
+                }
               }
             }
           }

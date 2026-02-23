@@ -121,8 +121,8 @@ This is after the horizontal line.
 
 * Bullet 1
 * Bullet 2
-    * SubBullet 1
-    * SubBullet 2
+  * SubBullet 1
+  * SubBullet 2
 * Bullet 3
     1. SubNumeric 1
     2. SubNumeric 2

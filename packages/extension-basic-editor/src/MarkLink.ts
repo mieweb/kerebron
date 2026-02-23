@@ -11,6 +11,7 @@ export class MarkLink extends Mark {
         href: {},
         title: { default: undefined },
         origUrl: { default: undefined },
+        mdTemplate: { default: undefined },
       },
       inclusive: false,
       parseDOM: [

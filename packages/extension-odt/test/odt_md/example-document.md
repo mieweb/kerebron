@@ -1,9 +1,9 @@
 * [Heading 1](#heading-1)
-* [Heading level 2](#heading-level-2)
-* [Heading level 3 - with a table](#heading-level-3-with-a-table)
-* [Heading 3 - a diagram with links](#heading-3-a-diagram-with-links)
-* [Heading 3 - with a Table of contents](#heading-3-with-a-table-of-contents)
-* [Other examples](#other-examples)
+  * [Heading level 2](#heading-level-2)
+    * [Heading level 3 - with a table](#heading-level-3-with-a-table)
+    * [Heading 3 - a diagram with links](#heading-3-a-diagram-with-links)
+    * [Heading 3 - with a Table of contents](#heading-3-with-a-table-of-contents)
+  * [Other examples](#other-examples)
 * [Image](#image)
 * [Preformatted Text](#preformatted-text)
 
@@ -120,12 +120,12 @@ This is after the horizontal line.
 
 * Bullet 1
 * Bullet 2
-    * SubBullet 1
-    * SubBullet 2
+  * SubBullet 1
+  * SubBullet 2
 * Bullet 3
-    1. SubNumeric 1
-    2. SubNumeric 2
-    3. SubNumeric 3
+  1. SubNumeric 1
+  2. SubNumeric 2
+  3. SubNumeric 3
 A.  Alpha 1
 B.  Alpha 2
 C.  Alpha 3

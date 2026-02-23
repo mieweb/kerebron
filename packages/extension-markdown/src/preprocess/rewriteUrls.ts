@@ -29,13 +29,22 @@ export const rewriteUrls: AsyncCommandFactory =
 
     for (const [mark, start, end] of linkMarks) {
       const origUrl = mark.attrs.href;
-      const src = await urlRewriter(origUrl, { type: 'A', dest: 'md' });
-      if (src !== origUrl) {
+      const meta: Record<string, string> = {};
+      const src = await urlRewriter(origUrl, {
+        type: 'A',
+        dest: 'md',
+        setMeta: (key, value) => {
+          meta[key] = value;
+        },
+      });
+      if (src !== origUrl || meta['mdTemplate']) {
+        const mdTemplate = meta['mdTemplate'];
         tr.removeMark(tr.mapping.map(start), tr.mapping.map(end), mark);
         const newMark = state.schema.mark('link', {
           ...mark.attrs,
           href: src,
           origUrl,
+          mdTemplate,
         });
         tr.addMark(tr.mapping.map(start), tr.mapping.map(end), newMark);
       }
@@ -43,12 +52,21 @@ export const rewriteUrls: AsyncCommandFactory =
 
     for (const [node, pos] of imageNodes) {
       const origUrl = node.attrs.src;
-      const src = await urlRewriter(origUrl, { type: 'IMG', dest: 'md' });
-      if (src !== origUrl) {
+      const meta: Record<string, string> = {};
+      const src = await urlRewriter(origUrl, {
+        type: 'IMG',
+        dest: 'md',
+        setMeta: (key, value) => {
+          meta[key] = value;
+        },
+      });
+      if (src !== origUrl || meta['mdTemplate']) {
+        const mdTemplate = meta['mdTemplate'];
         tr.setNodeMarkup(tr.mapping.map(pos), null, {
           ...node.attrs,
           src,
           origUrl,
+          mdTemplate,
         });
       }
     }

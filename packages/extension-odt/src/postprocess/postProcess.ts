@@ -6,6 +6,7 @@ import { removeUnusedBookmarks } from './removeUnusedBookmarks.ts';
 import { fixContinuedLists } from './fixContinuedLists.ts';
 import { convertMathMl } from './convertMathMl.ts';
 import { mergeCodeBlocks } from './mergeCodeBlocks.ts';
+import { fixListsLevels } from './fixListsLevels.ts';
 
 export interface PostProcessConfig {
   doc: Node;
@@ -18,6 +19,7 @@ export function getDefaultsPostProcessFilters(
   return [
     // removeUnusedBookmarks,
     convertCodeParagraphsToCodeBlocks,
+    fixListsLevels,
     fixContinuedLists,
     convertMathMl,
     mergeCodeBlocks,

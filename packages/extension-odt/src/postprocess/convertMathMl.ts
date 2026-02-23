@@ -51,5 +51,5 @@ export const convertMathMl: Command = (state, dispatch): boolean => {
     dispatch(tr);
   }
 
-  return true;
+  return tr.docChanged;
 };

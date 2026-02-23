@@ -42,6 +42,9 @@ export class NodeOrderedList extends Node {
     continue: {
       default: undefined,
     },
+    odtMarginLeft: {
+      default: undefined,
+    },
   };
 
   override getNodeSpec(): NodeSpec {
