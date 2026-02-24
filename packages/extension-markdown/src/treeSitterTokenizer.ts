@@ -524,6 +524,8 @@ function treeToTokens(
             +node.endPosition?.column,
           ];
           token.markup = nodeText(node) || '';
+          token.attrSet('margin_before', '1');
+          token.attrSet('margin_after', '1');
           retVal.push(token);
         }
         break;
@@ -556,6 +558,7 @@ function treeToTokens(
           );
           openToken.level = blockLevel;
           openToken.markup = nodeText(underline) || '#';
+          openToken.attrSet('margin_before', '1');
           retVal.push(openToken);
 
           const children = node.children
@@ -575,6 +578,7 @@ function treeToTokens(
           closeToken.level = blockLevel;
           closeToken.markup = nodeText(underline) || '';
 
+          closeToken.attrSet('margin_after', '1');
           retVal.push(closeToken);
         }
         break;
@@ -596,6 +600,7 @@ function treeToTokens(
           );
           openToken.level = blockLevel;
           openToken.markup = nodeText(marker) || '#';
+          openToken.attrSet('margin_before', '1');
           retVal.push(openToken);
 
           const children = [...node.children.filter((c: any) => !!c)];
@@ -622,6 +627,7 @@ function treeToTokens(
             NESTING_CLOSING,
           );
           closeToken.level = blockLevel;
+          closeToken.attrSet('margin_after', '1');
           retVal.push(closeToken);
         }
         break;
@@ -674,7 +680,8 @@ function treeToTokens(
             .join('');
 
           token.content = content;
-
+          token.attrSet('margin_before', '1');
+          token.attrSet('margin_after', '1');
           retVal.push(token);
         }
         break;
@@ -689,6 +696,7 @@ function treeToTokens(
             NESTING_OPENING,
           );
           openToken.level = blockLevel;
+          openToken.attrSet('margin_before', '1');
           retVal.push(openToken);
 
           blockLevel++;
@@ -703,6 +711,7 @@ function treeToTokens(
             NESTING_CLOSING,
           );
           closeToken.level = blockLevel;
+          closeToken.attrSet('margin_after', '1');
           retVal.push(closeToken);
         }
         break;
@@ -746,6 +755,8 @@ function treeToTokens(
           token.attrSet('indent', '' + indent);
           token.content = content;
 
+          token.attrSet('margin_before', '1');
+          token.attrSet('margin_after', '1');
           retVal.push(token);
         }
         break;
@@ -760,6 +771,7 @@ function treeToTokens(
             NESTING_OPENING,
           );
           openToken.level = blockLevel;
+          openToken.attrSet('margin_before', '1');
           retVal.push(openToken);
 
           blockLevel++;
@@ -772,6 +784,7 @@ function treeToTokens(
             NESTING_CLOSING,
           );
           closeToken.level = blockLevel;
+          closeToken.attrSet('margin_after', '1');
           retVal.push(closeToken);
         }
         break;
@@ -892,6 +905,7 @@ function treeToTokens(
             NESTING_OPENING,
           );
           openToken.level = blockLevel;
+          openToken.attrSet('margin_before', '1');
           retVal.push(openToken);
 
           blockLevel++;
@@ -998,6 +1012,7 @@ function treeToTokens(
             NESTING_CLOSING,
           );
           closeToken.level = blockLevel;
+          closeToken.attrSet('margin_after', '1');
           retVal.push(closeToken);
         }
         break;
@@ -1040,6 +1055,7 @@ function treeToTokens(
           if (start) {
             openToken.attrSet('start', start);
           }
+          openToken.attrSet('margin_before', '1');
           retVal.push(openToken);
 
           blockLevel++;
@@ -1054,6 +1070,7 @@ function treeToTokens(
             NESTING_CLOSING,
           );
           closeToken.level = blockLevel;
+          closeToken.attrSet('margin_after', '1');
           retVal.push(closeToken);
         }
         break;
@@ -1134,6 +1151,8 @@ function treeToTokens(
           const token = new Token('html_block', '', NESTING_SELF_CLOSING);
           token.level = blockLevel;
           token.content = nodeText(node) ?? '';
+          token.attrSet('margin_before', '1');
+          token.attrSet('margin_after', '1');
           retVal.push(token);
         }
         break;

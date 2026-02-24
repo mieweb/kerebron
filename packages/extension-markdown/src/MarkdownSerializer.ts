@@ -38,7 +38,7 @@ export function writeIndented(
     let prefix = '';
 
     if (output.colPos === 0) {
-      prefix += '> '.repeat(currentCtx.blockquoteCnt).trim();
+      prefix += '> '.repeat(currentCtx.blockquoteCnt);
     }
     if (output.colPos === 0 && line.length > 0) {
       prefix += '    '.repeat(currentCtx.footnoteCnt);
@@ -115,17 +115,18 @@ export function writeIndented(
       .replace(regex, '')
       .replace(/[ \t\u00A0]+$/g, '');
 
-    output.log(prefix);
-
     if (isLastLine) {
       if (hasBreak) {
+        output.log(rightTrimmed ? prefix : prefix.trim());
         output.log(rightTrimmed + (hasBreak ? '  ' : ''), tok);
         offset += (rightTrimmed + (hasBreak ? '  ' : '')).length;
       } else {
+        output.log(line ? prefix : prefix.trim());
         output.log(line, tok);
         offset += line.length;
       }
     } else {
+      output.log(rightTrimmed ? prefix : prefix.trim());
       output.log(rightTrimmed + (hasBreak ? '  ' : ''), tok);
       offset += (rightTrimmed + (hasBreak ? '  ' : '')).length;
     }
