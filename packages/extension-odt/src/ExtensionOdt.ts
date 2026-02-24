@@ -6,12 +6,6 @@ import {
   Extension,
   type UrlRewriter,
 } from '@kerebron/editor';
-import {
-  init_debug,
-  parse_content,
-  parse_styles,
-  unzip,
-} from '@kerebron/odt-wasm';
 
 import { OdtParser, OdtParserConfig } from './OdtParser.ts';
 import { getDefaultsPostProcessFilters } from './postprocess/postProcess.ts';
@@ -24,7 +18,7 @@ export interface OdtConfig extends OdtParserConfig {
   postProcessCommands?: Command[];
 }
 
-init_debug();
+let odtWasm: Record<string, any> | undefined = undefined;
 
 export class ExtensionOdt extends Extension {
   name = 'odt';
@@ -43,7 +37,14 @@ export class ExtensionOdt extends Extension {
         throw new Error('Not implemented');
       },
       toDoc: async (buffer: Uint8Array): Promise<Node> => {
-        const { doc, filesMap } = odtConverter.odtToJson(buffer);
+        if (!odtWasm) {
+          odtWasm = this.config.debug
+            ? await import('@kerebron/odt-wasm/debug')
+            : await import('@kerebron/odt-wasm');
+          odtWasm = await odtWasm.init();
+        }
+
+        const { doc, filesMap } = odtConverter.odtToJson(buffer, odtWasm);
 
         const filterCommands = getDefaultsPostProcessFilters({
           doc,
@@ -81,15 +82,15 @@ export class ExtensionOdt extends Extension {
 
         return state.doc;
       },
-      odtToJson: (buffer: Uint8Array) => {
-        const files = unzip(buffer);
+      odtToJson: (buffer: Uint8Array, odtWasm: any) => {
+        const files = odtWasm.unzip(buffer);
         const filesMap: Record<string, Uint8Array> = {};
         for (const k of files.keys()) {
           filesMap[k] = Uint8Array.from(files.get(k));
         }
 
-        const stylesTree = parse_styles(files.get('styles.xml'));
-        const contentTree = parse_content(files.get('content.xml'));
+        const stylesTree = odtWasm.parse_styles(files.get('styles.xml'));
+        const contentTree = odtWasm.parse_content(files.get('content.xml'));
 
         if (this.config.debug) {
           const event = new CustomEvent('odt:parsed', {

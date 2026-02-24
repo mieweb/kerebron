@@ -3,10 +3,10 @@
   "tasks": {
     "wasmbuild": "deno run -A jsr:@deno/wasmbuild@0.21.0",
     "wasmbuild:debug": "deno run -A jsr:@deno/wasmbuild@0.21.0 --debug --out lib-debug",
-    "build": "deno task wasmbuild && deno task wasmbuild:debug"
+    "build": "deno task wasmbuild && deno task wasmbuild:debug && deno task wasmbuild:bundler"
   },
   "exports": {
-    ".": "./lib/rs_lib.js",
-    "./debug": "./lib-debug/rs_lib.js"
+    ".": "./lib.js",
+    "./debug": "./lib-debug.js"
   }
 }
