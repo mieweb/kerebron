@@ -100,7 +100,7 @@ export function getListNodesHandlers(): Record<string, NodeHandler> {
 
       ctx.openNode();
 
-      const children = odtElement['list-item'].map((item) => ({
+      const children = odtElement['list-item'].map((item: any) => ({
         'list-item': item,
       }));
 

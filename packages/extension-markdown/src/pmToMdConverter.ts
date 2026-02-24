@@ -386,11 +386,10 @@ export async function extPmToMdConverter(
       return {
         selfClose: (node: Node) => {
           let src = node.attrs.src;
-          if (config.urlRewriter) {
-            // src = await config.urlRewriter(src, { type: 'IMG', dest: 'md' });
-          }
+          let alt = node.attrs.alt;
           const token = new Token('image', 'img', 0);
           token.attrSet('src', src);
+          token.attrSet('alt', alt);
           token.attrSet('origUrl', node.attrs.origUrl);
           if (node.attrs.title) {
             token.attrSet('title', node.attrs.title);

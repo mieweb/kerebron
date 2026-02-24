@@ -194,8 +194,9 @@ pub struct DrawImage {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
-//@XmlText('value')
 pub struct SvgDesc {
+  #[serde(default)]
+  #[serde(rename = "$value")]
   value: Option<String>,
 }
 
@@ -209,7 +210,7 @@ pub struct DrawFrame {
   image: Option<DrawImage>,
   //     #[serde(rename = "svg:desc")]
   #[serde(rename = "desc")]
-  description: Option<SvgDesc>,
+  desc: Option<SvgDesc>,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]

@@ -355,6 +355,12 @@ export class OdtParser {
       ...getTableNodesHandlers(),
       'g': () => { // Test is: embedded-diagram-example.odt
         // DrawG draw:g
+        const node = ctx.createText(
+          'INSTEAD OF EMBEDDED DIAGRAM ABOVE USE EMBEDDED DIAGRAM FROM DRIVE AND PUT LINK TO IT IN THE DESCRIPTION. See: https://github.com/mieweb/wikiGDrive/issues/353',
+        );
+        if (node) {
+          ctx.current.content.push(node);
+        }
       },
       'frame': (ctx: OdtStashContext, odtElement: any) => {
         if (odtElement.object && odtElement.object['@href']) {
@@ -371,7 +377,7 @@ export class OdtParser {
           }
         }
         if (odtElement.image && odtElement.image['@href']) { // TODO links rewrite
-          const alt = odtElement.description?.value || '';
+          const alt = odtElement.desc?.['$value'] || '';
           const src = odtElement.image['@href'];
           ctx.openNode();
           ctx.closeNode('image', {
