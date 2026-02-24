@@ -18,6 +18,9 @@ export class NodeBulletList extends Node {
     toc: {
       default: undefined,
     },
+    odtMarginLeft: {
+      default: undefined,
+    },
   };
 
   override getNodeSpec(): NodeSpec {

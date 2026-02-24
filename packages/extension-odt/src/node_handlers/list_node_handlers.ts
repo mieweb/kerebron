@@ -5,6 +5,7 @@ import {
   OdtStashContext,
   resolveListStyle,
 } from '../OdtParser.ts';
+import { inchesToMm } from './basic_node_handlers.ts';
 
 // https://docs.oasis-open.org/office/OpenDocument/v1.4/OpenDocument-v1.4-part3-schema.html#a_19_880_22__text_list_
 // The text:style-name attribute specifies the name of a list style that is applied to a list.
@@ -15,7 +16,7 @@ import {
 // To determine which formatting properties are applied to a list, the list level and list style name are taken into account.
 function processListStyle(ctx: OdtStashContext, level: number) {
   const listTracker = ctx.listTracker;
-  const attrs: Record<string, string> = {};
+  const attrs: Record<string, string | number> = {};
 
   let style: ListStyle = resolveListStyle(
     ctx.stylesTree,
@@ -50,7 +51,7 @@ function processListStyle(ctx: OdtStashContext, level: number) {
           '@margin-left'
         ];
       if (marginLeft) {
-        attrs['odtMarginLefts'] = marginLeft;
+        attrs['odtMarginLeft'] = inchesToMm(marginLeft);
       }
     }
     const bulletLevelStyle = style['list-level-style-bullet'].find(
@@ -62,7 +63,7 @@ function processListStyle(ctx: OdtStashContext, level: number) {
           '@margin-left'
         ];
       if (marginLeft) {
-        attrs['odtMarginLeft'] = marginLeft;
+        attrs['odtMarginLeft'] = inchesToMm(marginLeft);
       }
     }
   }

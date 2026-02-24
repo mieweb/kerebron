@@ -153,7 +153,7 @@ export function getBasicNodesHandlers(): Record<string, NodeHandler> {
         } else {
           for (let i = levels.length - 1; i >= 0; i--) {
             if (levels[i] > marginLeft) {
-              ctx.closeNode('bullet_list');
+              ctx.closeNode('bullet_list', { odtMarginLeft: marginLeft });
               if (i > 0) {
                 ctx.closeNode('list_item');
               }
@@ -171,12 +171,15 @@ export function getBasicNodesHandlers(): Record<string, NodeHandler> {
       }
 
       for (let i = levels.length - 1; i >= 0; i--) {
-        levels.pop();
+        const marginLeft = levels.pop();
         if (i > 0) {
-          ctx.closeNode('bullet_list');
+          ctx.closeNode('bullet_list', { odtMarginLeft: marginLeft });
           ctx.closeNode('list_item');
         } else {
-          ctx.closeNode('bullet_list', { toc: true });
+          ctx.closeNode('bullet_list', {
+            odtMarginLeft: marginLeft,
+            toc: true,
+          });
         }
       }
     },
