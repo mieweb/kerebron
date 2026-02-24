@@ -1,6 +1,6 @@
 import type { NodeSpec, NodeType } from 'prosemirror-model';
 import { Node as PmNode } from 'prosemirror-model';
-import { Plugin, TextSelection } from 'prosemirror-state';
+import { Plugin } from 'prosemirror-state';
 
 import {
   type CoreEditor,
@@ -8,9 +8,9 @@ import {
   NESTING_OPENING,
   Node,
 } from '@kerebron/editor';
-import { type CommandFactories, firstCommand } from '@kerebron/editor/commands';
+import { type CommandFactories } from '@kerebron/editor/commands';
 import { Decoration, DecorationSet } from 'prosemirror-view';
-import { CommandFactory } from '../../editor/src/commands/types.ts';
+import { CommandFactory } from '@kerebron/editor/commands';
 
 function collectCommentAnchors(doc: PmNode) {
   const starts = new Map();
