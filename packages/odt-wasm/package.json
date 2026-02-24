@@ -4,7 +4,9 @@
   "main": "./lib.js",
   "files": [
     "lib/",
-    "lib-debug/"
+    "lib-debug/",
+    "lib.js",
+    "lib-debug.js"
   ],
   "exports": {
     ".": {
