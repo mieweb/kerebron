@@ -393,7 +393,6 @@ export class MarkdownSerializer {
 
           try {
             serializeInlineTokens(this.ctx, tokenSource, token.children);
-            this.ctx.output.rtrim();
             this.ctx.unstash('serializeInlineTokens()');
           } catch (err: any) {
             this.ctx.current.debug(err.message);

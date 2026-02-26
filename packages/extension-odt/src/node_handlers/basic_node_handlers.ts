@@ -20,6 +20,22 @@ export function inchesToMm(value: string): number {
 export function getInlineNodesHandlers(): Record<string, NodeHandler> {
   return {
     '$text': (ctx: OdtStashContext, value: any) => {
+      if (ctx.current.marks.length > 0) {
+        const parts = value.match(/^([ \t\u00A0]*)(.*)([ \t\u00A0]*)$/);
+
+        if (parts[1]) {
+          ctx.current.content.push(ctx.schema.text(parts[1]));
+        }
+        const node = ctx.createText(parts[2]);
+        if (node) {
+          ctx.current.content.push(node);
+        }
+        if (parts[3]) {
+          ctx.current.content.push(ctx.schema.text(parts[3]));
+        }
+        return;
+      }
+
       const node = ctx.createText(value);
       if (node) {
         ctx.current.content.push(node);

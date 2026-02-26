@@ -390,6 +390,24 @@ export class OdtParser {
       'annotation': () => {
         // ignore: true,
       },
+      'note': (ctx: OdtStashContext, value: any) => {
+        const citation = value['note-citation'];
+        const body = value['note-body'];
+
+        if (!citation || !body) {
+          return;
+        }
+
+        ctx.handle('text', { $value: [{ $text: citation.$value }] });
+        for (const para of body.p) {
+          iterateChildren(
+            para.$value,
+            (child) => ctx.handle(child.tag, child.value),
+          );
+          ctx.closeNode('paragraph');
+          ctx.openNode();
+        }
+      },
     };
 
     const ctx = new OdtStashContext(

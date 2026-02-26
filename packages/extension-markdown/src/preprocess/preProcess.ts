@@ -8,9 +8,10 @@ import { removeEmptyTags } from './removeEmptyTags.ts';
 import { removeMarkedContent } from './removeMarkedContent.ts';
 import { removeSuggest } from './removeSuggest.ts';
 import { rewriteUrls } from './rewriteUrls.ts';
-import { rtrimLines } from './rtrimLines.ts';
+import { trimLines } from './trimLines.ts';
 import { insertToc } from './insertToc.ts';
 import { addEnterAfterImage } from './addEnterAfterImage.ts';
+import { fixParaEnding } from './fixParaEnding.ts';
 
 export interface PreProcessConfig {
   urlRewriter?: UrlRewriter;
@@ -26,9 +27,10 @@ export function getDefaultsPreProcessFilters(
     removeSuggest,
     removeEmptyTags,
     fixIdLinks,
+    fixParaEnding,
+    trimLines,
     addEnterAfterImage,
     addEmptyLines,
-    rtrimLines,
     rewriteUrls(urlRewriter),
   ];
 }

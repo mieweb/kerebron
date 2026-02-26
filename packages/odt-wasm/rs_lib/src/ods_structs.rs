@@ -163,6 +163,29 @@ pub struct TextBookmarkEnd {
   pub name: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct NoteCitation {
+  #[serde(default)]
+  #[serde(rename = "$value")]
+  value: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct NoteBody {
+  #[serde(rename = "p")]
+  // #[serde(default)]
+  // #[serde(rename = "$value")]
+  value: Vec<TextParagraph>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct TextNote {
+  #[serde(rename = "note-citation")]
+  note_citation: Option<NoteCitation>,
+  #[serde(rename = "note-body")]
+  note_body: Option<NoteBody>,
+}
+
 /* Sample HR:
   text:anchor-type="as-char"
   style:rel-width="100%"
@@ -328,6 +351,9 @@ pub enum TextParagraphItem {
   TextBookmarkStart(TextBookmarkStart),
   #[serde(rename = "bookmark-end")]
   TextBookmarkEnd(TextBookmarkEnd),
+
+  #[serde(rename = "note")]
+  TextNote(TextNote),
 
   //     #[serde(rename = "draw:rect")]
   #[serde(rename = "rect")]
