@@ -131,6 +131,16 @@ async function processModule(moduleRoot: string, json: DenoJson) {
 
     if (Array.isArray(packageJson.files)) {
       for (const file of packageJson.files) {
+        const dir = path.dirname(path.resolve(outDir, file));
+        try {
+          await Deno.stat(dir);
+        } catch (err) {
+          if (err instanceof Deno.errors.NotFound) {
+            await Deno.mkdir(dir, { recursive: true });
+          } else {
+            throw err;
+          }
+        }
         await copyRecursive(
           path.resolve(moduleRoot, file),
           path.resolve(outDir, file),
