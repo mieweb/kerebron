@@ -3,8 +3,9 @@
   "type": "module",
   "main": "./lib.js",
   "files": [
-    "lib/*.ts",
-    "lib/*.js",
+    "lib/odt_parser.d.ts",
+    "lib/odt_parser.js",
+    "lib/odt_parser.internal.js",
     "lib.js"
   ],
   "exports": {
