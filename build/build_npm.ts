@@ -2,6 +2,7 @@ import * as path from '@std/path';
 import { copy, exists } from '@std/fs';
 import { build, BuildOptions, emptyDir } from '@deno/dnt';
 import { SpecifierMappings } from '@deno/dnt/transform';
+import { expandGlob } from 'https://deno.land/std/fs/mod.ts';
 
 const __dirname = import.meta.dirname!;
 
@@ -225,15 +226,26 @@ async function processModule(moduleRoot: string, json: DenoJson) {
   }
 
   const hasAssets = await exists(path.resolve(moduleRoot, 'assets'));
-  const exportsObj: Record<string, Record<string, string>> = {};
+  const exportsObj: Record<string, Record<string, string> | string> = {};
 
   const files = ['esm', 'src'].concat(json.files || []);
 
   if (hasAssets) {
     files.push('assets');
-    exportsObj['./assets/*.css'] = {
-      'import': './assets/*.css',
-    };
+    exportsObj['./assets/*.css'] = './assets/*.css';
+  }
+
+  if (exportsObj['./assets/*.css']) {
+    for await (
+      const file of expandGlob('./assets/*.css', {
+        root: path.resolve(moduleRoot),
+      })
+    ) {
+      const name = './' +
+        file.path.substring((path.resolve(moduleRoot)).length + 1);
+      exportsObj[name] = name;
+    }
+    delete exportsObj['./assets/*.css'];
   }
 
   const opts: BuildOptions = {
