@@ -3,6 +3,8 @@
   "type": "module",
   "main": "./lib.js",
   "files": [
+    "lib/*.ts",
+    "lib/*.js",
     "lib.js"
   ],
   "exports": {

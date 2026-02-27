@@ -6,7 +6,6 @@
     "build": "deno task wasmbuild && deno task wasmbuild:debug"
   },
   "exports": {
-    ".": "./lib.js",
-    "./debug": "./lib-debug.js"
+    ".": "./lib.js"
   }
 }
