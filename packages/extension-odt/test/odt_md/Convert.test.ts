@@ -10,7 +10,7 @@ import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionOdt } from '@kerebron/extension-odt';
 import { ExtensionTables } from '@kerebron/extension-tables';
 import { NodeCodeBlock } from '@kerebron/extension-basic-editor/NodeCodeBlock';
-import { denoCdn } from '@kerebron/wasm/deno';
+import { assetLoad } from '@kerebron/wasm/deno';
 import { urlToFolderId } from '../wgd/idParsers.ts';
 
 globalThis.DOMParser = DOMParser as any;
@@ -30,7 +30,7 @@ Deno.test('convert odt to md', async () => {
   const extMd = new ExtensionMarkdown({
     debugTokens: true,
     serializerDebug,
-    cdnUrl: denoCdn(),
+    assetLoad,
   });
   const extOdt = new ExtensionOdt({
     debug: true,

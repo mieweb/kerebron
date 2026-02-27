@@ -2,13 +2,14 @@
   "name": "@kerebron/wasm",
   "description": "Mirror of https://github.com/tree-sitter-grammars and other wasm files",
   "tasks": {
-    "build": "deno --allow-net --allow-read=./assets --allow-write=./assets ./fetch_wasm.ts ./assets"
+    "build": "deno --allow-net --allow-read=.. --allow-write=./assets ./fetch_wasm.ts ./assets"
   },
   "imports": {},
   "exports": {
     ".": "./src/mod.ts",
     "./deno": "./src/deno.ts",
-    "./node": "./src/node.ts"
+    "./node": "./src/node.ts",
+    "./web": "./src/web.ts"
   },
   "files": ["assets"]
 }

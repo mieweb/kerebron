@@ -2,12 +2,14 @@ import { CoreEditor } from '@kerebron/editor';
 import { DevAdvancedEditorKit } from '@kerebron/editor-kits/DevAdvancedEditorKit';
 import { BasicEditorKit } from '@kerebron/extension-basic-editor/BasicEditorKit';
 
+import { createAssetLoad } from '@kerebron/wasm/web';
+
 import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
 mermaid.initialize({ startOnLoad: true });
 
 const editor1 = CoreEditor.create({
   uri: 'test.md',
-  cdnUrl: '/wasm/',
+  assetLoad: createAssetLoad('/wasm'),
   element: document.getElementById('editor') || undefined,
   editorKits: [
     new DevAdvancedEditorKit(),

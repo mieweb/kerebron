@@ -1,4 +1,4 @@
-import { parse_content, parse_styles, unzip } from './lib/rs_lib.js';
+import { parse_content, parse_styles, unzip } from './lib/odt_parser.js';
 
 const input = Deno.readFileSync(
   '../extension-odt/test/odt_md/example-document.odt',

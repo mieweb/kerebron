@@ -9,12 +9,15 @@
  *   - "latest" (default)
  *   - A specific tag like "v0.5.1"
  */
-
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { tgz } from 'jsr:@deno-library/compress';
+
 import manifest from './src/wasm.json' with { type: 'json' };
+
+const __dirname = import.meta.dirname!;
 
 async function getLatestRelease(repo: string) {
   console.log('Fetching latest release info...');
@@ -96,6 +99,20 @@ async function main() {
     throw new Error('Dest dir not specified');
   }
 
+  {
+    const project = 'odt-wasm';
+    const destDir = mainDestDir + '/' + project;
+    await Deno.mkdirSync(destDir, { recursive: true });
+    await Deno.copyFile(
+      __dirname + '/../' + project + '/lib/odt_parser.wasm',
+      destDir + '/odt-parser.wasm',
+    );
+    await Deno.copyFile(
+      __dirname + '/../' + project + '/lib-debug/odt_parser.wasm',
+      destDir + '/odt-parser-debug.wasm',
+    );
+  }
+
   for (const group of manifest) {
     const repo = group.repo;
     const versionArg = (group as any).version || 'latest';
@@ -137,14 +154,32 @@ async function main() {
       }
 
       for (const wasmFile of files) {
-        const asset = release.assets.find((a) => a.name === wasmFile);
+        let asset = release.assets.find((a) => a.name === wasmFile);
 
+        let fileToExtract = '';
+        let downloadedFile = wasmFile;
+        let wasmFileName = wasmFile;
         if (!asset) {
-          console.error(`  ✗ ${wasmFile} not found in release assets`);
-          continue;
+          if (wasmFile.indexOf('tar.gz/') > -1) {
+            const zipFile = wasmFile.substring(
+              0,
+              wasmFile.indexOf('tar.gz/') + 'tar.gz'.length,
+            );
+            wasmFileName = wasmFile.substring(
+              wasmFile.indexOf('tar.gz/') + 'tar.gz/'.length,
+            );
+
+            asset = release.assets.find((a) => a.name === zipFile);
+            downloadedFile = zipFile;
+            fileToExtract = wasmFileName; //path.join(wasmDir, wasmFileName);
+          }
+        }
+        if (!asset) {
+          throw new Error(`${wasmFile} not found in release assets`);
         }
 
-        const destPath = path.join(wasmDir, wasmFile);
+        const destPath = path.join(wasmDir, wasmFileName);
+        const downloadPath = path.join(wasmDir, downloadedFile);
 
         // Check if file already exists
         if (fs.existsSync(destPath)) {
@@ -160,8 +195,21 @@ async function main() {
           }
         }
 
-        const size = await downloadFile(asset.url, destPath);
-        await verifyWasmFile(destPath);
+        const size = await downloadFile(asset.url, downloadPath);
+
+        if (fileToExtract) {
+          await tgz.uncompress(downloadPath, path.join(wasmDir, 'tar'));
+          await Deno.copyFile(
+            path.join(wasmDir, 'tar', fileToExtract),
+            path.join(wasmDir, fileToExtract),
+          );
+          await Deno.remove(path.join(wasmDir, 'tar'), { recursive: true });
+          await Deno.remove(downloadPath);
+        }
+
+        if (destPath.endsWith('.wasm')) {
+          await verifyWasmFile(destPath);
+        }
         totalSize += size;
       }
 

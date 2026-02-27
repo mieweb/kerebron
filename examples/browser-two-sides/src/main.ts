@@ -1,6 +1,8 @@
 import { CoreEditor } from '@kerebron/editor';
 import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
 
+import { createAssetLoad } from '@kerebron/wasm/web';
+
 const editorElem = document.getElementById('editor');
 const prevElement = document.getElementById('preview');
 if (!editorElem) {
@@ -17,7 +19,7 @@ editorElem.innerHTML = '';
 
 const editor1 = CoreEditor.create({
   uri: 'test.md',
-  cdnUrl: '/wasm/',
+  assetLoad: createAssetLoad('/wasm'),
   element: document.getElementById('editor') || undefined,
   editorKits: [
     new AdvancedEditorKit(),

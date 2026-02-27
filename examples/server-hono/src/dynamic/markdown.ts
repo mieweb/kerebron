@@ -4,7 +4,7 @@ import { Fragment, Node as PmNode } from 'prosemirror-model';
 import { CoreEditor } from '@kerebron/editor';
 import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
 
-import { nodeCdn } from '@kerebron/wasm/node';
+import { assetLoad } from '@kerebron/wasm/node';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 
 const __dirname = import.meta.dirname;
@@ -20,7 +20,7 @@ export async function markdownToHtml(
   ctx: MdContext = {},
 ): Promise<string> {
   const editor = CoreEditor.create({
-    cdnUrl: nodeCdn(),
+    assetLoad,
     editorKits: [
       new BrowserLessEditorKit(),
       {

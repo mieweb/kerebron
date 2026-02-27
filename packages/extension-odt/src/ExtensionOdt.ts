@@ -13,6 +13,8 @@ import { Command } from '@kerebron/editor/commands';
 import { EditorState, Transaction } from 'prosemirror-state';
 import { urlRewrite } from './postprocess/urlRewrite.ts';
 
+import { init } from '@kerebron/odt-wasm';
+
 export interface OdtConfig extends OdtParserConfig {
   debug?: boolean;
   postProcessCommands?: Command[];
@@ -37,11 +39,16 @@ export class ExtensionOdt extends Extension {
         throw new Error('Not implemented');
       },
       toDoc: async (buffer: Uint8Array): Promise<Node> => {
+        const assetLoad = editor.config.assetLoad;
+        if (!assetLoad) {
+          throw new Error('No assetLoad');
+        }
+
         if (!odtWasm) {
-          odtWasm = this.config.debug
-            ? await import('@kerebron/odt-wasm/debug')
-            : await import('@kerebron/odt-wasm');
-          odtWasm = await odtWasm.init();
+          const odtWasmArray = this.config.debug
+            ? await assetLoad('odt-wasm/odt-parser-debug.wasm')
+            : await assetLoad('odt-wasm/odt-parser.wasm');
+          odtWasm = await init(odtWasmArray);
         }
 
         const { doc, filesMap } = odtConverter.odtToJson(buffer, odtWasm);

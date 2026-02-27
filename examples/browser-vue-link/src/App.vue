@@ -1,7 +1,7 @@
 <template>
-  <div>
-    <div ref="editor1" class="kb-component"></div>
-    <div ref="editor2" class="kb-component"></div>
+  <div class="row">
+    <div ref="editor1" class="kb-component col"></div>
+    <div ref="editor2" class="kb-component col"></div>
   </div>
 </template>
 <script lang="ts">
@@ -10,7 +10,7 @@ import { DevAdvancedEditorKit } from '@kerebron/editor-kits/DevAdvancedEditorKit
 import { BasicEditorKit } from '@kerebron/extension-basic-editor/BasicEditorKit';
 
 import { Fragment, Node as PmNode, Schema } from 'prosemirror-model';
-import { Parser } from 'https://esm.sh/expr-eval';
+import { Parser } from 'expr-eval';
 
 const parser = new Parser();
 

@@ -1,5 +1,6 @@
 import { CoreEditor } from '@kerebron/editor';
 import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
+import { createAssetLoad } from '@kerebron/wasm/web';
 
 import mainCssText from '@kerebron/editor/assets/index.css?inline';
 import kitCssText from '@kerebron/editor-kits/assets/AdvancedEditorKit.css?inline';
@@ -33,7 +34,7 @@ export default class KerebronEditor extends HTMLElement {
     this.shadowRoot.appendChild(wrapper);
 
     this.editor = CoreEditor.create({
-      cdnUrl: this.getAttribute('cdn-url') || undefined,
+      assetLoad: createAssetLoad(this.getAttribute('cdn-url')) || undefined,
       readOnly: this.hasAttribute('readonly') ? true : false,
       element: wrapper,
       editorKits: [

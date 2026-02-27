@@ -30,11 +30,11 @@ export async function mdToPmConverterText(
   config: MdConfig,
   schema: Schema,
 ): Promise<Node> {
-  if (!config.cdnUrl) {
-    throw new Error('No config.cdnUrl');
+  if (!config.assetLoad) {
+    throw new Error('No config.assetLoad');
   }
 
-  const tokenizer = await sitterTokenizer(config.cdnUrl);
+  const tokenizer = await sitterTokenizer(config.assetLoad);
 
   const defaultMarkdownParser = new MarkdownParser(
     schema,

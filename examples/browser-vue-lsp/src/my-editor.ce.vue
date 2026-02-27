@@ -26,6 +26,7 @@ import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
 import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
 import { LspTransportGetter, Transport } from '@kerebron/extension-lsp';
 import { Dropdown, MenuElement, MenuItem } from '@kerebron/extension-menu';
+import { createAssetLoad } from '@kerebron/wasm/web';
 
 export default {
   name: 'my-editor',
@@ -114,7 +115,7 @@ export default {
       }
 
       this.editor = CoreEditor.create({
-        cdnUrl: 'http://localhost:8000/wasm/',
+        assetLoad: createAssetLoad(new URL('http://localhost:8000/wasm/')),
         uri: 'file:///test.md',
         element: this.$refs.editor,
         editorKits: [

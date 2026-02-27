@@ -66,3 +66,5 @@ export type UrlRewriter = (
   url: string,
   ctx: UrlRewriteContext,
 ) => Promise<string>;
+
+export type AssetLoad = (name: string) => Promise<Uint8Array<any>>;

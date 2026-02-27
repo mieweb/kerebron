@@ -1,6 +1,7 @@
 import type { Node, Schema } from 'prosemirror-model';
 import { Slice } from 'prosemirror-model';
 import {
+  AssetLoad,
   type Converter,
   type CoreEditor,
   Extension,
@@ -21,7 +22,7 @@ export interface MdConfig {
   dispatchSourceMap?: boolean;
   debugTokens?: boolean;
   serializerDebug?: (...args: any[]) => void;
-  cdnUrl?: string;
+  assetLoad?: AssetLoad;
   urlRewriter?: UrlRewriter;
 }
 
@@ -46,7 +47,7 @@ export class ExtensionMarkdown extends Extension {
           pmToMdConverter(
             source,
             {
-              cdnUrl: this.editor.config.cdnUrl,
+              assetLoad: this.editor.config.assetLoad,
               ...this.config,
               urlRewriter: this.urlToRewriter,
             },
@@ -55,7 +56,7 @@ export class ExtensionMarkdown extends Extension {
           ),
         toDoc: (source: Uint8Array) =>
           mdToPmConverter(source, {
-            cdnUrl: this.editor.config.cdnUrl,
+            assetLoad: this.editor.config.assetLoad,
             ...this.config,
             urlRewriter: this.urlFromRewriter,
           }, schema),
@@ -77,7 +78,7 @@ export class ExtensionMarkdown extends Extension {
   async fromMarkdown(source: string): Promise<Slice> {
     const doc = await mdToPmConverterText(
       source,
-      { cdnUrl: this.editor.config.cdnUrl, ...this.config },
+      { assetLoad: this.editor.config.assetLoad, ...this.config },
       this.editor.schema,
     );
 

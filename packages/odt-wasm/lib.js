@@ -1,13 +1,15 @@
 let wasmInstance;
 
-export async function init() {
-  const wasm = await import('./lib/rs_lib.wasm');
-  const internal = await import('./lib/rs_lib.internal.js');
+export async function init(wasmBinary) {
+  const internal = await import('./lib/odt_parser.internal.js');
+  const wasm = await WebAssembly.instantiate(wasmBinary, {
+    './odt_parser.internal.js': internal,
+  });
 
-  internal.__wbg_set_wasm(wasm);
-  wasm.__wbindgen_start();
+  internal.__wbg_set_wasm(wasm.instance.exports);
+  wasm.instance.exports.__wbindgen_start();
   internal.init_debug();
 
-  wasmInstance = wasm;
+  wasmInstance = wasm.instance;
   return internal;
 }

@@ -4,6 +4,7 @@ import { EditorState, Plugin, Transaction } from 'prosemirror-state';
 import {
   CoreEditor,
   Extension,
+  NESTING_CLOSING,
   NESTING_OPENING,
   NodeAndPos,
   nodeToTreeString,
@@ -12,13 +13,12 @@ import {
 import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionOdt } from '@kerebron/extension-odt';
-import { denoCdn } from '@kerebron/wasm/deno';
+import { assetLoad } from '@kerebron/wasm/deno';
 
 import { urlToFolderId } from './idParsers.ts';
 import { Schema } from 'prosemirror-model';
 import { getDefaultsPreProcessFilters } from '@kerebron/extension-markdown/preProcess';
 import { Command } from '@kerebron/editor/commands';
-import { NESTING_CLOSING } from '../../../extension-markdown/src/types.ts';
 
 const __dirname = import.meta.dirname;
 
@@ -291,7 +291,7 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
       const extMd = new ExtensionMarkdown({
         debugTokens: opts.debug,
         serializerDebug,
-        cdnUrl: denoCdn(),
+        assetLoad,
       });
 
       extMd.urlToRewriter = async (url: string, ctx: UrlRewriteContext) => {
@@ -341,6 +341,7 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
       };
 
       const editor = CoreEditor.create({
+        assetLoad,
         editorKits: [
           new BrowserLessEditorKit(),
           {

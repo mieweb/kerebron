@@ -8,11 +8,19 @@
       @import '@kerebron/editor/assets/index.css';
       @import '@kerebron/editor-kits/assets/DevAdvancedEditorKit.css';
     </style>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css"
+    />
   </head>
   <body>
-    <div id="editor"></div>
-    <div id="preview"></div>
-
+    <div class="row">
+      <div class="col" id="editor"></div>
+      <div class="col">
+        <div id="preview"></div>
+      </div>
+    </div>
     <script defer type="module" src="./src/main.ts"></script>
   </body>
 </html>

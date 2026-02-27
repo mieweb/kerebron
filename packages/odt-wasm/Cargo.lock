@@ -130,6 +130,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "odt_parser"
+version = "0.0.0"
+dependencies = [
+ "console_error_panic_hook",
+ "quick-xml",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "wasm-bindgen",
+ "zip",
+]
+
+[[package]]
 name = "once_cell"
 version = "1.21.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -161,19 +174,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "21b2ebcf727b7760c461f091f9f0f539b77b8e87f2fd88131e7f1b433b3cece4"
 dependencies = [
  "proc-macro2",
-]
-
-[[package]]
-name = "rs_lib"
-version = "0.0.0"
-dependencies = [
- "console_error_panic_hook",
- "quick-xml",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "wasm-bindgen",
- "zip",
 ]
 
 [[package]]
@@ -308,7 +308,7 @@ dependencies = [
 name = "wasm_runner"
 version = "0.1.0"
 dependencies = [
- "rs_lib",
+ "odt_parser",
 ]
 
 [[package]]

@@ -14,7 +14,7 @@
     "@vue/devtools-api": "npm:@vue/devtools-api@7.7.7",
     "@vitejs/plugin-vue": "npm:@vitejs/plugin-vue@6.0.1",
     "vite-plugin-wasm": "npm:vite-plugin-wasm@3.5.0",
-    "expr-eval": "https://esm.sh/expr-eval"
+    "expr-eval": "https://esm.sh/expr-eval@2.0.2"
   },
   "exports": {},
   "license": "MIT"

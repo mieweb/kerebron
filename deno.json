@@ -78,11 +78,12 @@
 
     "vite": "npm:vite@7.1.4",
 
+    "web-tree-sitter": "npm:web-tree-sitter@0.26.6",
+
     "thememirror": "npm:thememirror@2.0.1"
   },
   "lint": {
     "exclude": [
-      "**/deno-tree-sitter",
       "**/extension-markdown",
       "**/extension-odt",
       "**/extension-lsp",
@@ -112,8 +113,7 @@
       "**/*.md",
       "**/*.odt.xml",
       "**/*.xml",
-      "**/dist",
-      "packages/tree-sitter/deno-tree-sitter"
+      "**/dist"
     ]
   },
   "unstable": ["raw-imports"],

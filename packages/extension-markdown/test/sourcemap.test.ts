@@ -6,7 +6,7 @@ import { CoreEditor } from '@kerebron/editor';
 import { BasicEditorKit } from '@kerebron/extension-basic-editor/BasicEditorKit';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionTables } from '@kerebron/extension-tables';
-import { denoCdn } from '@kerebron/wasm/deno';
+import { assetLoad } from '@kerebron/wasm/deno';
 
 globalThis.DOMParser = DOMParser as any;
 globalThis.XMLSerializer = XMLSerializer;
@@ -29,7 +29,7 @@ Deno.test('sourcemap test', async () => {
   });
 
   const editor = CoreEditor.create({
-    cdnUrl: denoCdn(),
+    assetLoad: assetLoad,
     editorKits: [
       new BasicEditorKit(),
       {

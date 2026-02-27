@@ -1,5 +1,13 @@
 [
   {
+    "repo": "tree-sitter/tree-sitter",
+    "version": "latest",
+    "files": [
+      "web-tree-sitter.tar.gz/web-tree-sitter.wasm",
+      "web-tree-sitter.tar.gz/web-tree-sitter.js"
+    ]
+  },
+  {
     "repo": "ggodlewski/tree-sitter-mermaid",
     "version": "latest",
     "files": ["tree-sitter-mermaid.wasm"],

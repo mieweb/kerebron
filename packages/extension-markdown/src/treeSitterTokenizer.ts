@@ -5,13 +5,14 @@ import {
   type Tree,
 } from '@kerebron/tree-sitter';
 
+import { getLangTreeSitter } from '@kerebron/wasm';
 import {
   NESTING_CLOSING,
   NESTING_OPENING,
   NESTING_SELF_CLOSING,
   Token,
 } from './types.ts';
-import { fetchWasm, getLangTreeSitter } from '@kerebron/wasm';
+import { AssetLoad } from '@kerebron/editor';
 
 interface HasStartPosition {
   startPosition: { row: number; column: number };
@@ -1188,8 +1189,8 @@ function treeToTokens(
   return retVal;
 }
 
-export async function sitterTokenizer(cdnUrl: string) {
-  const jsonManifest = getLangTreeSitter('markdown', cdnUrl);
+export async function sitterTokenizer(assetLoad: AssetLoad) {
+  const jsonManifest = getLangTreeSitter('markdown');
   const blockUrl: string = jsonManifest.files.find((url) =>
     url.indexOf('_inline') === -1
   )!;
@@ -1197,8 +1198,8 @@ export async function sitterTokenizer(cdnUrl: string) {
     url.indexOf('_inline') > -1
   )!;
 
-  const markdownWasm = await fetchWasm(blockUrl);
-  const inlineWasm = await fetchWasm(inlineUrl);
+  const markdownWasm = await assetLoad(jsonManifest.dir + '/' + blockUrl);
+  const inlineWasm = await assetLoad(jsonManifest.dir + '/' + inlineUrl);
 
   const blockParser: Parser =
     (await createParser(markdownWasm)) as unknown as Parser;

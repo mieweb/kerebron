@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-rs_lib = { path = "../rs_lib" }
+odt_parser = { path = "../odt_parser" }

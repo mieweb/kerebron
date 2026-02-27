@@ -2,7 +2,7 @@
 resolver = "2"
 members = [
   "wasm_runner",
-  "rs_lib",
+  "odt_parser",
 ]
 
 [profile.release]

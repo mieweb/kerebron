@@ -6,7 +6,7 @@ import {
 } from 'prosemirror-model';
 
 import { ExtensionManager } from './ExtensionManager.ts';
-import type { Content, EditorKit, JSONContent } from './types.ts';
+import type { AssetLoad, Content, EditorKit, JSONContent } from './types.ts';
 import { EditorState, Transaction } from 'prosemirror-state';
 import { CommandManager } from './commands/CommandManager.ts';
 import { nodeToTreeString } from './nodeToTreeString.ts';
@@ -16,11 +16,11 @@ import { Extension } from './Extension.ts';
 import { defaultUi, EditorUi } from './ui.ts';
 import { runInputRulesTexts } from './plugins/input-rules/InputRulesPlugin.ts';
 import {
+  AsyncCommand,
   ChainedCommands,
   Command,
   CommandFactories,
 } from './commands/types.ts';
-import { AsyncCommand } from '@kerebron/editor/commands';
 
 function ensureDocSchema(
   doc: ProseMirrorNode,
@@ -39,7 +39,7 @@ export interface EditorConfig {
   content: Content;
   parseOptions: ParseOptions;
   // extensions: AnyExtensionOrReq[];
-  cdnUrl?: string;
+  assetLoad?: AssetLoad;
   uri?: string;
   languageID?: string;
   topNode?: string;

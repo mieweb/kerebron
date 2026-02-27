@@ -1,11 +1,10 @@
 import { createParser, type Parser, type Tree } from '@kerebron/tree-sitter';
 
-import { assertEquals } from '@kerebron/test-utils';
 import { MarkdownSerializer } from '@kerebron/extension-markdown/MarkdownSerializer';
-import { fetchWasm, getLangTreeSitter } from '@kerebron/wasm';
+import { getLangTreeSitter } from '@kerebron/wasm';
 
 import { sitterTokenizer } from '../src/treeSitterTokenizer.ts';
-import { denoCdn } from '@kerebron/wasm/deno';
+import { assetLoad } from '@kerebron/wasm/deno';
 
 const __dirname = import.meta.dirname;
 const source = new TextDecoder().decode(
@@ -13,7 +12,7 @@ const source = new TextDecoder().decode(
 );
 
 Deno.test('tree test', async () => {
-  const jsonManifest = getLangTreeSitter('markdown', denoCdn());
+  const jsonManifest = getLangTreeSitter('markdown');
   const blockUrl: string = jsonManifest.files.find((url) =>
     url.indexOf('_inline') === -1
   )!;
@@ -21,8 +20,8 @@ Deno.test('tree test', async () => {
     url.indexOf('_inline') > -1
   )!;
 
-  const markdownWasm = await fetchWasm(blockUrl);
-  const inlineWasm = await fetchWasm(inlineUrl);
+  const markdownWasm = await assetLoad(jsonManifest.dir + '/' + blockUrl);
+  const inlineWasm = await assetLoad(jsonManifest.dir + '/' + inlineUrl);
 
   const blockParser: Parser =
     (await createParser(markdownWasm)) as unknown as Parser;
@@ -36,7 +35,7 @@ Deno.test('tree test', async () => {
     JSON.stringify(tree?.rootNode, null, 2),
   );
 
-  const tokenizer = await sitterTokenizer(denoCdn());
+  const tokenizer = await sitterTokenizer(assetLoad);
   const tokens = tokenizer.parse(source);
 
   Deno.writeTextFileSync(
