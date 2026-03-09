@@ -1,14 +1,22 @@
 {
   "name": "@kerebron/legacy-compat",
   "type": "module",
-  "main": "./dist/kerebron.js",
+  "main": "./dist/kerebron.cjs",
+  "module": "./dist/kerebron.js",
   "files": [
     "dist/",
     "README.md"
   ],
   "exports": {
-    "./assets/*.css": {
-      "import": "./dist/*.css"
+    "./assets/kerebron.css": {
+      "import": "./dist/kerebron.css"
+    },
+    "./assets/kerebron-light.css": {
+      "import": "./dist/kerebron-light.css"
+    },
+    ".": {
+      "import": "./dist/kerebron.js",
+      "require": "./dist/kerebron.cjs"
     }
   }
 }
