@@ -71,6 +71,8 @@ export async function resolveDeno(
   id: string,
   cwd: string,
 ): Promise<DenoResolveResult | null> {
+  if (id.startsWith('\x00')) return null; // ignore vite virtual modules
+
   if (!checkedDenoInstall) {
     try {
       await execAsync(`${DENO_BINARY} --version`, { cwd });
@@ -161,13 +163,6 @@ export async function resolveViteSpecifier(
 ) {
   // Resolve import map
   const origId = id;
-  if (!id.startsWith('.') && !id.startsWith('/')) {
-    try {
-      id = import.meta.resolve(id);
-    } catch {
-      // Ignore: not resolvable
-    }
-  }
 
   if (importer && isDenoSpecifier(importer)) {
     const { resolved: parent } = parseDenoSpecifier(importer);

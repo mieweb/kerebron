@@ -18,10 +18,6 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "imports": {
-    "vite": "npm:vite@7.1.4",
-    "vite-plugin-wasm": "npm:vite-plugin-wasm@3.5.0"
-  },
   "exports": {
     ".": "./main.ts"
   },

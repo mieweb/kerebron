@@ -1,7 +1,6 @@
 {
   "name": "browser-vanilla-code-editor",
   "tasks": {
-    "//dev": "deno test --watch mod.ts",
     "dev": "deno run -A npm:vite",
     "build": "deno run -A npm:vite build",
     "build-watch": "deno run -A npm:vite build --watch",
@@ -27,10 +26,6 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
-  },
-  "imports": {
-    "vite": "npm:vite@7.1.4",
-    "vite-plugin-wasm": "npm:vite-plugin-wasm@3.5.0"
   },
   "exports": {},
   "license": "MIT"

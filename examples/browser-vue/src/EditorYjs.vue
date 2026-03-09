@@ -16,7 +16,8 @@
 <script lang="ts">
 import { CoreEditor } from '@kerebron/editor';
 import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
-import {AdvancedEditorKit} from '@kerebron/editor-kits//AdvancedEditorKit';
+import { AdvancedEditorKit } from '@kerebron/editor-kits//AdvancedEditorKit';
+import { createAssetLoad } from '@kerebron/wasm/web';
 
 export default {
   name: 'my-editor',
@@ -48,6 +49,7 @@ export default {
 
       this.editor = CoreEditor.create({
         element: this.$refs.editor,
+        assetLoad: createAssetLoad('/wasm'),
         editorKits: [
           new AdvancedEditorKit(),
           YjsEditorKit.createFrom(userName)

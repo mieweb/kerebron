@@ -80,8 +80,8 @@
     "npm:vite-css-modules@latest": "1.12.0_postcss@8.5.6_vite@7.1.4__@types+node@24.2.0__picomatch@4.0.3_@types+node@24.2.0",
     "npm:vite-plugin-standard-css-modules@latest": "0.0.11_vite@7.1.4__@types+node@24.2.0__picomatch@4.0.3_@types+node@24.2.0",
     "npm:vite-plugin-wasm@3.5.0": "3.5.0_vite@7.1.4__@types+node@24.2.0__picomatch@4.0.3_@types+node@24.2.0",
-    "npm:vite@*": "7.1.4_@types+node@24.2.0_picomatch@4.0.3",
-    "npm:vite@7.1.4": "7.1.4_@types+node@24.2.0_picomatch@4.0.3",
+    "npm:vite@*": "7.3.1_@types+node@24.2.0_picomatch@4.0.3",
+    "npm:vite@7.3.1": "7.3.1_@types+node@24.2.0_picomatch@4.0.3",
     "npm:vscode-languageserver-protocol@3.17.5": "3.17.5",
     "npm:vscode-languageserver-textdocument@1.0.12": "1.0.12",
     "npm:vue-router@4.5.1": "4.5.1_vue@3.5.21__typescript@5.9.3",
@@ -1606,14 +1606,14 @@
       "dependencies": [
         "@rolldown/pluginutils@1.0.0-beta.47",
         "@swc/core",
-        "vite"
+        "vite@7.1.4_@types+node@24.2.0_picomatch@4.0.3"
       ]
     },
     "@vitejs/plugin-vue@6.0.1_vite@7.1.4__@types+node@24.2.0__picomatch@4.0.3_vue@3.5.21__typescript@5.9.3_@types+node@24.2.0": {
       "integrity": "sha512-+MaE752hU0wfPFJEUAIxqw18+20euHHdxVtMvbFcOEpjEyfqXH/5DCoTHiVJ0J29EhTJdoTkjEv5YBKU9dnoTw==",
       "dependencies": [
         "@rolldown/pluginutils@1.0.0-beta.29",
-        "vite",
+        "vite@7.1.4_@types+node@24.2.0_picomatch@4.0.3",
         "vue"
       ]
     },
@@ -2986,19 +2986,19 @@
         "postcss-modules-local-by-default",
         "postcss-modules-scope",
         "postcss-modules-values",
-        "vite"
+        "vite@7.1.4_@types+node@24.2.0_picomatch@4.0.3"
       ]
     },
     "vite-plugin-standard-css-modules@0.0.11_vite@7.1.4__@types+node@24.2.0__picomatch@4.0.3_@types+node@24.2.0": {
       "integrity": "sha512-AWY2emxY+//1zjZQS6KIn1iQg6kPKhZqeZUEen1F8LwGSy1TEr1dUf24fKCDjHNcyq6mxGXRLIqIRpMqvDfyHQ==",
       "dependencies": [
-        "vite"
+        "vite@7.1.4_@types+node@24.2.0_picomatch@4.0.3"
       ]
     },
     "vite-plugin-wasm@3.5.0_vite@7.1.4__@types+node@24.2.0__picomatch@4.0.3_@types+node@24.2.0": {
       "integrity": "sha512-X5VWgCnqiQEGb+omhlBVsvTfxikKtoOgAzQ95+BZ8gQ+VfMHIjSHr0wyvXFQCa0eKQ0fKyaL0kWcEnYqBac4lQ==",
       "dependencies": [
-        "vite"
+        "vite@7.1.4_@types+node@24.2.0_picomatch@4.0.3"
       ]
     },
     "vite@7.1.4_@types+node@24.2.0_picomatch@4.0.3": {
@@ -3006,6 +3006,25 @@
       "dependencies": [
         "@types/node",
         "esbuild@0.25.12",
+        "fdir",
+        "picomatch",
+        "postcss",
+        "rollup",
+        "tinyglobby"
+      ],
+      "optionalDependencies": [
+        "fsevents"
+      ],
+      "optionalPeers": [
+        "@types/node"
+      ],
+      "bin": true
+    },
+    "vite@7.3.1_@types+node@24.2.0_picomatch@4.0.3": {
+      "integrity": "sha512-w+N7Hifpc3gRjZ63vYBXA56dvvRlNWRczTdmCBBa+CotUzAPf5b7YMdMR/8CQoeYE5LX3W4wj6RYTgonm1b9DA==",
+      "dependencies": [
+        "@types/node",
+        "esbuild@0.27.2",
         "fdir",
         "picomatch",
         "postcss",
@@ -3319,7 +3338,8 @@
       "npm:prosemirror-transform@1.10.4",
       "npm:prosemirror-view@1.40.0",
       "npm:thememirror@2.0.1",
-      "npm:vite@7.1.4",
+      "npm:vite-plugin-wasm@3.5.0",
+      "npm:vite@7.3.1",
       "npm:vscode-languageserver-protocol@3.17.5",
       "npm:vscode-languageserver-textdocument@1.0.12",
       "npm:web-tree-sitter@0.26.6",
@@ -3328,47 +3348,27 @@
       "npm:yjs@13.6.24"
     ],
     "members": {
-      "examples/browser-custom-element": {
-        "dependencies": [
-          "npm:vite-plugin-wasm@3.5.0",
-          "npm:vite@7.1.4"
-        ]
-      },
       "examples/browser-link-mermaid": {
         "dependencies": [
-          "npm:mermaid@11.12.2",
-          "npm:vite-plugin-wasm@3.5.0",
-          "npm:vite@7.1.4"
+          "npm:mermaid@11.12.2"
         ]
       },
       "examples/browser-react": {
         "dependencies": [
           "npm:@vitejs/plugin-react-swc@4.2.2",
           "npm:react-dom@19",
-          "npm:react@19",
-          "npm:vite-plugin-wasm@3.5.0",
-          "npm:vite@7.1.4"
+          "npm:react@19"
         ]
       },
       "examples/browser-two-sides": {
         "dependencies": [
-          "npm:mermaid@11.12.2",
-          "npm:vite-plugin-wasm@3.5.0",
-          "npm:vite@7.1.4"
-        ]
-      },
-      "examples/browser-vanilla-code-editor": {
-        "dependencies": [
-          "npm:vite-plugin-wasm@3.5.0",
-          "npm:vite@7.1.4"
+          "npm:mermaid@11.12.2"
         ]
       },
       "examples/browser-vue": {
         "dependencies": [
           "npm:@vitejs/plugin-vue@6.0.1",
           "npm:@vue/devtools-api@7.7.7",
-          "npm:vite-plugin-wasm@3.5.0",
-          "npm:vite@7.1.4",
           "npm:vue-router@4.5.1",
           "npm:vue@3.5.21"
         ]
@@ -3377,8 +3377,6 @@
         "dependencies": [
           "npm:@vitejs/plugin-vue@6.0.1",
           "npm:@vue/devtools-api@7.7.7",
-          "npm:vite-plugin-wasm@3.5.0",
-          "npm:vite@7.1.4",
           "npm:vue-router@4.5.1",
           "npm:vue@3.5.21"
         ]
@@ -3387,8 +3385,6 @@
         "dependencies": [
           "npm:@vitejs/plugin-vue@6.0.1",
           "npm:@vue/devtools-api@7.7.7",
-          "npm:vite-plugin-wasm@3.5.0",
-          "npm:vite@7.1.4",
           "npm:vue-router@4.5.1",
           "npm:vue@3.5.21"
         ]
@@ -3397,8 +3393,6 @@
         "dependencies": [
           "npm:@vitejs/plugin-vue@6.0.1",
           "npm:@vue/devtools-api@7.7.7",
-          "npm:vite-plugin-wasm@3.5.0",
-          "npm:vite@7.1.4",
           "npm:vue-router@4.5.1",
           "npm:vue@3.5.21"
         ]
@@ -3409,9 +3403,7 @@
           "npm:@hono/vite-ssg@0.3.0",
           "npm:@vitejs/plugin-vue@6.0.1",
           "npm:hono@4.10.7",
-          "npm:ventojs@2.3.0",
-          "npm:vite-plugin-wasm@3.5.0",
-          "npm:vite@7.1.4"
+          "npm:ventojs@2.3.0"
         ]
       },
       "packages/editor-react": {
@@ -3449,12 +3441,6 @@
       "packages/extension-server-hono": {
         "dependencies": [
           "jsr:@hono/hono@^4.7.4"
-        ]
-      },
-      "packages/legacy-compat": {
-        "dependencies": [
-          "npm:vite-plugin-wasm@3.5.0",
-          "npm:vite@7.1.4"
         ]
       }
     }

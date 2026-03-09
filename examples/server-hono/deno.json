@@ -11,8 +11,6 @@
   "license": "MIT",
   "imports": {
     "@std/assert": "jsr:@std/assert@1",
-    "vite": "npm:vite@7.1.4",
-    "vite-plugin-wasm": "npm:vite-plugin-wasm@3.5.0",
     "@vitejs/plugin-vue": "npm:@vitejs/plugin-vue@6.0.1",
     "hono": "npm:hono@4.10.7",
     "@hono/vite-ssg": "npm:@hono/vite-ssg@0.3.0",
