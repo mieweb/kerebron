@@ -6,14 +6,15 @@ You can try using Kerebron directly from CDN:
 <button id="loadOdt">LOAD ODT</button>
 <div id="editor"></div>
 <style>
-    @import "https://cdn.jsdelivr.net/npm/@kerebron/lib-cdn@latest/dist/kerebron.css";
+    @import "https://cdn.jsdelivr.net/npm/@kerebron/legacy-compat@latest/dist/kerebron.css";
 </style>
 <script type="module" defer>
-    import * as Kerebron from "https://cdn.jsdelivr.net/npm/@kerebron/lib-cdn@latest/dist/kerebron.js";
-    const { CoreEditor, AdvancedEditorKit } = Kerebron;
+    import * as Kerebron from "https://cdn.jsdelivr.net/npm/@kerebron/legacy-compat@latest/dist/kerebron.js";
+    const { CoreEditor, AdvancedEditorKit, assetLoad } = Kerebron;
 
     const editor = CoreEditor.create({
         uri: "test.odt",
+        assetLoad: createAssetLoad('https://cdn.jsdelivr.net/npm/@kerebron/wasm@latest/assets'),
         element: document.getElementById("editor"),
         editorKits: [new AdvancedEditorKit()],
     });

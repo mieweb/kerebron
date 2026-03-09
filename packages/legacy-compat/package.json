@@ -1,0 +1,14 @@
+{
+  "name": "@kerebron/legacy-compat",
+  "type": "module",
+  "main": "./dist/kerebron.js",
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "exports": {
+    "./assets/*.css": {
+      "import": "./dist/*.css"
+    }
+  }
+}

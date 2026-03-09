@@ -1,3 +1,0 @@
-[submodule "packages/deno-tree-sitter"]
-	path = packages/tree-sitter/deno-tree-sitter
-	url = git@github.com:jeff-hykin/deno-tree-sitter.git

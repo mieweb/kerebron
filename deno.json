@@ -22,7 +22,7 @@
     "packages/wasm",
     "packages/test-utils",
     "packages/tree-sitter",
-    "packages/lib-cdn",
+    "packages/legacy-compat",
     "packages/custom-elements",
 
     "examples/browser-vanilla-code-editor",
@@ -42,7 +42,7 @@
     "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
   },
   "tasks": {
-    "build:cdn": "deno task -f lib-cdn build",
+    "build:legacy-compat": "deno task -f legacy-compat build",
     "build:ext-odt": "deno task -f @kerebron/odt-wasm build",
     "build:ext-wasm": "deno task -f @kerebron/wasm build",
     "dev": "deno task -f server-hono start"

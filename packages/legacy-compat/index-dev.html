@@ -1,0 +1,54 @@
+<html>
+  <!--
+This file is for checking legacy-compat package before publishing
+
+Start it with:
+
+deno task -f legacy-compat serve
+
+Go to: http://localhost:8000/index-dev.html
+-->
+
+  <body>
+    <button id="loadOdt">LOAD ODT</button>
+    <div id="editor"></div>
+    <style>
+      @import 'http://localhost:8000/dist/kerebron.css';
+      /* For light only mode
+        @import "https://cdn.jsdelivr.net/npm/@kerebron/legacy-compat@latest/dist/kerebron-light.css";
+          */
+    </style>
+    <script type="module" defer>
+      import * as Kerebron from 'http://localhost:8000/dist/kerebron.js';
+      const { CoreEditor, AdvancedEditorKit, createAssetLoad } =
+        Kerebron;
+
+      const editor = CoreEditor.create({
+        uri: 'test.odt',
+        assetLoad: createAssetLoad(
+          'https://cdn.jsdelivr.net/npm/@kerebron/wasm@latest/assets',
+        ),
+        element: document.getElementById('editor'),
+        editorKits: [new AdvancedEditorKit()],
+      });
+
+      document.getElementById('loadOdt').addEventListener(
+        'click',
+        async () => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            console.log('Selected file:', file);
+            await editor.loadDocument(
+              file.type,
+              new Uint8Array(await file.arrayBuffer()),
+            );
+          });
+          input.click();
+          return true;
+        },
+      );
+    </script>
+  </body>
+</html>

@@ -1,5 +1,5 @@
 {
-  "name": "@kerebron/lib-cdn",
+  "name": "@kerebron/legacy-compat",
   "tasks": {
     "build": "deno run -A npm:vite build",
     "serve": "deno run --allow-net --allow-read jsr:@std/http/file-server"
