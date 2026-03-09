@@ -14,7 +14,7 @@ export interface MenuConfig {
 export class ExtensionMenuLegacy extends Extension {
   name = 'menu';
 
-  constructor(protected override config: MenuConfig = { floating: true }) {
+  constructor(public override config: MenuConfig = { floating: true }) {
     super(config);
   }
 

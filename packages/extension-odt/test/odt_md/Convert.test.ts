@@ -11,6 +11,7 @@ import { ExtensionOdt } from '@kerebron/extension-odt';
 import { ExtensionTables } from '@kerebron/extension-tables';
 import { NodeCodeBlock } from '@kerebron/extension-basic-editor/NodeCodeBlock';
 import { assetLoad } from '@kerebron/wasm/deno';
+
 import { urlToFolderId } from '../wgd/idParsers.ts';
 
 globalThis.DOMParser = DOMParser as any;
@@ -52,6 +53,7 @@ Deno.test('convert odt to md', async () => {
   ];
 
   const editor = CoreEditor.create({
+    assetLoad,
     editorKits,
   });
 
