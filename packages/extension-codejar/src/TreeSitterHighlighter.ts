@@ -7,26 +7,27 @@ import {
 } from '@kerebron/wasm';
 
 import { DecorationInline, Decorator } from './Decorator.ts';
+import { AssetLoad } from '@kerebron/editor';
 
 export class TreeSitterHighlighter {
   parser: Parser | undefined;
   hightligtScm: string | undefined;
-  cdnUrl? = 'http://localhost:8000/wasm/';
+  assetLoad?: AssetLoad;
   lang?: string;
 
   async init(lang: string): Promise<boolean> {
     this.lang = lang;
-    if (!lang) {
+    if (!lang || !this.assetLoad) {
       this.parser = undefined;
       this.hightligtScm = undefined;
       return true;
     }
-    const treeSitterConfig = getLangTreeSitter(lang, this.cdnUrl);
+    const treeSitterConfig = getLangTreeSitter(lang);
     const wasmUrl = treeSitterConfig.files[0]; // TODO add support for split parsers like markdown
     const highlightUrl = treeSitterConfig.queries['highlights.scm'];
 
     try {
-      const wasm = await fetchWasm(wasmUrl);
+      const wasm = await this.assetLoad(wasmUrl);
       this.parser = await createParser(wasm);
 
       this.hightligtScm = await fetchTextResource(highlightUrl);

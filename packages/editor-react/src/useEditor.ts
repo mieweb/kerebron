@@ -1,6 +1,6 @@
 import { type DependencyList, useEffect, useRef, useState } from 'react';
 import { CoreEditor } from '@kerebron/editor';
-import type { Content, EditorKit } from '@kerebron/editor';
+import type { AssetLoad, Content, EditorKit } from '@kerebron/editor';
 
 export interface UseEditorOptions {
   /** Array of extensions to use */
@@ -10,7 +10,7 @@ export interface UseEditorOptions {
   /** Initial JSON content */
   initialContent?: Content;
   /** CDN URL for WASM files */
-  cdnUrl?: string;
+  assetLoad?: AssetLoad;
   /** Document URI */
   uri?: string;
   /** Called when editor is ready */
@@ -57,7 +57,7 @@ export function useEditor(
       editorKits = [],
       content,
       initialContent,
-      cdnUrl,
+      assetLoad,
       uri,
       onReady,
       onTransaction,
@@ -72,7 +72,7 @@ export function useEditor(
       element: container,
       editorKits,
       content: initialContent,
-      cdnUrl,
+      assetLoad: assetLoad,
       uri,
     });
 

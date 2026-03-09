@@ -91,7 +91,7 @@ class CodeJarBlockNodeView implements NodeView {
     });
 
     this.highlighter = new TreeSitterHighlighter();
-    this.highlighter.cdnUrl = this.editor.config.cdnUrl;
+    this.highlighter.assetLoad = this.editor.config.assetLoad;
     this.decorator = new Decorator();
 
     dom.append(this.element);
