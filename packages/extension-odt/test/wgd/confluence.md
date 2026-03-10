@@ -20,11 +20,11 @@ A new github repo with a node.js script specific to this conversion.
   * Paragraphs should be paragraphs
   * Images (which are attachments in Confluence) should be embedded in google docs<a id="cukuroni2k4r"></a>
   * Macros can be wrapped in {{% curlies %}} and dumped as text
-    * <strong>Example Block Macro:</strong>
+    * **Example Block Macro:**
       {{% macroname propertyname='value' propertyname='value' %}}
       macro body, if exists
       {{% /macroname %}}
-    * <strong>Example Inline Macro:</strong>
+    * **Example Inline Macro:**
       {{% macroname propertyname='value' propertyname='value' /%}}
   * Tables should be kept tables
   * Embedded Video should be converted to an image with a hyperlink
