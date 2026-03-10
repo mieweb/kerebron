@@ -12,6 +12,19 @@ export const mergeCodeBlocks: Command = (state, dispatch): boolean => {
   const codeBlockType = schema.nodes.code_block;
   const paraBlockType = schema.nodes.paragraph;
 
+  state.doc.descendants((node, pos) => {
+    if (
+      [CODEBLOCK_START, CODEBLOCK_END].includes(
+        node.textContent.trim(),
+      )
+    ) {
+      tr = tr.deleteRange(
+        tr.mapping.map(pos),
+        tr.mapping.map(pos + node.nodeSize),
+      );
+    }
+  });
+
   const parent = state.doc;
   let offset = 0;
   for (let nodeNo = 0; nodeNo < parent.childCount; nodeNo++) {
@@ -91,20 +104,6 @@ export const mergeCodeBlocks: Command = (state, dispatch): boolean => {
 
     offset += codeSize;
   }
-
-  state.doc.descendants((node, pos) => {
-    if (
-      node.type === paraBlockType &&
-      [CODEBLOCK_START, CODEBLOCK_END].includes(
-        node.textBetween(0, node.content.size),
-      )
-    ) {
-      tr = tr.deleteRange(
-        tr.mapping.map(pos),
-        tr.mapping.map(pos + node.nodeSize),
-      );
-    }
-  });
 
   if (dispatch) {
     dispatch(tr);

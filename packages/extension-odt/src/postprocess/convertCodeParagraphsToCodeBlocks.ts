@@ -22,6 +22,7 @@ export const convertCodeParagraphsToCodeBlocks: Command = (
         const monospaced = child.marks.some((mark) =>
           mark.type === markCodeType
         );
+        const whitespaced = child.textContent.match(/^[ \t\u00A0]+$/);
 
         if (child.type.name === 'node_bookmark') {
           codeText += '\n';
@@ -35,7 +36,7 @@ export const convertCodeParagraphsToCodeBlocks: Command = (
           continue;
         }
 
-        if (monospaced) {
+        if (monospaced || whitespaced) {
           codeText += child.text || child.textBetween(0, child.content.size);
           codeSize += child.nodeSize;
           continue;

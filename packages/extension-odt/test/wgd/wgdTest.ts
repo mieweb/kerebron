@@ -383,7 +383,7 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
         ((event: CustomEvent) => {
           const { doc } = event.detail;
           Deno.writeTextFileSync(
-            __dirname + '/' + pmName + '.0.debug.json',
+            __dirname + '/' + pmName + '.odtprefilter.debug.json',
             JSON.stringify(doc, null, 2),
           );
         }) as EventListener,
@@ -394,7 +394,7 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
         ((event: CustomEvent) => {
           const { doc } = event.detail;
           Deno.writeTextFileSync(
-            __dirname + '/' + pmName + '.odtfiltered.debug.json',
+            __dirname + '/' + pmName + '.odtpostfilter.debug.json',
             JSON.stringify(doc, null, 2),
           );
         }) as EventListener,
@@ -420,7 +420,7 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
         const doc = editor.getDocument();
         const json = doc.toJSON();
         Deno.writeTextFileSync(
-          __dirname + '/' + pmName + '.debug.json',
+          __dirname + '/' + pmName + '.loaded.debug.json',
           JSON.stringify(json, null, 2),
         );
         Deno.writeTextFileSync(

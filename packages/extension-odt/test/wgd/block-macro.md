@@ -8,14 +8,12 @@ The following information is intended to walk users through the basic enrollment
 
 {{% tip %}}
 If the Quality Reporting portlet is not enabled, click the **Select Portlets** link toward the top of the page. Select the *Quality Reporting* portlet, and click the **Save** button.
-
 {{% /tip %}}
 
 2. Click the {{% syslink "Enroll" "f=layout&module=MIPS&name=Advanced+Measure+Enrollment&user_id=50&redirect=f%3Domniscope&tabmodule=+" %}} hyperlink to begin the enrollment process.
 
 {{% warning %}}
 Ensure all participating provider profiles are edited with the correct National Provider Identifier (NPI) and Tax Identification Number (TIN), so that the JSON file to be submitted successfully uploads to the reporting website.
-
 {{% /warning %}}
 
 3. After the page loads, use the *Opt In* section to begin enrolling users, accordingly. Begin typing into the **User** autocomplete each name of the user(s)/provider(s) being enrolled. Multiple users/providers may be enrolled at one time.
@@ -34,5 +32,4 @@ For more information on filtering tables and using the DataVis grids, see the [U
 
 {{% info %}}
 The logged-in user will now be able to track the enrolled measures from the Quality Reporting portlet on the Quick View.
-
 {{% /info %}}
