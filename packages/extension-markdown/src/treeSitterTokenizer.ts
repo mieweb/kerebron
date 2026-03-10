@@ -195,7 +195,11 @@ function treeToTokens(
             }
             if (text?.trim().length > 0) {
               if (text.startsWith('\n')) {
-                const sbToken = new Token('softbreak', 'br', NESTING_SELF_CLOSING);
+                const sbToken = new Token(
+                  'softbreak',
+                  'br',
+                  NESTING_SELF_CLOSING,
+                );
                 sbToken.map = map;
                 sbToken.content = '\n';
                 pushInlineNode(sbToken, 'whitespace other softbreak');
