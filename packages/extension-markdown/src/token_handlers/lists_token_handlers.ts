@@ -5,9 +5,7 @@ import {
   type TokenHandler,
   writeIndented,
 } from '@kerebron/extension-markdown/MarkdownSerializer';
-import {
-  getInlineTokensHandlers,
-} from './inline_token_handlers.ts';
+import { getInlineTokensHandlers } from './inline_token_handlers.ts';
 import { TokenSource } from '../TokenSource.ts';
 import { numberString } from '../utils.ts';
 
