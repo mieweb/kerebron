@@ -18,7 +18,8 @@ A new github repo with a node.js script specific to this conversion.
   * Import content from Confluence Page into Google Documents
   * Heading should be headings
   * Paragraphs should be paragraphs
-  * Images (which are attachments in Confluence) should be embedded in google docs<a id="cukuroni2k4r"></a>
+  * Images (which are attachments in Confluence) should be embedded in google docs
+    <a id="cukuroni2k4r"></a>
   * Macros can be wrapped in {{% curlies %}} and dumped as text
     * **Example Block Macro:**
       {{% macroname propertyname='value' propertyname='value' %}}
@@ -31,6 +32,8 @@ A new github repo with a node.js script specific to this conversion.
   * Formatting is not required to be converted.
 
 ## Proposed Instructions
+
+<a id="_x0pn817jsti8"></a>
 
 ```
 confluence2google <path to space> <path to google shared drive>
@@ -49,6 +52,8 @@ confluence2google <path to space> <path to google shared drive>
     c.  [Example XML zip file](gdoc:abc)
 3. Use HTML
     a.  [Confluence Export](https://confluence.atlassian.com/confcloud/import-a-confluence-space-724765531.html) that makes an HTML file
+
+<a id="ggsym7lvzx37"></a>
 
 ## Examples
 

@@ -215,11 +215,6 @@ function extractShortcodesFromCodeblock(tr: Transaction, schema: Schema) {
 
     if (!firstShortcode && !lastShortcode) return true;
 
-    const newCodeblock = codeblockType.create(
-      node.attrs,
-      schema.text(lines.concat(emptyEnding).join('\n')),
-    );
-
     const nodesToInsert = [];
 
     if (firstShortcode) {
@@ -233,7 +228,13 @@ function extractShortcodesFromCodeblock(tr: Transaction, schema: Schema) {
       );
     }
 
-    nodesToInsert.push(newCodeblock);
+    if (emptyEnding.length > 0) {
+      const newCodeblock = codeblockType.create(
+        node.attrs,
+        schema.text(lines.concat(emptyEnding).join('\n')),
+      );
+      nodesToInsert.push(newCodeblock);
+    }
 
     if (lastShortcode) {
       nodesToInsert.push(

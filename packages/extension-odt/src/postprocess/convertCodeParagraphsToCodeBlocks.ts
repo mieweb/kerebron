@@ -17,6 +17,9 @@ export const convertCodeParagraphsToCodeBlocks: Command = (
     if (node.type.name === 'paragraph') {
       let codeText = '';
       let codeSize = 0;
+
+      const bookmarks: Node[] = [];
+
       for (let childNo = 0; childNo < node.childCount; childNo++) {
         const child = node.child(childNo);
         const monospaced = child.marks.some((mark) =>
@@ -25,7 +28,7 @@ export const convertCodeParagraphsToCodeBlocks: Command = (
         const whitespaced = child.textContent.match(/^[ \t\u00A0]+$/);
 
         if (child.type.name === 'node_bookmark') {
-          codeText += '\n';
+          bookmarks.push(child);
           codeSize += child.nodeSize;
           continue;
         }
@@ -49,7 +52,7 @@ export const convertCodeParagraphsToCodeBlocks: Command = (
         const startPos = tr.mapping.map(pos);
         const endPos = tr.mapping.map(pos + 1 + codeSize);
 
-        if (codeText) {
+        if (codeText.trim()) {
           const textNode = schema.text(codeText);
           const codeBlock = schema.nodes.code_block.createAndFill(null, [
             textNode,
@@ -60,6 +63,9 @@ export const convertCodeParagraphsToCodeBlocks: Command = (
           }
         } else {
           tr.replace(startPos, endPos);
+        }
+        for (const bookmark of bookmarks) {
+          tr.insert(startPos, bookmark);
         }
       }
 

@@ -20,7 +20,7 @@ export const addEmptyLines: Command = (state, dispatch): boolean => {
     for (let index = 0; index < nodes.length; index++) {
       const child = nodes[index];
 
-      if ('image' === child.type.name) {
+      if (['image', 'node_bookmark'].includes(child.type.name)) {
         if (index > 0) {
           const prevNode = nodes[index - 1];
 

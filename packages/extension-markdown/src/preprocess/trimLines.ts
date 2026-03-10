@@ -21,6 +21,10 @@ export const trimLines: Command = (state, dispatch): boolean => {
   ) {
     let offset = 0;
 
+    if (parent.type.name === 'code_block' && parent.textContent.trim()) {
+      return;
+    }
+
     function trimBeforeIndex(index: number, offset: number) {
       let to = pos + offset; // - child.nodeSize;
       for (let prev = index - 1; prev >= 0; prev--) {
