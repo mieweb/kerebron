@@ -34,7 +34,7 @@ export async function mdToPmConverterText(
     throw new Error('No config.assetLoad');
   }
 
-  const tokenizer = await sitterTokenizer(config.assetLoad);
+  const tokenizer = await sitterTokenizer(config.assetLoad, config.moduleOptions);
 
   const defaultMarkdownParser = new MarkdownParser(
     schema,

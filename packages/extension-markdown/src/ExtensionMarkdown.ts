@@ -24,6 +24,7 @@ export interface MdConfig {
   serializerDebug?: (...args: any[]) => void;
   assetLoad?: AssetLoad;
   urlRewriter?: UrlRewriter;
+  moduleOptions?: object;
 }
 
 export type { Token };

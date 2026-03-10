@@ -1189,7 +1189,7 @@ function treeToTokens(
   return retVal;
 }
 
-export async function sitterTokenizer(assetLoad: AssetLoad) {
+export async function sitterTokenizer(assetLoad: AssetLoad, moduleOptions?: object) {
   const jsonManifest = getLangTreeSitter('markdown');
   const blockUrl: string = jsonManifest.files.find((url) =>
     url.indexOf('_inline') === -1
@@ -1202,9 +1202,9 @@ export async function sitterTokenizer(assetLoad: AssetLoad) {
   const inlineWasm = await assetLoad(jsonManifest.dir + '/' + inlineUrl);
 
   const blockParser: Parser =
-    (await createParser(markdownWasm)) as unknown as Parser;
+    (await createParser(markdownWasm, { moduleOptions })) as unknown as Parser;
   const inlineParser: Parser =
-    (await createParser(inlineWasm)) as unknown as Parser;
+    (await createParser(inlineWasm, { moduleOptions })) as unknown as Parser;
 
   return {
     parse: (source: string): Array<Token> => {
