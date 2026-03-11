@@ -1,8 +1,8 @@
 {
   "name": "@kerebron/odt-wasm",
   "tasks": {
-    "wasmbuild": "deno run -A jsr:@deno/wasmbuild@0.21.0",
-    "wasmbuild:debug": "deno run -A jsr:@deno/wasmbuild@0.21.0 --debug --out lib-debug",
+    "wasmbuild": "deno run -A jsr:@deno/wasmbuild@0.21.1",
+    "wasmbuild:debug": "deno run -A jsr:@deno/wasmbuild@0.21.1 --debug --out lib-debug",
     "build": "deno task wasmbuild && deno task wasmbuild:debug"
   },
   "exports": {
