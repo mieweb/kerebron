@@ -1,9 +1,6 @@
-import {
-  createParser,
-  type Node as TreeSitterNode,
-  Parser,
-  type Tree,
-} from '@kerebron/tree-sitter';
+import { type Node as TreeSitterNode } from 'prosemirror-model';
+
+import { createParser, Parser, type Tree } from '@kerebron/tree-sitter';
 
 import { getLangTreeSitter } from '@kerebron/wasm';
 import {
@@ -69,6 +66,43 @@ function treeToTokens(
       return inlineContent.substring(node.startIndex, node.endIndex);
     };
 
+    const outputSplitText = (text: string, node: TreeSitterNode) => {
+      const rows = text.split('\n');
+      let rowOffset = 0;
+      for (const row of rows) {
+        if (rowOffset > 0) {
+          const map: [number, number, number, number] = [ // TODO verify in viewer
+            startPosition.row + node.startPosition?.row + rowOffset,
+            startPosition.row + node.endPosition?.row + rowOffset,
+            0,
+            0,
+          ];
+
+          const sbToken = new Token('softbreak', 'wbr', NESTING_SELF_CLOSING);
+          sbToken.map = map;
+          sbToken.content = '\n';
+          pushInlineNode(sbToken, 'softbreak between text rows');
+        }
+
+        const map: [number, number, number, number] = [
+          startPosition.row + node.startPosition?.row + rowOffset,
+          startPosition.row + node.endPosition?.row + rowOffset,
+          startPosition.column + node.startPosition?.column,
+          (+node.endPosition.row === +node.startPosition.row
+            ? startPosition.column
+            : 0) + node.endPosition?.column,
+        ];
+
+        const token = new Token('text', '', NESTING_SELF_CLOSING);
+        token.map = map;
+        token.meta = 'noEscText';
+        token.content = rows.length > 1 ? row.replace(/^\s+/, '') : row;
+        pushInlineNode(token, 'text');
+
+        rowOffset++;
+      }
+    };
+
     for (const node of children) {
       const map: [number, number, number, number] = [
         startPosition.row + node.startPosition?.row,
@@ -95,11 +129,8 @@ function treeToTokens(
 
         case 'text':
           {
-            const token = new Token('text', '', NESTING_SELF_CLOSING);
-            token.map = map;
-            token.meta = 'noEscText';
-            token.content = nodeText(node) ?? '';
-            pushInlineNode(token, 'text');
+            const text = nodeText(node) ?? '';
+            outputSplitText(text, node);
           }
           break;
 
@@ -128,7 +159,7 @@ function treeToTokens(
               retVal.push(token);
             } else {
               const token = new Token('math', '', NESTING_SELF_CLOSING);
-              token.attrSet('lang', 'mathml');
+              token.attrSet('lang', 'latex');
               token.map = map;
               token.meta = 'noEscText';
 
@@ -142,7 +173,7 @@ function treeToTokens(
           {
             const text = nodeText(node) || '';
             if (text === '\n') {
-              const token = new Token('softbreak', 'br', NESTING_SELF_CLOSING);
+              const token = new Token('softbreak', 'wbr', NESTING_SELF_CLOSING);
               token.map = map;
               token.content = text ?? '';
               pushInlineNode(token, 'whitespace \n');
@@ -169,11 +200,7 @@ function treeToTokens(
               break;
             }
             if (text?.trim().length > 0) {
-              const token = new Token('text', '', NESTING_SELF_CLOSING);
-              token.map = map;
-              token.meta = 'noEscText';
-              token.content = text ?? '';
-              pushInlineNode(token, 'whitespace other');
+              outputSplitText(text, node);
               break;
             }
           }
@@ -406,6 +433,22 @@ function treeToTokens(
             pushInlineNode(token, 'html_block');
           }
           break;
+        case 'hard_line_break':
+          {
+            const tokenName = 'hardbreak';
+            const tagName = 'br';
+            const token = new Token(
+              tokenName,
+              tagName,
+              NESTING_SELF_CLOSING,
+            );
+
+            token.map = map;
+            token.meta = 'noEscText';
+            token.content = nodeText(node) ?? '';
+            pushInlineNode(token, 'hard_line_break');
+          }
+          break;
         default:
           console.debug('inline_node', node);
           throw new Error(`Unhandled inline node type: ${node.type}`);
@@ -431,19 +474,11 @@ function treeToTokens(
         throw new Error('!inlineText');
       }
 
-      if (node.children.length > 0) {
-        walkInline(node.children, source, node.startPosition);
-      } else {
-        const inlineTree = inlineParser.parse(inlineText);
-        if (!inlineTree) {
-          throw new Error('!inlineTree');
-        }
-        walkInline(
-          inlineTree?.rootNode.children,
-          inlineText,
-          node.startPosition,
-        );
+      const inlineTree = inlineParser.parse(inlineText);
+      if (!inlineTree) {
+        throw new Error('!inlineTree');
       }
+      walkInline(inlineTree?.rootNode.children, inlineText, node.startPosition);
 
       return;
     }
