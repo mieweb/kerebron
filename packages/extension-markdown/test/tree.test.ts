@@ -24,9 +24,9 @@ Deno.test('tree test', async () => {
   const inlineWasm = await assetLoad(jsonManifest.dir + '/' + inlineUrl);
 
   const blockParser: Parser =
-    (await createParser(markdownWasm)) as unknown as Parser;
+    (await createParser(markdownWasm, { assetLoad })) as unknown as Parser;
   const inlineParser: Parser =
-    (await createParser(inlineWasm)) as unknown as Parser;
+    (await createParser(inlineWasm, { assetLoad })) as unknown as Parser;
 
   const tree: Tree | null = blockParser.parse(source);
 

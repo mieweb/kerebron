@@ -1,10 +1,6 @@
 import { createParser, type Parser } from '@kerebron/tree-sitter';
 
-import {
-  fetchTextResource,
-  fetchWasm,
-  getLangTreeSitter,
-} from '@kerebron/wasm';
+import { fetchTextResource, getLangTreeSitter } from '@kerebron/wasm';
 
 import { DecorationInline, Decorator } from './Decorator.ts';
 import { AssetLoad } from '@kerebron/editor';
@@ -28,7 +24,7 @@ export class TreeSitterHighlighter {
 
     try {
       const wasm = await this.assetLoad(wasmUrl);
-      this.parser = await createParser(wasm);
+      this.parser = await createParser(wasm, { assetLoad: this.assetLoad });
 
       this.hightligtScm = await fetchTextResource(highlightUrl);
     } catch (err) {

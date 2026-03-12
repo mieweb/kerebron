@@ -1,6 +1,7 @@
 import * as path from '@std/path';
 
-import { createParser, type Parser, type Tree } from '@kerebron/tree-sitter';
+import { createParser, Parser } from '@kerebron/tree-sitter';
+import { assetLoad } from '@kerebron/wasm/deno';
 
 // import { parseMarkdown } from '../../../tree-sitter/md-to-html-incremental.ts';
 
@@ -44,10 +45,10 @@ const inlineWasm = await Deno.readFile(
 // const markdownWasm = await fetchWasm(blockUrl);
 // const inlineWasm = await fetchWasm(inlineUrl);
 
-const blockParser: Parser =
-  (await createParser(markdownWasm)) as unknown as Parser;
-const inlineParser: Parser =
-  (await createParser(inlineWasm)) as unknown as Parser;
+const blockParser =
+  (await createParser(markdownWasm, { assetLoad })) as unknown as Parser;
+const inlineParser =
+  (await createParser(inlineWasm, { assetLoad })) as unknown as Parser;
 
 // const BlockParser = await createParser(markdownWasm);
 // const InlineParser = await createParser(inlineWasm);

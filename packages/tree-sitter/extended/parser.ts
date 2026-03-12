@@ -1,10 +1,4 @@
-// import { Tree } from "../web-tree-sitter/src/tree.ts"
-// import { ParseOptions, Parser } from "../web-tree-sitter/src/parser.ts"
-// import { Language } from "../web-tree-sitter/src/language.ts"
-// import { ParseCallback } from "../web-tree-sitter/src/index.ts";
-// import { setModule } from '../web-tree-sitter/src/constants.ts';
-// import { MainModule } from '../web-tree-sitter/lib/web-tree-sitter.d.ts';
-import './node_extended.ts';
+import { type AssetLoad } from '@kerebron/editor';
 import {
   Language,
   ParseCallback,
@@ -12,6 +6,8 @@ import {
   Parser,
   Tree,
 } from 'web-tree-sitter';
+
+import './node_extended.ts';
 
 // this only exists to help with type hints
 class ExtendedParser extends Parser {
@@ -75,18 +71,19 @@ let hasBeenLoaded = false;
  */
 interface Options {
   disableSoftNodes?: boolean;
-  moduleOptions?: Object;
+  assetLoad: AssetLoad;
 }
 
 export async function createParser(
   wasmUint8Array: Uint8Array,
-  { disableSoftNodes = false, moduleOptions }: Options = {},
+  { disableSoftNodes = false, assetLoad }: Options,
 ) {
-  await Parser.init();
-
   if (!hasBeenLoaded) {
     hasBeenLoaded = true;
-    await Parser.init(moduleOptions);
+    const module = {
+      wasmBinary: await assetLoad('tree-sitter/web-tree-sitter.wasm'),
+    };
+    await Parser.init(module);
   }
   const parser = new ExtendedParser();
   const language = await Language.load(wasmUint8Array);
