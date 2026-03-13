@@ -1,22 +1,53 @@
-#!/bin/sh
+#!/bin/bash
 
-RED="\033[1;31m"
-GREEN="\033[1;32m"
-NC="\033[0m"
+set -e
+
+if [ -t 1 ] && tput colors >/dev/null 2>&1 && [ "$(tput colors)" -ge 8 ]; then
+    RED="\033[1;31m"
+    GREEN="\033[1;32m"
+    NC="\033[0m"
+else
+    RED="❌ "
+    GREEN="✅ "
+    NC=""
+fi
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+COMMITS=$(git log origin/$BRANCH..HEAD --pretty=format:"%s")
+
+TRIVIAL_REGEXES=(
+  "(fix|chore).*(typo|wip)"
+)
+
+INVALID=0
+
+for msg in $COMMITS; do
+  for pattern in "${TRIVIAL_REGEXES[@]}"; do
+    if echo "$msg" | grep -Ei "$pattern" >/dev/null; then
+      echo -e "${RED}Trivial commit detected: '$msg'${NC}"
+      INVALID=1
+    fi
+  done
+done
+
+if [ $INVALID -eq 1 ]; then
+  echo "Please squash/fixup trivial commits before pushing."
+  exit 1
+fi
 
 echo "Running deno fmt --check before push..."
 deno fmt --check
 if [ $? -ne 0 ]; then
-    echo "${RED}Error: deno fmt --check failed. Please fix formatting issues before pushing.${NC}"
+    echo -e "${RED}Error: deno fmt --check failed. Please fix formatting issues before pushing.${NC}"
     exit 1
 fi
-echo "${GREEN}Formatting check passed.${NC}"
+echo -e "${GREEN}Formatting check passed.${NC}"
 
 echo "Running deno tests..."
 deno task test:pre-push
 if [ $? -ne 0 ]; then
-    echo "${RED}Error: deno tests failed. Please fix failing tests before pushing.${NC}"
+    echo -e "${RED}Error: deno tests failed. Please fix failing tests before pushing.${NC}"
     exit 2
 fi
-echo "${GREEN}All tests passed.${NC}"
+echo -e "${GREEN}All tests passed.${NC}"
 exit 0

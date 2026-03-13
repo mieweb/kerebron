@@ -1,8 +1,11 @@
-# Prerequisite
-
-Before everything else install git hooks with `deno task postinstall`
-
 ## Contributing Guidelines
+
+1. BEFORE EVERYTHING else install git hooks with `deno task postinstall`
+
+2. All commits must follow Conventional Commits: <type>(<scope>): <short description> (e.g., feat(ui): add dark mode) and avoid trivial messages like fix: typo.
+   This ensures proper release changelog.
+
+3. Use fixup/squash to combine commits when needed. See https://mikulskibartosz.name/git-fixup-explained for guidance
 
 Code layout, names are unstable pre-1.0.
 Some things like tests might still fail.

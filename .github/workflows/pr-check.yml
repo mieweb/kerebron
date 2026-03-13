@@ -5,6 +5,61 @@ on:
       - main
 
 jobs:
+  commit-message-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Fetch full history
+        run: git fetch --prune --unshallow
+
+      - name: Check PR commit messages
+        run: |
+          echo "Checking commit messages in this PR..."
+          INVALID=0
+          for msg in $(git log --pretty=format:"%s" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}); do
+            if ! echo "$msg" | grep -E "^(feat|fix|chore|docs|test|refactor|ci|build)(\(.+\))?: .+" >/dev/null; then
+              echo "::error ::Invalid commit message: '$msg'"
+              INVALID=1
+            fi
+          done
+          if [ $INVALID -eq 1 ]; then
+            echo "::notice ::Please squash/fixup your commits and follow the Conventional Commit format:"
+            echo "::notice ::<type>(scope): short description"
+            echo "::notice ::Example: feat(ui): add dark mode toggle"
+            exit 1
+          fi
+
+      - name: Reject trivial commits
+        run: |
+          echo "Checking PR commits for trivial messages..."
+
+          # Fetch PR commits
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          COMMITS=$(git log --pretty=format:"%s" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+
+          INVALID=0
+
+          # Define array of trivial regex patterns
+          TRIVIAL_REGEXES=(
+            "(fix|chore).*(typo|wip)"
+          )
+
+          # Loop through commits
+          for msg in $COMMITS; do
+            for pattern in "${TRIVIAL_REGEXES[@]}"; do
+              if echo "$msg" | grep -Ei "$pattern" >/dev/null; then
+                echo "::error ::Trivial commit detected: '$msg'"
+                INVALID=1
+              fi
+            done
+          done
+
+          if [ $INVALID -eq 1 ]; then
+            echo "::notice ::Please squash/fixup trivial commits before merging."
+            exit 1
+          fi
+
   prepush-checks:
     runs-on: ubuntu-latest
     steps:

@@ -1,0 +1,42 @@
+#!/bin/bash
+
+set -e
+
+if [ -t 1 ] && tput colors >/dev/null 2>&1 && [ "$(tput colors)" -ge 8 ]; then
+    RED="\033[1;31m"
+    GREEN="\033[1;32m"
+    NC="\033[0m"
+else
+    RED="❌ "
+    GREEN="✅ "
+    NC=""
+fi
+
+COMMIT_MSG_FILE="$1"                    # Git passes the path to the commit message
+COMMIT_MSG=$(head -n1 "$COMMIT_MSG_FILE")  # Read the first line of the commit message
+
+if ! echo "$COMMIT_MSG" | grep -E "^(feat|fix|chore|docs|test|refactor|ci|build)(\(.+\))?: .+" >/dev/null; then
+  echo -e "${RED}Commit message is not a Conventional Commit: ${NC}"
+  echo "   '$COMMIT_MSG'"
+  echo "Format: <type>(scope): short description"
+  echo "Example:"
+  echo "  feat(auth): add login with OTP"
+  echo "  fix(ui): correct button alignment"
+  echo "  chore(deps): update dependencies"
+  echo "  docs(readme): add usage instructions"
+  echo "  test(api): add endpoint tests"
+  echo "  refactor(core): improve performance of loop"
+  echo "  ci(github): add workflow for PR checks"
+  echo "  build(docker): update docker image version"
+  exit 1
+fi
+
+# Require GitHub issue link for feat/fix commits
+if [[ "$COMMIT_MSG" =~ ^(feat|fix) ]] && ! echo "$COMMIT_MSG" | grep -qE "\(#([0-9]+)\)"; then
+    echo -e "${RED}Commit of type 'feat' or 'fix' must reference a GitHub issue:${NC}"
+    echo "   '$COMMIT_MSG'"
+    echo "Example: feat(ui): add dark mode (#123)"
+    exit 1
+fi
+
+echo -e "${GREEN}Commit message valid.${NC}"
