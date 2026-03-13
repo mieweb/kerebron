@@ -159,7 +159,7 @@ examples/          # Example implementations
 - Use `jsr:` or `npm:` prefixes for external dependencies
 
 ### Building
-- **Build all**: `deno task build`
+- **Build all**: `deno task build:all`
 - **Build WASM extensions**: `deno task build:ext-wasm`
 - **Build ODT**: `deno task build:ext-odt`
 - **Build NPM packages**: Use `deno run -A ./utils/build_npm.ts`

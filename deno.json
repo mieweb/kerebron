@@ -42,7 +42,7 @@
     "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
   },
   "tasks": {
-    "build": "deno task build:ext-odt && deno task -f @kerebron build",
+    "build:all": "deno task build:ext-odt && deno task -f @kerebron build",
     "dev": "deno task -f server-hono start",
     "build:legacy-compat": "deno task -f legacy-compat build",
     "build:ext-odt": "deno task -f @kerebron/odt-wasm build",

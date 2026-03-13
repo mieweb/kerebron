@@ -8,7 +8,7 @@ jobs:
   commit-message-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Fetch full history
         run: git fetch --prune --unshallow
@@ -80,7 +80,7 @@ jobs:
         run: deno install
 
       - name: Build packages
-        run: deno task build
+        run: deno task build:all
 
       - name: Make pre-push hook executable
         run: chmod +x ./utils/hooks/pre-push

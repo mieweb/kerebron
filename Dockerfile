@@ -13,6 +13,6 @@ COPY . ./
 WORKDIR "/usr/src/app"
 
 RUN deno install
-RUN deno task build
+RUN deno task build:all
 
 CMD [ "sh", "-c", "deno task dev" ]

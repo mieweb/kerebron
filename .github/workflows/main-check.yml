@@ -25,7 +25,7 @@ jobs:
         run: deno install
 
       - name: Build packages
-        run: deno task build
+        run: deno task build:all
 
       - name: Make pre-push hook executable
         run: chmod +x ./utils/hooks/pre-push

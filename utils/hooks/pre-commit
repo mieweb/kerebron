@@ -1,7 +1,18 @@
 #!/bin/bash
 
+set -e
+
+# PATH is wrong when running from webstorm
+if [ -f "$HOME/.profile" ]; then
+    . "$HOME/.profile"
+fi
+
+RED="\033[1;31m"
+GREEN="\033[1;32m"
+NC="\033[0m"
+
 echo "Running deno fmt --check before push..."
-/home/gg/.deno/bin/deno fmt --check
+deno fmt --check
 if [ $? -ne 0 ]; then
     echo -e "${RED}Error: deno fmt --check failed. Please fix formatting issues before pushing.${NC}"
     exit 2
