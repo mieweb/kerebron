@@ -10,7 +10,7 @@ You can try using Kerebron directly from CDN:
 </style>
 <script type="module" defer>
     import * as Kerebron from "https://cdn.jsdelivr.net/npm/@kerebron/legacy-compat@latest/dist/kerebron.js";
-    const { CoreEditor, AdvancedEditorKit, assetLoad } = Kerebron;
+    const { CoreEditor, AdvancedEditorKit, createAssetLoad } = Kerebron;
 
     const editor = CoreEditor.create({
         uri: "test.odt",

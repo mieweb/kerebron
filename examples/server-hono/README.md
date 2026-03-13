@@ -10,5 +10,6 @@ Features:
 
 ```sh
 deno task -f browser build
+deno task -f server-hono build
 deno task -f server-hono cf:deploy
 ```
