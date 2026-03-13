@@ -24,12 +24,13 @@ jobs:
         with:
           node-version: '22.x'
           registry-url: 'https://registry.npmjs.org'
+
       - uses: actions-rust-lang/setup-rust-toolchain@v1
-      - run: deno task -f @kerebron/odt-wasm build # Future Deno versions may add cross-package task dependencies
-      - run: deno task -f @kerebron build
-      #      - run: deno task -f browser- build
+
+      - name: Build packages
+        run: deno task build
       - name: Build npm
-        run: deno run -A ./build/build_npm.ts ${{steps.get_tag_version.outputs.TAG_VERSION}}
+        run: deno run -A ./utils/build_npm.ts ${{steps.get_tag_version.outputs.TAG_VERSION}}
       - name: Publish npm
         if: startsWith(github.ref, 'refs/tags/')
         env:

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+RED="\033[1;31m"
+GREEN="\033[1;32m"
+NC="\033[0m"
+
+echo "Running deno fmt --check before push..."
+/home/gg/.deno/bin/deno fmt --check
+if [ $? -ne 0 ]; then
+    echo "${RED}Error: deno fmt --check failed. Please fix formatting issues before pushing.${NC}"
+    exit 1
+fi
+echo "${GREEN}Formatting check passed.${NC}"
+exit 0

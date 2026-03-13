@@ -13,7 +13,6 @@ COPY . ./
 WORKDIR "/usr/src/app"
 
 RUN deno install
-# deno task --recursive build # TODO make somehow vite dependent on wasm
-RUN deno task --recursive build
+RUN deno task build
 
-CMD [ "sh", "-c", "deno task -f example-server-hono start" ]
+CMD [ "sh", "-c", "deno task dev" ]

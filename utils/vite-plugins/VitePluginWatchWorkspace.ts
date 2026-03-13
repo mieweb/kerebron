@@ -31,7 +31,7 @@ type VitePluginWatchExternalOptions = {
   // path or glob
   currentPackage: string;
   format: 'esm' | 'cjs';
-  // file types to build
+  // file types to utils
   fileTypes?: string[];
   // glob patterns to ignore
   ignorePaths?: string[];

@@ -66,7 +66,7 @@ TODO
 To generate npm packages
 
 ```sh
-deno -A ./build/build_npm.ts
+deno -A ./utils/build_npm.ts
 ```
 
 ## Run through docker

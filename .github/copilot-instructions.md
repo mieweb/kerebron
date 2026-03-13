@@ -162,13 +162,12 @@ examples/          # Example implementations
 - **Build all**: `deno task build`
 - **Build WASM extensions**: `deno task build:ext-wasm`
 - **Build ODT**: `deno task build:ext-odt`
-- **Build NPM packages**: Use `./scripts/build-and-publish-npm.sh <version>` (NOT `deno run -A build/build_npm.ts` directly)
+- **Build NPM packages**: Use `deno run -A ./utils/build_npm.ts`
   - This script builds WASM dependencies first, which are required before the npm build
-  - Example: `./scripts/build-and-publish-npm.sh 1.0.0` for dry run
-  - Example: `./scripts/build-and-publish-npm.sh 1.0.0 --publish` to publish to npm
+  - Example: `deno run -A ./utils/build_npm.ts 1.0.0`
 
 ### Running Examples
-- **Dev server**: `deno task -f server-deno-hono start` - **ALWAYS start this first!**
+- **Dev server**: `deno task dev` - **ALWAYS start this first!**
   - Runs on `http://localhost:8000`
   - Serves all examples (Vue, React, vanilla) at their respective paths
   - Provides backend services: Yjs WebSocket, LSP, WASM files, API endpoints
@@ -209,7 +208,7 @@ import { Editor } from '@kerebron/editor';
 ## NPM Package Generation
 
 Kerebron uses DNT (Deno Node Transform) to generate hybrid npm modules supporting both ESM and CommonJS:
-- Build script: `build/build_npm.ts`
+- Build script: `utils/build_npm.ts`
 - Generates packages compatible with Node.js ecosystem
 - Maintains Deno-first development experience
 

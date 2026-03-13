@@ -4,8 +4,8 @@ import fs from 'node:fs';
 import { defineConfig } from 'vite';
 import wasm from 'vite-plugin-wasm';
 
-import { generateAlias } from '../../build/vite-plugins/generateAlias.ts';
-import { deno } from '../../build/vite-plugins/denoPlugin.ts';
+import { generateAlias } from '../../utils/vite-plugins/generateAlias.ts';
+import { deno } from '../../utils/vite-plugins/denoPlugin.ts';
 
 const __dirname = import.meta.dirname!;
 
