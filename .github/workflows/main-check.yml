@@ -1,8 +1,8 @@
-name: Check PR
+name: Check main branch
+
 on:
-  pull_request:
-    branches:
-      - main
+  push:
+    branches: [main]
 
 jobs:
   prepush-checks:
