@@ -29,7 +29,7 @@ jobs:
             const unchecked = (prBody.match(/- \[ \]/g) || []).length;
 
             if (unchecked > 0) {
-              await github.issues.createComment({
+              await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.payload.pull_request.number,
