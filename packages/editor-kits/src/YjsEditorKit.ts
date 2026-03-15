@@ -1,9 +1,9 @@
 import * as Y from 'yjs';
-import { WebsocketProvider } from 'y-websocket';
+import { WebsocketProvider } from '@kerebron/extension-yjs/WebsocketProvider';
 
 import type { AnyExtensionOrReq, EditorKit } from '@kerebron/editor';
 import {
-  CreateWsProvider,
+  CreateYjsProvider,
   ExtensionYjs,
   YjsProvider,
 } from '@kerebron/extension-yjs';
@@ -28,7 +28,7 @@ export class YjsEditorKit implements EditorKit {
   }
 
   getExtensions(): AnyExtensionOrReq[] {
-    const createWsProvider: CreateWsProvider = (roomId: string) => {
+    const createYjsProvider: CreateYjsProvider = (roomId: string) => {
       const ydoc = new Y.Doc();
       const wsProvider: YjsProvider = new WebsocketProvider(
         this.url,
@@ -36,8 +36,8 @@ export class YjsEditorKit implements EditorKit {
         ydoc,
       );
 
-      wsProvider.on('status', (event) => {
-        console.log('wsProvider status', event.status); // logs "connected" or "disconnected"
+      wsProvider.addEventListener('status', (event) => {
+        console.log('wsProvider status', event.detail.status); // logs "connected" or "disconnected"
       });
 
       return [wsProvider, ydoc];
@@ -45,7 +45,7 @@ export class YjsEditorKit implements EditorKit {
 
     return [
       new MarkYChange(),
-      new ExtensionYjs({ createWsProvider }),
+      new ExtensionYjs({ createYjsProvider }),
     ];
   }
 }

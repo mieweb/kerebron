@@ -11,11 +11,11 @@ import { WSSharedDoc } from './WSSharedDoc.ts';
 import { createTypedEncoder } from './message-type.ts';
 
 export interface RemoteDoc extends Y.Doc {
-  readonly awareness: Y.Awareness;
+  readonly awareness: awarenessProtocol.Awareness;
 }
 
 export class YjsRoom extends DurableObject {
-  private doc: Y.YjsDoc = new WSSharedDoc();
+  private doc: RemoteDoc = new WSSharedDoc();
   private sessions = new Map<WebSocket, () => void>();
 
   protected storage = new YTransactionStorageImpl({
@@ -46,7 +46,13 @@ export class YjsRoom extends DurableObject {
     });
     this.doc.awareness.on(
       'update',
-      ({ added, removed, updated }) => {
+      (
+        {
+          added: Array<number>,
+          removed: Array<number>,
+          updated: Array<number>,
+        },
+      ) => {
         for (const client of [...added, ...updated]) {
           this.awarenessClients.add(client);
         }

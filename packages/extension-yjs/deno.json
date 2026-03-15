@@ -1,9 +1,13 @@
 {
   "name": "@kerebron/extension-yjs",
   "tasks": {},
-  "imports": {},
+  "imports": {
+    "hono": "npm:hono@4.10.7"
+  },
   "exports": {
     ".": "./src/ExtensionYjs.ts",
+    "./YjsProvider": "./src/YjsProvider.ts",
+    "./WebsocketProvider": "./src/WebsocketProvider.ts",
     "./MarkYChange": "./src/MarkYChange.ts",
     "./userColors": "./src/userColors.ts",
     "./debug": "./src/debug.ts"

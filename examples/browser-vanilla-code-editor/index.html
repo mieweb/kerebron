@@ -14,9 +14,22 @@
         outline: #ff000066 1px solid;
       }
     </style>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css"
+      media="(prefers-color-scheme: light)"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-dark-5@1.1.3/dist/css/bootstrap-night.min.css"
+      media="(prefers-color-scheme: dark)"
+    />
   </head>
   <body>
-    <button id="loadDoc">loadDoc</button>
+    <my-yjs-room></my-yjs-room>
+    <button id="loadDoc" class="btn">loadDoc</button>
     <div id="editor"></div>
     <script type="module" src="./src/main.ts"></script>
     <pre id="markdown"></pre>

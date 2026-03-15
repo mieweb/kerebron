@@ -42,7 +42,6 @@ export interface EditorConfig {
   assetLoad?: AssetLoad;
   uri?: string;
   languageID?: string;
-  topNode?: string;
   readOnly?: boolean;
   debug?: boolean;
   hooks?: HookMap;

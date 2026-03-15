@@ -33,15 +33,6 @@ export default {
   },
   async mounted() {
     this.$nextTick(() => {
-      const docUrl = globalThis.location.hash.slice(1);
-      let roomId;
-      if (docUrl.startsWith('room:')) {
-        roomId = docUrl.substring('room:'.length);
-      } else {
-        roomId = String(Math.random());
-        globalThis.location.hash = 'room:' + roomId;
-      }
-
       let userName = '';
       if (!userName) {
         userName = 'TODO ' + Math.floor(Math.random() * 100);
@@ -63,6 +54,8 @@ export default {
         this.md = new TextDecoder().decode(buffer);
         // this.$emit('input', this.lastValue);
       });
+
+      this.editor.chain().changeRoom(this.roomId).run();
     });
   },
   watch: {
@@ -73,7 +66,9 @@ export default {
       }
     },
     async roomId() {
-      await this.editor.loadDocumentText('yjs', this.roomId);
+      if (this.editor) {
+        this.editor.chain().changeRoom(this.roomId).run();
+      }
     }
   },
   methods: {

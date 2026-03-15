@@ -35,8 +35,8 @@ onMounted(async () => {
     collection,
   );
 
-  meteorProvider.on('status', (event) => {
-    console.log('wsProvider status', event.status); // logs "connected" or "disconnected"
+  meteorProvider.addEventListener('status', (event) => {
+    console.log('wsProvider status', event.detail.status); // logs "connected" or "disconnected"
   });
 
   const userColor = userColors[random.uint32() % userColors.length];

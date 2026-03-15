@@ -12,8 +12,6 @@
   </div>
 </template>
 <script lang="ts">
-import * as random from 'lib0/random';
-import { WebsocketProvider } from 'y-websocket';
 import { dracula } from 'thememirror';
 
 import { CoreEditor, type TextRange } from '@kerebron/editor';
@@ -63,7 +61,7 @@ export default {
       }
     },
     async roomId() {
-      await this.editor.loadDocumentText('yjs', this.roomId);
+      this.editor.chain().changeRoom(this.roomId).run();
     }
   },
   methods: {

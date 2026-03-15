@@ -1,11 +1,11 @@
-import { WebsocketProvider } from 'y-websocket';
 import * as Y from 'yjs';
 
 import { CoreEditor } from '@kerebron/editor';
-import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
-import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
-
 import { ExtensionSelection } from '@kerebron/extension-basic-editor/ExtensionSelection';
+import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
+
+import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
+import { WebsocketProvider } from '@kerebron/extension-yjs/WebsocketProvider';
 import { userColors } from '@kerebron/extension-yjs/userColors';
 
 const ydoc = new Y.Doc();
@@ -42,8 +42,8 @@ cursorPlugin = editor.state.plugins.find((plugin) =>
   plugin.key === 'yjs-position$'
 );
 
-wsProvider.on('status', (event) => {
-  console.log('wsProvider status', event.status); // logs "connected" or "disconnected"
+wsProvider.addEventListener('status', (event) => {
+  console.log('wsProvider status', event.detail.status); // logs "connected" or "disconnected"
 
   if (event.status === 'connected') {
     // console.log(selectionExtension.extractSelection());

@@ -26,7 +26,7 @@ export class ExtensionLsp extends Extension {
   mainLang: string = 'markdown';
   source!: LspSource;
 
-  constructor(protected override config: LspConfig) {
+  constructor(public override config: LspConfig) {
     super(config);
   }
 

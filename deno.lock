@@ -89,7 +89,6 @@
     "npm:web-tree-sitter@0.26.6": "0.26.6",
     "npm:wrangler@*": "4.58.0_unenv@2.0.0-rc.24_workerd@1.20260107.1",
     "npm:y-protocols@1.0.6": "1.0.6_yjs@13.6.24",
-    "npm:y-websocket@3.0.0": "3.0.0_yjs@13.6.24",
     "npm:yjs@13.6.24": "13.6.24"
   },
   "jsr": {
@@ -3131,14 +3130,6 @@
         "yjs"
       ]
     },
-    "y-websocket@3.0.0_yjs@13.6.24": {
-      "integrity": "sha512-mUHy7AzkOZ834T/7piqtlA8Yk6AchqKqcrCXjKW8J1w2lPtRDjz8W5/CvXz9higKAHgKRKqpI3T33YkRFLkPtg==",
-      "dependencies": [
-        "lib0",
-        "y-protocols",
-        "yjs"
-      ]
-    },
     "yjs@13.6.24": {
       "integrity": "sha512-xn/pYLTZa3uD1uDG8lpxfLRo5SR/rp0frdASOl2a71aYNvUXdWcLtVL91s2y7j+Q8ppmjZ9H3jsGVgoFMbT2VA==",
       "dependencies": [
@@ -3344,7 +3335,6 @@
       "npm:vscode-languageserver-textdocument@1.0.12",
       "npm:web-tree-sitter@0.26.6",
       "npm:y-protocols@1.0.6",
-      "npm:y-websocket@3.0.0",
       "npm:yjs@13.6.24"
     ],
     "members": {
@@ -3441,6 +3431,11 @@
       "packages/extension-server-hono": {
         "dependencies": [
           "jsr:@hono/hono@^4.7.4"
+        ]
+      },
+      "packages/extension-yjs": {
+        "dependencies": [
+          "npm:hono@4.10.7"
         ]
       }
     }

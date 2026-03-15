@@ -2,52 +2,37 @@ import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 import { Tracker } from 'meteor/tracker';
 
-import * as Y from 'yjs'; // eslint-disable-line
+import * as Y from 'yjs';
 import * as encoding from 'lib0/encoding';
 import * as decoding from 'lib0/decoding';
 import * as syncProtocol from 'y-protocols/sync';
 import * as authProtocol from 'y-protocols/auth';
 import * as awarenessProtocol from 'y-protocols/awareness';
-import { ObservableV2 } from 'lib0/observable';
 
-export const messageSync = 0;
-export const messageQueryAwareness = 3;
-export const messageAwareness = 1;
-export const messageAuth = 2;
+import { MessageHandler } from '@kerebron/extension-yjs/YjsProvider';
+import {
+  messageAuth,
+  messageAwareness,
+  messageQueryAwareness,
+  messageSync,
+} from '@kerebron/extension-yjs/YjsProvider';
 
-type Handler = (
-  encoder: encoding.Encoder,
-  decoder: decoding.Decoder,
-  provider: MeteorProvider,
-  emitSynced: boolean,
-  messageType: number,
-) => void;
-
-interface EVENTS {
-  'connection-close': (
-    event: CloseEvent | null,
-    provider: MeteorProvider,
-  ) => any;
-  'status': (
-    event: { status: 'connected' | 'disconnected' | 'connecting' },
-  ) => any;
-  'connection-error': (event: Event, provider: MeteorProvider) => any;
-  'sync': (state: boolean) => any;
-  'synced': (state: boolean) => any;
-}
-
-export class MeteorProvider extends ObservableV2<EVENTS> {
+export class MeteorProvider extends EventTarget {
   private awareness: awarenessProtocol.Awareness;
-  private messageHandlers: Handler[];
+  private messageHandlers: MessageHandler<MeteorProvider>[];
   private _synced: boolean;
   private _updateHandler: (update: Uint8Array, origin: any) => void;
   private _awarenessUpdateHandler: ({ added, updated, removed }: {
     added: any;
     updated: any;
     removed: any;
-  }, _origin) => void;
+  }, _origin: any) => void;
   private handle: Meteor.LiveQueryHandle;
-  private wsconnected: boolean;
+
+  wsconnected = false;
+  wsconnecting = false;
+  bcconnected = false;
+
   private _exitHandler: () => void;
 
   constructor(
@@ -59,7 +44,7 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
     super();
 
     const awareness = this.awareness = new awarenessProtocol.Awareness(doc);
-    this.setupMessageHandlers();
+    this.messageHandlers = this.setupMessageHandlers();
 
     this._synced = false;
 
@@ -103,7 +88,7 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
     });
   }
 
-  joinRoom(roomId: string, onMessage) {
+  joinRoom(roomId: string, onMessage: (message: any) => void) {
     Meteor.subscribe(this.collectionName, roomId, {
       onReady() {
         console.log(`Subscribed to ${roomId}`);
@@ -111,7 +96,7 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
     });
 
     this.handle = this.collection.find().observeChanges({
-      added(id, fields) {
+      added(id: string, fields: any) {
         // console.log(`Got message from user ${fields.userId}:`, fields);
         onMessage({ _id: id, ...fields });
         // Optional: remove the message immediately so it doesn't pile up
@@ -135,8 +120,9 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
   set synced(state) {
     if (this._synced !== state) {
       this._synced = state;
-      this.emit('synced', [state]);
-      this.emit('sync', [state]);
+
+      this.dispatchEvent(new CustomEvent('synced', { detail: { state } }));
+      this.dispatchEvent(new CustomEvent('sync', { detail: { state } }));
     }
   }
 
@@ -144,7 +130,6 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
     this.disconnect();
     this.awareness.off('update', this._awarenessUpdateHandler);
     this.doc.off('update', this._updateHandler);
-    super.destroy();
   }
 
   disconnect() {
@@ -174,9 +159,9 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
     this.wsconnected = false;
     this.synced = false;
 
-    this.emit('status', [{
-      status: 'connecting',
-    }]);
+    this.dispatchEvent(
+      new CustomEvent('status', { detail: { status: 'connecting' } }),
+    );
 
     Tracker.autorun(() => {
       const status = Meteor.status();
@@ -187,9 +172,10 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
         case 'connected':
           {
             this.wsconnected = true;
-            this.emit('status', [{
-              status: 'connected',
-            }]);
+
+            this.dispatchEvent(
+              new CustomEvent('status', { detail: { status: 'connected' } }),
+            );
             // always send sync step 1 when connected
             const encoder = encoding.createEncoder();
             encoding.writeVarUint(encoder, messageSync);
@@ -219,7 +205,9 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
   }
 
   closeWebsocketConnection(event: CloseEvent | null) {
-    this.emit('connection-close', [event, this]);
+    this.dispatchEvent(
+      new CustomEvent('connection-close', { detail: { event } }),
+    );
 
     if (this.wsconnected) {
       this.wsconnected = false;
@@ -232,20 +220,20 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
         ),
         this,
       );
-      this.emit('status', [{
-        status: 'disconnected',
-      }]);
+      this.dispatchEvent(
+        new CustomEvent('status', { detail: { status: 'disconnected' } }),
+      );
     }
   }
 
   private setupMessageHandlers() {
-    this.messageHandlers = [];
-    this.messageHandlers[messageSync] = (
-      encoder,
-      decoder,
-      provider,
-      emitSynced,
-      _messageType,
+    const messageHandlers: MessageHandler<MeteorProvider>[] = [];
+    messageHandlers[messageSync] = (
+      encoder: encoding.Encoder,
+      decoder: decoding.Decoder,
+      provider: MeteorProvider,
+      emitSynced: boolean,
+      _messageType: number,
     ) => {
       encoding.writeVarUint(encoder, messageSync);
       const syncMessageType = syncProtocol.readSyncMessage(
@@ -262,12 +250,12 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
       }
     };
 
-    this.messageHandlers[messageQueryAwareness] = (
-      encoder,
-      _decoder,
-      provider,
-      _emitSynced,
-      _messageType,
+    messageHandlers[messageQueryAwareness] = (
+      encoder: encoding.Encoder,
+      _decoder: decoding.Decoder,
+      provider: MeteorProvider,
+      _emitSynced: boolean,
+      _messageType: number,
     ) => {
       encoding.writeVarUint(encoder, messageAwareness);
       encoding.writeVarUint8Array(
@@ -279,12 +267,12 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
       );
     };
 
-    this.messageHandlers[messageAwareness] = (
-      _encoder,
-      decoder,
-      provider,
-      _emitSynced,
-      _messageType,
+    messageHandlers[messageAwareness] = (
+      _encoder: encoding.Encoder,
+      decoder: decoding.Decoder,
+      provider: MeteorProvider,
+      _emitSynced: boolean,
+      _messageType: number,
     ) => {
       awarenessProtocol.applyAwarenessUpdate(
         provider.awareness,
@@ -293,23 +281,29 @@ export class MeteorProvider extends ObservableV2<EVENTS> {
       );
     };
 
-    const permissionDeniedHandler = (provider: MeteorProvider, reason) =>
+    const permissionDeniedHandler = (
+      provider: MeteorProvider,
+      reason: string,
+    ) =>
       console.warn(
         `Permission denied to access ${provider.roomId}.\n${reason}`,
       );
 
-    this.messageHandlers[messageAuth] = (
-      _encoder,
-      decoder,
-      provider,
-      _emitSynced,
-      _messageType,
+    messageHandlers[messageAuth] = (
+      _encoder: encoding.Encoder,
+      decoder: decoding.Decoder,
+      provider: MeteorProvider,
+      _emitSynced: boolean,
+      _messageType: number,
     ) => {
       authProtocol.readAuthMessage(
         decoder,
         provider.doc,
-        (_ydoc, reason) => permissionDeniedHandler(provider, reason),
+        (_ydoc: Y.Doc, reason: string) =>
+          permissionDeniedHandler(provider, reason),
       );
     };
+
+    return messageHandlers;
   }
 }

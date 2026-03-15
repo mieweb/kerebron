@@ -16,7 +16,6 @@
   </div>
 </template>
 <script lang="ts">
-import * as Y from 'yjs';
 import { CoreEditor } from '@kerebron/editor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
@@ -57,7 +56,9 @@ export default {
       }
     },
     async roomId() {
-      await this.editor.loadDocumentText('yjs', this.roomId);
+      if (this.editor) {
+        this.editor.chain().changeRoom(this.roomId).run();
+      }
     }
   },
   methods: {
@@ -126,7 +127,11 @@ export default {
       });
 
       if (this.roomId) {
-        await this.editor.loadDocumentText('yjs', this.roomId);
+        this.editor.chain().changeRoom(this.roomId).run();
+        const example = await import('./example.md?raw');
+        const buffer = new TextEncoder().encode(example.default);
+        await this.editor.loadDocument('text/x-markdown', buffer);
+
       }
 
       if (false)

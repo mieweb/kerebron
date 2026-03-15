@@ -7,6 +7,9 @@ import type { ExtensionBasicCodeEditor } from '@kerebron/extension-basic-editor/
 import type { LspTransportGetter, Transport } from '@kerebron/extension-lsp';
 import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
 
+import YjsRoom from '@kerebron/custom-elements/YjsRoom';
+YjsRoom.register();
+
 window.addEventListener('load', async () => {
   const docUrl = globalThis.location.hash.slice(1);
   let roomId;
@@ -44,7 +47,6 @@ window.addEventListener('load', async () => {
 
   const editor = CoreEditor.create({
     uri: 'test.yaml',
-    topNode: 'doc_code',
     element: document.getElementById('editor') || undefined,
     editorKits: [
       new CodeEditorKit('json'),
@@ -107,4 +109,18 @@ window.addEventListener('load', async () => {
     );
     await editor.loadDocument('text/code-only', buffer);
   });
+
+  const switcher = document.querySelector('my-yjs-room')!;
+  switcher.addEventListener('change-room', async (ev) => {
+    if ('detail' in ev) {
+      roomId = ev.detail as string;
+      if (roomId) {
+        editor.chain().changeRoom(roomId).run();
+      }
+    }
+  });
+
+  if (roomId) {
+    editor.chain().changeRoom(roomId).run();
+  }
 });
