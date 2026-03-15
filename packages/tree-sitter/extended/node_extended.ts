@@ -335,7 +335,7 @@ export class HardNode extends BaseNode {
    * @param options.maxResultDepth - depth relative to the current node (1 = direct children, 2 = grandchildren, etc)
    * @returns {[Object]} output
    */
-  query(queryString, options) {
+  query(queryString: string, options) {
     const { matchLimit, startPosition, endPosition, maxResultDepth } =
       options || {};
     const realMaxResultDepth = maxResultDepth == null
@@ -344,8 +344,8 @@ export class HardNode extends BaseNode {
     let query;
     try {
       query = new Query(this.tree.language, queryString);
-    } catch (error) {
-      if (error instanceof QueryError) {
+    } catch (error: any) {
+      if (error.name === 'QueryError') {
         error.message = `${error.message} in the following query: ${
           JSON.stringify(queryString)
         }`;

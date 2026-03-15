@@ -20,13 +20,14 @@ export class TreeSitterHighlighter {
     }
     const treeSitterConfig = getLangTreeSitter(lang);
     const wasmUrl = treeSitterConfig.files[0]; // TODO add support for split parsers like markdown
-    const highlightUrl = treeSitterConfig.queries['highlights.scm'];
 
     try {
-      const wasm = await this.assetLoad(wasmUrl);
+      const wasm = await this.assetLoad(treeSitterConfig.dir + '/' + wasmUrl);
       this.parser = await createParser(wasm, { assetLoad: this.assetLoad });
 
-      this.hightligtScm = await fetchTextResource(highlightUrl);
+      this.hightligtScm = new TextDecoder().decode(
+        await this.assetLoad(treeSitterConfig.dir + '/' + 'highlights.scm'),
+      );
     } catch (err) {
       console.error('Error init highlight for: ' + lang, err);
     }
