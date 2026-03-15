@@ -95,9 +95,13 @@ export class ExtensionMarkdown extends Extension {
 
   override created(): void {
     if (!this.editor.hooks['pm2md.pre']) {
-      this.editor.hooks['pm2md.pre'] = getDefaultsPreProcessFilters({
-        urlRewriter: this.config.urlRewriter,
-      });
+      if (this.editor.schema.topNodeType.name === 'doc') {
+        this.editor.hooks['pm2md.pre'] = getDefaultsPreProcessFilters({
+          urlRewriter: this.config.urlRewriter,
+        });
+      } else {
+        this.editor.hooks['pm2md.pre'] = [];
+      }
     }
   }
 }

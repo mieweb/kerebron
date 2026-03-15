@@ -114,7 +114,7 @@ class CodeJarBlockNodeView implements NodeView {
       },
     };
 
-    this.extensionLsp = editor.getExtension('lsp');
+    this.extensionLsp = editor.getExtension<ExtensionLsp>('lsp');
 
     let lastDiag = 0;
     this.diagListener = (event: Event) => {

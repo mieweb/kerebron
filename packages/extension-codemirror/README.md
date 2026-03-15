@@ -11,7 +11,6 @@ import {
 import { NodeDocumentCode } from '@kerebron/extension-basic-editor/NodeDocumentCode';
 
 this.editor = CoreEditor.create({
-  topNode: 'doc_code',
   element: document.querySelector('div#editor'),
   extensions: [
     new ExtensionBasicEditor(),
