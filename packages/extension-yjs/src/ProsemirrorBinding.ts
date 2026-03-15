@@ -162,7 +162,10 @@ export class ProsemirrorBinding implements BindingMetadata {
   private readonly beforeAllTransactions: () => void;
   private readonly afterAllTransactions: () => void;
 
-  private _observeFunction: (event: any, transaction: any) => void;
+  private _observeFunction: (
+    events: Array<Y.YEvent<any>>,
+    transaction: Y.Transaction,
+  ) => void;
   private _domSelectionInView: boolean = false;
   get beforeTransactionSelection(): TransactionSelection | null {
     return this._beforeTransactionSelection;
@@ -187,8 +190,8 @@ export class ProsemirrorBinding implements BindingMetadata {
      * Is overlapping mark - i.e. mark does not exclude itself.
      */
     this.isOMark = new Map();
-    this._observeFunction = (event, transaction) => {
-      this.yXmlChanged(event, transaction);
+    this._observeFunction = (events, transaction) => {
+      this.yXmlChanged(events, transaction);
     };
     this.ydoc = yXmlFragment.doc!;
     /**
@@ -335,8 +338,9 @@ export class ProsemirrorBinding implements BindingMetadata {
           this,
         )
       ).filter((n) => n !== null);
-      const _tr = state.tr.setMeta('addToHistory', false);
-      const tr = _tr.replace(
+      const tr = state.tr;
+      tr.setMeta('addToHistory', false);
+      tr.replace(
         0,
         state.doc.content.size,
         new PModel.Slice(PModel.Fragment.from(fragmentContent), 0, 0),
@@ -500,24 +504,21 @@ export class ProsemirrorBinding implements BindingMetadata {
   }
 
   yXmlChanged(events: Array<Y.YEvent<any>>, transaction: Y.Transaction) {
-    if (!this.prosemirrorView) {
-      return;
-    }
-
-    const syncState = ySyncPluginKey.getState(this.prosemirrorView.state)!;
-    if (
-      events.length === 0 || syncState.snapshot ||
-      syncState.prevSnapshot
-    ) {
-      // drop out if snapshot is active
-      this.renderSnapshot(syncState.snapshot, syncState.prevSnapshot);
-      return;
-    }
-
     this.mux(() => {
       if (!this.prosemirrorView) {
         return;
       }
+
+      const syncState = ySyncPluginKey.getState(this.prosemirrorView.state)!;
+      if (
+        events.length === 0 || syncState.snapshot ||
+        syncState.prevSnapshot
+      ) {
+        // drop out if snapshot is active
+        this.renderSnapshot(syncState.snapshot, syncState.prevSnapshot);
+        return;
+      }
+
       const state = this.prosemirrorView.state;
 
       const delType = (_: any, type: Y.AbstractType<any>) =>
@@ -598,10 +599,5 @@ export class ProsemirrorBinding implements BindingMetadata {
       return;
     }
     this.prosemirrorView = undefined;
-    //   {
-    //   state: new EditorState(),
-    //   dispatch: () => false,
-    //   fake: true
-    // };
   }
 }

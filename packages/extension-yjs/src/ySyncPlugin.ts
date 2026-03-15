@@ -4,7 +4,8 @@ import { Plugin } from 'prosemirror-state';
 import { ySyncPluginKey, yUndoPluginKey } from './keys.ts';
 import { defaultColors, ProsemirrorBinding } from './ProsemirrorBinding.ts';
 import { Schema } from 'prosemirror-model';
-import type { CreateWsProvider, YjsProvider } from './ExtensionYjs.ts';
+import type { CreateYjsProvider, YjsProvider } from './ExtensionYjs.ts';
+import { prosemirrorToYDoc } from '../test/convertUtils.ts';
 
 export type TransactFunc<T> = (
   f: (arg0?: Y.Transaction) => T,
@@ -29,7 +30,7 @@ export interface YSyncPluginState {
   provider?: YjsProvider;
   type: Y.XmlFragment;
   ydoc: Y.Doc;
-
+  connectionState: ConnectionState;
   binding: ProsemirrorBinding;
   addToHistory: boolean;
   isChangeOrigin: boolean;
@@ -42,6 +43,15 @@ export interface YSyncPluginState {
   permanentUserData?: Y.PermanentUserData;
 }
 
+interface YSyncMeta {
+  changeRoom?: {
+    roomId: string;
+  };
+  leaveRoom?: boolean;
+  isChangeOrigin?: boolean;
+  isUndoRedoOperation?: boolean;
+}
+
 /**
  * This plugin listens to changes in prosemirror view and keeps yXmlState and view in sync.
  *
@@ -49,7 +59,7 @@ export interface YSyncPluginState {
  */
 export const ySyncPlugin = (
   schema: Schema,
-  createWsProvider: CreateWsProvider,
+  createYjsProvider: CreateYjsProvider,
   {
     colors = defaultColors,
     colorMapping = new Map(),
@@ -68,11 +78,13 @@ export const ySyncPlugin = (
     key: ySyncPluginKey,
     state: {
       init: (_initargs, state): YSyncPluginState => {
-        const ydoc = new Y.Doc();
+        const ydoc = prosemirrorToYDoc(state.doc, 'prosemirror');
+
         const yXmlFragment: Y.XmlFragment = ydoc.getXmlFragment('prosemirror');
         const binding = new ProsemirrorBinding(yXmlFragment, new Map());
 
         return {
+          connectionState: 'idle',
           roomId: '',
           provider: undefined,
           binding,
@@ -90,83 +102,96 @@ export const ySyncPlugin = (
         };
       },
       apply: (tr, pluginState: YSyncPluginState) => {
-        const change: Partial<YSyncPluginState> = tr.getMeta(ySyncPluginKey);
-        if (change !== undefined) {
-          pluginState = {
-            ...pluginState,
-            ...change,
-          };
+        const pluginMeta: Partial<YSyncMeta> = tr.getMeta(ySyncPluginKey);
 
-          if ('roomId' in change) {
-            if (change.roomId) {
-              const [provider, ydoc] = createWsProvider(change.roomId);
-              pluginState.provider = provider;
-              const yXmlFragment: Y.XmlFragment = ydoc.getXmlFragment(
-                'prosemirror',
-              );
-              pluginState.type = yXmlFragment, pluginState.ydoc = ydoc;
+        if (pluginMeta?.leaveRoom) {
+          const ydoc = new Y.Doc();
+          const yXmlFragment: Y.XmlFragment = ydoc.getXmlFragment(
+            'prosemirror',
+          );
+          pluginState.type = yXmlFragment, pluginState.ydoc = ydoc;
+          pluginState.provider = undefined;
 
-              if (pluginState.provider) {
-                if (pluginState.binding.prosemirrorView) {
-                  const view = pluginState.binding.prosemirrorView;
-                  const tr = view.state.tr.setMeta(
-                    'yjs:awareness',
-                    pluginState.provider.awareness,
-                  );
-                  view.dispatch(tr);
-                }
-              }
-            } else {
-              const ydoc = new Y.Doc();
-              const yXmlFragment: Y.XmlFragment = ydoc.getXmlFragment(
-                'prosemirror',
+          pluginState.snapshot = undefined;
+          pluginState.prevSnapshot = undefined;
+          pluginState.isChangeOrigin = false;
+          pluginState.isUndoRedoOperation = false;
+          pluginState.addToHistory = true;
+          pluginState.restore = undefined;
+
+          initialContentChanged = false;
+
+          pluginState.binding.changeRoom(pluginState.type); // TODO?
+          setTimeout(() => {
+            pluginState.binding._forceRerender();
+          }, 0);
+
+          return pluginState;
+        }
+
+        if (pluginMeta?.changeRoom) {
+          const [provider, ydoc] = createYjsProvider(
+            pluginMeta.changeRoom.roomId,
+          );
+          pluginState.provider = provider;
+          const yXmlFragment: Y.XmlFragment = ydoc.getXmlFragment(
+            'prosemirror',
+          );
+          pluginState.type = yXmlFragment, pluginState.ydoc = ydoc;
+
+          if (pluginState.provider) {
+            if (pluginState.binding.prosemirrorView) {
+              const view = pluginState.binding.prosemirrorView;
+              const tr = view.state.tr.setMeta(
+                'yjs:awareness',
+                pluginState.provider.awareness,
               );
-              pluginState.type = yXmlFragment, pluginState.ydoc = ydoc;
-              pluginState.provider = undefined;
+              view.dispatch(tr);
             }
-            pluginState.snapshot = undefined;
-            pluginState.prevSnapshot = undefined;
-            pluginState.isChangeOrigin = false;
-            pluginState.isUndoRedoOperation = false;
-            pluginState.addToHistory = true;
-            pluginState.restore = undefined;
-
-            initialContentChanged = false;
-
-            pluginState.binding.changeRoom(pluginState.type);
-            setTimeout(() => {
-              pluginState.binding._forceRerender();
-            }, 0);
-
-            return pluginState;
           }
+
+          pluginState.snapshot = undefined;
+          pluginState.prevSnapshot = undefined;
+          pluginState.isChangeOrigin = false;
+          pluginState.isUndoRedoOperation = false;
+          pluginState.addToHistory = true;
+          pluginState.restore = undefined;
+
+          initialContentChanged = false;
+
+          pluginState.binding.changeRoom(pluginState.type);
+          setTimeout(() => {
+            pluginState.binding._forceRerender();
+          }, 0);
+
+          return pluginState;
         }
 
         pluginState.addToHistory = tr.getMeta('addToHistory') !== false;
         // always set isChangeOrigin. If undefined, this is not change origin.
-        pluginState.isChangeOrigin = !!change?.isChangeOrigin;
-        pluginState.isUndoRedoOperation = !!change?.isChangeOrigin &&
-          !!change?.isUndoRedoOperation;
+        pluginState.isChangeOrigin = !!pluginMeta?.isChangeOrigin;
+        pluginState.isUndoRedoOperation = !!pluginMeta?.isChangeOrigin &&
+          !!pluginMeta?.isUndoRedoOperation;
 
         const binding = pluginState.binding;
 
         if (binding?.prosemirrorView) {
-          if (change?.snapshot || change?.prevSnapshot) {
+          if (pluginMeta?.snapshot || pluginMeta?.prevSnapshot) {
             // snapshot changed, rerender next
             setTimeout(() => {
               if (!binding.prosemirrorView) {
                 return;
               }
-              if (change.restore == null) {
+              if (pluginMeta.restore == null) {
                 binding._renderSnapshot(
-                  change.snapshot,
-                  change.prevSnapshot,
+                  pluginMeta.snapshot,
+                  pluginMeta.prevSnapshot,
                   pluginState,
                 );
               } else {
                 binding._renderSnapshot(
-                  change.snapshot,
-                  change.snapshot,
+                  pluginMeta.snapshot,
+                  pluginMeta.snapshot,
                   pluginState,
                 );
                 // reset to current prosemirror state
