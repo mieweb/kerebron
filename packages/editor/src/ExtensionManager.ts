@@ -15,14 +15,7 @@ import { KeymapPlugin } from './plugins/keymap/keymap.ts';
 import { CommandShortcuts, firstCommand } from './commands/mod.ts';
 import { type Command } from 'prosemirror-state';
 import { addAttributesToSchema } from './utilities/getHtmlAttributes.ts';
-import { type CommandManager } from './commands/CommandManager.ts';
 import { TrackSelecionPlugin } from './plugins/TrackSelecionPlugin.ts';
-
-export function findDuplicates(items: any[]): any[] {
-  const filtered = items.filter((el, index) => items.indexOf(el) !== index);
-
-  return Array.from(new Set(filtered));
-}
 
 export function splitExtensions(extensions: Iterable<AnyExtension>) {
   const baseExtensions = Array.from(extensions).filter((extension) =>
