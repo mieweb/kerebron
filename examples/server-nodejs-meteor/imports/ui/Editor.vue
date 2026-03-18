@@ -4,28 +4,19 @@ const collectionName = 'ephemeralChannel';
 const collection = new Mongo.Collection(collectionName + 'Messages');
 </script>
 <script setup>
-import * as random from 'lib0/random';
 import * as Y from 'yjs';
 
+import { onMounted } from 'vue';
+
 import { CoreEditor } from '@kerebron/editor';
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
-import { ExtensionMarkdown } from '@kerebron/extension-markdown';
-import { ExtensionTables } from '@kerebron/extension-tables';
-import { ExtensionMenu } from '@kerebron/extension-menu';
-import { ExtensionYjs } from '@kerebron/extension-yjs';
-import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
+import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
 
 import { MeteorProvider } from './y-meteor.ts';
-
-import { userColors } from '@kerebron/extension-yjs/userColors';
-import { dracula } from 'thememirror';
-
-import { onMounted } from 'vue';
-import {AdvancedEditorKit} from "../../../../packages/editor-kits/src/AdvancedEditorKit";
 
 onMounted(async () => {
   const ydoc = new Y.Doc();
 
+  // TODO refactor to changeRoom, changeUser
   const roomId = 'room-abc';
 
   const meteorProvider = new MeteorProvider(
@@ -37,13 +28,6 @@ onMounted(async () => {
 
   meteorProvider.addEventListener('status', (event) => {
     console.log('wsProvider status', event.detail.status); // logs "connected" or "disconnected"
-  });
-
-  const userColor = userColors[random.uint32() % userColors.length];
-  meteorProvider.awareness.setLocalStateField('user', {
-    name: 'Anonymous ' + Math.floor(Math.random() * 100),
-    color: userColor.color,
-    colorLight: userColor.light,
   });
 
   const element = document.getElementById('editor');

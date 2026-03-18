@@ -2,10 +2,10 @@ import { CoreEditor } from '@kerebron/editor';
 import { CodeEditorKit } from '@kerebron/editor-kits/CodeEditorKit';
 import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
 import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
-import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
 import type { ExtensionBasicCodeEditor } from '@kerebron/extension-basic-editor/ExtensionBasicCodeEditor';
 import type { LspTransportGetter, Transport } from '@kerebron/extension-lsp';
 import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
+import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
 
 import YjsRoom from '@kerebron/custom-elements/YjsRoom';
 YjsRoom.register();
@@ -40,17 +40,13 @@ window.addEventListener('load', async () => {
     return undefined;
   };
 
-  let userName = '';
-  if (!userName) {
-    userName = 'TODO ' + Math.floor(Math.random() * 100);
-  }
-
+  let user;
   const editor = CoreEditor.create({
     uri: 'test.yaml',
     element: document.getElementById('editor') || undefined,
     editorKits: [
       new CodeEditorKit('json'),
-      YjsEditorKit.createFrom(userName),
+      YjsEditorKit.createFrom(),
       LspEditorKit.createFrom({ getLspTransport }),
       // lsp-ws-proxy --listen 9991 -- npx yaml-language-server --stdio
       // lsp-ws-proxy --listen 9991 -- npx vscode-json-languageserver --stdio
@@ -120,7 +116,19 @@ window.addEventListener('load', async () => {
     }
   });
 
+  switcher.addEventListener('change-user', async (ev) => {
+    if ('detail' in ev) {
+      user = ev.detail;
+      if (user) {
+        editor.chain().changeuser(user).run();
+      }
+    }
+  });
+
   if (roomId) {
     editor.chain().changeRoom(roomId).run();
+  }
+  if (user) {
+    editor.chain().changeuser(user).run();
   }
 });

@@ -1,22 +1,42 @@
 import { Decoration, DecorationSet } from 'prosemirror-view';
-import { Plugin, PluginKey } from 'prosemirror-state';
+import { EditorState, Plugin, PluginKey } from 'prosemirror-state';
 import { type DecorationAttrs } from 'prosemirror-view';
 
-import type { CoreEditor } from '@kerebron/editor';
+import {
+  type ColorMapper,
+  defaultColorMapper,
+  generateBlankUser,
+  type User,
+} from '@kerebron/editor/user';
 
-import type { ExtensionRemoteSelection } from './ExtensionRemoteSelection.ts';
+import type { SelectionState } from './ExtensionRemoteSelection.ts';
 
-export const remoteSelectionPluginKey = new PluginKey('remote-selection');
+export const remoteSelectionPluginKey = new PluginKey<RemoteSelectionState>(
+  'remote-selection',
+);
+
+interface RemoteSelectionState {
+  remoteStates: SelectionState[];
+  me: User;
+  colorMapper: ColorMapper;
+}
 
 /**
  * Default generator for a cursor element
  */
-export const defaultCursorBuilder = (user: any): HTMLElement => {
+export const defaultCursorBuilder = (
+  user: User,
+  me: User,
+  colorMapper: ColorMapper,
+): HTMLElement => {
+  const colorPair = colorMapper(user, me);
+  const color = colorPair.light;
+
   const cursor = document.createElement('span');
   cursor.classList.add('kb-yjs__cursor');
-  cursor.setAttribute('style', `border-color: ${user.color};`);
+  cursor.setAttribute('style', `border-color: ${color};`);
   const userDiv = document.createElement('div');
-  userDiv.setAttribute('style', `background-color: ${user.color}`);
+  userDiv.setAttribute('style', `background-color: ${color}`);
   userDiv.insertBefore(document.createTextNode(user.name), null);
   const nonbreakingSpace1 = document.createTextNode('\u2060');
   const nonbreakingSpace2 = document.createTextNode('\u2060');
@@ -29,47 +49,40 @@ export const defaultCursorBuilder = (user: any): HTMLElement => {
 /**
  * Default generator for the selection attributes
  */
-export const defaultSelectionBuilder = (user: any): DecorationAttrs => {
+export const defaultSelectionBuilder = (
+  user: User,
+  me: User,
+  colorMapper: ColorMapper,
+): DecorationAttrs => {
+  const colorPair = colorMapper(user, me);
+  const color = colorPair.light;
+
   return {
-    style: `background-color: ${user.color}70`,
+    style: `background-color: ${color}70`,
     class: 'kb-yjs__selection',
   };
 };
 
-const rxValidColor = /^#[0-9a-fA-F]{6}$/;
-
 export const createDecorations = (
-  state: any,
-  extension: ExtensionRemoteSelection,
+  state: EditorState,
+  pluginState: RemoteSelectionState,
   createCursor: (
-    user: { name: string; color: string },
-    clientId: number,
+    user: User,
+    me: User,
+    colorMapper: ColorMapper,
   ) => Element,
   createSelection: (
-    user: { name: string; color: string },
-    clientId: number,
+    user: User,
+    me: User,
+    colorMapper: ColorMapper,
   ) => DecorationAttrs,
-): any => {
+): DecorationSet => {
   const decorations: Decoration[] = [];
 
-  const remoteStates = extension.getRemoteStates();
-  if (remoteStates.length === 0) {
-    return DecorationSet.create(state.doc, []);
-  }
-
+  const remoteStates = pluginState.remoteStates;
   for (const remoteState of remoteStates) {
     if (remoteState.cursor != null) {
-      const user = remoteState.user || {};
-      if (user.color == null) {
-        user.color = '#ffa500';
-      } else if (!rxValidColor.test(user.color)) {
-        // We only support 6-digit RGB colors in y-prosemirror
-        console.warn('A user uses an unsupported color format', user);
-      }
-      if (user.name == null) {
-        user.name = `User: ${remoteState.clientId}`;
-      }
-
+      const user = remoteState.user;
       const cursor = remoteState.cursor;
       let anchor = cursor.anchor || null;
       let head = cursor.head || null;
@@ -81,9 +94,9 @@ export const createDecorations = (
         decorations.push(
           Decoration.widget(
             head,
-            () => createCursor(user, remoteState.clientId),
+            () => createCursor(user, pluginState.me, pluginState.colorMapper),
             {
-              key: remoteState.clientId + '',
+              key: remoteState.clientId + user.id + user.name,
               side: 10,
             },
           ),
@@ -94,7 +107,7 @@ export const createDecorations = (
           Decoration.inline(
             from,
             to,
-            createSelection(user, remoteState.clientId),
+            createSelection(user, pluginState.me, pluginState.colorMapper),
             {
               inclusiveEnd: true,
               inclusiveStart: false,
@@ -108,49 +121,62 @@ export const createDecorations = (
 };
 
 export const remoteSelectionPlugin = (
-  extension: ExtensionRemoteSelection,
-  editor: CoreEditor,
   {
     cursorBuilder = defaultCursorBuilder,
     selectionBuilder = defaultSelectionBuilder,
   }: {
-    cursorBuilder?: (user: any, clientId: number) => HTMLElement;
-    selectionBuilder?: (user: any, clientId: number) => DecorationAttrs;
+    cursorBuilder?: (
+      user: User,
+      me: User,
+      colorMapper: ColorMapper,
+    ) => HTMLElement;
+    selectionBuilder?: (
+      user: User,
+      me: User,
+      colorMapper: ColorMapper,
+    ) => DecorationAttrs;
   } = {},
 ) => {
-  return new Plugin({
+  return new Plugin<RemoteSelectionState>({
     key: remoteSelectionPluginKey,
     state: {
-      init(_, state) {
-        return createDecorations(
-          state,
-          extension,
-          cursorBuilder,
-          selectionBuilder,
-        );
+      init() {
+        return {
+          remoteStates: [],
+          me: generateBlankUser(),
+          colorMapper: defaultColorMapper,
+        };
       },
-      apply(tr, prevState, _oldState, newState) {
-        const remoteCursorState = tr.getMeta(remoteSelectionPluginKey);
-        // TODO validate: isChangeOrigin
-        // const state = remoteSelectionPluginKey.getState(newState);
-
-        if (
-          (remoteCursorState?.isChangeOrigin) ||
-          (remoteCursorState?.remotePositionUpdated)
-        ) {
-          return createDecorations(
-            newState,
-            extension,
-            cursorBuilder,
-            selectionBuilder,
-          );
+      apply(tr, pluginState) {
+        const changeUser = tr.getMeta('changeUser');
+        if (changeUser) {
+          pluginState.me = { ...changeUser.user };
         }
-        return prevState.map(tr.mapping, tr.doc);
+        const setColorMapper = tr.getMeta('setColorMapper');
+        if (setColorMapper) {
+          pluginState.colorMapper = setColorMapper.colorMapper;
+        }
+
+        const remoteSelectionChange = tr.getMeta('remoteSelectionChange');
+        if (remoteSelectionChange) {
+          pluginState.remoteStates = [...remoteSelectionChange.remoteStates];
+        }
+
+        return pluginState;
       },
     },
     props: {
-      decorations: (state) => {
-        return remoteSelectionPluginKey.getState(state);
+      decorations(state) {
+        const pluginState = this.getState(state);
+        if (!pluginState) {
+          return DecorationSet.empty;
+        }
+        return createDecorations(
+          state,
+          pluginState,
+          cursorBuilder,
+          selectionBuilder,
+        );
       },
     },
   });

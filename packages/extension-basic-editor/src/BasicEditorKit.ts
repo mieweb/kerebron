@@ -7,6 +7,7 @@ import { ExtensionGapcursor } from './ExtensionGapcursor.ts';
 import { ExtensionHtml } from './ExtensionHtml.ts';
 import { ExtensionMediaUpload } from './ExtensionMediaUpload.ts';
 import { ExtensionTextAlign } from './ExtensionTextAlign.ts';
+import { ExtensionUser } from './ExtensionUser.ts';
 import { ExtensionRemoteSelection } from './remote-selection/ExtensionRemoteSelection.ts';
 import { ExtensionPairing } from './pairing/ExtensionPairing.ts';
 
@@ -62,6 +63,7 @@ export class BasicEditorKit implements EditorKit {
       new ExtensionSelection(),
       new ExtensionTextAlign(),
       new ExtensionPairing(),
+      new ExtensionUser(),
       new NodeDocument(),
       new NodeText(),
       new NodeParagraph(),

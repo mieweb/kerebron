@@ -8,7 +8,10 @@ import * as math from 'lib0/math';
 import { RemoteSyncConfig, remoteSyncFacet } from './remote-sync.ts';
 import type { CoreEditor } from '@kerebron/editor';
 
-import type { ExtensionRemoteSelection } from '@kerebron/extension-basic-editor/ExtensionRemoteSelection';
+import {
+  type ExtensionRemoteSelection,
+  remoteSelectionPluginKey,
+} from '@kerebron/extension-basic-editor/ExtensionRemoteSelection';
 
 export const yRemoteSelectionsTheme = cmView.EditorView.baseTheme({
   '.cm-rSelection': {},
@@ -122,6 +125,7 @@ export class YRemoteSelectionsPluginValue {
     this.editor = this.conf.editor;
     this.decorations = cmState.RangeSet.of([]);
 
+    // TODO refactor to use `meta(remoteSelectionChange)`
     this._remoteSelectionChange = () => {
       view.dispatch({ annotations: [yRemoteSelectionsAnnotation.of([])] });
     };
@@ -141,11 +145,9 @@ export class YRemoteSelectionsPluginValue {
   update(update: cmView.ViewUpdate) {
     const decorations: cmState.Range<cmView.Decoration>[] = [];
 
-    const extension: ExtensionRemoteSelection = this.editor.getExtension(
-      'remote-selection',
-    )!;
+    const pluginState = remoteSelectionPluginKey.getState(this.editor.state);
 
-    const remoteStates = extension.getRemoteStates();
+    const remoteStates = pluginState?.remoteStates || [];
     for (const state of remoteStates) {
       const clientId = state.clientId;
 

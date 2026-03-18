@@ -121,7 +121,7 @@ export default {
         element: this.$refs.editor,
         editorKits: [
           new DevAdvancedEditorKit(myMenu),
-          YjsEditorKit.createFrom(userName),
+          YjsEditorKit.createFrom(),
           // LspEditorKit.createFrom({ getLspTransport }),
         ]
       });

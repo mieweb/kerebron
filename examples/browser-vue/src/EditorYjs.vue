@@ -21,7 +21,7 @@ import { createAssetLoad } from '@kerebron/wasm/web';
 
 export default {
   name: 'my-editor',
-  props: ['modelValue', 'roomId'],
+  props: ['modelValue', 'roomId', 'user'],
   expose: ['loadDoc', 'loadDoc2'],
   data() {
     return {
@@ -33,17 +33,12 @@ export default {
   },
   async mounted() {
     this.$nextTick(() => {
-      let userName = '';
-      if (!userName) {
-        userName = 'TODO ' + Math.floor(Math.random() * 100);
-      }
-
       this.editor = CoreEditor.create({
         element: this.$refs.editor,
         assetLoad: createAssetLoad('/wasm'),
         editorKits: [
           new AdvancedEditorKit(),
-          YjsEditorKit.createFrom(userName)
+          YjsEditorKit.createFrom()
         ],
         // content: pmDoc
       });
@@ -56,6 +51,9 @@ export default {
       });
 
       this.editor.chain().changeRoom(this.roomId).run();
+      if (this.user) {
+        this.editor.chain().changeUser({ ...this.user }).run();
+      }
     });
   },
   watch: {
@@ -65,9 +63,14 @@ export default {
         // this.view.updateState(this.state);
       }
     },
-    async roomId() {
+    roomId() {
       if (this.editor) {
         this.editor.chain().changeRoom(this.roomId).run();
+      }
+    },
+    user() {
+      if (this.editor && this.user) {
+        this.editor.chain().changeUser({ ...this.user }).run();
       }
     }
   },

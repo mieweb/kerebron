@@ -1,23 +1,63 @@
-import * as Y from 'yjs';
 import { Awareness } from 'y-protocols/awareness';
+import * as Y from 'yjs';
 
 import { EditorState, Plugin, Transaction } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 
 import type { CoreEditor } from '@kerebron/editor';
-import type {
-  ExtensionRemoteSelection,
-  SelectionState,
-} from '@kerebron/extension-basic-editor/ExtensionRemoteSelection';
-import { remoteSelectionPluginKey } from '@kerebron/extension-basic-editor/ExtensionRemoteSelection';
+import {
+  type ColorMapper,
+  defaultColorMapper,
+  generateBlankUser,
+  type User,
+} from '@kerebron/editor/user';
+import type { SelectionState } from '@kerebron/extension-basic-editor/ExtensionRemoteSelection';
 
+import { yPositionPluginKey, ySyncPluginKey } from './keys.ts';
 import {
   absolutePositionToRelativePosition,
   relativePositionToAbsolutePosition,
-  setMeta,
-} from './lib.ts';
-import { yPositionPluginKey, ySyncPluginKey } from './keys.ts';
+} from './position.ts';
 import type { YSyncPluginState } from './ySyncPlugin.ts';
+
+/**
+ * Is null if no timeout is in progress.
+ * Is defined if a timeout is in progress.
+ * Maps from view
+ */
+let viewsToUpdate: Map<EditorView, Map<any, any>> | null = null;
+
+const updateMetas = () => {
+  const ups: Map<EditorView, Map<any, any>> | null = viewsToUpdate;
+  viewsToUpdate = null;
+  if (!ups) {
+    return;
+  }
+  ups.forEach((metas, view) => {
+    const tr = view.state.tr;
+    const syncState = ySyncPluginKey.getState(view.state);
+    if (syncState && syncState.binding) { //  && !syncState.binding.isDestroyed
+      metas.forEach((val, key) => {
+        tr.setMeta(key, val);
+      });
+      view.dispatch(tr);
+    }
+  });
+};
+
+export const setMeta = <K, V>(view: EditorView, key: K, value: V) => {
+  if (!viewsToUpdate) {
+    viewsToUpdate = new Map<EditorView, Map<K, V>>();
+    setTimeout(updateMetas, 0);
+  }
+
+  let subMap = viewsToUpdate.get(view);
+  if (subMap === undefined) {
+    subMap = new Map<K, V>();
+    viewsToUpdate.set(view, subMap);
+  }
+  subMap.set(key, value);
+};
 
 type AwarenessListener = (
   { added, updated, removed }: {
@@ -36,20 +76,24 @@ interface PositionPluginConfig {
 export interface YPositionPluginState {
   awareness?: Awareness;
   awarenessListener?: AwarenessListener;
+  cursorStateField: string;
+  userStateField: string;
+  me: User;
+  colorMapper: ColorMapper;
 }
 
 function destroyAwareness(
-  state: YPositionPluginState,
-  cursorStateField: string,
+  pluginState: YPositionPluginState,
 ) {
-  if (!state.awareness) {
+  if (!pluginState.awareness) {
     return;
   }
-  const awareness = state.awareness;
-  if (state.awarenessListener) {
-    awareness.off('change', state.awarenessListener);
+  const awareness = pluginState.awareness;
+  if (pluginState.awarenessListener) {
+    awareness.off('change', pluginState.awarenessListener);
   }
-  awareness.setLocalStateField(cursorStateField, null);
+  awareness.setLocalStateField(pluginState.cursorStateField, null);
+  pluginState.awareness = undefined;
 }
 
 function initAwareness(state: YPositionPluginState, editor: CoreEditor) {
@@ -63,10 +107,14 @@ function initAwareness(state: YPositionPluginState, editor: CoreEditor) {
     { added, updated, removed },
   ) => {
     const ystate: YSyncPluginState = ySyncPluginKey.getState(view.state)!;
-    if (!ystate.provider) {
+    if (!ystate.binding) {
       return;
     }
-    const awareness = ystate.provider.awareness;
+    const yjs = ystate.binding.getYjs();
+    if (!yjs) {
+      return;
+    }
+
     const clients = added.concat(updated).concat(removed);
     if (
       clients.findIndex((id: number) => id !== awareness.doc.clientID) ===
@@ -75,46 +123,39 @@ function initAwareness(state: YPositionPluginState, editor: CoreEditor) {
       return;
     }
 
-    if (view.docView) {
-      setMeta(view, remoteSelectionPluginKey, {
-        remotePositionUpdated: true,
-      });
-    }
-
     const remoteStates: SelectionState[] = [];
 
-    const ydoc = ystate.ydoc;
+    const { ydoc, xmlFragment } = yjs;
 
     awareness.getStates().forEach((aw, clientId) => {
       if (!defaultAwarenessStateFilter(ydoc.clientID, clientId, aw)) {
         return;
       }
 
-      if (!aw.cursor) {
+      const cursor = aw[state.cursorStateField];
+      const user: User | undefined = aw[state.userStateField];
+
+      if (!cursor || !user) {
         return;
       }
 
       const anchor = relativePositionToAbsolutePosition(
         ydoc,
-        ystate.type,
-        Y.createRelativePositionFromJSON(aw.cursor.anchor),
-        ystate.binding.mapping,
+        xmlFragment,
+        Y.createRelativePositionFromJSON(cursor.anchor),
+        ystate.binding.getMapping(),
       );
       const head = relativePositionToAbsolutePosition(
         ydoc,
-        ystate.type,
-        Y.createRelativePositionFromJSON(aw.cursor.head),
-        ystate.binding.mapping,
+        xmlFragment,
+        Y.createRelativePositionFromJSON(cursor.head),
+        ystate.binding.getMapping(),
       );
 
       if (anchor !== null && head !== null) {
         remoteStates.push({
           clientId,
-          user: {
-            name: aw.user?.name,
-            color: aw.user?.color,
-            colorLight: aw.user?.colorLight,
-          },
+          user: user,
           cursor: {
             anchor,
             head,
@@ -122,12 +163,10 @@ function initAwareness(state: YPositionPluginState, editor: CoreEditor) {
         });
       }
     });
-    const extension: ExtensionRemoteSelection = editor.getExtension(
-      'remote-selection',
-    )!;
 
-    extension.setRemoteStates(remoteStates);
-    // view.dispatch({ annotations: [yRemoteSelectionsAnnotation.of([])] });
+    const tr = editor.state.tr;
+    tr.setMeta('remoteSelectionChange', { remoteStates });
+    editor.dispatchTransaction(tr);
   };
 
   awareness.on('change', state.awarenessListener);
@@ -147,40 +186,49 @@ export const yPositionPlugin = (
   {
     getSelection = (state: EditorState) => state.selection,
   }: PositionPluginConfig = {},
-  cursorStateField: string = 'cursor',
 ) => {
   return new Plugin<YPositionPluginState>({
     key: yPositionPluginKey,
     state: {
-      init: (_initargs, state): YPositionPluginState => {
+      init: (): YPositionPluginState => {
         return {
           awareness: undefined,
+          cursorStateField: 'kerebron:cursor',
+          userStateField: 'kerebron:user',
+          me: generateBlankUser(),
+          colorMapper: defaultColorMapper,
         };
       },
       apply: (tr: Transaction, pluginState: YPositionPluginState) => {
-        const awareness = tr.getMeta('yjs:awareness');
+        const changeUser = tr.getMeta('changeUser');
+        if (changeUser) {
+          pluginState.me = { ...changeUser.user };
+        }
+        const setColorMapper = tr.getMeta('setColorMapper');
+        if (setColorMapper) {
+          pluginState.colorMapper = setColorMapper.colorMapper;
+        }
+
+        const awareness = tr.getMeta('yjs:setAwareness');
         if (awareness) {
           if (pluginState.awareness) {
-            destroyAwareness(pluginState, cursorStateField);
+            destroyAwareness(pluginState);
           }
           pluginState.awareness = awareness;
           if (pluginState.awareness) {
             initAwareness(pluginState, editor);
           }
         }
+
+        if (tr.getMeta('yjs:removeAwareness')) {
+          if (pluginState.awareness) {
+            destroyAwareness(pluginState);
+          }
+        }
         return pluginState;
       },
     },
     view: (view: EditorView) => {
-      // const ystate: YSyncPluginState = ySyncPluginKey.getState(view.state)!;
-      // if (
-      //   ystate.snapshot != null || ystate.prevSnapshot != null ||
-      //   ystate.binding.mapping.size === 0
-      // ) {
-      //   // do not render cursors while snapshot is active
-      //   return DecorationSet.empty;
-      // }
-
       const updateAwareness = (
         selectionAnchor: number,
         selectionHead: number,
@@ -195,30 +243,37 @@ export const yPositionPlugin = (
         const current = awareness.getLocalState() || {};
 
         const ystate: YSyncPluginState = ySyncPluginKey.getState(view.state)!;
+        const yjs = ystate.binding.getYjs();
+        if (!yjs) {
+          return;
+        }
+        const { xmlFragment } = yjs;
 
         const anchor: Y.RelativePosition = absolutePositionToRelativePosition(
           selectionAnchor,
-          ystate.type,
-          ystate.binding.mapping,
+          xmlFragment,
+          ystate.binding.getMapping(),
         );
         const head: Y.RelativePosition = absolutePositionToRelativePosition(
           selectionHead,
-          ystate.type,
-          ystate.binding.mapping,
+          xmlFragment,
+          ystate.binding.getMapping(),
         );
 
+        const cursor = current[state.cursorStateField];
+
         if (
-          current.cursor == null ||
+          cursor == null ||
           !Y.compareRelativePositions(
-            Y.createRelativePositionFromJSON(current.cursor.anchor),
+            Y.createRelativePositionFromJSON(cursor.anchor),
             anchor,
           ) ||
           !Y.compareRelativePositions(
-            Y.createRelativePositionFromJSON(current.cursor.head),
+            Y.createRelativePositionFromJSON(cursor.head),
             head,
           )
         ) {
-          awareness.setLocalStateField(cursorStateField, {
+          awareness.setLocalStateField(state.cursorStateField, {
             anchor,
             head,
           });
@@ -232,22 +287,31 @@ export const yPositionPlugin = (
         if (!state.awareness) {
           return;
         }
-        const awareness = state.awareness;
 
-        const ystate = ySyncPluginKey.getState(view.state)!;
+        const ystate: YSyncPluginState = ySyncPluginKey.getState(view.state)!;
+        const yjs = ystate.binding.getYjs();
+        if (!yjs) {
+          return;
+        }
+
+        const awareness = state.awareness;
         const current = awareness.getLocalState() || {};
 
+        const { ydoc, xmlFragment } = yjs;
+
+        const cursor = current[state.cursorStateField];
+
         if (
-          current.cursor != null &&
+          cursor &&
           relativePositionToAbsolutePosition(
-              ystate.ydoc,
-              ystate.type,
-              Y.createRelativePositionFromJSON(current.cursor.anchor),
-              ystate.binding.mapping,
+              ydoc,
+              xmlFragment,
+              Y.createRelativePositionFromJSON(cursor.anchor),
+              ystate.binding.getMapping(),
             ) !== null
         ) {
           // delete cursor information if current cursor information is owned by this editor binding
-          awareness.setLocalStateField(cursorStateField, null);
+          awareness.setLocalStateField(state.cursorStateField, null);
         }
       };
 
@@ -286,7 +350,7 @@ export const yPositionPlugin = (
               view.state,
             );
           if (pluginState) {
-            destroyAwareness(pluginState, cursorStateField);
+            destroyAwareness(pluginState);
           }
 
           editor.removeEventListener(

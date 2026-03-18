@@ -18,8 +18,6 @@ export interface ColorDef {
 }
 
 interface YSyncOpts {
-  colors?: Array<ColorDef>;
-  colorMapping?: Map<string, ColorDef>;
   permanentUserData?: Y.PermanentUserData;
   onFirstRender?: () => void;
   roomId?: string;
@@ -38,8 +36,6 @@ export interface YSyncPluginState {
   snapshot?: Y.Snapshot;
   prevSnapshot?: Y.Snapshot;
   isUndoRedoOperation: boolean;
-  colors: Array<ColorDef>;
-  colorMapping: Map<string, ColorDef>;
   permanentUserData?: Y.PermanentUserData;
 }
 
@@ -61,8 +57,6 @@ export const ySyncPlugin = (
   schema: Schema,
   createYjsProvider: CreateYjsProvider,
   {
-    colors = defaultColors,
-    colorMapping = new Map(),
     onFirstRender = () => {
     },
   }: YSyncOpts = {},
@@ -96,8 +90,6 @@ export const ySyncPlugin = (
           isUndoRedoOperation: false,
           addToHistory: true,
           restore: undefined,
-          colors,
-          colorMapping,
           permanentUserData: undefined,
         };
       },

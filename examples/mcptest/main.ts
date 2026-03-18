@@ -6,12 +6,10 @@ import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEd
 
 import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
 import { WebsocketProvider } from '@kerebron/extension-yjs/WebsocketProvider';
-import { userColors } from '@kerebron/extension-yjs/userColors';
 
 const ydoc = new Y.Doc();
 
 const roomId = 'aaa';
-const userColor = userColors[1 % userColors.length];
 
 const wsProvider = new WebsocketProvider(
   'http://localhost:8000/yjs',
@@ -19,21 +17,10 @@ const wsProvider = new WebsocketProvider(
   ydoc,
 );
 
-wsProvider.awareness.setLocalStateField('user', {
-  name: 'BOT ' + Math.floor(Math.random() * 100),
-  color: userColor.color,
-  colorLight: userColor.light,
-});
-
-let userName = '';
-if (!userName) {
-  userName = 'TODO ' + Math.floor(Math.random() * 100);
-}
-
 const editor = CoreEditor.create({
   editorKits: [
     new BrowserLessEditorKit(),
-    YjsEditorKit.createFrom(userName),
+    YjsEditorKit.createFrom(),
   ],
 });
 

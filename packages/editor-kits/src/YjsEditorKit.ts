@@ -13,7 +13,7 @@ import { MarkYChange } from '@kerebron/extension-yjs/MarkYChange';
 export class YjsEditorKit implements EditorKit {
   name = 'yjs-editor';
 
-  static createFrom(userName: string, url?: string) {
+  static createFrom(url?: string) {
     if (!url) {
       const protocol = globalThis.location.protocol === 'http:'
         ? 'ws:'
@@ -21,10 +21,10 @@ export class YjsEditorKit implements EditorKit {
       url = protocol + '//' + globalThis.location.host + '/yjs';
     }
 
-    return new YjsEditorKit(url, userName);
+    return new YjsEditorKit(url);
   }
 
-  constructor(public url: string, public userName: string) {
+  constructor(public url: string) {
   }
 
   getExtensions(): AnyExtensionOrReq[] {

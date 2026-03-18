@@ -29,14 +29,12 @@ import {
   ExtensionMenuLegacy,
 } from '@kerebron/extension-menu-legacy';
 
-import { ExtensionYjs } from '@kerebron/extension-yjs';
-import { userColors } from '@kerebron/extension-yjs/userColors';
 import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
 import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
 
 export default {
   name: 'my-editor',
-  props: ['modelValue', 'roomId'],
+  props: ['modelValue', 'roomId', 'user'],
   expose: ['loadDoc', 'loadDoc2'],
   data() {
     return {
@@ -60,8 +58,13 @@ export default {
         // this.view.updateState(this.state);
       }
     },
-    async roomId() {
+    roomId() {
       this.editor.chain().changeRoom(this.roomId).run();
+    },
+    user() {
+      if (this.editor && this.user) {
+        this.editor.chain().changeUser({ ...this.user }).run();
+      }
     }
   },
   methods: {
@@ -84,15 +87,10 @@ export default {
         }
       });
 
-      let userName = '';
-      if (!userName) {
-        userName = 'TODO ' + Math.floor(Math.random() * 100);
-      }
-
       this.editor = CoreEditor.create({
         element: this.$refs.editor,
         editorKits: [
-          YjsEditorKit.createFrom(userName),
+          YjsEditorKit.createFrom(),
           {
             getExtensions() {
               return [
@@ -128,6 +126,10 @@ export default {
           }
         ]
       });
+
+      if (this.user) {
+        this.editor.chain().changeUser({ ...this.user }).run();
+      }
 
       this.editor.addEventListener('transaction', async (ev: CustomEvent) => {
         this.lastValue = ev.detail.transaction.doc;

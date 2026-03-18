@@ -1,9 +1,16 @@
+import {
+  generateBlankUser,
+  generateRandomUser,
+  User,
+} from '@kerebron/editor/user';
+
 export default class YjsRoom extends HTMLElement {
   static tagName = 'my-yjs-room';
   roomIDs: Set<string> = new Set();
   roomID = '';
   roomSelect: HTMLSelectElement | undefined;
-  userName = '';
+  userInput: HTMLInputElement | undefined;
+  user: User = generateBlankUser();
   hashCallback: EventListenerOrEventListenerObject | undefined;
 
   constructor() {
@@ -26,21 +33,32 @@ export default class YjsRoom extends HTMLElement {
     userPrefix.textContent = '@';
 
     // <input type="text" class="form-control" size="10" placeholder="Username">
-    const userInput = document.createElement('input');
-    userInput.type = 'text';
-    userInput.className = 'form-control';
-    userInput.size = 10;
-    userInput.placeholder = 'Username';
+    this.userInput = document.createElement('input');
+    this.userInput.type = 'text';
+    this.userInput.className = 'form-control';
+    this.userInput.size = 10;
+    this.userInput.placeholder = 'Username';
 
-    userInput.addEventListener('change', (event) => {
-      if (!userInput.value) {
+    this.userInput.addEventListener('change', (event) => {
+      if (!this.userInput?.value) {
         return;
       }
-      this.userName = userInput.value;
+
+      if (!this.user.id) {
+        this.user = generateRandomUser();
+      }
+      this.user.name = this.userInput.value;
+
       this.onUserChange();
     });
 
-    userGroup.append(userPrefix, userInput);
+    const userBtn = document.createElement('button');
+    userBtn.className = 'btn btn-secondary';
+    userBtn.textContent = 'Change name';
+    userBtn.type = 'button';
+    userBtn.addEventListener('click', () => this.onUserChange());
+
+    userGroup.append(userPrefix, this.userInput, userBtn);
 
     // --- Room group ---
     // <div class="input-group w-auto">
@@ -95,11 +113,14 @@ export default class YjsRoom extends HTMLElement {
   }
 
   onUserChange() {
-    if (!this.userName) {
+    if (!this.user) {
       return;
     }
+
+    localStorage.setItem('kerebron:user', JSON.stringify(this.user));
+
     const event = new CustomEvent('change-user', {
-      detail: this.userName,
+      detail: this.user,
     });
     this.dispatchEvent(event);
   }
@@ -123,6 +144,18 @@ export default class YjsRoom extends HTMLElement {
     this.hashCallback = () => this.hashChange();
     globalThis.addEventListener('hashchange', this.hashCallback);
     this.hashChange();
+
+    const stored = localStorage.getItem('kerebron:user');
+    if (stored) {
+      this.user = JSON.parse(stored);
+    } else {
+      this.user = generateRandomUser();
+      this.onUserChange();
+    }
+
+    if (this.userInput) {
+      this.userInput.value = this.user.name;
+    }
   }
 
   renderDropDown() {

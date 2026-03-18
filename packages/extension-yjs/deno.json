@@ -9,7 +9,6 @@
     "./YjsProvider": "./src/YjsProvider.ts",
     "./WebsocketProvider": "./src/WebsocketProvider.ts",
     "./MarkYChange": "./src/MarkYChange.ts",
-    "./userColors": "./src/userColors.ts",
     "./debug": "./src/debug.ts"
   }
 }

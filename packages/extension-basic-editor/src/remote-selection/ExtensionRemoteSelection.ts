@@ -1,17 +1,12 @@
 import { Plugin } from 'prosemirror-state';
-import { type CoreEditor, Extension } from '@kerebron/editor';
+import { Extension } from '@kerebron/editor';
+import { type User } from '@kerebron/editor/user';
 
 import { remoteSelectionPlugin } from './remoteSelectionPlugin.ts';
 
-type Color = string;
-
 export interface SelectionState {
   clientId: number;
-  user: {
-    name: string;
-    color: Color;
-    colorLight: Color;
-  };
+  user: User;
   cursor?: {
     anchor: number;
     head: number;
@@ -23,23 +18,9 @@ export { remoteSelectionPluginKey } from './remoteSelectionPlugin.ts';
 export class ExtensionRemoteSelection extends Extension {
   override name = 'remote-selection';
 
-  private remoteStates: SelectionState[] = [];
-
   override getProseMirrorPlugins(): Plugin[] {
     return [
-      remoteSelectionPlugin(this, this.editor),
+      remoteSelectionPlugin(),
     ];
-  }
-
-  getRemoteStates(): SelectionState[] {
-    return this.remoteStates;
-  }
-
-  setRemoteStates(states: SelectionState[]) {
-    this.remoteStates = states;
-    const event = new CustomEvent('remoteSelectionChange', {
-      detail: {},
-    });
-    this.editor.dispatchEvent(event);
   }
 }
