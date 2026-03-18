@@ -41,7 +41,7 @@ export class ExtensionMarkdown extends Extension {
     editor: CoreEditor,
     schema: Schema,
   ): Record<string, Converter> {
-    return {
+    const converters: Record<string, Converter> = {
       'text/x-markdown': {
         fromDoc: (source: Node) =>
           pmToMdConverter(
@@ -62,6 +62,8 @@ export class ExtensionMarkdown extends Extension {
           }, schema),
       },
     };
+    converters['text/markdown'] = converters['text/x-markdown'];
+    return converters;
   }
 
   toMarkdown(source: Node): Promise<MarkdownResult> {
