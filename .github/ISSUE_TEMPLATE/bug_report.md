@@ -1,27 +1,38 @@
-# Bug Report
+---
+name: Bug report
+about: Create a report to help us improve
+title: ''
+labels: ''
+assignees: ''
 
-## What is the error message?
+---
 
-Copy/paste or attach error message / console log
-Screen shot if UI bug
+**Describe the bug**
+A clear and concise description of what the bug is.
 
-## Describe the bug
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Go to '...'
+2. Click on '....'
+3. Scroll down to '....'
+4. See error
 
-A **short** and clear description of what the bug is.
+**Expected behavior**
+A clear and concise description of what you expected to happen.
 
-## Steps to Reproduce
+**Screenshots**
+If applicable, add screenshots to help explain your problem.
 
-1. Step one
-2. Step two
+**Desktop (please complete the following information):**
+ - OS: [e.g. iOS]
+ - Browser [e.g. chrome, safari]
+ - Version [e.g. 22]
 
-## Expected behavior
+**Smartphone (please complete the following information):**
+ - Device: [e.g. iPhone6]
+ - OS: [e.g. iOS8.1]
+ - Browser [e.g. stock browser, safari]
+ - Version [e.g. 22]
 
-Describe what you expected to happen.
-
-## Checklist (all must be checked)
-
-- [ ] I have read the CONTRIBUTING.md guidelines
-- [ ] I have provided steps to reproduce
-- [ ] I have included expected and actual behavior
-- [ ] I have included relevant logs/screenshots if applicable
-- [ ] I have checked for duplicate issues
+**Additional context**
+Add any other context about the problem here.

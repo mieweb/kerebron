@@ -1,16 +1,20 @@
-# Feature Request
+---
+name: Feature request
+about: Suggest an idea for this project
+title: ''
+labels: ''
+assignees: ''
 
-## Describe the problem
+---
 
-Describe the problem you are trying to solve.
+**Is your feature request related to a problem? Please describe.**
+A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
 
-## Proposed Solution
+**Describe the solution you'd like**
+A clear and concise description of what you want to happen.
 
-Describe the solution you would like.
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
 
-## Checklist (all must be checked)
-
-- [ ] I have read the CONTRIBUTING.md guidelines
-- [ ] I have provided a clear problem description
-- [ ] I have included expected behavior
-- [ ] I have checked for duplicates
+**Additional context**
+Add any other context or screenshots about the feature request here.
