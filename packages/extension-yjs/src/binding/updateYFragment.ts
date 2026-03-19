@@ -4,10 +4,10 @@ import { Mark, Node, Schema } from 'prosemirror-model';
 
 import { simpleDiff } from 'lib0/diff';
 
-import { ySyncPluginKey } from './keys.ts';
-import * as utils from './utils.ts';
-import type { BindingMetadata } from './ProsemirrorBinding.ts';
-import { TransactFunc } from './ySyncPlugin.ts';
+import { ySyncPluginKey } from '../keys.ts';
+import * as utils from '../utils.ts';
+import type { BindingMetadata } from './BindingMetadata.ts';
+import { TransactFunc } from '../lib.ts';
 
 const hashedMarkNameRegex = /(.*)(--[a-zA-Z0-9+/=]{8})$/;
 export const yattr2markname = (attrName: string) =>
@@ -21,8 +21,11 @@ const marksToAttributes = (
   marks.forEach((mark) => {
     if (mark.type.name !== 'ychange') {
       let isOverlapping = true;
-      if (!meta.isOMark.has(mark.type.name)) {
-        meta.isOMark.set(mark.type.name, !mark.type.excludes(mark.type));
+      if (!meta.isOverlappingMark.has(mark.type.name)) {
+        meta.isOverlappingMark.set(
+          mark.type.name,
+          !mark.type.excludes(mark.type),
+        );
         isOverlapping = false;
       }
 
@@ -278,7 +281,9 @@ export const updateYFragment = (
   yDomFragment: Y.XmlFragment,
   pNode: Node,
   meta: BindingMetadata,
+  addToYjsHistory?: boolean,
 ) => {
+  const origin = ySyncPluginKey;
   if (
     yDomFragment instanceof Y.XmlElement &&
     yDomFragment.nodeName !== pNode.type.name
@@ -342,7 +347,9 @@ export const updateYFragment = (
       }
     }
   }
-  ydoc.transact(() => {
+  ydoc.transact((ytr) => {
+    ytr.meta.set('updateYFragment', 1);
+    ytr.meta.set('addToYjsHistory', addToYjsHistory);
     // try to compare and update
     while (yChildCnt - left - right > 0 && pChildCnt - left - right > 0) {
       const leftY: Y.XmlElement | Y.XmlText = yChildren[left];
@@ -435,5 +442,5 @@ export const updateYFragment = (
       }
       yDomFragment.insert(left, ins);
     }
-  }, ySyncPluginKey);
+  }, origin);
 };

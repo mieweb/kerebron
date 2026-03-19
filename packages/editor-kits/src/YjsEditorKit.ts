@@ -36,10 +36,6 @@ export class YjsEditorKit implements EditorKit {
         ydoc,
       );
 
-      wsProvider.addEventListener('status', (event) => {
-        console.log('wsProvider status', event.detail.status); // logs "connected" or "disconnected"
-      });
-
       return [wsProvider, ydoc];
     };
 

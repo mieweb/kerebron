@@ -9,7 +9,10 @@ import * as syncProtocol from 'y-protocols/sync';
 import * as authProtocol from 'y-protocols/auth';
 import * as awarenessProtocol from 'y-protocols/awareness';
 
-import { MessageHandler } from '@kerebron/extension-yjs/YjsProvider';
+import {
+  MessageHandler,
+  MessageType,
+} from '@kerebron/extension-yjs/YjsProvider';
 import {
   messageAuth,
   messageAwareness,
@@ -233,7 +236,7 @@ export class MeteorProvider extends EventTarget {
       decoder: decoding.Decoder,
       provider: MeteorProvider,
       emitSynced: boolean,
-      _messageType: number,
+      _messageType: MessageType,
     ) => {
       encoding.writeVarUint(encoder, messageSync);
       const syncMessageType = syncProtocol.readSyncMessage(
@@ -255,7 +258,7 @@ export class MeteorProvider extends EventTarget {
       _decoder: decoding.Decoder,
       provider: MeteorProvider,
       _emitSynced: boolean,
-      _messageType: number,
+      _messageType: MessageType,
     ) => {
       encoding.writeVarUint(encoder, messageAwareness);
       encoding.writeVarUint8Array(
@@ -272,7 +275,7 @@ export class MeteorProvider extends EventTarget {
       decoder: decoding.Decoder,
       provider: MeteorProvider,
       _emitSynced: boolean,
-      _messageType: number,
+      _messageType: MessageType,
     ) => {
       awarenessProtocol.applyAwarenessUpdate(
         provider.awareness,
@@ -294,7 +297,7 @@ export class MeteorProvider extends EventTarget {
       decoder: decoding.Decoder,
       provider: MeteorProvider,
       _emitSynced: boolean,
-      _messageType: number,
+      _messageType: MessageType,
     ) => {
       authProtocol.readAuthMessage(
         decoder,

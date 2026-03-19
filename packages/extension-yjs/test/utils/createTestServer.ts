@@ -5,7 +5,13 @@ import { HonoYjsMemAdapter } from '@kerebron/extension-server-hono/HonoYjsMemAda
 
 let port = 34000;
 
-export async function createTestServer(): Promise<Deno.HttpServer> {
+interface TestServer {
+  denoServer: Deno.HttpServer;
+  port: number;
+  yjsAdapter: HonoYjsMemAdapter;
+}
+
+export async function createTestServer(): Promise<TestServer> {
   const yjsAdapter = new HonoYjsMemAdapter();
 
   const app = new Hono();
@@ -13,7 +19,7 @@ export async function createTestServer(): Promise<Deno.HttpServer> {
   app.use(
     '/*',
     cors({
-      origin: ['http://localhost:' + port, 'https://kerebron.com'],
+      origin: ['http://localhost:' + port],
     }),
   );
 
@@ -37,8 +43,12 @@ export async function createTestServer(): Promise<Deno.HttpServer> {
 
   while (true) {
     try {
-      const server = Deno.serve({ port }, app.fetch);
-      return server;
+      const denoServer = Deno.serve({ hostname: 'localhost', port }, app.fetch);
+      return {
+        denoServer,
+        port,
+        yjsAdapter,
+      };
     } catch (err: any) {
       if ('EADDRINUSE' === err.code) {
         port++;
@@ -49,6 +59,7 @@ export async function createTestServer(): Promise<Deno.HttpServer> {
   }
 }
 
-export function shutdownServer(server: Deno.HttpServer) {
-  server.shutdown();
+export async function shutdownServer(server: TestServer) {
+  await server.denoServer.shutdown();
+  server.yjsAdapter.destroy();
 }

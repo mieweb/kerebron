@@ -15,6 +15,7 @@ import {
   MessageHandler,
   messageQueryAwareness,
   messageSync,
+  MessageType,
   YjsProvider,
 } from './YjsProvider.ts';
 
@@ -76,18 +77,21 @@ const closeWebsocketConnection = (
     }
     // Start with no reconnect timeout and increase timeout by
     // using exponential backoff starting with 100ms
-    setTimeout(
-      setupWS,
-      math.min(
-        math.pow(2, provider.wsUnsuccessfulReconnects) * 100,
-        provider.maxBackoffTime,
-      ),
-      provider,
-    );
+    if (!provider.destroyed) {
+      provider.setupWSTimeout = setTimeout(
+        setupWS,
+        math.min(
+          math.pow(2, provider.wsUnsuccessfulReconnects) * 100,
+          provider.maxBackoffTime,
+        ),
+        provider,
+      );
+    }
   }
 };
 
 const setupWS = (provider: WebsocketProvider) => {
+  provider.setupWSTimeout = undefined;
   if (provider.shouldConnect && !provider.ws) {
     const websocket = new provider._WS(provider.url, provider.protocols);
     websocket.binaryType = 'arraybuffer';
@@ -194,6 +198,7 @@ export class WebsocketProvider extends EventTarget implements YjsProvider {
   protocols: string[];
   _WS: typeof WebSocket;
   awareness: awarenessProtocol.Awareness;
+  destroyed = false;
   wsconnected = false;
   wsconnecting = false;
   bcconnected = false;
@@ -209,6 +214,7 @@ export class WebsocketProvider extends EventTarget implements YjsProvider {
   ) => void;
   private _exitHandler: () => void;
   private _checkInterval: number;
+  setupWSTimeout: number | undefined;
 
   constructor(
     serverUrl: string,
@@ -342,8 +348,13 @@ export class WebsocketProvider extends EventTarget implements YjsProvider {
   }
 
   destroy() {
+    this.destroyed = true;
+
     if (this._resyncInterval !== 0) {
       clearInterval(this._resyncInterval);
+    }
+    if (this.setupWSTimeout) {
+      clearTimeout(this.setupWSTimeout);
     }
     clearInterval(this._checkInterval);
     this.disconnect();
@@ -352,7 +363,7 @@ export class WebsocketProvider extends EventTarget implements YjsProvider {
     // }
     this.awareness.off('update', this._awarenessUpdateHandler);
     this.doc.off('update', this._updateHandler);
-    // super.destroy();
+    this.awareness.destroy();
   }
 
   connectBc() {
@@ -438,10 +449,10 @@ export class WebsocketProvider extends EventTarget implements YjsProvider {
       decoder: decoding.Decoder,
       provider: WebsocketProvider,
       emitSynced: boolean,
-      _messageType: number,
+      _messageType: MessageType,
     ) => {
       encoding.writeVarUint(encoder, messageSync);
-      const syncMessageType = syncProtocol.readSyncMessage(
+      const syncMessageType: MessageType = syncProtocol.readSyncMessage(
         decoder,
         encoder,
         provider.doc,
@@ -460,7 +471,7 @@ export class WebsocketProvider extends EventTarget implements YjsProvider {
       _decoder: decoding.Decoder,
       provider: WebsocketProvider,
       _emitSynced: boolean,
-      _messageType: number,
+      _messageType: MessageType,
     ) => {
       encoding.writeVarUint(encoder, messageAwareness);
       encoding.writeVarUint8Array(
@@ -477,7 +488,7 @@ export class WebsocketProvider extends EventTarget implements YjsProvider {
       decoder: decoding.Decoder,
       provider: WebsocketProvider,
       _emitSynced: boolean,
-      _messageType: number,
+      _messageType: MessageType,
     ) => {
       awarenessProtocol.applyAwarenessUpdate(
         provider.awareness,
@@ -491,7 +502,7 @@ export class WebsocketProvider extends EventTarget implements YjsProvider {
       decoder: decoding.Decoder,
       provider: WebsocketProvider,
       _emitSynced: boolean,
-      _messageType: number,
+      _messageType: MessageType,
     ) => {
       authProtocol.readAuthMessage(
         decoder,

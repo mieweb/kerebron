@@ -11,13 +11,10 @@ import type {
 
 import { ySyncPlugin } from './ySyncPlugin.ts';
 import { yPositionPlugin } from './yPositionPlugin.ts';
-import { redo, undo, yUndoPlugin } from './yUndoPlugin.ts';
+import { redoCommand, undoCommand, yUndoPlugin } from './yUndoPlugin.ts';
 import { ySyncPluginKey } from './keys.ts';
 
-import type { YjsProvider } from './YjsProvider.ts';
-export type { YjsProvider } from './YjsProvider.ts';
-
-export type CreateYjsProvider = (roomId: string) => [YjsProvider, Y.Doc];
+import type { CreateYjsProvider } from './YjsProvider.ts';
 
 export interface YjsConfig {
   createYjsProvider: CreateYjsProvider;
@@ -56,11 +53,28 @@ export class ExtensionYjs extends Extension {
       };
     };
 
+    const getYDoc: CommandFactory = (
+      { resolve, reject }: {
+        resolve: (doc: Y.Doc) => void;
+        reject: (reason: any) => void;
+      },
+    ) => {
+      return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+        const tr = state.tr;
+        tr.setMeta(ySyncPluginKey, { getYDoc: { resolve, reject } });
+        if (dispatch) {
+          dispatch(tr);
+        }
+        return true;
+      };
+    };
+
     return {
-      'changeRoom': changeRoom,
-      'leaveRoom': leaveRoom,
-      'undo': () => undo,
-      'redo': () => redo,
+      getYDoc,
+      changeRoom,
+      leaveRoom,
+      'undo': () => undoCommand,
+      'redo': () => redoCommand,
     };
   }
 
@@ -77,7 +91,7 @@ export class ExtensionYjs extends Extension {
 
   override getProseMirrorPlugins(): Plugin[] {
     return [
-      ySyncPlugin(this.editor.schema, this.config.createYjsProvider),
+      ySyncPlugin(this.editor, this.config.createYjsProvider),
       yPositionPlugin(this.editor),
       yUndoPlugin(),
     ];

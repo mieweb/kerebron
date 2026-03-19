@@ -20,7 +20,7 @@ function createNewProsemirrorView() {
   const editor = CoreEditor.create({
     editorKits: [
       new BrowserLessEditorKit(),
-      YjsEditorKit.createFrom('test-user', 'ws://localhost:12345'),
+      YjsEditorKit.createFrom('ws://localhost:12345'),
     ],
   });
 

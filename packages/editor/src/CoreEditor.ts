@@ -131,12 +131,12 @@ export class CoreEditor extends EventTarget {
     return this.commandManager.commandFactories;
   }
 
-  public chain(): ChainedCommands {
-    return this.commandManager.createChain();
+  public chain(startTr?: Transaction): ChainedCommands {
+    return this.commandManager.createChain(startTr);
   }
 
-  public can(): ChainedCommands {
-    return this.commandManager.createCan();
+  public can(startTr?: Transaction): ChainedCommands {
+    return this.commandManager.createCan(startTr);
   }
 
   public link(source: CoreEditor): ChainedCommands {
@@ -321,6 +321,14 @@ export class CoreEditor extends EventTarget {
     this.dispatchEvent(event);
   }
 
+  public getConverter(mediaType: string) {
+    const converter = this.extensionManager.converters[mediaType];
+    if (!converter) {
+      throw new Error('Converter not found for: ' + mediaType);
+    }
+    return converter;
+  }
+
   public getDocument() {
     return this.state.doc;
   }
@@ -330,10 +338,7 @@ export class CoreEditor extends EventTarget {
   }
 
   public async loadDocument(mediaType: string, content: Uint8Array) {
-    const converter = this.extensionManager.converters[mediaType];
-    if (!converter) {
-      throw new Error('Converter not found for: ' + mediaType);
-    }
+    const converter = this.getConverter(mediaType);
     const parsedDoc = await converter.toDoc(content);
 
     let newState = EditorState.create({
@@ -365,15 +370,28 @@ export class CoreEditor extends EventTarget {
   }
 
   public async saveDocument(mediaType: string): Promise<Uint8Array> {
-    const converter = this.extensionManager.converters[mediaType];
-    if (!converter) {
-      throw new Error('Converter not found for: ' + mediaType);
-    }
-
+    const converter = this.getConverter(mediaType);
     const json = this.state.doc.toJSON();
     const clonedDoc = ProseMirrorNode.fromJSON(this.state.schema, json);
 
     return await converter.fromDoc(clonedDoc);
+  }
+
+  async patchDocument(mediaType: string, content: Uint8Array) {
+    const converter = this.getConverter(mediaType);
+    const parsedDoc = await converter.toDoc(content);
+
+    const tr = this.state.tr;
+    tr.replaceWith(
+      0,
+      this.state.doc.content.size,
+      parsedDoc.content,
+    );
+    this.dispatchTransaction(tr);
+  }
+
+  patchDocumentText(mediaType: string, content: string) {
+    return this.patchDocument(mediaType, new TextEncoder().encode(content));
   }
 
   public getJSON(): JSONContent {

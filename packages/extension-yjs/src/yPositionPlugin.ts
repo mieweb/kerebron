@@ -45,20 +45,6 @@ const updateMetas = () => {
   });
 };
 
-export const setMeta = <K, V>(view: EditorView, key: K, value: V) => {
-  if (!viewsToUpdate) {
-    viewsToUpdate = new Map<EditorView, Map<K, V>>();
-    setTimeout(updateMetas, 0);
-  }
-
-  let subMap = viewsToUpdate.get(view);
-  if (subMap === undefined) {
-    subMap = new Map<K, V>();
-    viewsToUpdate.set(view, subMap);
-  }
-  subMap.set(key, value);
-};
-
 type AwarenessListener = (
   { added, updated, removed }: {
     added: number[];
@@ -123,10 +109,8 @@ function initAwareness(state: YPositionPluginState, editor: CoreEditor) {
       return;
     }
 
-    const remoteStates: SelectionState[] = [];
-
     const { ydoc, xmlFragment } = yjs;
-
+    const remoteStates: SelectionState[] = [];
     awareness.getStates().forEach((aw, clientId) => {
       if (!defaultAwarenessStateFilter(ydoc.clientID, clientId, aw)) {
         return;

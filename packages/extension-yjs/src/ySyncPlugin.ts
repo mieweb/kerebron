@@ -2,20 +2,9 @@ import * as Y from 'yjs';
 import { Plugin } from 'prosemirror-state';
 
 import { ySyncPluginKey, yUndoPluginKey } from './keys.ts';
-import { defaultColors, ProsemirrorBinding } from './ProsemirrorBinding.ts';
-import { Schema } from 'prosemirror-model';
-import type { CreateYjsProvider, YjsProvider } from './ExtensionYjs.ts';
-import { prosemirrorToYDoc } from '../test/convertUtils.ts';
-
-export type TransactFunc<T> = (
-  f: (arg0?: Y.Transaction) => T,
-  origin?: any,
-) => T;
-
-export interface ColorDef {
-  light: string;
-  dark: string;
-}
+import type { CreateYjsProvider } from './YjsProvider.ts';
+import { PmYjsBinding } from './binding/PmYjsBinding.ts';
+import { CoreEditor } from '@kerebron/editor';
 
 interface YSyncOpts {
   permanentUserData?: Y.PermanentUserData;
@@ -24,28 +13,24 @@ interface YSyncOpts {
 }
 
 export interface YSyncPluginState {
-  roomId: string;
-  provider?: YjsProvider;
-  type: Y.XmlFragment;
-  ydoc: Y.Doc;
-  connectionState: ConnectionState;
-  binding: ProsemirrorBinding;
-  addToHistory: boolean;
+  binding: PmYjsBinding;
   isChangeOrigin: boolean;
-  restore: any;
-  snapshot?: Y.Snapshot;
-  prevSnapshot?: Y.Snapshot;
-  isUndoRedoOperation: boolean;
+  isUndoRedoOperation: boolean; // Used in y-history.test.ts
   permanentUserData?: Y.PermanentUserData;
 }
 
 interface YSyncMeta {
+  getYDoc?: {
+    resolve: (doc: Y.Doc) => void;
+    reject: (reason: any) => void;
+  };
   changeRoom?: {
     roomId: string;
   };
   leaveRoom?: boolean;
   isChangeOrigin?: boolean;
   isUndoRedoOperation?: boolean;
+  restore?: any;
 }
 
 /**
@@ -54,7 +39,7 @@ interface YSyncMeta {
  * This plugin also keeps references to the type and the shared document so other plugins can access it.
  */
 export const ySyncPlugin = (
-  schema: Schema,
+  editor: CoreEditor,
   createYjsProvider: CreateYjsProvider,
   {
     onFirstRender = () => {
@@ -64,145 +49,76 @@ export const ySyncPlugin = (
   let initialContentChanged = false;
   const plugin: Plugin<YSyncPluginState> = new Plugin<YSyncPluginState>({
     props: {
-      // editable: (state) => {
-      //   const syncState = ySyncPluginKey.getState(state)!;
-      //   return syncState.snapshot && syncState.prevSnapshot;
-      // },
+      editable: (state) => {
+        return true;
+      },
     },
     key: ySyncPluginKey,
     state: {
       init: (_initargs, state): YSyncPluginState => {
-        const ydoc = prosemirrorToYDoc(state.doc, 'prosemirror');
-
-        const yXmlFragment: Y.XmlFragment = ydoc.getXmlFragment('prosemirror');
-        const binding = new ProsemirrorBinding(yXmlFragment, new Map());
-
         return {
-          connectionState: 'idle',
-          roomId: '',
-          provider: undefined,
-          binding,
-          type: yXmlFragment,
-          ydoc: ydoc,
-          snapshot: undefined,
-          prevSnapshot: undefined,
+          binding: new PmYjsBinding(editor),
           isChangeOrigin: false,
           isUndoRedoOperation: false,
-          addToHistory: true,
-          restore: undefined,
           permanentUserData: undefined,
         };
       },
       apply: (tr, pluginState: YSyncPluginState) => {
         const pluginMeta: Partial<YSyncMeta> = tr.getMeta(ySyncPluginKey);
 
-        if (pluginMeta?.leaveRoom) {
-          const ydoc = new Y.Doc();
-          const yXmlFragment: Y.XmlFragment = ydoc.getXmlFragment(
-            'prosemirror',
-          );
-          pluginState.type = yXmlFragment, pluginState.ydoc = ydoc;
-          pluginState.provider = undefined;
+        const changeUser = tr.getMeta('changeUser');
+        if (changeUser) {
+          pluginState.binding.changeUser(changeUser.user);
+        }
 
-          pluginState.snapshot = undefined;
-          pluginState.prevSnapshot = undefined;
+        if (pluginMeta?.getYDoc) {
+          const yjs = pluginState.binding.getYjs();
+          if (yjs) {
+            pluginMeta.getYDoc.resolve(yjs.ydoc);
+          } else {
+            if (pluginMeta.getYDoc.reject) {
+              pluginMeta.getYDoc.reject(new Error('No yjs'));
+            } else {
+              throw new Error('No yjs');
+            }
+          }
+          return pluginState;
+        }
+
+        if (pluginMeta?.leaveRoom) {
           pluginState.isChangeOrigin = false;
           pluginState.isUndoRedoOperation = false;
-          pluginState.addToHistory = true;
-          pluginState.restore = undefined;
 
           initialContentChanged = false;
 
-          pluginState.binding.changeRoom(pluginState.type); // TODO?
-          setTimeout(() => {
-            pluginState.binding._forceRerender();
-          }, 0);
+          pluginState.binding.leaveRoom(tr);
 
           return pluginState;
         }
 
         if (pluginMeta?.changeRoom) {
-          const [provider, ydoc] = createYjsProvider(
-            pluginMeta.changeRoom.roomId,
-          );
-          pluginState.provider = provider;
-          const yXmlFragment: Y.XmlFragment = ydoc.getXmlFragment(
-            'prosemirror',
-          );
-          pluginState.type = yXmlFragment, pluginState.ydoc = ydoc;
-
-          if (pluginState.provider) {
-            if (pluginState.binding.prosemirrorView) {
-              const view = pluginState.binding.prosemirrorView;
-              const tr = view.state.tr.setMeta(
-                'yjs:awareness',
-                pluginState.provider.awareness,
-              );
-              view.dispatch(tr);
-            }
-          }
-
-          pluginState.snapshot = undefined;
-          pluginState.prevSnapshot = undefined;
           pluginState.isChangeOrigin = false;
           pluginState.isUndoRedoOperation = false;
-          pluginState.addToHistory = true;
-          pluginState.restore = undefined;
 
           initialContentChanged = false;
 
-          pluginState.binding.changeRoom(pluginState.type);
-          setTimeout(() => {
-            pluginState.binding._forceRerender();
-          }, 0);
+          const roomId = pluginMeta.changeRoom.roomId;
+          pluginState.binding.changeRoom(
+            roomId,
+            createYjsProvider,
+            tr,
+          );
 
           return pluginState;
         }
 
-        pluginState.addToHistory = tr.getMeta('addToHistory') !== false;
+        pluginState.binding.addToYjsHistory =
+          tr.getMeta('addToYjsHistory') !== false;
         // always set isChangeOrigin. If undefined, this is not change origin.
         pluginState.isChangeOrigin = !!pluginMeta?.isChangeOrigin;
         pluginState.isUndoRedoOperation = !!pluginMeta?.isChangeOrigin &&
           !!pluginMeta?.isUndoRedoOperation;
 
-        const binding = pluginState.binding;
-
-        if (binding?.prosemirrorView) {
-          if (pluginMeta?.snapshot || pluginMeta?.prevSnapshot) {
-            // snapshot changed, rerender next
-            setTimeout(() => {
-              if (!binding.prosemirrorView) {
-                return;
-              }
-              if (pluginMeta.restore == null) {
-                binding._renderSnapshot(
-                  pluginMeta.snapshot,
-                  pluginMeta.prevSnapshot,
-                  pluginState,
-                );
-              } else {
-                binding._renderSnapshot(
-                  pluginMeta.snapshot,
-                  pluginMeta.snapshot,
-                  pluginState,
-                );
-                // reset to current prosemirror state
-                delete pluginState.restore;
-                delete pluginState.snapshot;
-                delete pluginState.prevSnapshot;
-                initialContentChanged = false;
-                binding.mux(() => {
-                  if (!binding.prosemirrorView) {
-                    return;
-                  }
-                  binding.prosemirrorChanged(
-                    binding.prosemirrorView.state.doc,
-                  );
-                });
-              }
-            }, 0);
-          }
-        }
         return pluginState;
       },
     },
@@ -212,11 +128,6 @@ export const ySyncPlugin = (
       )!;
       const binding = pluginState.binding;
 
-      binding.initView(view);
-      if (binding.mapping.size === 0) {
-        // force rerender to update the bindings mapping
-        binding._forceRerender();
-      }
       onFirstRender();
       return {
         update: () => {
@@ -229,37 +140,26 @@ export const ySyncPlugin = (
 
           const binding = pluginState.binding;
           if (
-            !pluginState.snapshot && !pluginState.prevSnapshot
+            // If the content doesn't change initially, we don't render anything to Yjs
+            // If the content was cleared by a user action, we want to catch the change and
+            // represent it in Yjs
+            initialContentChanged ||
+            view.state.doc.content.findDiffStart(
+                view.state.doc.type.createAndFill()!.content,
+              ) !== null
           ) {
+            initialContentChanged = true;
             if (
-              // If the content doesn't change initially, we don't render anything to Yjs
-              // If the content was cleared by a user action, we want to catch the change and
-              // represent it in Yjs
-              initialContentChanged ||
-              view.state.doc.content.findDiffStart(
-                  view.state.doc.type.createAndFill()!.content,
-                ) !== null
+              pluginState.binding.addToYjsHistory === false &&
+              !pluginState.isChangeOrigin
             ) {
-              initialContentChanged = true;
-              if (
-                pluginState.addToHistory === false &&
-                !pluginState.isChangeOrigin
-              ) {
-                const yUndoPluginState = yUndoPluginKey.getState(view.state);
-                if (yUndoPluginState?.undoManager) {
-                  yUndoPluginState.undoManager.stopCapturing();
-                }
+              const yUndoPluginState = yUndoPluginKey.getState(view.state);
+              if (yUndoPluginState?.undoManager) {
+                yUndoPluginState.undoManager.stopCapturing();
               }
-              binding.mux(() => {
-                if (!pluginState.ydoc) {
-                  return;
-                }
-                pluginState.ydoc.transact((tr) => {
-                  tr.meta.set('addToHistory', pluginState.addToHistory);
-                  binding.prosemirrorChanged(view.state.doc);
-                }, ySyncPluginKey);
-              });
             }
+
+            binding.pmChanged();
           }
         },
         destroy: () => {

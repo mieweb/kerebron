@@ -2,9 +2,9 @@ import * as PModel from 'prosemirror-model';
 import { Mark, Schema } from 'prosemirror-model';
 import * as Y from 'yjs';
 
-import type { BindingMetadata } from './ProsemirrorBinding.ts';
-import { ySyncPluginKey } from './keys.ts';
-import { isVisible } from './utils.ts';
+import type { BindingMetadata } from './BindingMetadata.ts';
+import { ySyncPluginKey } from '../keys.ts';
+import { isVisible } from '../utils.ts';
 import { yattr2markname } from './updateYFragment.ts';
 
 export const attributesToMarks = (

@@ -103,6 +103,10 @@ export class Room {
       },
     );
   }
+
+  destroy() {
+    this.awareness.destroy();
+  }
 }
 
 const rooms: Map<string, Room> = new Map();
@@ -114,6 +118,12 @@ export class HonoYjsMemAdapter implements HonoWsAdapter {
 
   constructor() {
     this.rooms = rooms;
+  }
+
+  destroy() {
+    for (const [_roomId, room] of this.rooms) {
+      room.destroy();
+    }
   }
 
   getRoomNames() {

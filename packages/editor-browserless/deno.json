@@ -5,6 +5,7 @@
   "exports": {
     ".": "./src/mod.ts",
     "./BrowserLessEditorKit": "./src/BrowserLessEditorKit.ts",
+    "./BrowserLessCodeEditorKit": "./src/BrowserLessCodeEditorKit.ts",
     "./window": "./src/window.ts"
   }
 }

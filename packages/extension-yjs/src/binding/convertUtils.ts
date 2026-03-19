@@ -1,16 +1,16 @@
-import { Fragment, Node, type Schema } from 'prosemirror-model';
 import * as Y from 'yjs';
-import { updateYFragment } from '../src/updateYFragment.ts';
-import { createNodeFromYElement } from '../src/createNodeFromYElement.ts';
-import { TransactFunc } from '../src/ySyncPlugin.ts';
-import { BindingMetadata } from '../src/ProsemirrorBinding.ts';
-// import { TransactFunc } from './ySyncPlugin.ts';
-// import { BindingMetadata } from './ProsemirrorBinding.ts';
-// import { createNodeFromYElement, updateYFragment } from './updateYFragment.ts';
+
+import { Fragment, Node, type Schema } from 'prosemirror-model';
+
+import { TransactFunc } from '../lib.ts';
+
+import { updateYFragment } from './updateYFragment.ts';
+import { createNodeFromYElement } from './createNodeFromYElement.ts';
+import { BindingMetadata } from './BindingMetadata.ts';
 
 export const createEmptyMeta = (): BindingMetadata => ({
   mapping: new Map(),
-  isOMark: new Map(),
+  isOverlappingMark: new Map(),
 });
 
 /**
@@ -84,7 +84,10 @@ export function prosemirrorToYXmlFragment(
   const ydoc: { transact: TransactFunc<void> } = type.doc
     ? type.doc
     : { transact: (transaction) => transaction(undefined) };
-  updateYFragment(ydoc, type, doc, { mapping: new Map(), isOMark: new Map() });
+  updateYFragment(ydoc, type, doc, {
+    mapping: new Map(),
+    isOverlappingMark: new Map(),
+  });
   return type;
 }
 

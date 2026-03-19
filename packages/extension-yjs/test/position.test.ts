@@ -1,20 +1,20 @@
-import { EditorState } from 'prosemirror-state';
 import * as Y from 'yjs';
 
+import { EditorState } from 'prosemirror-state';
+
 import { DummyEditorView } from '@kerebron/editor/DummyEditorView';
+import { debugYDoc } from '@kerebron/extension-yjs/debug';
+
+import { createEmptyMeta } from '../src/binding/convertUtils.ts';
 import {
   absolutePositionToRelativePosition,
   relativePositionToAbsolutePosition,
-} from '../src/lib.ts';
-import { ySyncPlugin } from '../src/ySyncPlugin.ts';
-import { yUndoPlugin } from '../src/yUndoPlugin.ts';
+} from '../src/position.ts';
+import { getRelativeSelection } from '../src/ui/selection.ts';
 
 import { schema as codeSchema } from './codeSchema.ts';
-import { createEmptyMeta } from './convertUtils.ts';
-import { ProsemirrorBinding } from '../src/ProsemirrorBinding.ts';
-import { debugYDoc } from '@kerebron/extension-yjs/debug';
 
-const createNewComplexProsemirrorView = (y: Y.Doc, undoManager = false) => {
+const createNewComplexProsemirrorView = () => {
   const view = new DummyEditorView({
     state: EditorState.create({
       schema: codeSchema,
@@ -29,7 +29,6 @@ const createNewComplexProsemirrorView = (y: Y.Doc, undoManager = false) => {
 Deno.test('position conversion', () => {
   // <code_block>bbbbb2</code_block>
   // <code_block lang="yaml">TEST</code_block>
-  //
 
   // const ydoc = new Y.Doc()
   // const yxmlElement = ydoc.get('prosemirror', Y.XmlElement)
@@ -53,66 +52,53 @@ Deno.test('position conversion', () => {
 
     // const permanentUserData = new Y.PermanentUserData(ydoc)
     // permanentUserData.setUserMapping(ydoc, ydoc.clientID, 'me')
-    console.log('yxml', yxml.toString());
   });
 
-  const view = createNewComplexProsemirrorView(ydoc);
-
-  // const p = new Y.XmlElement('paragraph')
-  // const ytext = new Y.XmlText('hello world!')
-  // p.insert(0, [ytext])
-  // yxml.insert(0, [p])
-  // const snapshotDoc1 = Y.encodeStateAsUpdateV2(ydoc)
-  // ytext.delete(0, 6)
-  // const snapshotDoc2 = Y.encodeStateAsUpdateV2(ydoc)
-  // view.dispatch(
-  //   view.state.tr.setMeta(ySyncPluginKey, { snapshot: snapshotDoc2, prevSnapshot: snapshotDoc1, permanentUserData })
-  // )
-  //
-  //
+  const view = createNewComplexProsemirrorView();
 
   const yXmlFragment = yxml;
 
   const meta = createEmptyMeta();
   const mapping = meta.mapping;
 
-  const binding = new ProsemirrorBinding(yXmlFragment, mapping);
+  // const getRelativeSelection = (
+  //   pmbinding: ProsemirrorBinding,
+  //   state: EditorState,
+  // ) => ({
+  //   type: (
+  //     /** @type {any} */
+  //     state.selection.jsonID
+  //   ),
+  //   anchor: absolutePositionToRelativePosition(
+  //     state.selection.anchor,
+  //     pmbinding.type,
+  //     pmbinding.mapping,
+  //   ),
+  //   head: absolutePositionToRelativePosition(
+  //     state.selection.head,
+  //     pmbinding.type,
+  //     pmbinding.mapping,
+  //   ),
+  // });
 
-  const getRelativeSelection = (
-    pmbinding: ProsemirrorBinding,
-    state: EditorState,
-  ) => ({
-    type: (
-      /** @type {any} */
-      state.selection.jsonID
-    ),
-    anchor: absolutePositionToRelativePosition(
-      state.selection.anchor,
-      pmbinding.type,
-      pmbinding.mapping,
-    ),
-    head: absolutePositionToRelativePosition(
-      state.selection.head,
-      pmbinding.type,
-      pmbinding.mapping,
-    ),
-  });
-
-  const relSel = getRelativeSelection(binding, view.state);
+  const relSel = getRelativeSelection(yXmlFragment, mapping, view.state);
 
   const anchor = relativePositionToAbsolutePosition(
-    binding.ydoc,
-    binding.type,
+    ydoc,
+    yxml,
     relSel.anchor,
-    binding.mapping,
+    mapping,
   );
   const head = relativePositionToAbsolutePosition(
-    binding.ydoc,
-    binding.type,
+    ydoc,
+    yxml,
     relSel.head,
-    binding.mapping,
+    mapping,
   );
 
-  console.log('pdoc', JSON.stringify(view.state.doc.toJSON()));
-  console.log('ydoc', debugYDoc(ydoc));
+  // console.log('pdoc', JSON.stringify(view.state.doc.toJSON()));
+  // console.log('ydoc', debugYDoc(ydoc));
+
+  // console.log('anchor', anchor);
+  // console.log('head', head);
 });

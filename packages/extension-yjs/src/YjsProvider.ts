@@ -10,12 +10,23 @@ export const messageQueryAwareness = 3;
 export const messageAwareness = 1;
 export const messageAuth = 2;
 
+export type CreateYjsProvider = (roomId: string) => [YjsProvider, Y.Doc];
+
+export const MessageType = {
+  Sync: 0,
+  Awareness: 1,
+  Auth: 2,
+  QueryAwareness: 3,
+} as const;
+
+export type MessageType = typeof MessageType[keyof typeof MessageType];
+
 export type MessageHandler<T extends YjsProvider> = (
   encoder: encoding.Encoder,
   decoder: decoding.Decoder,
   provider: T,
   emitSynced: boolean,
-  messageType: number,
+  messageType: MessageType,
 ) => void;
 
 export interface YjsProviderEventMap {
@@ -32,6 +43,8 @@ export interface YjsProvider extends EventTarget {
   awareness: awarenessProtocol.Awareness;
   doc: Y.Doc;
   synced: boolean;
+
+  destroy();
 
   addEventListener<K extends keyof YjsProviderEventMap>(
     type: K,

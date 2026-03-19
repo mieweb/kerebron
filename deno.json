@@ -47,7 +47,7 @@
     "build:legacy-compat": "deno task -f legacy-compat build",
     "build:ext-odt": "deno task -f @kerebron/odt-wasm build",
     "build:ext-wasm": "deno task -f @kerebron/wasm build",
-    "test:pre-push": "deno test --no-check --allow-read=. --allow-write=. packages/extension-markdown/test/ packages/extension-odt/test/",
+    "test:pre-push": "deno test --no-check --allow-env --allow-net=localhost --allow-read=. --allow-write=. packages/extension-markdown/test/ packages/extension-odt/test/ packages/extension-yjs/test/",
     "postinstall": "ln -sf ../../utils/hooks/commit-msg .git/hooks/commit-msg && ln -sf ../../utils/hooks/pre-commit .git/hooks/pre-commit && ln -sf ../../utils/hooks/pre-push .git/hooks/pre-push"
   },
   "imports": {
