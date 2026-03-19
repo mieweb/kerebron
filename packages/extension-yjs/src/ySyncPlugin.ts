@@ -30,7 +30,15 @@ interface YSyncMeta {
   leaveRoom?: boolean;
   isChangeOrigin?: boolean;
   isUndoRedoOperation?: boolean;
-  restore?: any;
+  getYSnapshot?: {
+    resolve: (snapshot: Uint8Array) => void;
+    reject: (reason: any) => void;
+  };
+  setYSnapshot?: {
+    prevSnapshot?: Uint8Array;
+    snapshot: Uint8Array;
+  };
+  resetYSnapshot?: boolean;
 }
 
 /**
@@ -50,7 +58,8 @@ export const ySyncPlugin = (
   const plugin: Plugin<YSyncPluginState> = new Plugin<YSyncPluginState>({
     props: {
       editable: (state) => {
-        return true;
+        const syncState = ySyncPluginKey.getState(state)!;
+        return syncState.binding.isEditable();
       },
     },
     key: ySyncPluginKey,
@@ -119,6 +128,34 @@ export const ySyncPlugin = (
         pluginState.isUndoRedoOperation = !!pluginMeta?.isChangeOrigin &&
           !!pluginMeta?.isUndoRedoOperation;
 
+        if (pluginMeta?.getYSnapshot) {
+          const yjs = pluginState.binding.getYjs();
+          if (yjs) {
+            const snapshot = Y.snapshot(yjs.ydoc);
+            pluginMeta.getYSnapshot.resolve(Y.encodeSnapshotV2(snapshot));
+          } else {
+            if (pluginMeta.getYSnapshot.reject) {
+              pluginMeta.getYSnapshot.reject(new Error('No yjs'));
+            } else {
+              throw new Error('No yjs');
+            }
+          }
+          return pluginState;
+        }
+
+        if (pluginMeta?.resetYSnapshot) {
+          pluginState.binding.diffViewer.reset();
+          return pluginState;
+        }
+
+        if (pluginMeta?.setYSnapshot) {
+          const { prevSnapshot, snapshot } = pluginMeta?.setYSnapshot;
+          setTimeout(() => { // Prevent from snapshot being overwritten by current tr
+            pluginState.binding.setSnapshot(snapshot, prevSnapshot);
+          }, 0);
+          return pluginState;
+        }
+
         return pluginState;
       },
     },
@@ -139,27 +176,29 @@ export const ySyncPlugin = (
           }
 
           const binding = pluginState.binding;
-          if (
-            // If the content doesn't change initially, we don't render anything to Yjs
-            // If the content was cleared by a user action, we want to catch the change and
-            // represent it in Yjs
-            initialContentChanged ||
-            view.state.doc.content.findDiffStart(
-                view.state.doc.type.createAndFill()!.content,
-              ) !== null
-          ) {
-            initialContentChanged = true;
+          if (binding.isEditable()) {
             if (
-              pluginState.binding.addToYjsHistory === false &&
-              !pluginState.isChangeOrigin
+              // If the content doesn't change initially, we don't render anything to Yjs
+              // If the content was cleared by a user action, we want to catch the change and
+              // represent it in Yjs
+              initialContentChanged ||
+              view.state.doc.content.findDiffStart(
+                  view.state.doc.type.createAndFill()!.content,
+                ) !== null
             ) {
-              const yUndoPluginState = yUndoPluginKey.getState(view.state);
-              if (yUndoPluginState?.undoManager) {
-                yUndoPluginState.undoManager.stopCapturing();
+              initialContentChanged = true;
+              if (
+                pluginState.binding.addToYjsHistory === false &&
+                !pluginState.isChangeOrigin
+              ) {
+                const yUndoPluginState = yUndoPluginKey.getState(view.state);
+                if (yUndoPluginState?.undoManager) {
+                  yUndoPluginState.undoManager.stopCapturing();
+                }
               }
-            }
 
-            binding.pmChanged();
+              binding.pmChanged();
+            }
           }
         },
         destroy: () => {

@@ -13,7 +13,7 @@ const _convolute = (digest: Uint8Array) => {
 export const hashOfJSON = (json: any) =>
   buf.toBase64(_convolute(sha256.digest(buf.encodeAny(json))));
 
-export const isVisible = (item: Y.Item, snapshot: Y.Snapshot) =>
+export const isVisible = (item: Y.Item, snapshot?: Y.Snapshot) =>
   snapshot === undefined ? !item.deleted : (snapshot.sv.has(item.id.client) &&
     (snapshot.sv.get(item.id.client)!) > item.id.clock &&
     !Y.isDeleted(snapshot.ds, item.id));

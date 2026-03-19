@@ -77,6 +77,7 @@ Deno.test('suppress_pm_writes_until_initial_sync_prevents_early_push', async () 
     const { editor: writer } = createNewDocEditor(port, 'writer');
     await writer.loadDocumentText('text/x-markdown', '# Remote Truth');
     writer.chain().changeRoom('room-sync-gate').run();
+    await sleep(STEP_TS);
 
     // Prepare local content before join; with sync gating this must NOT be pushed
     const { editor: joiner } = createNewDocEditor(port, 'joiner');

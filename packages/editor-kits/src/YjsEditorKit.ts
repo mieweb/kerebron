@@ -2,11 +2,11 @@ import * as Y from 'yjs';
 import { WebsocketProvider } from '@kerebron/extension-yjs/WebsocketProvider';
 
 import type { AnyExtensionOrReq, EditorKit } from '@kerebron/editor';
+import { ExtensionYjs } from '@kerebron/extension-yjs';
 import {
   CreateYjsProvider,
-  ExtensionYjs,
   YjsProvider,
-} from '@kerebron/extension-yjs';
+} from '@kerebron/extension-yjs/YjsProvider';
 
 import { MarkYChange } from '@kerebron/extension-yjs/MarkYChange';
 
@@ -29,7 +29,7 @@ export class YjsEditorKit implements EditorKit {
 
   getExtensions(): AnyExtensionOrReq[] {
     const createYjsProvider: CreateYjsProvider = (roomId: string) => {
-      const ydoc = new Y.Doc();
+      const ydoc = new Y.Doc({ gc: false });
       const wsProvider: YjsProvider = new WebsocketProvider(
         this.url,
         roomId,

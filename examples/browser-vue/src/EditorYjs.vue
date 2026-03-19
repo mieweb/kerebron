@@ -7,16 +7,12 @@
       <h5>Markdown</h5>
       <pre>{{ md }}</pre>
     </div>
-    <div>
-      <h5>ydoc</h5>
-      <pre>{{ JSON.stringify(ydoc, null, 2) }}</pre>
-    </div>
   </div>
 </template>
 <script lang="ts">
 import { CoreEditor } from '@kerebron/editor';
 import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
-import { AdvancedEditorKit } from '@kerebron/editor-kits//AdvancedEditorKit';
+import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
 import { createAssetLoad } from '@kerebron/wasm/web';
 
 export default {
@@ -26,7 +22,6 @@ export default {
   data() {
     return {
       lastValue: null,
-      ydoc: {},
       md: '',
       editor: null,
     };

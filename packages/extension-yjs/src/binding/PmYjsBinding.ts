@@ -15,6 +15,7 @@ import { yXmlFragmentToProseMirrorRootNode } from './convertUtils.ts';
 import { updateYFragment } from './updateYFragment.ts';
 import { BindingMetadata } from './BindingMetadata.ts';
 import { createNodeIfNotExists } from './createNodeFromYElement.ts';
+import { DiffViewer } from './DiffViewer.ts';
 
 type Mutex = (f: () => void, g?: () => void) => void;
 
@@ -44,6 +45,7 @@ export class PmYjsBinding extends EventTarget {
 
   private yjs: YjsData | undefined;
   private selectionStash: SelectionStash | undefined;
+  public readonly diffViewer: DiffViewer;
 
   public addToYjsHistory = true;
   private hasImported = false;
@@ -63,6 +65,7 @@ export class PmYjsBinding extends EventTarget {
   constructor(private readonly editor: CoreEditor) {
     super();
 
+    this.diffViewer = new DiffViewer();
     this.bindingMetadata = { mapping: new Map(), isOverlappingMark: new Map() };
 
     this.mux = createMutex();
@@ -90,6 +93,8 @@ export class PmYjsBinding extends EventTarget {
     const tr = this.editor.state.tr;
     this.leaveRoom(tr);
     this.editor.dispatchTransaction(tr);
+    this.diffViewer.reset();
+    this.selectionStash?.destroy();
   }
 
   changeUser(user: User) {
@@ -104,23 +109,26 @@ export class PmYjsBinding extends EventTarget {
     createYjsProvider: CreateYjsProvider,
     tr: Transaction,
   ) {
+    this.connectionState = 'joining';
+    this.hasImported = false;
+
     if (this.provider) {
       this.provider.removeEventListener('synced', this.syncedHandler);
       this.provider.destroy();
-      this.hasImported = false;
       this.provider = undefined;
     }
 
-    this.addToYjsHistory = true;
-
-    this.connectionState = 'joining';
     const [provider, ydoc] = createYjsProvider(
       roomId,
     );
+
+    this.addToYjsHistory = true;
+    this.provider = provider;
+
     this.bindingMetadata.mapping.clear();
     this.bindingMetadata.isOverlappingMark.clear();
+    this.diffViewer.reset();
 
-    this.provider = provider;
     const fieldName = 'kerebron:' + this.editor.schema.topNodeType.name;
     this.yjs = { ydoc, xmlFragment: ydoc.getXmlFragment(fieldName) };
     this.selectionStash = new SelectionStash(
@@ -145,6 +153,10 @@ export class PmYjsBinding extends EventTarget {
 
     this.addToYjsHistory = true;
     this.provider = undefined;
+
+    this.bindingMetadata.mapping.clear();
+    this.bindingMetadata.isOverlappingMark.clear();
+    this.diffViewer.reset();
 
     this.selectionStash?.destroy();
     this.selectionStash = undefined;
@@ -181,11 +193,13 @@ export class PmYjsBinding extends EventTarget {
         return;
       }
 
+      if (this.diffViewer.isActive()) {
+        return;
+      }
+
       const state = this.editor.state;
 
       const { xmlFragment } = this.yjs;
-
-      // TODO handleSnapShot
 
       const mapping = this.bindingMetadata.mapping;
       const delType = (_: any, type: Y.AbstractType<any>) =>
@@ -212,9 +226,6 @@ export class PmYjsBinding extends EventTarget {
       ).filter((n) => n !== null);
 
       const tr = state.tr;
-      if (ytr.origin instanceof Y.UndoManager) {
-      } else {
-      }
       tr.setMeta('addToYjsHistory', false);
       tr.replace(
         0,
@@ -233,6 +244,10 @@ export class PmYjsBinding extends EventTarget {
     }
 
     if (!this.yjs) {
+      return;
+    }
+
+    if (this.diffViewer.isActive()) {
       return;
     }
 
@@ -296,5 +311,50 @@ export class PmYjsBinding extends EventTarget {
 
   getSelectionStash(): SelectionStash | undefined {
     return this.selectionStash;
+  }
+
+  isEditable() {
+    return !this.diffViewer.isActive();
+  }
+
+  setSnapshot(
+    snapshot: Uint8Array<ArrayBufferLike>,
+    prevSnapshot: Uint8Array<ArrayBufferLike> | undefined,
+  ) {
+    if (!this.yjs) {
+      return;
+    }
+    this.diffViewer.setSnapshot(this.yjs, snapshot, prevSnapshot);
+
+    // clear mapping because we are going to rerender
+    this.bindingMetadata.mapping.clear();
+    this.bindingMetadata.isOverlappingMark.clear();
+
+    this.mux(() => {
+      const historyDoc = this.diffViewer.getHistoryDoc();
+      if (!historyDoc) {
+        return;
+      }
+
+      historyDoc.transact((ytr) => {
+        const state = this.editor.state;
+        const fragmentContent = this.diffViewer.getFragmentContent(state, ytr);
+
+        if (!fragmentContent) {
+          return;
+        }
+
+        const tr = state.tr;
+        tr.replace(
+          0,
+          state.doc.content.size,
+          new Slice(Fragment.from(fragmentContent), 0, 0),
+        );
+
+        tr.setMeta('addToHistory', false);
+        tr.setMeta(ySyncPluginKey, { isChangeOrigin: true }),
+          this.editor.dispatchTransaction(tr);
+      }, ySyncPluginKey);
+    });
   }
 }

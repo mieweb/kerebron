@@ -51,7 +51,7 @@ export const createNodeFromYElement = (
   meta: BindingMetadata,
   snapshot?: Y.Snapshot,
   prevSnapshot?: Y.Snapshot,
-  computeYChange?: (arg0: 'removed' | 'added', arg1: Y.ID) => any,
+  computeYChange?: (changeType: 'removed' | 'added', yid: Y.ID) => any,
 ): PModel.Node | null => {
   const children: PModel.Node[] = [];
   const createChildren = (type: Y.XmlElement | Y.XmlText) => {

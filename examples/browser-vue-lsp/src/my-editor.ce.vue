@@ -8,10 +8,6 @@
         <h5>Markdown</h5>
         <pre v-html=mdToHtml(md)></pre>
       </div>
-      <div>
-        <h5>ydoc</h5>
-        <pre>{{ JSON.stringify(ydoc, null, 2) }}</pre>
-      </div>
     </div>
   </div>
 </template>

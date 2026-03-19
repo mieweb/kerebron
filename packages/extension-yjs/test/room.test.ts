@@ -1,11 +1,7 @@
-import * as Y from 'yjs';
-
 import { CoreEditor } from '@kerebron/editor';
 import { assert, assertEquals } from '@kerebron/test-utils';
 import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
 import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
-
-import { ySyncPluginKey } from '../src/keys.ts';
 
 import { createTestServer, shutdownServer } from './utils/createTestServer.ts';
 import { assetLoad } from '@kerebron/wasm/deno';
@@ -22,6 +18,7 @@ function createNewDocEditor(port: number, user = 'test-user') {
   return { editor };
 }
 
+const STEP_TS = 50;
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -67,7 +64,7 @@ Deno.test('join_existing_room_prefers_remote_content', async () => {
 
     writer.destroy();
     joiner.destroy();
-    await sleep(100);
+    await sleep(STEP_TS);
   } finally {
     await shutdownServer(server);
   }
@@ -110,7 +107,7 @@ Deno.test('explicit_import_overwrites_room_and_propagates', async () => {
 
     editor1.destroy();
     editor2.destroy();
-    await sleep(100);
+    await sleep(STEP_TS);
   } finally {
     await shutdownServer(server);
   }
@@ -150,7 +147,7 @@ Deno.test('room_switch_rebinds_to_new_fragment', async () => {
 
     editor1.destroy();
     editor2.destroy();
-    await sleep(100);
+    await sleep(STEP_TS);
   } finally {
     await shutdownServer(server);
   }
@@ -188,7 +185,7 @@ Deno.test('rapid_room_switch_last_room_wins', async () => {
     writerA.destroy();
     writerB.destroy();
     joiner.destroy();
-    await sleep(100);
+    await sleep(STEP_TS);
   } finally {
     await shutdownServer(server);
   }
@@ -209,7 +206,7 @@ Deno.test('join_empty_room_imports_local_doc_if_policy_enabled', async () => {
     // Join empty room
     local.chain().changeRoom('room-empty-import-policy').run();
 
-    await sleep(100);
+    await sleep(STEP_TS);
 
     // Another peer joins same room and should see imported content
     const { editor: peer } = createNewDocEditor(port, 'peer');
@@ -227,7 +224,7 @@ Deno.test('join_empty_room_imports_local_doc_if_policy_enabled', async () => {
 
     peer.destroy();
     local.destroy();
-    await sleep(100);
+    await sleep(STEP_TS);
   } finally {
     await shutdownServer(server);
   }
@@ -241,6 +238,8 @@ Deno.test('join_non_empty_room_does_not_auto_overwrite_existing_content', async 
     const { editor: writer } = createNewDocEditor(port, 'writer');
     await writer.loadDocumentText('text/x-markdown', '# Existing Room Content');
     writer.chain().changeRoom('room-non-empty-policy').run();
+
+    await sleep(STEP_TS);
 
     const { editor: local } = createNewDocEditor(port, 'local');
     await local.loadDocumentText(
@@ -265,7 +264,7 @@ Deno.test('join_non_empty_room_does_not_auto_overwrite_existing_content', async 
 
     writer.destroy();
     local.destroy();
-    await sleep(100);
+    await sleep(STEP_TS);
   } finally {
     await shutdownServer(server);
   }
@@ -283,7 +282,7 @@ Deno.test('explicit_force_overwrite_replaces_non_empty_room_and_propagates', asy
     writer.chain().changeRoom('room-force-overwrite').run();
     importer.chain().changeRoom('room-force-overwrite').run();
     peer.chain().changeRoom('room-force-overwrite').run();
-    await sleep(100);
+    await sleep(STEP_TS);
 
     writer.chain();
     await writer.patchDocumentText(
@@ -315,7 +314,7 @@ Deno.test('explicit_force_overwrite_replaces_non_empty_room_and_propagates', asy
     writer.destroy();
     importer.destroy();
     peer.destroy();
-    await sleep(100);
+    await sleep(STEP_TS);
   } finally {
     await shutdownServer(server);
   }
@@ -339,7 +338,7 @@ Deno.test('room_epoch_guard_ignores_stale_join_callbacks', async () => {
     // Simulate rapid changes that can produce stale async callbacks
     joiner.chain().changeRoom('room-epoch-a').run();
     joiner.chain().changeRoom('room-epoch-b').run();
-    await sleep(100);
+    await sleep(STEP_TS);
 
     await waitFor(
       () =>
@@ -357,7 +356,7 @@ Deno.test('room_epoch_guard_ignores_stale_join_callbacks', async () => {
     writerA.destroy();
     writerB.destroy();
     joiner.destroy();
-    await sleep(100);
+    await sleep(STEP_TS);
   } finally {
     await shutdownServer(server);
   }

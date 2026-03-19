@@ -1,5 +1,4 @@
 import * as Y from 'yjs';
-import * as bc from 'lib0/broadcastchannel';
 import * as time from 'lib0/time';
 import * as encoding from 'lib0/encoding';
 import * as decoding from 'lib0/decoding';
@@ -32,7 +31,7 @@ const readMessage = (
 ): encoding.Encoder => {
   const decoder = decoding.createDecoder(buf);
   const encoder = encoding.createEncoder();
-  const messageType = decoding.readVarUint(decoder);
+  const messageType = decoding.readVarUint(decoder) as MessageType;
   const messageHandler = provider.messageHandlers[messageType];
   if (messageHandler) {
     messageHandler(encoder, decoder, provider, emitSynced, messageType);
@@ -113,7 +112,11 @@ const setupWS = (provider: WebsocketProvider) => {
       );
     };
     websocket.onclose = (event) => {
-      closeWebsocketConnection(provider, websocket, event);
+      try {
+        closeWebsocketConnection(provider, websocket, event);
+      } catch (err) {
+        console.error(err);
+      }
     };
     websocket.onopen = () => {
       provider.wsLastMessageReceived = time.getUnixTime();
@@ -153,7 +156,11 @@ const broadcastMessage = (provider: WebsocketProvider, buf: Uint8Array) => {
     ws.send(buf);
   }
   if (provider.bcconnected) {
-    bc.publish(provider.bcChannel, buf, provider);
+    try {
+      provider.bc.postMessage(buf);
+    } catch (err) {
+      console.trace(err);
+    }
   }
 };
 
@@ -206,7 +213,8 @@ export class WebsocketProvider extends EventTarget implements YjsProvider {
   wsUnsuccessfulReconnects: number;
   messageHandlers: MessageHandler<WebsocketProvider>[];
   wsLastMessageReceived: number;
-  private _bcSubscriber: (data: any, origin: any) => void;
+  public readonly bc: BroadcastChannel;
+  private _bcSubscriber: (messageEvent: MessageEvent) => void;
   private _updateHandler: (update: any, origin: any) => void;
   private _awarenessUpdateHandler: (
     { added, updated, removed }: { added: any; updated: any; removed: any },
@@ -241,6 +249,7 @@ export class WebsocketProvider extends EventTarget implements YjsProvider {
       this.serverUrl = this.serverUrl.slice(0, this.serverUrl.length - 1);
     }
     this.bcChannel = this.serverUrl + '/' + roomname;
+    this.bc = new BroadcastChannel(this.bcChannel);
     this.maxBackoffTime = opts.maxBackoffTime;
     this.params = opts.params;
     this.protocols = opts.protocols;
@@ -264,13 +273,8 @@ export class WebsocketProvider extends EventTarget implements YjsProvider {
       }, opts.resyncInterval);
     }
 
-    this._bcSubscriber = (data, origin) => {
-      if (origin !== this) {
-        const encoder = readMessage(this, new Uint8Array(data), false);
-        if (encoding.length(encoder) > 1) {
-          bc.publish(this.bcChannel, encoding.toUint8Array(encoder), this);
-        }
-      }
+    this._bcSubscriber = (event: MessageEvent) => {
+      readMessage(this, new Uint8Array(event.data), false);
     };
     /**
      * Listens to Yjs updates and sends them to remote peers (ws and broadcastchannel)
@@ -306,21 +310,25 @@ export class WebsocketProvider extends EventTarget implements YjsProvider {
     // }
     opts.awareness.on('update', this._awarenessUpdateHandler);
     this._checkInterval = /** @type {any} */ (setInterval(() => {
-      if (
-        this.wsconnected &&
-        messageReconnectTimeout <
-          time.getUnixTime() - this.wsLastMessageReceived
-      ) {
-        // no message received in a long time - not even your own awareness
-        // updates (which are updated every 15 seconds)
+      try {
+        if (
+          this.wsconnected &&
+          messageReconnectTimeout <
+            time.getUnixTime() - this.wsLastMessageReceived
+        ) {
+          // no message received in a long time - not even your own awareness
+          // updates (which are updated every 15 seconds)
 
-        if (this.ws) {
-          closeWebsocketConnection(
-            this,
-            this.ws,
-            null,
-          );
+          if (this.ws) {
+            closeWebsocketConnection(
+              this,
+              this.ws,
+              null,
+            );
+          }
         }
+      } catch (err) {
+        console.error(err);
       }
     }, messageReconnectTimeout / 10));
 
@@ -371,42 +379,40 @@ export class WebsocketProvider extends EventTarget implements YjsProvider {
       return;
     }
     if (!this.bcconnected) {
-      bc.subscribe(this.bcChannel, this._bcSubscriber);
+      this.bc.addEventListener('message', this._bcSubscriber);
       this.bcconnected = true;
     }
-    // send sync step1 to bc
-    // write sync step 1
-    const encoderSync = encoding.createEncoder();
-    encoding.writeVarUint(encoderSync, messageSync);
-    syncProtocol.writeSyncStep1(encoderSync, this.doc);
-    bc.publish(this.bcChannel, encoding.toUint8Array(encoderSync), this);
-    // broadcast local state
-    const encoderState = encoding.createEncoder();
-    encoding.writeVarUint(encoderState, messageSync);
-    syncProtocol.writeSyncStep2(encoderState, this.doc);
-    bc.publish(this.bcChannel, encoding.toUint8Array(encoderState), this);
-    // write queryAwareness
-    const encoderAwarenessQuery = encoding.createEncoder();
-    encoding.writeVarUint(encoderAwarenessQuery, messageQueryAwareness);
-    bc.publish(
-      this.bcChannel,
-      encoding.toUint8Array(encoderAwarenessQuery),
-      this,
-    );
-    // broadcast local awareness state
-    const encoderAwarenessState = encoding.createEncoder();
-    encoding.writeVarUint(encoderAwarenessState, messageAwareness);
-    encoding.writeVarUint8Array(
-      encoderAwarenessState,
-      awarenessProtocol.encodeAwarenessUpdate(this.awareness, [
-        this.doc.clientID,
-      ]),
-    );
-    bc.publish(
-      this.bcChannel,
-      encoding.toUint8Array(encoderAwarenessState),
-      this,
-    );
+
+    try {
+      // send sync step1 to bc
+      // write sync step 1
+      const encoderSync = encoding.createEncoder();
+      encoding.writeVarUint(encoderSync, messageSync);
+      syncProtocol.writeSyncStep1(encoderSync, this.doc);
+      this.bc.postMessage(encoding.toUint8Array(encoderSync));
+
+      // broadcast local state
+      const encoderState = encoding.createEncoder();
+      encoding.writeVarUint(encoderState, messageSync);
+      syncProtocol.writeSyncStep2(encoderState, this.doc);
+      this.bc.postMessage(encoding.toUint8Array(encoderState));
+      // write queryAwareness
+      const encoderAwarenessQuery = encoding.createEncoder();
+      encoding.writeVarUint(encoderAwarenessQuery, messageQueryAwareness);
+      this.bc.postMessage(encoding.toUint8Array(encoderAwarenessQuery));
+      // broadcast local awareness state
+      const encoderAwarenessState = encoding.createEncoder();
+      encoding.writeVarUint(encoderAwarenessState, messageAwareness);
+      encoding.writeVarUint8Array(
+        encoderAwarenessState,
+        awarenessProtocol.encodeAwarenessUpdate(this.awareness, [
+          this.doc.clientID,
+        ]),
+      );
+      this.bc.postMessage(encoding.toUint8Array(encoderAwarenessState));
+    } catch (err) {
+      console.trace(err);
+    }
   }
 
   disconnectBc() {
@@ -421,7 +427,13 @@ export class WebsocketProvider extends EventTarget implements YjsProvider {
     );
     broadcastMessage(this, encoding.toUint8Array(encoder));
     if (this.bcconnected) {
-      bc.unsubscribe(this.bcChannel, this._bcSubscriber);
+      setTimeout(() => { // Deno defers sending message. Ensure above broadcase was transmitted
+        try {
+          this.bc.close();
+        } catch (err) {
+          console.trace(err);
+        }
+      }, 0);
       this.bcconnected = false;
     }
   }

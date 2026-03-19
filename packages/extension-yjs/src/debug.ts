@@ -177,6 +177,27 @@ export function debugYNode(
     return retVal;
   }
 
+  if (node instanceof Y.AbstractType) {
+    if (!config.isVisible(node._item)) {
+      return '';
+    }
+
+    const atype: Y.AbstractType<any> = node;
+
+    retVal += config.renderDeleted(
+      `Y.AbstractType(${atype._length})`,
+      node._item,
+    );
+    retVal += yDebugClient(node._item);
+    retVal += '\n';
+
+    retVal += indentText(
+      JSON.stringify(atype._item),
+      1,
+    );
+    return retVal;
+  }
+
   if ('object' !== typeof node) {
     retVal += '' + node;
     return retVal;

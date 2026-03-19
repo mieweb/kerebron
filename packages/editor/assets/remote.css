@@ -35,3 +35,41 @@
     border-radius: var(--kb-radius-sm);
   }
 }
+
+[ychange_type] {
+  position: relative;
+}
+.ychange-hover {
+  display: none;
+}
+*:hover > .ychange-hover {
+  display: inline;
+  position: absolute;
+  top: -14px;
+  left: 0;
+  font-size: 12px;
+  padding: 0 2px;
+  border-radius: 3px 3px 0 0;
+  color: #fdfdfe;
+  user-select: none;
+  word-break: normal;
+}
+
+ychange[ychange_type='removed'],
+p[ychange_type='removed'] {
+  text-decoration: line-through;
+  background-color: red;
+}
+
+*:not(ychange)[ychange_type='removed'] {
+  background-color: #ff5a56;
+  color: inherit !important;
+}
+img[ychange_type='removed'] {
+  padding: 2px;
+}
+
+ychange[ychange_type='added'],
+p[ychange_type='removed'] {
+  background-color: green;
+}

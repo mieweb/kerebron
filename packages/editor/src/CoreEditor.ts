@@ -423,4 +423,8 @@ export class CoreEditor extends EventTarget {
   mergeCommandFactories(toInsert: Partial<CommandFactories>, name: string) {
     this.commandManager.mergeCommandFactories(toInsert, name);
   }
+
+  get editable() {
+    return this.view.editable;
+  }
 }

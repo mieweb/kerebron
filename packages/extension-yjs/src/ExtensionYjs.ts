@@ -69,12 +69,55 @@ export class ExtensionYjs extends Extension {
       };
     };
 
+    const getYSnapshot: CommandFactory = (
+      { resolve, reject }: {
+        resolve: (snapshot: Uint8Array) => void;
+        reject: (reason: any) => void;
+      },
+    ) => {
+      return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+        const tr = state.tr;
+        tr.setMeta(ySyncPluginKey, { getYSnapshot: { resolve, reject } });
+        if (dispatch) {
+          dispatch(tr);
+        }
+        return true;
+      };
+    };
+
+    const setYSnapshot: CommandFactory = (
+      opts: { prevSnapshot: Uint8Array; snapshot: Uint8Array },
+    ) => {
+      return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+        const tr = state.tr;
+        tr.setMeta(ySyncPluginKey, { setYSnapshot: opts });
+        if (dispatch) {
+          dispatch(tr);
+        }
+        return true;
+      };
+    };
+
+    const resetYSnapshot: CommandFactory = () => {
+      return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+        const tr = state.tr;
+        tr.setMeta(ySyncPluginKey, { resetYSnapshot: true });
+        if (dispatch) {
+          dispatch(tr);
+        }
+        return true;
+      };
+    };
+
     return {
       getYDoc,
       changeRoom,
       leaveRoom,
       'undo': () => undoCommand,
       'redo': () => redoCommand,
+      getYSnapshot,
+      setYSnapshot,
+      resetYSnapshot,
     };
   }
 

@@ -185,11 +185,13 @@ export class SelectionStash {
     if (!('root' in view)) {
       return false;
     }
-    const selection = view.root?.getSelection(); // https://stackoverflow.com/questions/62054839/shadowroot-getselection
+    const selection = document.getSelection();
 
-    if (!selection || selection.anchorNode == null) return false;
+    if (
+      !selection || selection.anchorNode == null || selection.focusNode == null
+    ) return false;
 
-    const range = document.createRange(); // https://github.com/yjs/y-prosemirror/pull/193
+    const range = document.createRange();
     range.setStart(selection.anchorNode, selection.anchorOffset);
     range.setEnd(selection.focusNode, selection.focusOffset);
 
