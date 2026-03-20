@@ -1142,3 +1142,7 @@
   width: 18px;
   height: 18px;
 }
+
+.kb-custom-menu__pinned-dropdown {
+  z-index: 999999;
+}

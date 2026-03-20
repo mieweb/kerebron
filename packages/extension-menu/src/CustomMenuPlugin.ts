@@ -670,7 +670,6 @@ export class CustomMenuView {
     this.pinnedDropdownMenu.style.position = 'absolute';
     this.pinnedDropdownMenu.style.top = `${rect.bottom + 4}px`;
     this.pinnedDropdownMenu.style.left = `${rect.left}px`;
-    this.pinnedDropdownMenu.style.zIndex = '1000';
 
     // Create scrollable content container
     const overflowContent = document.createElement('div');
