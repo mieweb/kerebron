@@ -1,6 +1,6 @@
 // import { DOMParser } from 'jsr:@b-fuze/deno-dom'; // No xml support (mathML) https://github.com/b-fuze/deno-dom/issues?q=is%3Aissue%20state%3Aopen%20xml
 import { DOMParser } from 'linkedom';
-import { XMLSerializer } from 'xmldom';
+import { XMLSerializer } from '@xmldom/xmldom';
 
 import { CoreEditor } from '@kerebron/editor';
 import { BasicEditorKit } from '@kerebron/extension-basic-editor/BasicEditorKit';

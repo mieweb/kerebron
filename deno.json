@@ -73,7 +73,7 @@
     "lib0": "npm:lib0@0.2.109",
     "orderedmap": "npm:orderedmap@latest",
 
-    "xmldom": "npm:@xmldom/xmldom@0.7.7",
+    "@xmldom/xmldom": "npm:@xmldom/xmldom@0.7.7",
     "linkedom": "npm:linkedom@0.18.12",
 
     "vscode-languageserver-protocol": "npm:vscode-languageserver-protocol@3.17.5",
