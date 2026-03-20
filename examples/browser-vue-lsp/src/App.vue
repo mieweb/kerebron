@@ -1,5 +1,5 @@
 <template>
-  <my-yjs-room @change-room="setRoom" @change-user="setUser" />
+  <my-yjs-room @change-room="setRoom" @change-user="setUser" ref="roomSelector" />
   <my-editor v-if="roomId" ref="editor" :roomId="roomId" :user="user"></my-editor>
 </template>
 
