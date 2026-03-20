@@ -47,10 +47,10 @@ export class YjsRoom extends DurableObject {
     this.doc.awareness.on(
       'update',
       (
-        {
-          added: Array<number>,
-          removed: Array<number>,
-          updated: Array<number>,
+        { added, removed, updated }: {
+          added: Array<number>;
+          removed: Array<number>;
+          updated: Array<number>;
         },
       ) => {
         for (const client of [...added, ...updated]) {

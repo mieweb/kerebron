@@ -17,4 +17,9 @@ export function install(
   app.get('/api/rooms', (c) => {
     return c.json([]);
   });
+
+  app.post('/api/rooms', (c) => {
+    const roomName = String(Math.floor(100000 / Math.random()));
+    return c.json(roomName);
+  });
 }

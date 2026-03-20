@@ -25,6 +25,6 @@
     "enabled": true
   },
   "build": {
-    "command": "deno task build:all"
+    "command": "deno task -f server-hono build"
   }
 }
