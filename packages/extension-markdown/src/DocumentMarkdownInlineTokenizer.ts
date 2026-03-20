@@ -241,12 +241,12 @@ export class DocumentMarkdownInlineTokenizer {
         }
         await this.markString(inner!, false, inlineTokens);
       } else {
-        const nodeSpec = this.nodes[node.type.name]
+        const nodeSpec = 'type' in node && this.nodes[node.type.name]
           ? this.nodes[node.type.name](node, currentPos)
           : blankNode;
 
         let tag = '';
-        if (node.type.spec.toDOM) {
+        if ('type' in node && node.type.spec.toDOM) {
           const dom = node.type.spec.toDOM(node);
           if (Array.isArray(dom) && dom.length > 0) {
             tag = dom[0];
@@ -260,7 +260,7 @@ export class DocumentMarkdownInlineTokenizer {
             token.level = level;
             token.map = [inlinePos];
             inlineTokens.push(token);
-          } else {
+          } else if ('type' in node) {
             const token = await nodeSpec.selfClose(node, inlinePos, index);
             token.meta = '!nodeSpec.selfClose';
             token.level = level;
