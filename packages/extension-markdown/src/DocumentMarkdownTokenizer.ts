@@ -1,4 +1,4 @@
-import type { Node } from 'prosemirror-model';
+import type { Node, Schema } from 'prosemirror-model';
 import { Token } from './types.ts';
 import {
   DocumentMarkdownInlineTokenizer,
@@ -20,6 +20,7 @@ export class DocumentMarkdownTokenizer {
       ) => DocumentMarkdownTokenizerSpec;
     },
     readonly marks: { [mark: string]: MarkTokenizerSpec },
+    readonly schema: Schema,
     readonly options: { hardBreakNodeName: string } = {
       hardBreakNodeName: 'hard_break',
     },
@@ -28,6 +29,7 @@ export class DocumentMarkdownTokenizer {
       nodes,
       marks,
       options,
+      schema,
     );
   }
 

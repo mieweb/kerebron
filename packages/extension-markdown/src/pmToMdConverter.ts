@@ -491,7 +491,7 @@ export async function extPmToMdConverter(
       close: 'code_close',
       escape: false,
     },
-  });
+  }, schema);
 
   const filterCommands = [...editor.hooks['pm2md.pre']];
   let state = EditorState.create({ doc: origDocument });

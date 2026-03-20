@@ -1,4 +1,4 @@
-import type { Mark, Node } from 'prosemirror-model';
+import type { Attrs, Mark, Node, Schema } from 'prosemirror-model';
 import { Token } from './types.ts';
 
 export type MarkTokenizerSpec = {
@@ -62,6 +62,20 @@ function generateInlineTokens(input: Array<[string, number]>): Array<Token> {
   return tokens;
 }
 
+interface NullNode {
+  isText: false;
+  attrs: Attrs;
+  text: string;
+  marks: Mark[];
+}
+
+const nullNode: NullNode = {
+  isText: false,
+  attrs: {},
+  text: '',
+  marks: [],
+};
+
 export class DocumentMarkdownInlineTokenizer {
   constructor(
     readonly nodes: {
@@ -72,6 +86,7 @@ export class DocumentMarkdownInlineTokenizer {
     },
     readonly marks: { [mark: string]: MarkTokenizerSpec },
     readonly options: { hardBreakNodeName: string },
+    readonly schema: Schema,
   ) {
   }
 
@@ -98,7 +113,11 @@ export class DocumentMarkdownInlineTokenizer {
 
     const inlineTokens: Array<Token> = [];
 
-    const progress = async (node: Node, offset: number, index: number) => {
+    const progress = async (
+      node: Node | NullNode,
+      offset: number,
+      index: number,
+    ) => {
       const inlinePos = currentPos + offset;
       let marks = node ? node.marks : [];
 
@@ -106,7 +125,7 @@ export class DocumentMarkdownInlineTokenizer {
       // that mark to prevent parser edge cases with new lines just
       // before closing marks.
       // TODO:
-      if (node && node.type.name === this.options.hardBreakNodeName) {
+      if ('type' in node && node.type.name === this.options.hardBreakNodeName) {
         marks = marks.filter((m) => {
           if (index + 1 == parent.childCount) return false;
           let next = parent.child(index + 1);
@@ -122,7 +141,7 @@ export class DocumentMarkdownInlineTokenizer {
       // If whitespace has to be expelled from the node, adjust
       // leading and trailing accordingly.
       if (
-        node.isText && marks.some((mark) => {
+        node?.isText && marks.some((mark) => {
           let info = this.getMark(mark.type.name);
           return info && info.expelEnclosingWhitespace && !mark.isInSet(active);
         })
@@ -130,12 +149,16 @@ export class DocumentMarkdownInlineTokenizer {
         let [_, lead, rest] = /^(\s*)(.*)$/m.exec(node.text!)!;
         if (lead) {
           leading.push([lead, inlinePos]);
-          node = rest ? (node as any).withText(rest) : null;
+          if (rest) {
+            node = this.schema.text(rest, node.marks);
+          } else {
+            node = nullNode;
+          }
           if (!node) marks = active;
         }
       }
       if (
-        node.isText && marks.some((mark) => {
+        node && node.isText && marks.some((mark) => {
           let info = this.getMark(mark.type.name);
           return info && info.expelEnclosingWhitespace &&
             (index == parent.childCount - 1 ||
@@ -145,7 +168,11 @@ export class DocumentMarkdownInlineTokenizer {
         let [_, rest, trail] = /^(.*?)(\s*)$/m.exec(node.text!)!;
         if (trail) {
           trailing.push([trail, inlinePos]);
-          node = rest ? (node as any).withText(rest) : null;
+          if (rest) {
+            node = this.schema.text(rest, node.marks);
+          } else {
+            node = nullNode;
+          }
           if (!node) marks = active;
         }
       }
