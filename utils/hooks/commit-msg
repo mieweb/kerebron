@@ -15,7 +15,7 @@ fi
 COMMIT_MSG_FILE="$1"                    # Git passes the path to the commit message
 COMMIT_MSG=$(head -n1 "$COMMIT_MSG_FILE")  # Read the first line of the commit message
 
-if ! echo "$COMMIT_MSG" | grep -E "^(feat|fix|chore|docs|test|refactor|ci|build)(\(.+\))?: .+" >/dev/null; then
+if ! echo "$COMMIT_MSG" | grep -E "^(feat|fix|chore|docs|test|refactor|ci|build|fixup)(\(.+\))?: .+" >/dev/null; then
   echo -e "${RED}Commit message is not a Conventional Commit: ${NC}"
   echo "   '$COMMIT_MSG'"
   echo "Format: <type>(scope): short description"
@@ -28,11 +28,12 @@ if ! echo "$COMMIT_MSG" | grep -E "^(feat|fix|chore|docs|test|refactor|ci|build)
   echo "  refactor(core): improve performance of loop"
   echo "  ci(github): add workflow for PR checks"
   echo "  build(docker): update docker image version"
+  echo "  fixup: fix typo"
   exit 1
 fi
 
 # Require GitHub issue link for feat/fix commits
-if [[ "$COMMIT_MSG" =~ ^(feat|fix) ]] && ! echo "$COMMIT_MSG" | grep -qE "\(#([0-9]+)\)"; then
+if [[ "$COMMIT_MSG" =~ ^(feat|fix): ]] && ! echo "$COMMIT_MSG" | grep -qE "\(#([0-9]+)\)"; then
     echo -e "${RED}Commit of type 'feat' or 'fix' must reference a GitHub issue:${NC}"
     echo "   '$COMMIT_MSG'"
     echo "Example: feat(ui): add dark mode (#123)"
