@@ -116,6 +116,12 @@ pub struct TextSpan {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub enum TextLinkItem {
+  #[serde(rename = "s")]
+  TextSpace(TextSpace),
+
+  #[serde(rename = "tab")]
+  TextTab,
+
   //     #[serde(rename = "text:span")]
   #[serde(rename = "span")]
   TextSpan(TextSpan),
