@@ -1,24 +1,41 @@
-import type {
-  Command as PmCommand,
-  EditorState,
-  Transaction,
-} from 'prosemirror-state';
+import type { EditorState, Transaction } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
+import { CoreEditor } from '@kerebron/editor';
 
-interface Command extends PmCommand {
+interface CommandContext {
+  editor: CoreEditor;
+}
+
+declare type Command = {
+  (
+    this: CommandContext | undefined,
+    state: EditorState,
+    dispatch?: (tr: Transaction) => void,
+    view?: EditorView,
+  ): boolean;
+
   displayName?: string;
   description?: string;
-}
+};
 
 export type { Command };
 
 export type CommandFactory = (...args: any[]) => Command;
 
-export type AsyncCommand = (
-  state: EditorState,
-  dispatch?: (tr: Transaction) => void,
-  view?: EditorView,
-) => Promise<boolean>;
+declare type AsyncCommand = {
+  (
+    this: CommandContext | undefined,
+    state: EditorState,
+    dispatch?: (tr: Transaction) => void,
+    view?: EditorView,
+  ): Promise<boolean>;
+
+  displayName?: string;
+  description?: string;
+};
+
+export type { AsyncCommand };
+
 export type AsyncCommandFactory = (...args: any[]) => AsyncCommand;
 
 export interface Commands {

@@ -41,7 +41,7 @@ import {
 /// the given type an attributes. If `dispatch` is null, only return a
 /// value to indicate whether this is possible, but don't actually
 /// perform the change.
-const wrapInList = (
+export const wrapInList: CommandFactory = (
   listType: NodeType,
   attrs: Attrs | null = null,
 ): Command => {
@@ -53,10 +53,10 @@ const wrapInList = (
     let { $from, $to } = state.selection;
     let range = $from.blockRange($to);
     if (!range) return false;
-    // let tr = dispatch ? state.tr : null;
-    const tr = state.tr;
+    let tr = dispatch ? state.tr : null;
+    // const tr = state.tr;
     const cmd = wrapRangeInList(tr, range, listType, attrs);
-    if (!cmd(state, dispatch)) return false;
+    if (!cmd.apply(this, [state, dispatch])) return false;
     if (dispatch) dispatch(tr!.scrollIntoView());
     return true;
   };
@@ -699,7 +699,7 @@ const splitBlock = (): Command => splitBlockAs();
 /// Acts like [`splitBlock`](#commands.splitBlock), but without
 /// resetting the set of active marks at the cursor.
 const splitBlockKeepMarks = (): Command => (state, dispatch) => {
-  return splitBlockAs()(
+  return splitBlockAs().apply(this, [
     state,
     dispatch && ((tr) => {
       let marks = state.storedMarks ||
@@ -707,7 +707,7 @@ const splitBlockKeepMarks = (): Command => (state, dispatch) => {
       if (marks) tr.ensureMarks(marks);
       dispatch(tr);
     }),
-  );
+  ]);
 };
 
 /// Move the selection to the node wrapping the current selection, if
@@ -1073,6 +1073,10 @@ function toggleMark(
 
 const undoInputRule: CommandFactory = () => undoInputRuleCommand;
 
+export const command: CommandFactory = (fn: Command) => (...props) => {
+  return fn.apply(this, props);
+};
+
 export const baseCommandFactories: Record<string, CommandFactory> = {
   wrapInList,
   wrapRangeInList,
@@ -1103,4 +1107,5 @@ export const baseCommandFactories: Record<string, CommandFactory> = {
   undoInputRule,
   runInputRulesRange,
   runInputRulesTexts,
+  command,
 };

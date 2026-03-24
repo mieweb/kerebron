@@ -32,9 +32,6 @@ import { NodeParagraph } from './NodeParagraph.ts';
 import { NodeHardBreak } from './NodeHardBreak.ts';
 import { NodeSoftBreak } from './NodeSoftBreak.ts';
 import { NodeHorizontalRule } from './NodeHorizontalRule.ts';
-import { NodeOrderedList } from './NodeOrderedList.ts';
-import { NodeBulletList } from './NodeBulletList.ts';
-import { NodeListItem } from './NodeListItem.ts';
 import { NodeImage } from './NodeImage.ts';
 import { NodeVideo } from './NodeVideo.ts';
 import { NodeBlockquote } from './NodeBlockquote.ts';
@@ -45,11 +42,14 @@ import { NodeDefinitionList } from './NodeDefinitionList.ts';
 import { NodeDefinitionTerm } from './NodeDefinitionTerm.ts';
 import { NodeDefinitionDesc } from './NodeDefinitionDesc.ts';
 import { NodeFrontmatter } from './NodeFrontmatter.ts';
-import { NodeTaskList } from './NodeTaskList.ts';
-import { NodeTaskItem } from './NodeTaskItem.ts';
 import { NodeInlineShortCode } from './NodeInlineShortCode.ts';
 import { NodeIframe } from './NodeIframe.ts';
 import { NodeCommentAnchor } from './NodeCommentAnchor.ts';
+import { NodeOrderedList } from './lists/NodeOrderedList.ts';
+import { NodeBulletList } from './lists/NodeBulletList.ts';
+import { NodeListItem } from './lists/NodeListItem.ts';
+import { NodeTaskList } from './lists/NodeTaskList.ts';
+import { NodeTaskItem } from './lists/NodeTaskItem.ts';
 
 export class BasicEditorKit implements EditorKit {
   getExtensions(): AnyExtensionOrReq[] {

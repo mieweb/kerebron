@@ -54,9 +54,13 @@ export class CommandManager {
 
         const command: Command = (state, dispatch, view) => {
           if (dispatch) {
-            console.debug(`Command: ${extName}.${name}`);
+            console.debug(`Command: ${extName}.${name}`, ...args);
           }
-          return realCommand(state, dispatch, view);
+          return realCommand.apply({ editor: this.editor }, [
+            state,
+            dispatch,
+            view,
+          ]);
         };
 
         return command;
@@ -73,9 +77,13 @@ export class CommandManager {
       const state = this.editor.state;
       const view = this.editor.view;
       if (view instanceof EditorView) {
-        return command(state, view.dispatch, view);
+        return command.apply({ editor: this.editor }, [
+          state,
+          view.dispatch,
+          view,
+        ]);
       } else {
-        return command(state, view.dispatch);
+        return command.apply({ editor: this.editor }, [state, view.dispatch]);
       }
     };
   }
@@ -107,10 +115,10 @@ export class CommandManager {
         Object.entries(commandFactories).map(([name, commandFactory]) => {
           const chainedCommand = (...args: never[]) => {
             const command = commandFactory(...args);
-            const callback = command(
+            const callback = command.apply({ editor: this.editor }, [
               chainedState,
               shouldDispatch ? fakeDispatch : undefined,
-            );
+            ]);
             callbacks.push(callback);
             return chain;
           };

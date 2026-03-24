@@ -9,6 +9,7 @@ import {
   type InputRule,
   wrappingInputRule,
 } from '@kerebron/editor/plugins/input-rules';
+import { toggleList } from './commands.ts';
 
 export class NodeBulletList extends Node {
   override name = 'bullet_list';
@@ -26,7 +27,7 @@ export class NodeBulletList extends Node {
   override getNodeSpec(): NodeSpec {
     return {
       content: 'list_item+',
-      group: 'block',
+      group: 'block list',
       parseDOM: [{ tag: 'ul' }],
       toDOM() {
         return ['ul', 0];
@@ -47,8 +48,11 @@ export class NodeBulletList extends Node {
     editor: CoreEditor,
     type: NodeType,
   ): Partial<CommandFactories> {
+    const keepMarks = false;
     return {
-      'toggleBulletList': () => editor.commandFactories.wrapInList(type),
+      'toggleBulletList': () => {
+        return toggleList('bullet_list', 'list_item', keepMarks);
+      },
     };
   }
 

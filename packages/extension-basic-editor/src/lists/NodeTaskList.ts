@@ -5,6 +5,7 @@ import {
   type CommandFactories,
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
+import { toggleList } from './commands.ts';
 
 export class NodeTaskList extends Node {
   override name = 'task_list';
@@ -13,20 +14,19 @@ export class NodeTaskList extends Node {
   override getNodeSpec(): NodeSpec {
     return {
       content: 'task_item+',
-      group: 'block',
+      group: 'block list',
       parseDOM: [{ tag: `ul[data-type="${this.name}"]` }],
-      toDOM() {
+      toDOM: () => {
         return ['ul', { 'data-type': this.name }, 0];
       },
     };
   }
 
-  override getCommandFactories(
-    editor: CoreEditor,
-    type: NodeType,
-  ): Partial<CommandFactories> {
+  override getCommandFactories(): Partial<CommandFactories> {
     return {
-      'toggleTaskList': () => editor.commandFactories.wrapInList(type),
+      'toggleTaskList': () => {
+        return toggleList('task_list', 'task_item');
+      },
     };
   }
 

@@ -1,18 +1,19 @@
 import {
   type Attrs,
   Fragment,
+  Mark,
   Node as PMNode,
   NodeRange,
-  NodeSpec,
   type NodeType,
+  ResolvedPos,
   Slice,
 } from 'prosemirror-model';
-import type {
+import {
   EditorState,
   NodeSelection,
+  Selection,
   Transaction,
 } from 'prosemirror-state';
-import { Selection } from 'prosemirror-state';
 import {
   canJoin,
   canSplit,
@@ -20,16 +21,7 @@ import {
   ReplaceAroundStep,
 } from 'prosemirror-transform';
 
-import { type CoreEditor, Node } from '@kerebron/editor';
-import type {
-  Command,
-  CommandFactories,
-  CommandShortcuts,
-} from '@kerebron/editor/commands';
-import {
-  getHtmlAttributes,
-  setHtmlAttributes,
-} from '@kerebron/editor/utilities';
+import type { Command, CommandFactory } from '@kerebron/editor/commands';
 
 /// Build a command that splits a non-empty textblock at the top level
 /// of a list item by also splitting that list item.
@@ -112,8 +104,8 @@ function splitListItemKeepMarks(
   itemAttrs?: Attrs,
 ): Command {
   let split = splitListItem(itemType, itemAttrs);
-  return (state, dispatch) => {
-    return split(
+  return function (state, dispatch) {
+    return split.apply(this, [
       state,
       dispatch && ((tr) => {
         let marks = state.storedMarks ||
@@ -121,7 +113,7 @@ function splitListItemKeepMarks(
         if (marks) tr.ensureMarks(marks);
         dispatch(tr);
       }),
-    );
+    ]);
   };
 }
 
@@ -290,57 +282,254 @@ export function sinkListItem(itemType: NodeType): Command {
   };
 }
 
-export class NodeListItem extends Node {
-  override name = 'list_item';
-  requires = ['doc'];
+const isList = (name: string) => {
+  return name.endsWith('_list');
+};
 
-  override attributes = {
-    value: {
-      default: undefined,
-    },
-    type: {
-      default: undefined,
-      fromDom(element: HTMLElement) {
-        return element.hasAttribute('type')
-          ? element.getAttribute('type')
-          : undefined;
-      },
-      toDom(node: PMNode) {
-        return node.attrs.type;
-      },
-    },
-  };
+export const clearNodes: CommandFactory = () => (state, dispatch) => {
+  const tr = state.tr;
+  const { selection } = tr;
+  const { ranges } = selection;
 
-  override getNodeSpec(): NodeSpec {
-    return {
-      content: 'paragraph block*',
-      parseDOM: [{
-        tag: 'li',
-        getAttrs: (element) => setHtmlAttributes(this, element),
-      }],
-      defining: true,
-      toDOM: (node) => {
-        return ['li', getHtmlAttributes(this, node), 0];
-      },
-    };
+  if (!dispatch) {
+    return true;
   }
 
-  override getCommandFactories(
-    editor: CoreEditor,
-    type: NodeType,
-  ): Partial<CommandFactories> {
-    return {
-      'splitListItem': () => splitListItem(type),
-      'liftListItem': () => liftListItem(type),
-      'sinkListItem': () => sinkListItem(type),
-    };
-  }
+  ranges.forEach(({ $from, $to }) => {
+    state.doc.nodesBetween($from.pos, $to.pos, (node, pos) => {
+      if (node.type.isText) {
+        return;
+      }
 
-  override getKeyboardShortcuts(): Partial<CommandShortcuts> {
-    return {
-      'Enter': 'splitListItem',
-      'Tab': 'sinkListItem',
-      'Shift-Tab': 'liftListItem',
-    };
+      const { doc, mapping } = tr;
+      const $mappedFrom = doc.resolve(mapping.map(pos));
+      const $mappedTo = doc.resolve(mapping.map(pos + node.nodeSize));
+      const nodeRange = $mappedFrom.blockRange($mappedTo);
+
+      if (!nodeRange) {
+        return;
+      }
+
+      const targetLiftDepth = liftTarget(nodeRange);
+
+      if (node.type.isTextblock) {
+        const { defaultType } = $mappedFrom.parent.contentMatchAt(
+          $mappedFrom.index(),
+        );
+
+        tr.setNodeMarkup(nodeRange.start, defaultType);
+      }
+
+      if (targetLiftDepth || targetLiftDepth === 0) {
+        tr.lift(nodeRange, targetLiftDepth);
+      }
+    });
+  });
+
+  return true;
+};
+
+export function findParentNodeClosestToPos(
+  $pos: ResolvedPos,
+  predicate: Predicate,
+):
+  | {
+    pos: number;
+    start: number;
+    depth: number;
+    node: PMNode;
+  }
+  | undefined {
+  for (let i = $pos.depth; i > 0; i -= 1) {
+    const node = $pos.node(i);
+
+    if (predicate(node)) {
+      return {
+        pos: i > 0 ? $pos.before(i) : 0,
+        start: $pos.start(i),
+        depth: i,
+        node,
+      };
+    }
   }
 }
+
+export type Predicate = (node: PMNode) => boolean;
+
+export function findParentNode(predicate: Predicate) {
+  return (selection: Selection) =>
+    findParentNodeClosestToPos(selection.$from, predicate);
+}
+
+const joinListBackwards = (tr: Transaction, listType: NodeType): boolean => {
+  const list = findParentNode((node) => node.type === listType)(tr.selection);
+
+  if (!list) {
+    return true;
+  }
+
+  const before = tr.doc.resolve(Math.max(0, list.pos - 1)).before(list.depth);
+
+  if (before === undefined) {
+    return true;
+  }
+
+  const nodeBefore = tr.doc.nodeAt(before);
+  const canJoinBackwards = list.node.type === nodeBefore?.type &&
+    canJoin(tr.doc, list.pos);
+
+  if (!canJoinBackwards) {
+    return true;
+  }
+
+  tr.join(list.pos);
+
+  return true;
+};
+
+const joinListForwards = (tr: Transaction, listType: NodeType): boolean => {
+  const list = findParentNode((node) => node.type === listType)(tr.selection);
+
+  if (!list) {
+    return true;
+  }
+
+  const after = tr.doc.resolve(list.start).after(list.depth);
+
+  if (after === undefined) {
+    return true;
+  }
+
+  const nodeAfter = tr.doc.nodeAt(after);
+  const canJoinForwards = list.node.type === nodeAfter?.type &&
+    canJoin(tr.doc, after);
+
+  if (!canJoinForwards) {
+    return true;
+  }
+
+  tr.join(after);
+
+  return true;
+};
+
+export const toggleList: CommandFactory = (
+  listTypeOrName,
+  itemTypeOrName,
+  keepMarks,
+  attributes = {},
+): Command =>
+  function (
+    state,
+    dispatch,
+    view,
+  ): boolean {
+    if (!this) {
+      throw new Error('Call this with Function.apply');
+    }
+
+    const editor = this.editor;
+
+    const splittableMarks: string[] = Object.keys(state.schema.marks).filter(
+      (name) => name !== 'link',
+    );
+    const listType = state.schema.nodes[listTypeOrName];
+    const itemType = state.schema.nodes[itemTypeOrName];
+    const { selection, storedMarks } = state;
+    const { $from, $to } = selection;
+    const range = $from.blockRange($to);
+
+    const marks: readonly Mark[] = storedMarks ||
+      (selection.$to.parentOffset ? selection.$from.marks() : []);
+
+    if (!range) {
+      return false;
+    }
+
+    const parentList = findParentNode((node) => isList(node.type.name))(
+      selection,
+    );
+
+    const tr = state.tr;
+
+    if (range.depth >= 1 && parentList && range.depth - parentList.depth <= 1) {
+      // remove list
+      if (parentList.node.type === listType) {
+        return liftListItem(itemType).apply(this, [state, dispatch, view]);
+      }
+
+      // change list type
+      if (
+        isList(parentList.node.type.name) &&
+        listType.validContent(parentList.node.content) &&
+        dispatch
+      ) {
+        return editor.chain(tr)
+          .command(() => {
+            tr.setNodeMarkup(parentList.pos, listType);
+
+            return true;
+          })
+          .command(() => joinListBackwards(tr, listType))
+          .command(() => joinListForwards(tr, listType))
+          .command(() => dispatch(tr))
+          .run();
+      }
+    }
+    if (!keepMarks || !marks || !dispatch) {
+      return editor.chain(tr)
+        // try to convert node to default node if needed
+        .command(() => {
+          const canWrapInList = editor.can().wrapInList(listType, attributes)
+            .run();
+
+          if (canWrapInList) {
+            return true;
+          }
+
+          // return clearNodes().apply(this, [state, dispatch, view]);
+          return editor.chain(tr).lift().run();
+        })
+        .wrapInList(listType, attributes)
+        .command(() => joinListBackwards(tr, listType))
+        .command(() => joinListForwards(tr, listType))
+        .command(() => {
+          if (dispatch) dispatch(tr);
+          return true;
+        })
+        .run();
+    }
+
+    return (
+      editor.chain(tr)
+        // try to convert node to default node if needed
+        .command(() => {
+          const canWrapInList = editor.can().wrapInList(listType, attributes)
+            .run();
+
+          const filteredMarks = marks.filter((mark) =>
+            splittableMarks.includes(mark.type.name)
+          );
+
+          tr.ensureMarks(filteredMarks);
+
+          if (canWrapInList) {
+            return true;
+          }
+
+          if (parentList) {
+            tr.setSelection(NodeSelection.create(state.doc, parentList.pos));
+          }
+
+          return clearNodes().apply(this, [state, dispatch, view]);
+        })
+        .wrapInList(listType, attributes)
+        .command(() => joinListBackwards(tr, listType))
+        .command(() => joinListForwards(tr, listType))
+        .command(() => {
+          if (dispatch) dispatch(tr);
+          return true;
+        })
+        .run()
+    );
+  };

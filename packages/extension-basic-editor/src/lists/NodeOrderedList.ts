@@ -14,6 +14,7 @@ import {
   type CommandFactories,
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
+import { toggleList } from './commands.ts';
 
 export class NodeOrderedList extends Node {
   override name = 'ordered_list';
@@ -49,8 +50,8 @@ export class NodeOrderedList extends Node {
 
   override getNodeSpec(): NodeSpec {
     return {
-      group: 'block',
       content: 'list_item+',
+      group: 'block list',
       parseDOM: [
         { tag: 'ol', getAttrs: (element) => setHtmlAttributes(this, element) },
       ],
@@ -75,8 +76,11 @@ export class NodeOrderedList extends Node {
     editor: CoreEditor,
     type: NodeType,
   ): Partial<CommandFactories> {
+    const keepMarks = false;
     return {
-      'toggleOrderedList': () => editor.commandFactories.wrapInList(type),
+      'toggleOrderedList': () => {
+        return toggleList('ordered_list', 'list_item', keepMarks);
+      },
     };
   }
 

@@ -33,7 +33,8 @@ function cmdItem(cmd: Command, options: Partial<MenuItemSpec>) {
     (passedOptions as any)[prop] = (options as any)[prop];
   }
   if (!options.enable && !options.select) {
-    passedOptions[options.enable ? 'enable' : 'select'] = (state) => cmd(state);
+    passedOptions[options.enable ? 'enable' : 'select'] = (state) =>
+      cmd.apply(undefined, [state]);
   }
 
   return new MenuItem(passedOptions);
@@ -66,13 +67,14 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
   ) {
     let passedOptions: MenuItemSpec = {
       run(state, dispatch) {
-        return editor.commandFactories.wrapIn(nodeType, options.attrs)(
-          state,
-          dispatch,
-        );
+        return editor.commandFactories.wrapIn(nodeType, options.attrs).apply({
+          editor,
+        }, [state, dispatch]);
       },
       select(state) {
-        return editor.commandFactories.wrapIn(nodeType, options.attrs)(state);
+        return editor.commandFactories.wrapIn(nodeType, options.attrs).apply({
+          editor,
+        }, [state]);
       },
     };
     for (let prop in options) {
@@ -100,7 +102,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     let passedOptions: MenuItemSpec = {
       run: command,
       enable(state) {
-        return command(state);
+        return command.apply({ editor }, [state]);
       },
       active(state) {
         let { $from, to, node } = state.selection as NodeSelection;
@@ -171,7 +173,10 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
         },
         run(state, dispatch) {
           if (markActive(state, markType)) {
-            editor.commandFactories.toggleMark(markType)(state, dispatch);
+            editor.commandFactories.toggleMark(markType).apply({ editor }, [
+              state,
+              dispatch,
+            ]);
             return true;
           }
           openPrompt({
@@ -184,10 +189,12 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
               title: new TextField({ label: 'Title' }),
             },
             callback(attrs) {
-              editor.commandFactories.toggleMark(markType, attrs)(
+              editor.commandFactories.toggleMark(markType, attrs).apply({
+                editor,
+              }, [
                 editor.view.state,
                 editor.view.dispatch,
-              );
+              ]);
               editor.view.focus();
             },
           });
@@ -202,22 +209,40 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
   const typeMenu = [];
 
   if (schema.nodes.bullet_list) {
-    blockMenu.push(wrapListItem(schema.nodes.bullet_list, {
-      title: 'Wrap in bullet list',
-      icon: icons.bulletList,
-    }));
+    blockMenu.push(
+      cmdItem(
+        editor.commandFactories.toggleBulletList(),
+        {
+          title: 'Wrap in bullet list',
+          label: 'Bullet List',
+          icon: icons.bulletList,
+        },
+      ),
+    );
   }
   if (schema.nodes.ordered_list) {
-    blockMenu.push(wrapListItem(schema.nodes.ordered_list, {
-      title: 'Wrap in ordered list',
-      icon: icons.orderedList,
-    }));
+    blockMenu.push(
+      cmdItem(
+        editor.commandFactories.toggleOrderedList(),
+        {
+          title: 'Wrap in ordered list',
+          label: 'Ordered List',
+          icon: icons.orderedList,
+        },
+      ),
+    );
   }
-  if (schema.nodes.blockquote) {
-    blockMenu.push(wrapItem(schema.nodes.blockquote, {
-      title: 'Wrap in block quote',
-      icon: icons.blockquote,
-    }));
+  if (schema.nodes.task_list) {
+    blockMenu.push(
+      cmdItem(
+        editor.commandFactories.toggleTaskList(),
+        {
+          title: 'Wrap in task list',
+          label: 'Task List',
+          icon: icons.taskList,
+        },
+      ),
+    );
   }
   if (schema.nodes.paragraph) {
     typeMenu.push(blockTypeItem(schema.nodes.paragraph, {
@@ -361,14 +386,14 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
       new MenuItem({
         title: 'Undo last change',
         run: (state, dispatch) => {
-          return editor.commandFactories.undo()(
+          return editor.commandFactories.undo().apply({ editor }, [
             editor.view.state,
             editor.view.dispatch,
             editorView,
-          );
+          ]);
         },
         enable: (state) => {
-          return editor.commandFactories.undo()(state);
+          return editor.commandFactories.undo().apply({ editor }, [state]);
         },
         icon: icons.undo,
       }),
@@ -378,9 +403,13 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
       new MenuItem({
         title: 'Redo last undone change',
         run: (state, dispatch) => {
-          return editor.commandFactories.redo()(state, dispatch);
+          return editor.commandFactories.redo().apply({ editor }, [
+            state,
+            dispatch,
+          ]);
         },
-        enable: (state) => editor.commandFactories.redo()(state),
+        enable: (state) =>
+          editor.commandFactories.redo().apply({ editor }, [state]),
         icon: icons.redo,
       }),
     );

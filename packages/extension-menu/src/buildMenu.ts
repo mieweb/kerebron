@@ -65,13 +65,14 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
   ) {
     let passedOptions: MenuItemSpec = {
       run(state, dispatch) {
-        return editor.commandFactories.wrapIn(nodeType, options.attrs)(
-          state,
-          dispatch,
-        );
+        return editor.commandFactories.wrapIn(nodeType, options.attrs).apply({
+          editor,
+        }, [state, dispatch]);
       },
       select(state) {
-        return editor.commandFactories.wrapIn(nodeType, options.attrs)(state);
+        return editor.commandFactories.wrapIn(nodeType, options.attrs).apply({
+          editor,
+        }, [state]);
       },
     };
     for (let prop in options) {
@@ -99,7 +100,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     let passedOptions: MenuItemSpec = {
       run: command,
       enable(state) {
-        return command(state);
+        return command.apply({ editor }, [state]);
       },
       active(state) {
         let { $from, to, node } = state.selection as NodeSelection;
@@ -172,14 +173,14 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
       run: (state, dispatch) => {
         const undoCmd = editor.commandFactories['undo']?.();
         if (undoCmd) {
-          return undoCmd(state, dispatch);
+          return undoCmd.apply({ editor }, [state, dispatch]);
         }
         return false;
       },
       enable: (state) => {
         const undoCmd = editor.commandFactories['undo']?.();
         if (undoCmd) {
-          return undoCmd(state);
+          return undoCmd.apply({ editor }, [state]);
         }
         return false;
       },
@@ -195,14 +196,14 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
       run: (state, dispatch) => {
         const redoCmd = editor.commandFactories['redo']?.();
         if (redoCmd) {
-          return redoCmd(state, dispatch);
+          return redoCmd.apply({ editor }, [state, dispatch]);
         }
         return false;
       },
       enable: (state) => {
         const redoCmd = editor.commandFactories['redo']?.();
         if (redoCmd) {
-          return redoCmd(state);
+          return redoCmd.apply({ editor }, [state]);
         }
         return false;
       },
@@ -258,29 +259,38 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
   const listMenu: MenuElement[] = [];
   if (schema.nodes.bullet_list) {
     listMenu.push(
-      wrapListItem(schema.nodes.bullet_list, {
-        title: 'Wrap in bullet list',
-        label: 'Bullet List',
-        icon: icons.bulletList,
-      }),
+      cmdItem(
+        editor.commandFactories.toggleBulletList(),
+        {
+          title: 'Wrap in bullet list',
+          label: 'Bullet List',
+          icon: icons.bulletList,
+        },
+      ),
     );
   }
   if (schema.nodes.ordered_list) {
     listMenu.push(
-      wrapListItem(schema.nodes.ordered_list, {
-        title: 'Wrap in ordered list',
-        label: 'Ordered List',
-        icon: icons.orderedList,
-      }),
+      cmdItem(
+        editor.commandFactories.toggleOrderedList(),
+        {
+          title: 'Wrap in ordered list',
+          label: 'Ordered List',
+          icon: icons.orderedList,
+        },
+      ),
     );
   }
   if (schema.nodes.task_list) {
     listMenu.push(
-      wrapListItem(schema.nodes.task_list, {
-        title: 'Wrap in task list',
-        label: 'Task List',
-        icon: icons.taskList,
-      }),
+      cmdItem(
+        editor.commandFactories.toggleTaskList(),
+        {
+          title: 'Wrap in task list',
+          label: 'Task List',
+          icon: icons.taskList,
+        },
+      ),
     );
   }
   if (listMenu.length > 0) {
@@ -389,7 +399,10 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
         },
         run(state, dispatch) {
           if (markActive(state, markType)) {
-            editor.commandFactories.toggleMark(markType)(state, dispatch);
+            editor.commandFactories.toggleMark(markType).apply({ editor }, [
+              state,
+              dispatch,
+            ]);
             return true;
           }
           openPrompt({
@@ -402,10 +415,12 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
               title: new TextField({ label: 'Title' }),
             },
             callback(attrs) {
-              editor.commandFactories.toggleMark(markType, attrs)(
+              editor.commandFactories.toggleMark(markType, attrs).apply({
+                editor,
+              }, [
                 editor.view.state,
                 editor.view.dispatch,
-              );
+              ]);
               editor.view.focus();
             },
           });
