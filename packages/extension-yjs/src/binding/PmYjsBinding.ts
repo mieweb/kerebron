@@ -61,6 +61,8 @@ export class PmYjsBinding extends EventTarget {
     events: Array<Y.YEvent<any>>,
     transaction: Y.Transaction,
   ) => void;
+  private permanentUserData: Y.PermanentUserData | undefined;
+  private user: User | undefined;
 
   constructor(private readonly editor: CoreEditor) {
     super();
@@ -98,9 +100,17 @@ export class PmYjsBinding extends EventTarget {
   }
 
   changeUser(user: User) {
+    this.user = user;
     if (!this.provider) {
       return;
     }
+
+    if (this.yjs && user.id) {
+      const { ydoc } = this.yjs;
+      this.permanentUserData = new Y.PermanentUserData(ydoc);
+      this.permanentUserData.setUserMapping(ydoc, ydoc.clientID, user.id);
+    }
+
     this.provider.awareness.setLocalStateField('kerebron:user', user);
   }
 
@@ -131,6 +141,11 @@ export class PmYjsBinding extends EventTarget {
 
     const fieldName = 'kerebron:' + this.editor.schema.topNodeType.name;
     this.yjs = { ydoc, xmlFragment: ydoc.getXmlFragment(fieldName) };
+    this.permanentUserData = new Y.PermanentUserData(ydoc);
+    if (this.user?.id) {
+      this.permanentUserData.setUserMapping(ydoc, ydoc.clientID, this.user.id);
+    }
+
     this.selectionStash = new SelectionStash(
       this.yjs,
       this.getMapping(),
@@ -162,6 +177,7 @@ export class PmYjsBinding extends EventTarget {
     this.selectionStash = undefined;
     this.yjs?.xmlFragment.unobserveDeep(this._observeFunction);
     this.yjs = undefined;
+    this.permanentUserData = undefined;
 
     this.hasImported = false;
 
@@ -172,6 +188,9 @@ export class PmYjsBinding extends EventTarget {
 
   importRemoteYdoc() {
     if (!this.yjs) {
+      return;
+    }
+    if (this.diffViewer.isActive()) {
       return;
     }
 
@@ -338,7 +357,11 @@ export class PmYjsBinding extends EventTarget {
 
       historyDoc.transact((ytr) => {
         const state = this.editor.state;
-        const fragmentContent = this.diffViewer.getFragmentContent(state, ytr);
+        const fragmentContent = this.diffViewer.getFragmentContent(
+          state,
+          ytr,
+          this.permanentUserData,
+        );
 
         if (!fragmentContent) {
           return;

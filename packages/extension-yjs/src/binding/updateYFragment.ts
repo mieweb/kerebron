@@ -1,6 +1,6 @@
 import * as Y from 'yjs';
 import * as PModel from 'prosemirror-model';
-import { Mark, Node, Schema } from 'prosemirror-model';
+import { Mark, Node } from 'prosemirror-model';
 
 import { simpleDiff } from 'lib0/diff';
 
@@ -348,8 +348,9 @@ export const updateYFragment = (
     }
   }
   ydoc.transact((ytr) => {
-    ytr.meta.set('updateYFragment', 1);
-    ytr.meta.set('addToYjsHistory', addToYjsHistory);
+    if (ytr) {
+      ytr.meta.set('addToYjsHistory', addToYjsHistory);
+    }
     // try to compare and update
     while (yChildCnt - left - right > 0 && pChildCnt - left - right > 0) {
       const leftY: Y.XmlElement | Y.XmlText = yChildren[left];

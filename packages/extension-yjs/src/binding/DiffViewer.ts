@@ -75,6 +75,7 @@ export class DiffViewer {
   getFragmentContent(
     state: EditorState,
     ytr: Y.Transaction,
+    permanentUserData?: Y.PermanentUserData,
   ): Node[] | undefined {
     if (!this.historyYXmlFragment || !this.snapshot) {
       return;
@@ -82,18 +83,17 @@ export class DiffViewer {
 
     // before rendering, we are going to sanitize ops and split deleted ops
     // if they were deleted by seperate users.
-    const pud: Y.PermanentUserData | undefined = undefined;
     // pluginState.permanentUserData;
-    if (pud) {
-      pud.dss.forEach((ds) => {
+    if (permanentUserData) {
+      permanentUserData.dss.forEach((ds) => {
         Y.iterateDeletedStructs(ytr, ds, (_item) => {});
       });
     }
     const computeYChange = (type: 'removed' | 'added', id: Y.ID) => {
-      const user = pud
+      const user = permanentUserData
         ? (type === 'added'
-          ? pud.getUserByClientId(id.client)
-          : pud.getUserByDeletedId(id))
+          ? permanentUserData.getUserByClientId(id.client)
+          : permanentUserData.getUserByDeletedId(id))
         : undefined;
       return {
         user,
