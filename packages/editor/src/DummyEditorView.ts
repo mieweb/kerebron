@@ -27,6 +27,7 @@ export class DummyEditorView {
 
   /// The view's current [state](#state.EditorState).
   public state: EditorState;
+  focused: boolean = false;
 
   /// Create a view. `place` may be a DOM node that the editor should
   /// be appended to, a function that will place it into the document,
@@ -231,11 +232,12 @@ export class DummyEditorView {
 
   /// Query whether the view has focus.
   hasFocus() {
-    return false;
+    return this.focused;
   }
 
   /// Focus the editor.
   focus() {
+    this.focused = true;
   }
 
   /// Removes the editor from the DOM and destroys all [node

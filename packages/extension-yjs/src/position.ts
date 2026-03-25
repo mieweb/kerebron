@@ -119,7 +119,7 @@ const createRelativePosition = (type: Y.AbstractType<any>, item: Y.Item) => {
 export const relativePositionToAbsolutePosition = (
   yDoc: Y.Doc,
   documentType: Y.XmlFragment,
-  relPos: any,
+  relPos: Y.RelativePosition,
   mapping: ProsemirrorMapping,
 ): null | number => {
   const decodedPos = Y.createAbsolutePositionFromRelativePosition(relPos, yDoc);

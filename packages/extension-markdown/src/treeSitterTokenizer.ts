@@ -1,4 +1,4 @@
-import { type Node as TreeSitterNode } from 'prosemirror-model';
+import { type Node as TreeSitterNode } from 'web-tree-sitter';
 
 import { createParser, Parser, type Tree } from '@kerebron/tree-sitter';
 

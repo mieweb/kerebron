@@ -417,89 +417,6 @@ Deno.test('testEmptyParagraph', async () => {
   }
 });
 
-/**
- * Test duplication issue https://github.com/yjs/y-prosemirror/issues/161
- */
-if (false) { // TODO fix restore pos
-  Deno.test('testInsertDuplication', async () => {
-    const server = await createTestServer();
-
-    try {
-      const { editor: editor1 } = createNewDocEditor(server.port);
-      editor1.chain().changeRoom('testInsertDuplication').run();
-
-      const { editor: editor2 } = createNewDocEditor(server.port);
-      editor2.chain().changeRoom('testInsertDuplication').run();
-
-      await sleep(STEP_TS);
-
-      {
-        const ydoc1: Y.Doc = await new Promise((resolve, reject) =>
-          editor1.chain().getYDoc({ resolve, reject }).run()
-        );
-        const yxml1: Y.XmlFragment = ydoc1.get('kerebron:doc', Y.XmlFragment);
-
-        const ydoc2: Y.Doc = await new Promise((resolve, reject) =>
-          editor2.chain().getYDoc({ resolve, reject }).run()
-        );
-        const yxml2: Y.XmlFragment = ydoc2.get('kerebron:doc', Y.XmlFragment);
-
-        yxml1.observeDeep((events) => {
-          events.forEach((event) => {
-            console.log('yxml1: ', JSON.stringify(event.changes.delta));
-          });
-        });
-        yxml2.observeDeep((events) => {
-          events.forEach((event) => {
-            console.log('yxml2: ', JSON.stringify(event.changes.delta));
-          });
-        });
-
-        editor1.dispatchTransaction(
-          editor1.state.tr.insert(
-            0,
-            editor1.schema.node(
-              'paragraph',
-            ),
-          ),
-        );
-        await sleep(STEP_TS);
-
-        const sync = async () => {
-          Y.applyUpdate(ydoc2, Y.encodeStateAsUpdate(ydoc1));
-          Y.applyUpdate(ydoc1, Y.encodeStateAsUpdate(ydoc2));
-          Y.applyUpdate(ydoc2, Y.encodeStateAsUpdate(ydoc1));
-          Y.applyUpdate(ydoc1, Y.encodeStateAsUpdate(ydoc2));
-          await sleep(10);
-        };
-        await sync();
-        editor1.dispatchTransaction(editor1.state.tr.insertText('1', 1, 1));
-        await sleep(STEP_TS);
-        editor2.dispatchTransaction(editor2.state.tr.insertText('2', 1, 1));
-        await sync();
-        editor1.dispatchTransaction(editor1.state.tr.insertText('1', 2, 2));
-        await sleep(STEP_TS);
-        editor2.dispatchTransaction(editor2.state.tr.insertText('2', 3, 3));
-        await sync();
-        checkResult({ testObjects: [editor1.view, editor2.view] });
-
-        console.log('yxml1.toString()', yxml1.toString());
-
-        assert(
-          yxml1.toString() ===
-            '<paragraph>1122</paragraph><paragraph></paragraph><paragraph></paragraph>',
-        );
-      }
-
-      editor1.destroy();
-      editor2.destroy();
-      await sleep(STEP_TS);
-    } finally {
-      await shutdownServer(server);
-    }
-  });
-}
-
 Deno.test('testInsertRightMatch', async () => {
   const server = await createTestServer();
 
@@ -580,81 +497,152 @@ Deno.test('testInsertRightMatch', async () => {
 });
 
 /**
+ * Test duplication issue https://github.com/yjs/y-prosemirror/issues/161
+ */
+if (false) {
+  Deno.test('testInsertDuplication', async () => {
+    const server = await createTestServer();
+
+    try {
+      const { editor: editor1 } = createNewDocEditor(server.port);
+      editor1.chain().changeRoom('testInsertDuplication1').run();
+
+      const { editor: editor2 } = createNewDocEditor(server.port);
+      editor2.chain().changeRoom('testInsertDuplication2').run();
+
+      await sleep(STEP_TS);
+
+      {
+        const ydoc1: Y.Doc = await new Promise((resolve, reject) =>
+          editor1.chain().getYDoc({ resolve, reject }).run()
+        );
+        const yxml1: Y.XmlFragment = ydoc1.get('kerebron:doc', Y.XmlFragment);
+
+        const ydoc2: Y.Doc = await new Promise((resolve, reject) =>
+          editor2.chain().getYDoc({ resolve, reject }).run()
+        );
+        const yxml2: Y.XmlFragment = ydoc2.get('kerebron:doc', Y.XmlFragment);
+
+        yxml1.observeDeep((events) => {
+          events.forEach((event) => {
+            console.log('yxml1: ', JSON.stringify(event.changes.delta));
+          });
+        });
+        yxml2.observeDeep((events) => {
+          events.forEach((event) => {
+            console.log('yxml2: ', JSON.stringify(event.changes.delta));
+          });
+        });
+
+        const sync = () => {
+          Y.applyUpdate(ydoc2, Y.encodeStateAsUpdate(ydoc1));
+          Y.applyUpdate(ydoc1, Y.encodeStateAsUpdate(ydoc2));
+          Y.applyUpdate(ydoc2, Y.encodeStateAsUpdate(ydoc1));
+          Y.applyUpdate(ydoc1, Y.encodeStateAsUpdate(ydoc2));
+        };
+        sync();
+        editor1.dispatchTransaction(editor1.state.tr.insertText('1', 1, 1));
+        editor2.dispatchTransaction(editor2.state.tr.insertText('2', 1, 1));
+        sync();
+        editor1.dispatchTransaction(editor1.state.tr.insertText('1', 2, 2));
+        editor2.dispatchTransaction(editor2.state.tr.insertText('2', 3, 3));
+        sync();
+        checkResult({ testObjects: [editor1.view, editor2.view] });
+
+        console.log('yxml1.toString()', yxml1.toString());
+
+        // For some reason not deterministic, sometimes we're getting:
+        // <paragraph>2121</paragraph><paragraph></paragraph>
+
+        assert(
+          yxml1.toString() ===
+            '<paragraph>1122</paragraph><paragraph></paragraph>',
+        );
+      }
+
+      editor1.destroy();
+      editor2.destroy();
+      await sleep(STEP_TS);
+    } finally {
+      await shutdownServer(server);
+    }
+  });
+}
+
+/**
  * Tests for #126 - initial cursor position should be retained, not jump to the end.
  */
-if (false) { // TODO fix restore pos
-  Deno.test('testInitialCursorPosition', async () => {
-    const server = await createTestServer();
+Deno.test('testInitialCursorPosition', async () => {
+  const server = await createTestServer();
 
-    try {
-      const { editor } = createNewDocEditor(server.port);
-      editor.chain().changeRoom('testInitialCursorPosition').run();
+  try {
+    const { editor } = createNewDocEditor(server.port);
+    await editor.loadDocumentText('text/markdown', 'hello');
+    editor.chain().changeRoom('testInitialCursorPosition').run();
+    await sleep(STEP_TS);
+
+    {
+      const ydoc: Y.Doc = await new Promise((resolve, reject) =>
+        editor.chain().getYDoc({ resolve, reject }).run()
+      );
+      const yxml: Y.XmlFragment = ydoc.get('kerebron:doc', Y.XmlFragment);
+
+      // const p = new Y.XmlElement('paragraph');
+      // p.insert(0, [new Y.XmlText('hello world!')]);
+      // yxml.insert(0, [p]);
+      const p: Y.XmlElement = yxml.get(0) as Y.XmlElement;
+      p.insert(p.length, [new Y.XmlText(' world!')]);
+
+      editor.view.focus();
       await sleep(STEP_TS);
 
-      {
-        const ydoc: Y.Doc = await new Promise((resolve, reject) =>
-          editor.chain().getYDoc({ resolve, reject }).run()
-        );
-        const yxml: Y.XmlFragment = ydoc.get('kerebron:doc', Y.XmlFragment);
-
-        const p = new Y.XmlElement('paragraph');
-        p.insert(0, [new Y.XmlText('hello world!')]);
-        yxml.insert(0, [p]);
-
-        editor.view.focus();
-        await sleep(STEP_TS);
-
-        assert(editor.view.state.selection.anchor === 1);
-        assert(editor.view.state.selection.head === 1);
-      }
-
-      editor.destroy();
-      await sleep(STEP_TS);
-    } finally {
-      await shutdownServer(server);
+      assert(editor.view.state.selection.anchor === 1);
+      assert(editor.view.state.selection.head === 1);
     }
-  });
-}
 
-if (false) { // TODO fix restore pos
-  Deno.test('testInitialCursorPosition2', async () => {
-    const server = await createTestServer();
+    editor.destroy();
+    await sleep(STEP_TS);
+  } finally {
+    await shutdownServer(server);
+  }
+});
 
-    try {
-      const { editor } = createNewDocEditor(server.port);
-      editor.chain().changeRoom('testInitialCursorPosition2').run();
-      await sleep(0);
+Deno.test('testInitialCursorPosition2', async () => {
+  const server = await createTestServer();
 
-      {
-        const ydoc: Y.Doc = await new Promise((resolve, reject) =>
-          editor.chain().getYDoc({ resolve, reject }).run()
-        );
-        const yxml: Y.XmlFragment = ydoc.get('kerebron:doc', Y.XmlFragment);
+  try {
+    const { editor } = createNewDocEditor(server.port);
+    await editor.loadDocumentText('text/markdown', 'hello');
+    editor.chain().changeRoom('testInitialCursorPosition2').run();
+    await sleep(STEP_TS);
 
-        editor.view.focus();
-        await sleep(10);
-        console.log(
-          'editor.view.state.selection1',
-          editor.view.state.selection.anchor,
-        );
+    {
+      const ydoc: Y.Doc = await new Promise((resolve, reject) =>
+        editor.chain().getYDoc({ resolve, reject }).run()
+      );
+      const yxml: Y.XmlFragment = ydoc.get('kerebron:doc', Y.XmlFragment);
+      console.log('yxml', yxml.toString());
 
-        const p: Y.XmlElement = yxml.get(0) as Y.XmlElement;
-        // const p = new Y.XmlElement('paragraph');
-        p.insert(0, [new Y.XmlText('hello world!')]);
-        // yxml.insert(0, [p]);
+      editor.view.focus();
+      await sleep(10);
+      console.log(
+        'editor.view.state.selection1',
+        editor.view.state.selection.anchor,
+      );
 
-        console.log(
-          'editor.view.state.selection2',
-          editor.view.state.selection.anchor,
-        );
-        assert(editor.view.state.selection.anchor === 1);
-        assert(editor.view.state.selection.head === 1);
-      }
+      // const p = new Y.XmlElement('paragraph');
+      // p.insert(0, [new Y.XmlText('hello world!')]);
+      // yxml.insert(0, [p]);
+      const p: Y.XmlElement = yxml.get(0) as Y.XmlElement;
+      p.insert(p.length, [new Y.XmlText(' world!')]);
 
-      editor.destroy();
-      await sleep(STEP_TS);
-    } finally {
-      await shutdownServer(server);
+      assert(editor.view.state.selection.anchor === 1);
+      assert(editor.view.state.selection.head === 1);
     }
-  });
-}
+
+    editor.destroy();
+    await sleep(STEP_TS);
+  } finally {
+    await shutdownServer(server);
+  }
+});

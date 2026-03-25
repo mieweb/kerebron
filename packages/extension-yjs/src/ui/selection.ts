@@ -25,13 +25,13 @@ interface TransactionSelection {
 
 const restoreRelativeSelection = (
   tr: Transaction,
-  relSel: ReturnType<typeof getRelativeSelection>,
+  relSel: TransactionSelection,
   yjs: YjsData,
   mapping: ProsemirrorMapping,
 ) => {
   const { ydoc, xmlFragment } = yjs;
 
-  if (relSel !== null && relSel.anchor !== null && relSel.head !== null) {
+  if (relSel.anchor !== null && relSel.head !== null) {
     if (relSel.type === 'all') {
       tr.setSelection(new AllSelection(tr.doc));
     } else if (relSel.type === 'node') {
