@@ -1,40 +1,44 @@
-import type { EditorState, Plugin } from 'prosemirror-state';
-import { Schema } from 'prosemirror-model';
+import type { EditorState, Plugin, Transaction } from 'prosemirror-state';
 
-import { type CoreEditor, Extension, type TextRange } from '@kerebron/editor';
+import { CommandFactories, Extension } from '@kerebron/editor';
+import { CommandFactory } from '@kerebron/editor/commands';
 
-import { AutocompletePlugin } from './AutocompletePlugin.ts';
-import { AutocompleteMatcher, AutocompleteRenderer } from './types.ts';
-
-export interface AutocompleteProps {
-  state: EditorState;
-  range: TextRange;
-  isActive?: boolean;
-}
-
-export interface AutocompleteConfig<I = any, TSelected = any> {
-  getItems: (query: string, props: AutocompleteProps) => I[] | Promise<I[]>;
-
-  onSelect?: (selected: TSelected, range: TextRange) => void;
-  allow?: (
-    props: AutocompleteProps,
-  ) => boolean;
-
-  matchers?: AutocompleteMatcher[];
-  renderer?: AutocompleteRenderer<I, TSelected>;
-
-  decorationTag?: string;
-  decorationClass?: string;
-}
+import {
+  AutocompletePlugin,
+  AutocompletePluginKey,
+} from './AutocompletePlugin.ts';
+import { AutocompleteConfig, AutocompleteSource } from './types.ts';
 
 export class ExtensionAutocomplete extends Extension {
   name = 'autocomplete';
-  plugin!: AutocompletePlugin<unknown, unknown>;
 
   public constructor(
-    protected override config: AutocompleteConfig,
+    public override config: AutocompleteConfig = {},
   ) {
     super(config);
+  }
+
+  override getCommandFactories(): Partial<CommandFactories> {
+    const addAutocompleteSource: CommandFactory = (
+      autocompleteSource: AutocompleteSource,
+    ) => {
+      return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+        const tr = state.tr;
+        tr.setMeta(AutocompletePluginKey, {
+          addAutocompleteSource: { autocompleteSource },
+        });
+
+        if (dispatch) {
+          dispatch(tr);
+        }
+
+        return true;
+      };
+    };
+
+    return {
+      addAutocompleteSource,
+    };
   }
 
   override getProseMirrorPlugins(): Plugin[] {

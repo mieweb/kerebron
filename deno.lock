@@ -1,29 +1,18 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@david/code-block-writer@^13.0.3": "13.0.3",
     "jsr:@deno-library/compress@*": "0.5.6",
     "jsr:@deno-library/crc32@1.0.2": "1.0.2",
-    "jsr:@deno/dnt@~0.42.3": "0.42.3",
     "jsr:@hono/hono@^4.7.4": "4.9.5",
-    "jsr:@std/assert@1": "1.0.14",
+    "jsr:@std/assert@1": "1.0.16",
     "jsr:@std/bytes@^1.0.2": "1.0.6",
-    "jsr:@std/fmt@1": "1.0.8",
-    "jsr:@std/fs@1": "1.0.19",
-    "jsr:@std/fs@1.0.19": "1.0.19",
     "jsr:@std/fs@1.0.5": "1.0.5",
-    "jsr:@std/internal@^1.0.10": "1.0.10",
-    "jsr:@std/internal@^1.0.9": "1.0.10",
+    "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@std/io@0.225.0": "0.225.0",
-    "jsr:@std/path@1": "1.1.2",
     "jsr:@std/path@1.0.8": "1.0.8",
-    "jsr:@std/path@1.1.2": "1.1.2",
-    "jsr:@std/path@^1.0.7": "1.1.2",
-    "jsr:@std/path@^1.1.1": "1.1.2",
+    "jsr:@std/path@^1.0.7": "1.0.8",
     "jsr:@std/streams@^1.0.7": "1.0.17",
     "jsr:@std/tar@0.1.3": "0.1.3",
-    "jsr:@ts-morph/bootstrap@0.27": "0.27.0",
-    "jsr:@ts-morph/common@0.27": "0.27.0",
     "jsr:@zip-js/zip-js@2.7.53": "2.7.53",
     "npm:@arcmantle/vite-plugin-import-css-sheet@latest": "1.0.12",
     "npm:@codemirror/autocomplete@6.18.6": "6.18.6",
@@ -88,18 +77,15 @@
     "npm:vue@3.5.21": "3.5.21_typescript@5.9.3",
     "npm:web-tree-sitter@0.26.6": "0.26.6",
     "npm:wrangler@*": "4.58.0_unenv@2.0.0-rc.24_workerd@1.20260107.1",
-    "npm:y-protocols@1.0.6": "1.0.6_yjs@13.6.24",
-    "npm:yjs@13.6.24": "13.6.24"
+    "npm:y-protocols@1.0.6": "1.0.6_yjs@13.6.30",
+    "npm:yjs@13.6.30": "13.6.30"
   },
   "jsr": {
-    "@david/code-block-writer@13.0.3": {
-      "integrity": "f98c77d320f5957899a61bfb7a9bead7c6d83ad1515daee92dbacc861e13bb7f"
-    },
     "@deno-library/compress@0.5.6": {
       "integrity": "9d76e37e7682fc8d3d99d5641a7af454ce4689b1df3fd3062141a1deb64453cd",
       "dependencies": [
         "jsr:@deno-library/crc32",
-        "jsr:@std/fs@1.0.5",
+        "jsr:@std/fs",
         "jsr:@std/io",
         "jsr:@std/path@1.0.8",
         "jsr:@std/tar",
@@ -109,30 +95,17 @@
     "@deno-library/crc32@1.0.2": {
       "integrity": "d2061bfee30c87c97f285dfca0fdc4458e632dc072a33ecfc73ca5177a5a39a0"
     },
-    "@deno/dnt@0.42.3": {
-      "integrity": "62a917a0492f3c8af002dce90605bb0d41f7d29debc06aca40dba72ab65d8ae3",
-      "dependencies": [
-        "jsr:@david/code-block-writer",
-        "jsr:@std/fmt",
-        "jsr:@std/fs@1",
-        "jsr:@std/path@1",
-        "jsr:@ts-morph/bootstrap"
-      ]
-    },
     "@hono/hono@4.9.5": {
       "integrity": "9979382257287abb33e98893247a97660adc0a9239cf37d57e207e3592040a96"
     },
-    "@std/assert@1.0.14": {
-      "integrity": "68d0d4a43b365abc927f45a9b85c639ea18a9fab96ad92281e493e4ed84abaa4",
+    "@std/assert@1.0.16": {
+      "integrity": "6a7272ed1eaa77defe76e5ff63ca705d9c495077e2d5fd0126d2b53fc5bd6532",
       "dependencies": [
-        "jsr:@std/internal@^1.0.10"
+        "jsr:@std/internal"
       ]
     },
     "@std/bytes@1.0.6": {
       "integrity": "f6ac6adbd8ccd99314045f5703e23af0a68d7f7e58364b47d2c7f408aeb5820a"
-    },
-    "@std/fmt@1.0.8": {
-      "integrity": "71e1fc498787e4434d213647a6e43e794af4fd393ef8f52062246e06f7e372b7"
     },
     "@std/fs@1.0.5": {
       "integrity": "41806ad6823d0b5f275f9849a2640d87e4ef67c51ee1b8fb02426f55e02fd44e",
@@ -140,15 +113,8 @@
         "jsr:@std/path@^1.0.7"
       ]
     },
-    "@std/fs@1.0.19": {
-      "integrity": "051968c2b1eae4d2ea9f79a08a3845740ef6af10356aff43d3e2ef11ed09fb06",
-      "dependencies": [
-        "jsr:@std/internal@^1.0.9",
-        "jsr:@std/path@^1.1.1"
-      ]
-    },
-    "@std/internal@1.0.10": {
-      "integrity": "e3be62ce42cab0e177c27698e5d9800122f67b766a0bea6ca4867886cbde8cf7"
+    "@std/internal@1.0.12": {
+      "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
     },
     "@std/io@0.225.0": {
       "integrity": "c1db7c5e5a231629b32d64b9a53139445b2ca640d828c26bf23e1c55f8c079b3",
@@ -159,12 +125,6 @@
     "@std/path@1.0.8": {
       "integrity": "548fa456bb6a04d3c1a1e7477986b6cffbce95102d0bb447c67c4ee70e0364be"
     },
-    "@std/path@1.1.2": {
-      "integrity": "c0b13b97dfe06546d5e16bf3966b1cadf92e1cc83e56ba5476ad8b498d9e3038",
-      "dependencies": [
-        "jsr:@std/internal@^1.0.10"
-      ]
-    },
     "@std/streams@1.0.17": {
       "integrity": "7859f3d9deed83cf4b41f19223d4a67661b3d3819e9fc117698f493bf5992140"
     },
@@ -172,19 +132,6 @@
       "integrity": "531270fc707b37ab9b5f051aa4943e7b16b86905e0398a4ebe062983b0c93115",
       "dependencies": [
         "jsr:@std/streams"
-      ]
-    },
-    "@ts-morph/bootstrap@0.27.0": {
-      "integrity": "b8d7bc8f7942ce853dde4161b28f9aa96769cef3d8eebafb379a81800b9e2448",
-      "dependencies": [
-        "jsr:@ts-morph/common"
-      ]
-    },
-    "@ts-morph/common@0.27.0": {
-      "integrity": "c7b73592d78ce8479b356fd4f3d6ec3c460d77753a8680ff196effea7a939052",
-      "dependencies": [
-        "jsr:@std/fs@1",
-        "jsr:@std/path@1"
       ]
     },
     "@zip-js/zip-js@2.7.53": {
@@ -1719,7 +1666,8 @@
       "deprecated": true
     },
     "@xmldom/xmldom@0.8.11": {
-      "integrity": "sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw=="
+      "integrity": "sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==",
+      "deprecated": true
     },
     "acorn-walk@8.3.2": {
       "integrity": "sha512-cjkyv4OtNCIeqhHrfS81QWXoCBPExR/J62oyEqepVw8WaQeSqpW2uhuLPh1m9eWhDuOo/jUXVTlifvesOWp/4A=="
@@ -3115,15 +3063,15 @@
     "ws@8.18.0": {
       "integrity": "sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw=="
     },
-    "y-protocols@1.0.6_yjs@13.6.24": {
+    "y-protocols@1.0.6_yjs@13.6.30": {
       "integrity": "sha512-vHRF2L6iT3rwj1jub/K5tYcTT/mEYDUppgNPXwp8fmLpui9f7Yeq3OEtTLVF012j39QnV+KEQpNqoN7CWU7Y9Q==",
       "dependencies": [
         "lib0",
         "yjs"
       ]
     },
-    "yjs@13.6.24": {
-      "integrity": "sha512-xn/pYLTZa3uD1uDG8lpxfLRo5SR/rp0frdASOl2a71aYNvUXdWcLtVL91s2y7j+Q8ppmjZ9H3jsGVgoFMbT2VA==",
+    "yjs@13.6.30": {
+      "integrity": "sha512-vv/9h42eCMC81ZHDFswuu/MKzkl/vyq1BhaNGfHyOonwlG4CJbQF4oiBBJPvfdeCt/PlVDWh7Nov9D34YY09uQ==",
       "dependencies": [
         "lib0"
       ]
@@ -3304,7 +3252,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@deno/dnt@~0.42.3",
+      "jsr:@deno/dnt@0.42.3",
       "jsr:@std/assert@1",
       "jsr:@std/fs@1.0.19",
       "jsr:@std/path@1.1.2",
@@ -3327,7 +3275,7 @@
       "npm:vscode-languageserver-textdocument@1.0.12",
       "npm:web-tree-sitter@0.26.6",
       "npm:y-protocols@1.0.6",
-      "npm:yjs@13.6.24"
+      "npm:yjs@13.6.30"
     ],
     "members": {
       "examples/browser-link-mermaid": {

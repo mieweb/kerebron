@@ -1,0 +1,26 @@
+{
+  "name": "browser-autocomplete",
+  "tasks": {
+    "dev": "deno run -A npm:vite",
+    "build": "deno run -A npm:vite build",
+    "build-watch": "deno run -A npm:vite build --watch",
+    "preview": "deno run -A npm:vite preview",
+    "serve": "deno run --allow-net --allow-read main.ts"
+  },
+  "compilerOptions": {
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "exports": {},
+  "license": "MIT"
+}

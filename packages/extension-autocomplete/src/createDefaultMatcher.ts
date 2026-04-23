@@ -22,7 +22,7 @@ export function createDefaultMatcher(
   const allowedPrefixes = config.allowedPrefixes || [' '];
   const startOfLine = config.startOfLine || false;
 
-  return ($position: ResolvedPos): SuggestionMatch => {
+  return ($position: ResolvedPos): SuggestionMatch | undefined => {
     const allowSpaces = config.allowSpaces && !allowToIncludeChar;
 
     const escapedChar = escapeForRegEx(char);
@@ -42,14 +42,14 @@ export function createDefaultMatcher(
     const text = $position.nodeBefore?.isText && $position.nodeBefore.text;
 
     if (!text) {
-      return null;
+      return undefined;
     }
 
     const textFrom = $position.pos - text.length;
     const match = Array.from(text.matchAll(regexp)).pop();
 
     if (!match || match.input === undefined || match.index === undefined) {
-      return null;
+      return undefined;
     }
 
     // JavaScript doesn't have lookbehinds. This hacks a check that first character
@@ -64,7 +64,7 @@ export function createDefaultMatcher(
       .test(matchPrefix);
 
     if (allowedPrefixes !== null && !matchPrefixIsAllowed) {
-      return null;
+      return undefined;
     }
 
     // The absolute position of the match in the document
@@ -86,10 +86,9 @@ export function createDefaultMatcher(
           to,
         },
         query: match[0],
-        text: match[0],
       };
     }
 
-    return null;
+    return undefined;
   };
 }

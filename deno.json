@@ -25,6 +25,7 @@
     "packages/legacy-compat",
     "packages/custom-elements",
 
+    "examples/browser-autocomplete",
     "examples/browser-vanilla-code-editor",
     "examples/browser-react",
     "examples/browser-vue",

@@ -107,6 +107,8 @@ export class CommandManager {
     const hasStartTransaction = !!startTr;
     const tr = startTr || state.tr;
 
+    tr.setMeta('isCommand', true);
+
     const chainedState = createChainableState(tr, state);
     const fakeDispatch = () => undefined;
 

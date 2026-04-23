@@ -1,155 +1,86 @@
-import { Plugin, PluginKey } from 'prosemirror-state';
+import { Plugin, PluginKey, Selection } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 
-import { type CoreEditor, type TextRange } from '@kerebron/editor';
+import { type CoreEditor } from '@kerebron/editor';
 
-import type { AutocompleteConfig } from './ExtensionAutocomplete.ts';
 import {
+  AutocompleteConfig,
   AutocompleteMatcher,
   AutocompleteRenderer,
+  AutocompleteSource,
+  MatchedSource,
+  SuggestionMatch,
   SuggestionProps,
 } from './types.ts';
-import { createDefaultMatcher } from './createDefaultMatcher.ts';
 import { DefaultRenderer } from './DefaultRenderer.ts';
+import { createDefaultMatcher } from './createDefaultMatcher.ts';
 
-export const AutocompletePluginKey = new PluginKey('autocomplete');
+interface AutoCompleteState {
+  autocompleteSources: AutocompleteSource[];
+  manual: boolean;
 
-export class AutocompletePlugin<Item, TSelected> extends Plugin {
+  active?: {
+    match: SuggestionMatch;
+    source: AutocompleteSource;
+    renderer: AutocompleteRenderer;
+  };
+
+  composing: boolean;
+  decorationId?: string;
+}
+
+interface AutocompleteMeta {
+  addAutocompleteSource?: {
+    autocompleteSource: AutocompleteSource;
+  };
+  activate?: boolean;
+  deactivate?: boolean;
+}
+
+export const AutocompletePluginKey = new PluginKey<AutoCompleteState>(
+  'autocomplete',
+);
+
+function matchSource(selection: Selection, sources: AutocompleteSource[]) {
+  let matched: MatchedSource = undefined;
+  const parentNode = selection.$anchor.parent;
+
+  for (const source of sources) {
+    if (!source.matchers) {
+      continue;
+    }
+    const matchers: AutocompleteMatcher[] = source.matchers;
+
+    if (
+      !['code_blocxk'].includes(parentNode.type.name)
+    ) {
+      for (const matcher of matchers) {
+        const match = matcher(selection.$from);
+        if (match) {
+          matched = {
+            source,
+            match,
+          };
+          return matched;
+        }
+      }
+    }
+  }
+  return undefined;
+}
+
+export class AutocompletePlugin<Item, TSelected>
+  extends Plugin<AutoCompleteState> {
   constructor(config: AutocompleteConfig, editor: CoreEditor) {
-    let props: SuggestionProps<Item, TSelected> | undefined;
-    const renderer: AutocompleteRenderer = config.renderer ||
-      new DefaultRenderer(editor);
-
     super({
       key: AutocompletePluginKey,
-      view() {
-        return {
-          update: async (view, prevState) => {
-            const prev = this.key?.getState(prevState);
-            const next = this.key?.getState(view.state);
-
-            const moved = prev.active && next.active &&
-              prev.range.from !== next.range.from;
-            const started = !prev.active && next.active;
-            const stopped = prev.active && !next.active;
-            const changed = !started && !stopped && prev.query !== next.query;
-
-            const handleStart = started || (moved && changed);
-            const handleChange = changed || moved;
-            let handleExit = stopped || (moved && changed);
-
-            if (!handleStart && !handleChange && !handleExit) {
-              return;
-            }
-
-            const state = handleExit && !handleStart ? prev : next;
-
-            // await new Promise(r => setTimeout(r, 100));
-            const decorationNode = view.dom.querySelector(
-              `[data-decoration-id="${state.decorationId}"]`,
-            );
-
-            props = {
-              range: state.range,
-              query: state.query,
-              text: state.text,
-              items: [],
-              command: (selected) => {
-                if (!config.onSelect) {
-                  return () => {};
-                }
-                return config.onSelect(selected, state.range);
-              },
-              decorationNode,
-              // virtual node for popper.js or tippy.js
-              // this can be used for building popups without a DOM node
-              clientRect: decorationNode
-                ? () => {
-                  // because of `items` can be asynchrounous we’ll search for the current decoration node
-                  const { decorationId } = this.key?.getState(editor.state); // eslint-disable-line
-                  const currentDecorationNode = view.dom.querySelector(
-                    `[data-decoration-id="${decorationId}"]`,
-                  );
-
-                  return currentDecorationNode?.getBoundingClientRect() || null;
-                }
-                : null,
-            };
-
-            if (handleStart) {
-              renderer?.onBeforeStart?.(props);
-            }
-
-            if (handleChange) {
-              renderer?.onBeforeUpdate?.(props);
-            }
-
-            if (handleChange || handleStart) {
-              if (config.getItems) {
-                try {
-                  const ctx = { state, range: state.range, isActive: true };
-                  props.items = await config.getItems(state.query, ctx);
-                } catch (err: any) {
-                  if (err.isLSP) {
-                    props.items = [];
-                    console.error(
-                      'LSP error config.getItems()',
-                      err.message,
-                      config.getItems,
-                    );
-                  } else {
-                    throw err;
-                  }
-                }
-                if (props.items.length === 0) {
-                  handleExit = true;
-                }
-              }
-            }
-
-            if (handleExit) {
-              renderer?.onExit?.(props);
-            }
-
-            if (handleChange) {
-              renderer?.onUpdate?.(props);
-            }
-
-            if (handleStart) {
-              renderer?.onStart?.(props);
-            }
-          },
-
-          destroy: () => {
-            if (!props) {
-              return;
-            }
-
-            renderer?.onExit?.(props);
-          },
-        };
-      },
-
       state: {
         // Initialize the plugin's internal state.
         init() {
-          const state: {
-            manual: boolean;
-            active: boolean;
-            range: TextRange;
-            query: null | string;
-            text: null | string;
-            composing: boolean;
-            decorationId?: string | null;
-          } = {
+          const state: AutoCompleteState = {
+            autocompleteSources: [],
             manual: false,
-            active: false,
-            range: {
-              from: 0,
-              to: 0,
-            },
-            query: null,
-            text: null,
+            active: undefined,
             composing: false,
           };
 
@@ -157,115 +88,266 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
         },
 
         // Apply changes to the plugin state from a view transaction.
-        apply(transaction, prev, _oldState, state) {
-          // const { isEditable } = editor; // TODO
-          const isEditable = true;
-          const { composing } = editor.view;
+        apply(transaction, value, prevState, state) {
+          const pluginMeta: AutocompleteMeta | undefined = transaction.getMeta(
+            AutocompletePluginKey,
+          );
+
+          const next = { ...value };
+
+          if (!pluginMeta && !transaction.isGeneric) {
+            // return next;
+          }
+
+          const { editable, composing } = editor.view;
           const { selection } = transaction;
-          const { empty, from } = selection;
-          const next = { ...prev };
 
-          const meta = transaction.getMeta(AutocompletePluginKey);
-          if (!meta && !transaction.isGeneric) {
+          const clearActive = () => {
+            if (next.active) {
+              next.active.renderer.destroy();
+              next.active = undefined;
+            }
+            next.decorationId = undefined;
+          };
+
+          const handleSource = (matched?: MatchedSource) => {
+            // If we found a match, update the current state to show it
+            if (
+              matched && (!matched.source.allow || matched.source.allow({
+                range: matched.match.range,
+                isActive: !!next.active,
+              }))
+            ) {
+              const { source, match } = matched;
+
+              console.info('Trigger matcher autocomplete', match);
+
+              let renderer = next.active?.renderer;
+              if (next.active?.source !== source) {
+                if (renderer) {
+                  renderer.destroy();
+                  renderer = undefined;
+                }
+              }
+              if (!renderer) {
+                renderer = new DefaultRenderer(editor);
+                renderer.addEventListener('close', () => {
+                  const tr = editor.state.tr.setMeta(AutocompletePluginKey, {
+                    deactivate: true,
+                  });
+                  console.info('Manual autocomplete deactivate');
+                  editor.view.dispatch(tr);
+                });
+              }
+
+              next.active = {
+                renderer,
+                source,
+                match,
+              };
+
+              const decorationId = `id_${
+                Math.floor(Math.random() * 0xffffffff)
+              }`;
+              next.decorationId = next.decorationId || decorationId; // ???
+            } else {
+              clearActive();
+            }
+          };
+
+          if (pluginMeta?.addAutocompleteSource) {
+            const source = {
+              ...pluginMeta.addAutocompleteSource.autocompleteSource,
+            };
+            if (!source.matchers && source.triggerKeys?.length === 1) {
+              source.matchers = [
+                createDefaultMatcher({ char: source.triggerKeys[0] }),
+              ];
+            }
+            next.autocompleteSources.push(
+              source,
+            );
             return next;
           }
 
-          if (meta?.type === 'deactivate') {
-            console.info('Deactivate autocomplete');
-            next.active = false;
-            return next;
-          }
-          if (meta?.type === 'activate') {
+          if (pluginMeta?.activate) {
             console.info('Trigger manual autocomplete');
-            next.range = { from: selection.from, to: selection.to };
-            next.active = true;
+
+            const matched = matchSource(selection, next.autocompleteSources);
+            handleSource(matched);
             next.manual = true;
-            next.query = null;
             return next;
+          }
+
+          if (pluginMeta?.deactivate) {
+            console.info('Deactivate autocomplete');
+            clearActive();
+            return next;
+          }
+
+          if (!editable) {
+            clearActive();
+            return next;
+          }
+
+          if (!selection.empty && !editor.view.composing) {
+            clearActive();
+            return next;
+          }
+
+          // Reset active state if we just left the previous suggestion range
+          if (
+            next.active && !composing && !next.composing &&
+            (selection.from < next.active.match.range.from ||
+              selection.from > next.active.match.range.to)
+          ) {
+            clearActive();
           }
 
           next.composing = composing;
 
-          const parentNode = selection.$anchor.parent;
-
-          if (
-            !['code_block'].includes(parentNode?.type.name) && isEditable &&
-            (empty || editor.view.composing)
-          ) {
-            // Reset active state if we just left the previous suggestion range
-            if (
-              (from < prev.range.from || from > prev.range.to) && !composing &&
-              !prev.composing
-            ) {
-              next.active = false;
-            }
-
-            const matchers: AutocompleteMatcher[] = config.matchers ||
-              [createDefaultMatcher()];
-            let match = undefined;
-
-            for (const matcher of matchers) {
-              match = matcher(selection.$from);
-              if (match) {
-                break;
-              }
-            }
-
-            const decorationId = `id_${Math.floor(Math.random() * 0xffffffff)}`;
-
-            // If we found a match, update the current state to show it
-            if (
-              match && (!config.allow || config.allow({
-                state,
-                range: match.range,
-                isActive: prev.active,
-              }))
-            ) {
-              console.info('Trigger matcher autocomplete', match);
-              next.active = true;
-              next.decorationId = prev.decorationId
-                ? prev.decorationId
-                : decorationId;
-              next.range = match.range;
-              next.query = match.query;
-              next.text = match.text;
-            } else {
-              next.active = false;
-            }
-          } else {
-            next.active = false;
+          if (transaction.getMeta('isCommand')) {
+            return next;
           }
 
+          const matched = matchSource(selection, next.autocompleteSources);
+          handleSource(matched);
           next.manual = false;
-
-          // Make sure to empty the range if suggestion is inactive
-          if (!next.active) {
-            next.decorationId = null;
-            next.range = { from: 0, to: 0 };
-            next.query = null;
-            next.text = null;
-          }
 
           return next;
         },
       },
 
+      view() {
+        return {
+          update: async (view, prevState) => {
+            const prev: AutoCompleteState = this.key?.getState(prevState);
+            const next: AutoCompleteState = this.key?.getState(view.state);
+
+            const moved = prev.active && next.active &&
+              prev.active.match.range.from !== next.active.match.range.from;
+            const started = !prev.active?.match && next.active?.match;
+            const stopped = prev.active?.match && !next.active?.match;
+            const changed = !started && !stopped &&
+              prev.active?.match.query !== next.active?.match.query;
+
+            if (stopped && prev.active) {
+              prev.active.renderer.destroy();
+              return;
+            }
+
+            if (next.active) {
+              const changedQuery =
+                prev.active?.match.query !== next.active.match.query;
+
+              if (changedQuery || moved) {
+                const decorationNode = view.dom.querySelector(
+                  `[data-decoration-id="${next.decorationId}"]`,
+                );
+
+                const onSelect = next.active.source.onSelect;
+                const range = next.active.match.range;
+
+                const props: SuggestionProps = {
+                  match: next.active.match,
+                  items: [],
+                  command: (selected) => {
+                    return onSelect(selected, range);
+                  },
+                  // decorationNode,
+                  // virtual node for popper.js or tippy.js
+                  // this can be used for building popups without a DOM node
+                  clientRect: () => {
+                    // because of `items` can be asynchrounous we’ll search for the current decoration node
+                    const { decorationId } = next; // eslint-disable-line
+                    const currentDecorationNode = view.dom.querySelector(
+                      `[data-decoration-id="${decorationId}"]`,
+                    );
+
+                    return currentDecorationNode?.getBoundingClientRect() ||
+                      null;
+                  },
+                };
+
+                next.active.renderer.onUpdate(props);
+
+                try {
+                  const ctx = {
+                    range: next.active.match.range,
+                    isActive: !!next.active,
+                  };
+                  const items = await next.active.source.getItems(
+                    next.active.match.query,
+                    ctx,
+                  );
+                  next.active.renderer.onUpdate({ ...props, items });
+                } catch (err: any) {
+                  if (err.isLSP) {
+                    console.error(
+                      'LSP error config.getItems()',
+                      err.message,
+                      next.active.source.getItems,
+                    );
+                  } else {
+                    throw err;
+                  }
+                }
+              }
+            }
+
+            const handleStart = started || (moved && changed);
+            const handleChange = changed || moved;
+            const handleExit = stopped || (moved && changed);
+
+            if (!handleStart && !handleChange && !handleExit) {
+              return;
+            }
+
+            const state = handleExit && !handleStart ? prev : next;
+
+            // const active = state.active;
+          },
+
+          destroy: () => {
+            const pluginState = AutocompletePluginKey.getState(editor.state);
+            if (!pluginState) {
+              return;
+            }
+
+            const { active } = pluginState;
+            if (active) {
+              active.renderer.destroy();
+            }
+          },
+        };
+      },
+
       props: {
         // Call the keydown hook if suggestion is active.
         handleKeyDown(view, event) {
-          const { active, range } = this.getState(view.state);
+          const pluginState = this.getState(view.state) as AutoCompleteState;
+          const { autocompleteSources } = pluginState;
 
-          if (event.key === ' ' && event.ctrlKey) {
-            const tr = view.state.tr.setMeta(AutocompletePluginKey, {
-              type: 'activate',
-            });
-            console.info('Manual autocomplete key');
-            view.dispatch(tr);
-            return true;
-          }
+          for (const source of autocompleteSources) {
+            const triggerKeys: string[] = [...(source.triggerKeys || [])];
+            for (const origKey of triggerKeys) {
+              let key = origKey.toLowerCase();
+              if (key.startsWith('ctrl+')) {
+                if (!event.ctrlKey) {
+                  continue;
+                }
+                key = key.substring('ctrl+'.length);
+              }
 
-          if (active) {
-            return renderer?.onKeyDown?.({ view, event, range }) || false;
+              if (key === event.key) {
+                const tr = view.state.tr.setMeta(AutocompletePluginKey, {
+                  activate: true,
+                });
+                console.info('Manual autocomplete key ' + origKey);
+                view.dispatch(tr);
+                return false;
+              }
+            }
           }
 
           return false;
@@ -273,9 +355,9 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
 
         // Setup decorator on the currently active suggestion.
         decorations(state) {
-          const { active, range, decorationId } = this.getState(state);
+          const { active, decorationId } = this.getState(state) || {};
 
-          if (!active) {
+          if (!active || !decorationId) {
             return null;
           }
 
@@ -284,18 +366,14 @@ export class AutocompletePlugin<Item, TSelected> extends Plugin {
           node.setAttribute('data-decoration-id', decorationId);
 
           return DecorationSet.create(state.doc, [
-            Decoration.widget(range.from, node),
+            Decoration.widget(active.match.range.from, node, {
+              class: node.className,
+              decorationId,
+              refresh: () => active.renderer.refresh(),
+            }),
           ]);
         },
       },
-    });
-
-    renderer.addEventListener('close', () => {
-      const tr = editor.state.tr.setMeta(AutocompletePluginKey, {
-        type: 'deactivate',
-      });
-      console.info('Manual autocomplete deactivate');
-      editor.view.dispatch(tr);
     });
   }
 }

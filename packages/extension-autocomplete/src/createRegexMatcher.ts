@@ -34,11 +34,11 @@ function matchBefore($position: ResolvedPos, expr: RegExp) {
 export function createRegexMatcher(
   regexes: RegExp[],
 ): AutocompleteMatcher {
-  return ($position: ResolvedPos): SuggestionMatch => {
+  return ($position: ResolvedPos): SuggestionMatch | undefined => {
     const text = $position.nodeBefore?.isText && $position.nodeBefore.text;
 
     if (!text) {
-      return null;
+      return undefined;
     }
     const textFrom = $position.pos - text.length;
 
@@ -46,7 +46,7 @@ export function createRegexMatcher(
       .filter((m) => !!m);
 
     if (matches.length === 0) {
-      return null;
+      return undefined;
     }
 
     matches.sort((a, b) => b.text.length - a.text.length);
@@ -65,7 +65,6 @@ export function createRegexMatcher(
         to,
       },
       query: matchedText,
-      text: matchedText,
     };
   };
 }

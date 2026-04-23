@@ -1,56 +1,46 @@
 import type { ResolvedPos } from 'prosemirror-model';
+import { EditorState } from 'prosemirror-state';
+
 import type { TextRange } from '@kerebron/editor';
-import { EditorView } from 'prosemirror-view';
+
+export interface AutocompleteConfig {
+  decorationTag?: string;
+  decorationClass?: string;
+}
+
+export interface AutocompleteProps {
+  range: TextRange;
+  isActive?: boolean;
+}
+
+export type AutocompleteMatcher = (
+  pos: ResolvedPos,
+) => SuggestionMatch | undefined;
+
+export interface AutocompleteSource<I = any, TSelected = any> {
+  getItems: (query: string, props: AutocompleteProps) => I[] | Promise<I[]>;
+
+  onSelect: (selected: TSelected, range: TextRange) => void;
+  allow?: (
+    props: AutocompleteProps,
+  ) => boolean;
+
+  matchers?: AutocompleteMatcher[];
+  renderer?: AutocompleteRenderer<I, TSelected>;
+  triggerKeys?: string[];
+}
+
+export interface SuggestionKeyDownProps {
+  event: KeyboardEvent;
+}
 
 export type SuggestionMatch = {
   range: TextRange;
   query: string;
-  text: string;
-} | null;
-
-export type AutocompleteMatcher = (pos: ResolvedPos) => SuggestionMatch;
-
-export interface SuggestionKeyDownProps {
-  view: EditorView;
-  event: KeyboardEvent;
-  range: TextRange;
-}
-
-export interface AutocompleteRenderer<I = any, TSelected = any> {
-  onBeforeStart?: (props: SuggestionProps<I, TSelected>) => void;
-  onStart?: (props: SuggestionProps<I, TSelected>) => void;
-  onBeforeUpdate?: (props: SuggestionProps<I, TSelected>) => void;
-  onUpdate?: (props: SuggestionProps<I, TSelected>) => void;
-  onExit?: (props: SuggestionProps<I, TSelected>) => void;
-  onKeyDown?: (props: SuggestionKeyDownProps) => boolean;
-
-  addEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
-  removeEventListener(
-    type: string,
-    callback: EventListenerOrEventListenerObject | null,
-    options?: EventListenerOptions | boolean,
-  ): void;
-}
+};
 
 export interface SuggestionProps<I = any, TSelected = any> {
-  /**
-   * The range of the suggestion.
-   */
-  range: TextRange;
-
-  /**
-   * The current suggestion query.
-   */
-  query: string;
-
-  /**
-   * The current suggestion text.
-   */
-  text: string;
+  match: SuggestionMatch;
 
   /**
    * The suggestion items array.
@@ -64,11 +54,11 @@ export interface SuggestionProps<I = any, TSelected = any> {
    */
   command: (props: TSelected) => void;
 
-  /**
-   * The decoration node HTML element
-   * @default null
-   */
-  decorationNode: Element | null;
+  // /**
+  //  * The decoration node HTML element
+  //  * @default null
+  //  */
+  // decorationNode: Element | null;
 
   /**
    * The function that returns the client rect
@@ -77,3 +67,28 @@ export interface SuggestionProps<I = any, TSelected = any> {
    */
   clientRect?: (() => DOMRect | null) | null;
 }
+
+export interface AutocompleteRenderer<I = any, TSelected = any> {
+  // setDecorationNode(node: HTMLElement): void;
+  onBeforeUpdate?: () => void;
+  onUpdate: (props: SuggestionProps<I, TSelected>) => void;
+  onKeyDown?: (props: SuggestionKeyDownProps) => boolean;
+  destroy: () => void;
+  refresh: () => void;
+
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  removeEventListener(
+    type: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: EventListenerOptions | boolean,
+  ): void;
+}
+
+export type MatchedSource = undefined | {
+  match: SuggestionMatch;
+  source: AutocompleteSource;
+};
