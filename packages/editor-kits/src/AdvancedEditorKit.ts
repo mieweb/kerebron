@@ -1,13 +1,12 @@
-import { dracula } from 'thememirror';
-
 import { AnyExtensionOrReq, EditorKit } from '@kerebron/editor';
 import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
-import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
+import { ExtensionCodeJar } from '@kerebron/extension-codejar';
 import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionCustomMenu } from '@kerebron/extension-menu';
 import { ExtensionOdt } from '@kerebron/extension-odt';
 import { ExtensionTables } from '@kerebron/extension-tables';
+import { ExtensionAutocomplete } from '@kerebron/extension-autocomplete';
 
 export class AdvancedEditorKit implements EditorKit {
   name = 'advanced-editor';
@@ -25,9 +24,8 @@ export class AdvancedEditorKit implements EditorKit {
       new ExtensionTables(),
       new ExtensionDevToolkit(),
       new ExtensionCustomMenu(this.menu),
-      new ExtensionCodeMirror({
-        theme: [dracula],
-      }),
+      new ExtensionCodeJar(),
+      new ExtensionAutocomplete(),
     ];
   }
 }
