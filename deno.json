@@ -118,7 +118,10 @@
     }
   },
   "fmt": {
+    "useTabs": false,
+    "lineWidth": 80,
     "singleQuote": true,
+    "semiColons": true,
     "exclude": [
       ".github/**/*.md",
       "**/*.md",

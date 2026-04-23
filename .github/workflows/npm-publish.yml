@@ -19,7 +19,7 @@ jobs:
 
       - uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.6
+          deno-version: v2.x # Use the latest stable Deno version
       - uses: actions/setup-node@v4
         with:
           node-version: '22.x'

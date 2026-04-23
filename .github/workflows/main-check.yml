@@ -16,7 +16,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.6
+          deno-version: v2.x # Use the latest stable Deno version
 
       - name: Setup rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
