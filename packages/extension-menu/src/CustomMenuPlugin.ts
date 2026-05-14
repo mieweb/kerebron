@@ -5,8 +5,6 @@ import { EditorView } from 'prosemirror-view';
 
 import type { CoreEditor } from '@kerebron/editor';
 
-import { CustomMenuOptions } from './ExtensionCustomMenu.ts';
-
 import type { MenuElement } from './menu.ts';
 import { getIcon } from './icons.ts';
 
@@ -1908,6 +1906,11 @@ export class CustomMenuView {
       this.wrapper.parentNode.replaceChild(this.editorView.dom, this.wrapper);
     }
   }
+}
+
+export interface CustomMenuOptions {
+  /// Provides the content of the menu
+  content: readonly (readonly MenuElement[])[];
 }
 
 export class CustomMenuPlugin extends Plugin {
