@@ -34,8 +34,6 @@ export class CustomMenuView {
   pinnedDropdownMenu: HTMLElement | null = null;
   tools: ToolItem[] = [];
   root: Document | ShadowRoot;
-  resizeHandle: HTMLElement;
-  editorContainer: HTMLElement;
   private closeOverflowHandler: ((e: MouseEvent) => void) | null = null;
   private closePinnedDropdownHandler: ((e: MouseEvent) => void) | null = null;
   private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
@@ -60,9 +58,6 @@ export class CustomMenuView {
   // Default order of tools (stored on initialization)
   private defaultOrder: string[] = [];
 
-  // Currently focused toolbar item index for keyboard navigation
-  private focusedToolbarIndex = -1;
-
   constructor(
     readonly editorView: EditorView,
     readonly editor: CoreEditor,
@@ -79,42 +74,26 @@ export class CustomMenuView {
     this.toolbar.classList.add(CSS_PREFIX);
     this.toolbar.setAttribute('role', 'toolbar');
 
-    // Create editor container with resize handle
-    this.editorContainer = document.createElement('div');
-    this.editorContainer.classList.add(CSS_PREFIX + '__editor-container');
-    this.editorContainer.style.height = '50vh'; // Start at 50% height
-
-    // Create resize handle
-    this.resizeHandle = document.createElement('div');
-    this.resizeHandle.classList.add(CSS_PREFIX + '__resize-handle');
-    this.resizeHandle.innerHTML = '<div class="' + CSS_PREFIX +
-      '__resize-handle-bar"></div>';
-
     // Mount toolbar before the editor DOM
     this.wrapper.appendChild(this.toolbar);
     if (editorView.dom.parentNode) {
       editorView.dom.parentNode.replaceChild(this.wrapper, editorView.dom);
     }
 
-    // Wrap editor in container and add resize handle
-    this.editorContainer.appendChild(editorView.dom);
-    this.editorContainer.appendChild(this.resizeHandle);
-    this.wrapper.appendChild(this.editorContainer);
+    this.wrapper.appendChild(editorView.dom);
 
     // Create overflow menu (initially hidden)
     this.overflowMenu = document.createElement('div');
     this.overflowMenu.classList.add(CSS_PREFIX + '__overflow-menu');
     this.overflowMenu.style.display = 'none';
-    this.wrapper.insertBefore(this.overflowMenu, this.editorContainer);
+    this.wrapper.insertBefore(this.overflowMenu, editorView.dom);
+    editorView.dom.classList.add('kb-custom-menu__editor');
 
     // Initialize tools from content
     this.initializeTools();
 
     // Load order state from localStorage
     this.loadOrderState();
-
-    // Setup resize functionality
-    this.setupResize();
 
     // Initial render
     this.render();
@@ -1033,11 +1012,6 @@ export class CustomMenuView {
 
           wrapper.appendChild(dom);
 
-          // Store the button DOM for later use (click after drag timeout)
-          wrapper.dataset.hasButton = 'true';
-          (wrapper as HTMLElement & { _buttonDom: HTMLElement })._buttonDom =
-            dom;
-
           // Add keyboard support for Enter/Space
           wrapper.addEventListener('keydown', (e: KeyboardEvent) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -1874,54 +1848,6 @@ export class CustomMenuView {
       clearTimeout(this.dragStartTimer);
       this.dragStartTimer = null;
     }
-  }
-
-  private setupResize() {
-    let isResizing = false;
-    let startY = 0;
-    let startHeight = 0;
-
-    const onMouseDown = (e: MouseEvent) => {
-      isResizing = true;
-      startY = e.clientY;
-      startHeight = this.editorContainer.offsetHeight;
-
-      // Add resizing class for visual feedback
-      this.wrapper.classList.add(CSS_PREFIX + '__wrapper--resizing');
-
-      // Prevent text selection while dragging
-      e.preventDefault();
-
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
-    };
-
-    const onMouseMove = (e: MouseEvent) => {
-      if (!isResizing) return;
-
-      const deltaY = e.clientY - startY;
-      const newHeight = startHeight + deltaY;
-
-      // Set minimum and maximum heights
-      const minHeight = 200;
-      const maxHeight = window.innerHeight - 100;
-
-      if (newHeight >= minHeight && newHeight <= maxHeight) {
-        this.editorContainer.style.height = newHeight + 'px';
-      }
-    };
-
-    const onMouseUp = () => {
-      if (!isResizing) return;
-
-      isResizing = false;
-      this.wrapper.classList.remove(CSS_PREFIX + '__wrapper--resizing');
-
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-    };
-
-    this.resizeHandle.addEventListener('mousedown', onMouseDown);
   }
 
   update(view: EditorView, prevState: EditorState) {
