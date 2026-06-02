@@ -8,7 +8,7 @@
     "serve": "deno run --allow-net --allow-read main.ts"
   },
   "imports": {
-    "@vitejs/plugin-react-swc": "npm:@vitejs/plugin-react-swc@4.2.2",
+    "@vitejs/plugin-react-swc": "npm:@vitejs/plugin-react-swc@4.3.1",
 
     "react": "npm:react@^19",
     "react-dom": "npm:react-dom@^19",

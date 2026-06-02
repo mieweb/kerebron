@@ -12,8 +12,6 @@ export function generateAlias() {
       'packages/extension-menu/assets',
     '@kerebron/extension-menu-legacy/assets': __dirname + '/../../' +
       'packages/extension-menu-legacy/assets',
-    '@kerebron/extension-codemirror/assets': __dirname + '/../../' +
-      'packages/extension-codemirror/assets',
     '@kerebron/extension-codejar/assets': __dirname + '/../../' +
       'packages/extension-codejar/assets',
     '@kerebron/extension-autocomplete/assets': __dirname + '/../../' +

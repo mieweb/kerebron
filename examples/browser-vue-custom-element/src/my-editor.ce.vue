@@ -12,24 +12,14 @@
   </div>
 </template>
 <script lang="ts">
-import { dracula } from 'thememirror';
-
-import { CoreEditor, type TextRange } from '@kerebron/editor';
-import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
-import { ExtensionMarkdown } from '@kerebron/extension-markdown';
-import { ExtensionOdt } from '@kerebron/extension-odt';
-import { ExtensionTables } from '@kerebron/extension-tables';
-import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
-import { ExtensionAutocomplete } from '@kerebron/extension-autocomplete';
+import { CoreEditor } from '@kerebron/editor';
 
 import {
   Dropdown,
   type MenuElement,
   MenuItem,
-  ExtensionMenuLegacy,
 } from '@kerebron/extension-menu-legacy';
 
-import { ExtensionCodeMirror } from '@kerebron/extension-codemirror';
 import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
 
 export default {
@@ -71,59 +61,28 @@ export default {
     async init() {
       this.$refs.editor.innerHTML = '';
 
-      const autocomplete = new ExtensionAutocomplete({
-        getItems(query: string) {
-          console.log('query', query);
-          return [
-            '@alice',
-            '@bob',
-            '@doug',
-            '@greg',
-            '@monika'
-            ].filter(str => str.startsWith(query));
-        },
-        onSelect: (selected: string, range: TextRange) => {
-          this.editor.chain().replaceRangeText(range, selected).run();
-        }
-      });
-
       this.editor = CoreEditor.create({
         element: this.$refs.editor,
         editorKits: [
-          YjsEditorKit.createFrom(),
-          {
-            getExtensions() {
-              return [
-                new ExtensionBasicEditor(),
-                new ExtensionMenuLegacy({
-                  modifyMenu: (menus: MenuElement[][]) => {
-                    const fileMenu = [
-                      new MenuItem({
-                        label: 'Simulate loadDoc',
-                        enable: () => true,
-                        run: () => this.loadDoc(),
-                      }),
-                      new MenuItem({
-                        label: 'Load',
-                        enable: () => true,
-                        run: () => this.loadDoc2(),
-                      }),
-                    ];
-                    menus[0].unshift(new Dropdown(fileMenu, {label: 'File'}));
-                    return menus;
-                  },
+          new DevAdvancedEditorKit({
+            modifyMenu: (menus: MenuElement[][]) => {
+              const fileMenu = [
+                new MenuItem({
+                  label: 'Simulate loadDoc',
+                  enable: () => true,
+                  run: () => this.loadDoc(),
                 }),
-                autocomplete,
-                new ExtensionMarkdown(),
-                new ExtensionOdt(),
-                new ExtensionTables(),
-                new ExtensionDevToolkit(),
-                new ExtensionCodeMirror({
-                  theme: [dracula],
+                new MenuItem({
+                  label: 'Load',
+                  enable: () => true,
+                  run: () => this.loadDoc2(),
                 }),
               ];
-            }
-          }
+              menus[0].unshift(new Dropdown(fileMenu, {label: 'File'}));
+              return menus;
+            },
+          }),
+          YjsEditorKit.createFrom(),
         ]
       });
 
