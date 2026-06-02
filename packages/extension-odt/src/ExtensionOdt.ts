@@ -1,4 +1,5 @@
 import type { Node, Schema } from 'prosemirror-model';
+import { EditorState, Transaction } from 'prosemirror-state';
 
 import {
   type Converter,
@@ -6,14 +7,12 @@ import {
   Extension,
   type UrlRewriter,
 } from '@kerebron/editor';
+import { Command } from '@kerebron/editor/commands';
+import { init } from '@kerebron/odt-wasm';
 
 import { OdtParser, OdtParserConfig } from './OdtParser.ts';
 import { getDefaultsPostProcessFilters } from './postprocess/postProcess.ts';
-import { Command } from '@kerebron/editor/commands';
-import { EditorState, Transaction } from 'prosemirror-state';
 import { urlRewrite } from './postprocess/urlRewrite.ts';
-
-import { init } from '@kerebron/odt-wasm';
 
 export interface OdtConfig extends OdtParserConfig {
   debug?: boolean;

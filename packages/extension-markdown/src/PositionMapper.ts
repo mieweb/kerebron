@@ -43,7 +43,7 @@ export class PositionMapper {
     this.doc = editor.state.doc;
     this.rawTextArr = [];
     for (const item of rawTextMap) {
-      if (item.nodeIdx > 0) {
+      if (item.nodeIdx >= 0) {
         this.rawTextArr.push({
           nodeIdx: item.nodeIdx,
           maxNodeIdx: item.nodeIdx,

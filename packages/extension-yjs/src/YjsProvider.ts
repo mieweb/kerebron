@@ -44,21 +44,13 @@ export interface YjsProvider extends EventTarget {
   doc: Y.Doc;
   synced: boolean;
 
-  destroy();
+  destroy(): void;
 
   addEventListener<K extends keyof YjsProviderEventMap>(
     type: K,
     listener: (event: YjsProviderEventMap[K]) => void,
     options?: boolean | AddEventListenerOptions,
   ): void;
-
-  removeEventListener<K extends keyof YjsProviderEventMap>(
-    type: K,
-    listener: (event: YjsProviderEventMap[K]) => void,
-    options?: boolean | EventListenerOptions,
-  ): void;
-
-  dispatchEvent(event: Event): boolean;
 
   // fallback DOM signature (required)
   addEventListener(
@@ -67,9 +59,17 @@ export interface YjsProvider extends EventTarget {
     options?: boolean | AddEventListenerOptions,
   ): void;
 
+  removeEventListener<K extends keyof YjsProviderEventMap>(
+    type: K,
+    listener: (event: YjsProviderEventMap[K]) => void,
+    options?: boolean | EventListenerOptions,
+  ): void;
+  // fallback DOM signature (required)
   removeEventListener(
     type: string,
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | EventListenerOptions,
   ): void;
+
+  dispatchEvent(event: Event): boolean;
 }

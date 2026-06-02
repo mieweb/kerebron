@@ -120,7 +120,7 @@ window.addEventListener('load', async () => {
     if ('detail' in ev) {
       user = ev.detail;
       if (user) {
-        editor.chain().changeuser(user).run();
+        editor.chain().changeUser(user).run();
       }
     }
   });
@@ -129,6 +129,6 @@ window.addEventListener('load', async () => {
     editor.chain().changeRoom(roomId).run();
   }
   if (user) {
-    editor.chain().changeuser(user).run();
+    editor.chain().changeUser(user).run();
   }
 });

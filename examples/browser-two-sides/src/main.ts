@@ -1,21 +1,20 @@
 import { CoreEditor } from '@kerebron/editor';
 import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
-
 import { createAssetLoad } from '@kerebron/wasm/web';
 
-const editorElem = document.getElementById('editor');
-const prevElement = document.getElementById('preview');
-if (!editorElem) {
+const richEditor = document.getElementById('editor');
+const textEditor = document.getElementById('preview') as HTMLTextAreaElement;
+if (!richEditor) {
   throw new Error('No editor element');
 }
-if (!prevElement) {
+if (!textEditor) {
   throw new Error('No preview element');
 }
 
 const buffer = new TextEncoder().encode(
-  editorElem.innerHTML,
+  richEditor.innerHTML,
 );
-editorElem.innerHTML = '';
+richEditor.innerHTML = '';
 
 const editor1 = CoreEditor.create({
   uri: 'test.md',
@@ -26,24 +25,24 @@ const editor1 = CoreEditor.create({
   ],
 });
 
+async function pmToMd() {
+  const buffer = await editor1.saveDocument('text/x-markdown');
+  textEditor.value = new TextDecoder().decode(buffer);
+}
+
+editor1.addEventListener('changed', () => {
+  pmToMd();
+});
+
 async function mdToPm() {
-  const md = prevElement?.value || '';
+  const md = textEditor?.value || '';
   const buffer = new TextEncoder().encode(
     md,
   );
   await editor1.loadDocument('text/x-markdown', buffer);
 }
 
-async function pmToMd() {
-  const buffer = await editor1.saveDocument('text/x-markdown');
-  prevElement.value = new TextDecoder().decode(buffer);
-}
-
-editor1.addEventListener('changed', async () => {
-  pmToMd();
-});
-
-prevElement.addEventListener('keyup', async () => {
+textEditor.addEventListener('keyup', () => {
   mdToPm();
 });
 
