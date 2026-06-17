@@ -192,9 +192,10 @@ export class ExtensionManager {
           allExtensions.set(extension.name, extension);
         }
         if ('requires' in extension) {
-          const childExtensions = Array.from(extension.requires).filter((e) =>
-            typeof e !== 'string'
-          );
+          const requires = Array.isArray(extension.requires)
+            ? extension.requires
+            : [];
+          const childExtensions = requires.filter((e) => typeof e !== 'string');
           createMap(new Set(childExtensions));
         }
       }
