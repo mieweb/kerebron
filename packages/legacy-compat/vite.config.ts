@@ -39,17 +39,6 @@ export default defineConfig({
       plugins: [
         {
           name: 'rename-file-after-build',
-          closeBundle() {
-            const distDir = path.resolve(__dirname, 'dist');
-            fs.renameSync(
-              path.join(distDir, 'kerebron3.js'),
-              path.join(distDir, 'kerebron.js'),
-            );
-            fs.renameSync(
-              path.join(distDir, 'kerebron3.cjs'),
-              path.join(distDir, 'kerebron.cjs'),
-            );
-          },
         },
       ],
       output: {
