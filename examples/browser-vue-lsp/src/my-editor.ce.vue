@@ -18,8 +18,8 @@ import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
 import { DevAdvancedEditorKit } from '@kerebron/editor-kits/DevAdvancedEditorKit';
 import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
 import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
-import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
-import { LspTransportGetter, Transport } from '@kerebron/extension-lsp';
+import { LSPWebSocketTransport } from '@kerebron/extension-lsp/LSPWebSocketTransport';
+import { LSPTransportGetter, Transport } from '@kerebron/extension-lsp';
 import { Dropdown, MenuElement, MenuItem } from '@kerebron/extension-menu';
 import { createAssetLoad } from '@kerebron/wasm/web';
 
@@ -84,31 +84,27 @@ export default {
         },
       }
 
-      const getLspTransport: LspTransportGetter = (lang: string): Transport | undefined => {
+      const getLspTransport: LSPTransportGetter = (lang: string): Transport | undefined => {
         const protocol = globalThis.location.protocol === 'http:' ? 'ws:' : 'wss:';
         const uri = protocol + '//' + globalThis.location.host + '/lsp';
 
         switch (lang) {
           case 'markdown':
-            return new LspWebSocketTransport(uri + '/mine');
+            return new LSPWebSocketTransport(uri + '/mine');
           case 'json':
-            return new LspWebSocketTransport(uri + '/deno');
+            return new LSPWebSocketTransport(uri + '/deno');
           case 'typescript':
           case 'javascript':
-            return new LspWebSocketTransport(uri + '/typescript');
+            return new LSPWebSocketTransport(uri + '/deno');
+            return new LSPWebSocketTransport(uri + '/typescript');
           case 'yaml':
-            return new LspWebSocketTransport(uri + '/yaml');
+            return new LSPWebSocketTransport(uri + '/yaml');
         }
         return undefined;
       }
 
       if (this.editor) {
         this.editor.destroy();
-      }
-
-      let userName = '';
-      if (!userName) {
-        userName = 'TODO ' + Math.floor(Math.random() * 100);
       }
 
       this.editor = CoreEditor.create({
@@ -118,7 +114,7 @@ export default {
         editorKits: [
           new DevAdvancedEditorKit(myMenu),
           YjsEditorKit.createFrom(),
-          // LspEditorKit.createFrom({ getLspTransport }),
+          LspEditorKit.createFrom({ getLspTransport }),
         ]
       });
 
@@ -133,7 +129,7 @@ export default {
       if (false)
       this.editor.addEventListener('selection', (event: CustomEvent) => {
         const selection = event.detail.selection;
-        const extensionMarkdown: ExtensionMarkdown | undefined = this.editor.getExtension('markdown');
+        const extensionMarkdown: ExtensionMarkdown | undefined = this.editor.ci.resolve('markdown');
         if (extensionMarkdown) {
           const result = extensionMarkdown.toMarkdown(this.editor.state.doc);
           this.md = result.content;

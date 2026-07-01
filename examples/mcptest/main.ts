@@ -37,7 +37,7 @@ wsProvider.addEventListener('status', (event) => {
   }
 });
 
-const extensionSelection = <ExtensionSelection> editor.getExtension(
+const extensionSelection = <ExtensionSelection> editor.ci.resolve(
   'selection',
 );
 

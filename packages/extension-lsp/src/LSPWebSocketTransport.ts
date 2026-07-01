@@ -7,7 +7,7 @@ function shouldReconnectOnCode(code: number) {
   return reconnectCodes.includes(code);
 }
 
-export class LspWebSocketTransport extends EventTarget implements Transport {
+export class LSPWebSocketTransport extends EventTarget implements Transport {
   socket: WebSocket | undefined;
   private reconnectAttempts = 0;
   private maxAttempts = 10;

@@ -4,12 +4,9 @@ import {
   TextDocumentSyncKind,
 } from 'vscode-languageserver-protocol';
 
-import {
-  DefaultWorkspace,
-  LspSource,
-  Workspace,
-  WorkspaceFile,
-} from './workspace.ts';
+import { Workspace, WorkspaceFile } from './workspace.ts';
+
+import { LSPSource, LSPWorkspace } from './LSPWorkspace.ts';
 
 const defaultNotificationHandlers: {
   [method: string]: (client: LSPClient, params: any) => void;
@@ -76,6 +73,11 @@ const clientCapabilities: lsp.ClientCapabilities = {
       parser: 'marked',
     },
   },
+  workspace: {
+    'diagnostics': {
+      'refreshSupport': true,
+    },
+  },
   textDocument: {
     publishDiagnostics: { versionSupport: true },
     completion: {
@@ -108,7 +110,7 @@ const clientCapabilities: lsp.ClientCapabilities = {
     implementation: {},
     typeDefinition: {},
     references: {},
-    diagnostic: {},
+    // diagnostic: {},
   },
   window: {
     showMessage: {},
@@ -156,7 +158,7 @@ export class LSPError extends Error {
 }
 
 export class LSPClient extends EventTarget {
-  sources: Record<string, LspSource> = {};
+  sources: Record<string, LSPSource> = {};
 
   workspace: Workspace;
   private nextReqID = 0;
@@ -209,7 +211,7 @@ export class LSPClient extends EventTarget {
 
     this.workspace = config.workspace
       ? config.workspace(this)
-      : new DefaultWorkspace(this);
+      : new LSPWorkspace(this);
   }
 
   startInitializing() {
@@ -272,7 +274,7 @@ export class LSPClient extends EventTarget {
     this.workspace.connected();
   }
 
-  connect(uri: string, source: LspSource) {
+  connect(uri: string, source: LSPSource) {
     if (this.sources[uri] && this.sources[uri] !== source) {
       throw new Error(`Source for ${uri} already connected`);
     }
@@ -308,6 +310,14 @@ export class LSPClient extends EventTarget {
           languageId: file.languageId,
           text: file.content,
           version: file.version,
+        },
+      },
+    );
+    await this.notification<lsp.DocumentDiagnosticParams>(
+      'textDocument/diagnostic',
+      {
+        textDocument: {
+          uri: file.uri,
         },
       },
     );
@@ -464,7 +474,7 @@ export class LSPClient extends EventTarget {
     return this.serverCapabilities ? !!this.serverCapabilities[name] : null;
   }
 
-  sync() {
+  syncFiles() {
     this.workspace.syncFiles();
   }
 
@@ -474,8 +484,6 @@ export class LSPClient extends EventTarget {
     id: number,
     params: any,
   ) {
-    console.error('this.timeoutRequest', this.timeout, method, id, params);
-
     const index = this.requests.indexOf(req);
     if (index > -1) {
       req.reject(LSPError.createTimeout());

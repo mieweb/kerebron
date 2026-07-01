@@ -1,12 +1,11 @@
 import type { Hono } from 'hono';
 import type { UpgradeWebSocket } from 'hono/ws';
 
-import { HonoYjsMemAdapter } from '@kerebron/extension-server-hono/HonoYjsMemAdapter';
 import { LspWsAdapter } from '../lsp/lsp-server.ts';
 
-import { proxyWs } from './proxyWs.ts';
 import { proxyTcp } from '../lsp/proxyTcp.ts';
 import { proxyProcess } from '../lsp/proxyProcess.ts';
+import { DenoRewriter } from '../lsp/DenoRewriter.ts';
 
 const lspWsAdapter = new LspWsAdapter();
 
@@ -71,9 +70,11 @@ export function install(
     '/lsp/deno',
     upgradeWebSocket((c) => {
       return proxyProcess(
-        'deno',
-        ['-L', 'debug', 'lsp'],
+        '/home/gg/workspaces/mieweb/deno/target/debug/deno',
+        // ['-L', 'debug', 'lsp'],
+        ['lsp'],
         c,
+        () => new DenoRewriter(),
       );
     }),
   );

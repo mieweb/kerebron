@@ -1,6 +1,7 @@
 import { Context } from 'hono';
 import type { WSContext, WSEvents } from 'hono/ws';
 import { processText } from './proxyTcp.ts';
+import { LspRewriter } from './LspRewriter.ts';
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
@@ -40,9 +41,12 @@ class ProcessClient extends EventTarget {
       return;
     }
     const payload = typeof data === 'string' ? encoder.encode(data) : data;
-    const header = `Content-Length: ${payload.length}\r\n\r\n`;
-    await this.writer.write(encoder.encode(header));
-    await this.writer.write(payload);
+    const header = encoder.encode(`Content-Length: ${payload.length}\r\n\r\n`);
+
+    const packet = new Uint8Array(header.length + payload.length);
+    packet.set(header, 0);
+    packet.set(payload, header.length);
+    await this.writer.write(packet);
   }
 
   close() {
@@ -112,20 +116,35 @@ class ProcessClient extends EventTarget {
 class ProxyContext implements WSEvents<WebSocket> {
   client: ProcessClient;
 
+  private lspRewriter?: LspRewriter;
+
   constructor(
     public readonly execPath: string,
     public readonly args: string[],
     private c: Context,
+    createLspRewriter?: () => LspRewriter,
   ) {
+    if (createLspRewriter) {
+      this.lspRewriter = createLspRewriter();
+      this.lspRewriter.init();
+    }
+
     this.client = new ProcessClient(this.execPath, this.args);
   }
 
   onOpen(event: Event, wsContext: WSContext<WebSocket>) {
     this.client.addEventListener('message', (event) => {
       if (event instanceof MessageEvent) {
-        // console.log('LSP says:', event.data);
+        console.log('LSP says:', event.data);
         if (wsContext.readyState === WebSocket.OPEN) {
-          wsContext.send(event.data);
+          let data = event.data;
+          if (this.lspRewriter) {
+            data = this.lspRewriter.rewriteLspData(data);
+          }
+
+          if (data) {
+            wsContext.send(data);
+          }
         }
       }
     });
@@ -142,8 +161,37 @@ class ProxyContext implements WSEvents<WebSocket> {
   onMessage(event: Event, wsContext: WSContext<WebSocket>) {
     if (event instanceof MessageEvent) {
       if (this.client) {
-        // console.log('BROWSER says:', event.data);
-        this.client.send(event.data);
+        let data = event.data;
+        if (this.lspRewriter) {
+          data = this.lspRewriter.rewriteEditorData(data);
+        }
+        console.log('EDITOR says:', data);
+
+        if (data) {
+          this.client.send(data);
+        }
+
+        try {
+          const json = JSON.parse(data);
+          console.log('json?.method', json?.method, json?.id);
+          if (json?.method === 'initialized') {
+            const data = JSON.stringify({
+              'jsonrpc': '2.0',
+              'method': 'workspace/didChangeConfiguration',
+              'params': {
+                'settings': {
+                  'deno': {
+                    'enable': true,
+                  },
+                },
+              },
+            });
+            console.log('SSS', data);
+            this.client.send(data);
+          }
+        } catch (err) {
+          console.error('EEE', err);
+        }
       }
     }
   }
@@ -152,6 +200,9 @@ class ProxyContext implements WSEvents<WebSocket> {
     console.info('BROWSER close:', 'code' in event ? event.code : '');
     if (this.client) {
       this.client.close();
+    }
+    if (this.lspRewriter) {
+      this.lspRewriter.destroy();
     }
   }
 
@@ -163,7 +214,8 @@ export function proxyProcess(
   execPath: string,
   args: string[],
   c: Context,
+  createLspRewriter?: () => LspRewriter,
 ): WSEvents<WebSocket> {
-  const proxy = new ProxyContext(execPath, args, c);
+  const proxy = new ProxyContext(execPath, args, c, createLspRewriter);
   return proxy;
 }

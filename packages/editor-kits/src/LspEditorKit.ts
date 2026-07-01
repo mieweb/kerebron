@@ -1,18 +1,18 @@
 import { Extension } from '@kerebron/editor';
 import type { AnyExtensionOrReq, EditorKit } from '@kerebron/editor';
 
-import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
-import { ExtensionLsp, type LspTransportGetter } from '@kerebron/extension-lsp';
+import { LSPWebSocketTransport } from '@kerebron/extension-lsp/LSPWebSocketTransport';
+import { ExtensionLsp, type LSPTransportGetter } from '@kerebron/extension-lsp';
 
 import type { Token } from '@kerebron/extension-markdown';
 import { SmartOutput } from '@kerebron/editor/utilities';
 import { Transport } from '@kerebron/extension-lsp';
 
 export interface LspEditorKitConfig {
-  getLspTransport: LspTransportGetter;
+  getLspTransport: LSPTransportGetter;
 }
 
-const defaultGetLspTransport: LspTransportGetter = (
+const defaultGetLspTransport: LSPTransportGetter = (
   lang: string,
 ): Transport | undefined => {
   const protocol = globalThis.location.protocol === 'http:' ? 'ws:' : 'wss:';
@@ -20,7 +20,7 @@ const defaultGetLspTransport: LspTransportGetter = (
 
   switch (lang) {
     case 'json':
-      return new LspWebSocketTransport(uri);
+      return new LSPWebSocketTransport(uri);
   }
   return undefined;
 };

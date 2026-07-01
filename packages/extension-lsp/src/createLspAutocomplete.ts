@@ -1,10 +1,11 @@
-import { DefaultRenderer } from '@kerebron/extension-autocomplete/DefaultRenderer';
+import { DefaultRenderer } from '@kerebron/extension-ui/autocomplete/DefaultRenderer';
 import { type CoreEditor, TextRange } from '@kerebron/editor';
 
 import {
+  AutocompleteConfig,
   type AutocompleteProps,
   createRegexMatcher,
-} from '@kerebron/extension-autocomplete';
+} from '@kerebron/extension-ui/autocomplete';
 
 import { ExtensionLsp } from './ExtensionLsp.ts';
 
@@ -35,13 +36,15 @@ export function cleanPlaceholders(input: string): string {
   return input.replace(regex, '$1');
 }
 
-export function createLspAutocomplete(extensionLsp: ExtensionLsp) {
+export function createLspAutocomplete(
+  extensionLsp: ExtensionLsp,
+): { autocompleteConfig: AutocompleteConfig } {
   const editor: CoreEditor = extensionLsp.getEditor();
   const renderer = new CustomRenderer(editor);
 
-  const config = {
-    renderer,
-    matchers: [createRegexMatcher([/\w+/, /(^|\s)@\w*/, /^#\w*/])],
+  const config: AutocompleteConfig = {
+    // renderer,
+    // matchers: [createRegexMatcher([/\w+/, /(^|\s)@\w*/, /^#\w*/])],
     getItems: async (query: string, props: AutocompleteProps) => {
       const { mapper } = await extensionLsp.source.getMappedContent();
 
@@ -49,7 +52,7 @@ export function createLspAutocomplete(extensionLsp: ExtensionLsp) {
 
       const client = extensionLsp.getClient(extensionLsp.mainLang);
       if (client) {
-        client.sync();
+        client.syncFiles();
         try {
           const completions:
             | { items: CompletionItem[] }

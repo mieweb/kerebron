@@ -5,8 +5,8 @@ import { CoreEditor } from '@kerebron/editor';
 import { ExtensionHistory } from '@kerebron/extension-basic-editor/ExtensionHistory';
 import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
 import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
-import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
-import { LspTransportGetter, Transport } from '@kerebron/extension-lsp';
+import { LSPWebSocketTransport } from '@kerebron/extension-lsp/LSPWebSocketTransport';
+import { LSPTransportGetter, Transport } from '@kerebron/extension-lsp';
 
 const MyEditor: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -17,7 +17,7 @@ const MyEditor: React.FC = () => {
   useEffect(() => {
     if (!editorRef.current) return;
 
-    const getLspTransport: LspTransportGetter = (
+    const getLspTransport: LSPTransportGetter = (
       lang: string,
     ): Transport | undefined => {
       const protocol = globalThis.location.protocol === 'http:'
@@ -27,14 +27,14 @@ const MyEditor: React.FC = () => {
 
       switch (lang) {
         case 'markdown':
-          return new LspWebSocketTransport(uri + '/mine');
+          return new LSPWebSocketTransport(uri + '/mine');
         case 'json':
-          return new LspWebSocketTransport(uri + '/deno');
+          return new LSPWebSocketTransport(uri + '/deno');
         case 'typescript':
         case 'javascript':
-          return new LspWebSocketTransport(uri + '/typescript');
+          return new LSPWebSocketTransport(uri + '/typescript');
         case 'yaml':
-          return new LspWebSocketTransport(uri + '/yaml');
+          return new LSPWebSocketTransport(uri + '/yaml');
       }
       return undefined;
     };

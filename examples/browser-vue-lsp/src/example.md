@@ -1,14 +1,16 @@
 ## Yaml lsp test
 
-```yaml
-console.warn("TEST");
+```typescript
+aaa/ddd
+2
 ```
+console.warn("TEST");
 
 ## JSON lsp test
 
-```json
+``json
 {
   "x": "y",
   "z": 1
 }
-```
+``

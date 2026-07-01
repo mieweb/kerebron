@@ -3,8 +3,8 @@ import { CodeEditorKit } from '@kerebron/editor-kits/CodeEditorKit';
 import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
 import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
 import type { ExtensionBasicCodeEditor } from '@kerebron/extension-basic-editor/ExtensionBasicCodeEditor';
-import type { LspTransportGetter, Transport } from '@kerebron/extension-lsp';
-import { LspWebSocketTransport } from '@kerebron/extension-lsp/LspWebSocketTransport';
+import type { LSPTransportGetter, Transport } from '@kerebron/extension-lsp';
+import { LSPWebSocketTransport } from '@kerebron/extension-lsp/LSPWebSocketTransport';
 import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
 
 import YjsRoom from '@kerebron/custom-elements/YjsRoom';
@@ -20,7 +20,7 @@ window.addEventListener('load', async () => {
     globalThis.location.hash = 'room:' + roomId;
   }
 
-  const getLspTransport: LspTransportGetter = (
+  const getLspTransport: LSPTransportGetter = (
     lang: string,
   ): Transport | undefined => {
     const protocol = globalThis.location.protocol === 'http:' ? 'ws:' : 'wss:';
@@ -28,14 +28,14 @@ window.addEventListener('load', async () => {
 
     switch (lang) {
       case 'markdown':
-        return new LspWebSocketTransport(uri + '/mine');
+        return new LSPWebSocketTransport(uri + '/mine');
       case 'json':
-        return new LspWebSocketTransport(uri + '/deno');
+        return new LSPWebSocketTransport(uri + '/deno');
       case 'typescript':
       case 'javascript':
-        return new LspWebSocketTransport(uri + '/typescript');
+        return new LSPWebSocketTransport(uri + '/typescript');
       case 'yaml':
-        return new LspWebSocketTransport(uri + '/yaml');
+        return new LSPWebSocketTransport(uri + '/yaml');
     }
     return undefined;
   };
@@ -58,7 +58,7 @@ window.addEventListener('load', async () => {
   editor.addEventListener('selection', (event: CustomEvent) => {
     const selection = event.detail.selection;
     const extensionMarkdown: ExtensionBasicCodeEditor | undefined = editor
-      .getExtension('basic-code-editor');
+      .ci.resolve('basic-code-editor');
     if (extensionMarkdown) {
       const result = extensionMarkdown.toRawText(editor.state.doc);
       const code = result.content;
