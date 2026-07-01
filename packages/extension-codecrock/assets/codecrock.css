@@ -1,10 +1,10 @@
-@import './codejar-linenumbers.css';
+@import './codecrock-linenumbers.css';
 
-.codejar-root {
+.codecrock-root {
   position: relative;
 }
 
-.codejar-root .codejar-select {
+.codecrock-root .codecrock-select {
   right: 5px;
   top: 5px;
   position: absolute;
@@ -12,11 +12,11 @@
   z-index: 99999;
 }
 
-.codejar-root:hover .codejar-select {
+.codecrock-root:hover .codecrock-select {
   opacity: 1;
 }
 
-.codejar {
+.codecrock {
   font-family: monospace;
 }
 
@@ -63,7 +63,8 @@
   color: #458;
   font-weight: bold;
 } /* Types */
-.ts-variable {
+.ts-variable,
+.ts-variable_builtin {
   color: #333;
 } /* Variables */
 .ts-constant,
@@ -96,34 +97,78 @@
   color: #e90;
 } /* Attributes */
 
+.ts-text_title {
+  font-weight: bolder;
+}
+
+.ts-punctuation_special {
+  color: green;
+}
+
+/* Dark mode */
+
 @media (prefers-color-scheme: dark) {
-  /* Dark mode adjustments */
   .ts-property {
     color: #9cdcfe;
   }
-  .ts-function {
+
+  .ts-function,
+  .ts-function_call,
+  .ts-function_builtin {
     color: #dcdcaa;
   }
-  .ts-keyword {
+
+  .ts-keyword,
+  .ts-keyword_operator {
     color: #c586c0;
   }
-  .ts-string {
+
+  .ts-string,
+  .ts-string_special {
     color: #ce9178;
   }
+
   .ts-number {
     color: #b5cea8;
   }
+
   .ts-comment {
     color: #6a9955;
   }
+
   .ts-operator {
     color: #d4d4d4;
   }
+
   .ts-type {
     color: #4ec9b0;
   }
-  .ts-constant {
+
+  .ts-variable,
+  .ts-variable_builtin {
+    color: #d4d4d4;
+  }
+
+  .ts-constant,
+  .ts-constant_builtin {
     color: #4fc1ff;
+  }
+
+  .ts-punctuation,
+  .ts-punctuation_bracket {
+    color: #d4d4d4;
+  }
+
+  .ts-namespace {
+    color: #c8c8c8;
+  }
+
+  .ts-tag {
+    color: #569cd6;
+  }
+
+  .ts-attribute {
+    color: #9cdcfe;
   }
 }
 

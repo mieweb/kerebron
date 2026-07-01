@@ -76,11 +76,11 @@ function insert(text: string) {
   document.execCommand('insertHTML', false, text);
 }
 
-function debounce(cb: any, wait: number) {
+export function debounce(cb: any, wait: number) {
   let timeout = 0;
   return (...args: any) => {
     clearTimeout(timeout);
-    timeout = window.setTimeout(() => cb(...args), wait);
+    timeout = setTimeout(() => cb(...args), wait);
   };
 }
 
@@ -95,7 +95,7 @@ function findPadding(text: string): [string, number, number] {
   return [text.substring(i, j) || '', i, j];
 }
 
-export class CodeJar extends EventTarget {
+export class CodeCrock extends EventTarget {
   options: Options;
   listeners: [string, any][] = [];
   history: HistoryRecord[] = [];
@@ -103,6 +103,7 @@ export class CodeJar extends EventTarget {
   onUpdateCbk: (code: string) => void | undefined = () => void 0;
   focus = false;
   prev: string | undefined; // code content prior keydown event
+  debounceHighlight: (...args: any) => void;
 
   constructor(
     private editor: HTMLElement,
@@ -151,7 +152,6 @@ export class CodeJar extends EventTarget {
       if (
         editor.contentEditable !== 'plaintext-only' || firefoxVersion >= 136
       ) {
-        console.log('editor.contentEditable', editor.contentEditable);
         isLegacy = true;
       }
 
@@ -164,9 +164,10 @@ export class CodeJar extends EventTarget {
 
     const debounceHighlight = debounce(() => {
       const pos = this.save();
-      this.doHighlight(editor, pos);
+      this.highlight(editor, pos);
       this.restore(pos);
     }, 30);
+    this.debounceHighlight = debounceHighlight;
 
     let recording = false;
     const shouldRecord = (event: KeyboardEvent): boolean => {
@@ -191,8 +192,123 @@ export class CodeJar extends EventTarget {
       this.editor.addEventListener(type, fn);
     };
 
+    function getCaretOffset(root: HTMLElement) {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return 0;
+
+      const range = sel.getRangeAt(0);
+      const preRange = range.cloneRange();
+
+      preRange.selectNodeContents(root);
+      preRange.setEnd(range.endContainer, range.endOffset);
+
+      return preRange.toString().length;
+    }
+
+    function getRowCol(root: HTMLElement) {
+      const text = root.textContent;
+      const offset = getCaretOffset(root);
+
+      const before = text.slice(0, offset);
+      const lines = before.split('\n');
+
+      const row = lines.length - 1;
+      const col = lines[lines.length - 1].length;
+
+      const rows = text.split('\n');
+
+      return {
+        row,
+        col,
+        lastRow: rows.length - 1,
+        lastCol: rows[rows.length - 1].length,
+      };
+    }
+
+    const maybeEscape = (event: KeyboardEvent) => {
+      const { row, col, lastRow, lastCol } = getRowCol(this.editor);
+
+      switch (event.key) {
+        case 'ArrowUp':
+          if (row === 0) {
+            this.dispatchEvent(new CustomEvent('blur-previous'));
+            event.stopPropagation();
+            event.preventDefault();
+            return true;
+          }
+          break;
+        case 'ArrowLeft':
+          if (row === 0 && col === 0) {
+            this.dispatchEvent(new CustomEvent('blur-previous'));
+            event.stopPropagation();
+            event.preventDefault();
+            return true;
+          }
+          break;
+        case 'ArrowDown':
+          if (row >= lastRow) {
+            this.dispatchEvent(new CustomEvent('blur-next'));
+            event.stopPropagation();
+            event.preventDefault();
+            return true;
+          }
+          break;
+        case 'ArrowRight':
+          if (row >= lastRow && col >= lastCol) {
+            this.dispatchEvent(new CustomEvent('blur-next'));
+            event.stopPropagation();
+            event.preventDefault();
+            return true;
+          }
+          break;
+      }
+
+      return false;
+    };
+
     on('keydown', (event) => {
       if (event.defaultPrevented) return;
+
+      const isSelectAll = (event.ctrlKey || event.metaKey) &&
+        event.key.toLowerCase() === 'a';
+
+      if (isSelectAll) {
+        event.preventDefault();
+
+        const range = document.createRange();
+        range.selectNodeContents(editor);
+
+        const selection = window.getSelection();
+        if (selection) {
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      }
+
+      switch (event.key) {
+        case 'Enter':
+          if (event.shiftKey) {
+            const { row, col, lastRow, lastCol } = getRowCol(this.editor);
+
+            if (row === 0) {
+              this.dispatchEvent(new CustomEvent('prepend-empty-line'));
+              event.stopPropagation();
+              event.preventDefault();
+            } else if (row >= lastRow) {
+              this.dispatchEvent(new CustomEvent('append-empty-line'));
+            }
+            return;
+          }
+          break;
+        case 'ArrowUp':
+        case 'ArrowLeft':
+        case 'ArrowDown':
+        case 'ArrowRight':
+          if (maybeEscape(event)) {
+            return;
+          }
+          break;
+      }
 
       this.prev = this.toString();
       if (this.options.preserveIdent) handleNewLine(event);
@@ -206,7 +322,6 @@ export class CodeJar extends EventTarget {
           recording = true;
         }
       }
-      if (isLegacy && !isCopy(event)) this.restore(this.save());
     });
 
     on('keyup', (event) => {
@@ -242,6 +357,9 @@ export class CodeJar extends EventTarget {
 
     const beforeCursor = () => {
       const s = this.getSelection();
+      if (!s) {
+        return '';
+      }
       const r0 = s.getRangeAt(0);
       const r = document.createRange();
       r.selectNodeContents(editor);
@@ -251,6 +369,9 @@ export class CodeJar extends EventTarget {
 
     const afterCursor = () => {
       const s = this.getSelection();
+      if (!s) {
+        return '';
+      }
       const r0 = s.getRangeAt(0);
       const r = document.createRange();
       r.selectNodeContents(editor);
@@ -298,7 +419,7 @@ export class CodeJar extends EventTarget {
         event.preventDefault();
         event.stopPropagation();
         if (afterCursor() == '') {
-          insert('\n ');
+          insert('\n\u200B');
           const pos = this.save();
           if (pos) {
             pos.start = --pos.end;
@@ -316,15 +437,17 @@ export class CodeJar extends EventTarget {
       if (open.includes(event.key)) {
         event.preventDefault();
         const pos = this.save();
-        const wrapText = pos.start == pos.end
+        const wrapText = pos && pos.start == pos.end
           ? ''
-          : this.getSelection().toString();
+          : (this.getSelection()?.toString() || '');
         const text = event.key + wrapText +
           (close[open.indexOf(event.key)] ?? '');
         insert(text);
-        pos.start++;
-        pos.end++;
-        this.restore(pos);
+        if (pos) {
+          pos.start++;
+          pos.end++;
+          this.restore(pos);
+        }
       }
     };
 
@@ -340,9 +463,11 @@ export class CodeJar extends EventTarget {
             const len = Math.min(this.options.tab.length, padding.length);
             this.restore({ start, end: start + len });
             document.execCommand('delete');
-            pos.start -= len;
-            pos.end -= len;
-            this.restore(pos);
+            if (pos) {
+              pos.start -= len;
+              pos.end -= len;
+              this.restore(pos);
+            }
           }
         } else {
           insert(this.options.tab);
@@ -383,37 +508,41 @@ export class CodeJar extends EventTarget {
       );
       const pos = this.save();
       insert(text);
-      console.log('ttt', text);
-      this.doHighlight(editor);
-      this.restore({
-        start: Math.min(pos.start, pos.end) + text.length,
-        end: Math.min(pos.start, pos.end) + text.length,
-        dir: '<-',
-      });
+      this.highlight(editor);
+      if (pos) {
+        this.restore({
+          start: Math.min(pos.start, pos.end) + text.length,
+          end: Math.min(pos.start, pos.end) + text.length,
+          dir: '<-',
+        });
+      }
     };
 
     const handleCut = (event: ClipboardEvent) => {
-      const pos = this.save();
       const selection = this.getSelection();
+      if (!selection) {
+        return;
+      }
+      const pos = this.save();
       const originalEvent = (event as any).originalEvent ?? event;
       originalEvent.clipboardData.setData('text/plain', selection.toString());
       document.execCommand('delete');
-      this.doHighlight(editor);
-      this.restore({
-        start: Math.min(pos.start, pos.end),
-        end: Math.min(pos.start, pos.end),
-        dir: '<-',
-      });
+      this.highlight(editor);
+      if (pos) {
+        this.restore({
+          start: Math.min(pos.start, pos.end),
+          end: Math.min(pos.start, pos.end),
+          dir: '<-',
+        });
+      }
       event.preventDefault();
     };
   }
 
   getSelection() {
-    return this.editor.getRootNode().getSelection() as Selection;
-  }
-
-  private doHighlight(editor: HTMLElement, pos?: Position) {
-    this.highlight(editor, pos);
+    const sel = window.getSelection();
+    return sel;
+    // return this.editor.getRootNode().getSelection() as Selection;
   }
 
   private uneditable(node: Node): Element | undefined {
@@ -429,7 +558,7 @@ export class CodeJar extends EventTarget {
   }
 
   override toString() {
-    return this.editor.textContent || '';
+    return this.editor.textContent.replace(/\u200B/g, '') || '';
   }
 
   updateOptions(newOptions: Partial<Options>) {
@@ -438,12 +567,14 @@ export class CodeJar extends EventTarget {
 
   updateCode(code: string, callOnUpdate: boolean = true) {
     this.editor.textContent = code;
-    this.doHighlight(this.editor);
+    this.highlight(this.editor);
     callOnUpdate && this.onUpdateCbk(code);
   }
 
   onUpdate(callback: (code: string) => void) {
-    this.onUpdateCbk = callback;
+    this.onUpdateCbk = debounce((code: string) => {
+      callback(code);
+    }, 100);
   }
 
   save(): Position | undefined {
@@ -464,15 +595,12 @@ export class CodeJar extends EventTarget {
       return undefined;
     }
 
+    const textContent = this.editor.textContent.replace(/\u200B/g, '');
     // If the anchor and focus are the editor element, return either a full
     // highlight or a start/end cursor position depending on the selection
     if (anchorNode === this.editor && focusNode === this.editor) {
-      pos.start = (anchorOffset > 0 && this.editor.textContent)
-        ? this.editor.textContent.length
-        : 0;
-      pos.end = (focusOffset > 0 && this.editor.textContent)
-        ? this.editor.textContent.length
-        : 0;
+      pos.start = (anchorOffset > 0 && textContent) ? textContent.length : 0;
+      pos.end = (focusOffset > 0 && textContent) ? textContent.length : 0;
       pos.dir = (focusOffset >= anchorOffset) ? '->' : '<-';
       return pos;
     }
@@ -615,6 +743,9 @@ export class CodeJar extends EventTarget {
 
     const html = this.editor.innerHTML;
     const pos = this.save();
+    if (!pos) {
+      return;
+    }
 
     const lastRecord = this.history[this.at];
     if (lastRecord) {
@@ -634,6 +765,10 @@ export class CodeJar extends EventTarget {
       this.at = maxHistory;
       this.history.splice(0, 1);
     }
+  }
+
+  forceHighlight() {
+    this.highlight(this.editor);
   }
 
   destroy() {

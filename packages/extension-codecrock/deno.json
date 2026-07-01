@@ -1,8 +1,7 @@
 {
-  "name": "@kerebron/extension-codejar",
+  "name": "@kerebron/extension-codecrock",
   "tasks": {},
-  "imports": {
-  },
+  "imports": {},
   "exports": {
     ".": "./src/mod.ts"
   }

@@ -12,10 +12,10 @@ export function generateAlias() {
       'packages/extension-menu/assets',
     '@kerebron/extension-menu-legacy/assets': __dirname + '/../../' +
       'packages/extension-menu-legacy/assets',
-    '@kerebron/extension-codejar/assets': __dirname + '/../../' +
-      'packages/extension-codejar/assets',
     '@kerebron/extension-autocomplete/assets': __dirname + '/../../' +
       'packages/extension-autocomplete/assets',
+    '@kerebron/extension-codecrock/assets': __dirname + '/../../' +
+      'packages/extension-codecrock/assets',
     '@kerebron/extension-basic-editor/assets': __dirname + '/../../' +
       'packages/extension-basic-editor/assets',
   };

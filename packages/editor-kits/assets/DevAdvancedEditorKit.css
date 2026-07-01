@@ -1,6 +1,6 @@
 @import '@kerebron/extension-tables/assets/tables.css';
 @import '@kerebron/extension-menu-legacy/assets/menu.css';
-@import '@kerebron/extension-codejar/assets/codejar.css';
-@import '@kerebron/extension-autocomplete/assets/autocomplete.css';
+@import '@kerebron/extension-codecrock/assets/codecrock.css';
+@import '@kerebron/extension-ui/assets/ui.css';
 @import '@kerebron/extension-basic-editor/assets/image-resize.css';
 @import '@kerebron/extension-basic-editor/assets/task-list.css';

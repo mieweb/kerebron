@@ -1,8 +1,7 @@
 import { Node } from 'prosemirror-model';
 import { EditorView } from 'prosemirror-view';
-import { CodeJar } from './CodeJar.ts';
+import { CodeCrock, Position } from './CodeCrock.ts';
 import { TextSelection } from 'prosemirror-state';
-import { off } from 'node:process';
 
 export function computeChange(oldVal: string, newVal: string) {
   if (oldVal === newVal) return null;
@@ -51,24 +50,31 @@ export const valueChanged = (
 };
 
 export const forwardSelection = (
-  codejar: CodeJar,
+  codeCrock: CodeCrock,
   pmView: EditorView,
   getPos: () => number | undefined,
 ) => {
   // if (!cmView.hasFocus) return;
-  const selection = asProseMirrorSelection(pmView.state.doc, codejar, getPos);
+  const codeCrockPos = codeCrock.save();
+  if (!codeCrockPos) {
+    return;
+  }
+  const selection = asProseMirrorSelection(
+    pmView.state.doc,
+    codeCrockPos,
+    getPos,
+  );
   if (!selection.eq(pmView.state.selection)) {
     pmView.dispatch(pmView.state.tr.setSelection(selection));
   }
 };
 
-export const asProseMirrorSelection = (
+const asProseMirrorSelection = (
   pmDoc: Node,
-  codejar: CodeJar,
+  pos: Position,
   getPos: () => number | undefined,
 ) => {
   const offset = (typeof getPos === 'function' ? getPos() || 0 : 0) + 1;
-  const pos = codejar.save();
   if (pos.dir === '<-') {
     return TextSelection.create(pmDoc, pos.start + offset, pos.end + offset);
   } else {

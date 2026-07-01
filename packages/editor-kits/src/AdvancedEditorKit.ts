@@ -1,6 +1,6 @@
 import { AnyExtensionOrReq, EditorKit } from '@kerebron/editor';
 import { ExtensionBasicEditor } from '@kerebron/extension-basic-editor/ExtensionBasicEditor';
-import { ExtensionCodeJar } from '@kerebron/extension-codejar';
+import { ExtensionCodeCrock } from '@kerebron/extension-codecrock';
 import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionCustomMenu } from '@kerebron/extension-menu';
@@ -24,7 +24,7 @@ export class AdvancedEditorKit implements EditorKit {
       new ExtensionTables(),
       new ExtensionDevToolkit(),
       new ExtensionCustomMenu(this.menu),
-      new ExtensionCodeJar(),
+      new ExtensionCodeCrock(),
       new ExtensionAutocomplete(),
     ];
   }

@@ -1,12 +1,20 @@
 export interface DecorationInline {
   startIndex: number;
   endIndex: number;
-  className: string;
-  title?: string;
+  attrs: { [k: string]: string };
 }
 
 export class Decorator {
   public decorationGroups: Record<string, DecorationInline[]> = {};
+
+  public refreshers: Array<() => void> = [];
+
+  refresh() {
+    for (const refresh of this.refreshers) {
+      refresh();
+    }
+    this.refreshers.splice(0, this.refreshers.length);
+  }
 
   highlight(code: string) {
     const decorations: DecorationInline[] = [];
@@ -37,19 +45,28 @@ export class Decorator {
       );
 
       for (const decor of activeDecors) {
-        if (decor.title) {
-          html += `<span class="${decor.className}" title="${
-            escapeHtml(decor.title || '')
-          }">`;
-        } else {
-          html += `<span class="${decor.className}">`;
+        html += `<span `;
+        for (const [k, v] of Object.entries(decor.attrs || {})) {
+          html += ` ${k}="${escapeHtml(v || '')}"`;
         }
+        html += '>';
       }
 
       html += escapeHtml(text);
 
       for (const decor of activeDecors) {
         html += '</span>';
+      }
+
+      const activeWidgetDecors = decorations.filter((d) =>
+        currentIdx === d.startIndex && d.startIndex === d.endIndex
+      );
+      for (const decor of activeWidgetDecors) {
+        html += `<span `;
+        for (const [k, v] of Object.entries(decor.attrs)) {
+          html += ` ${k}="${escapeHtml(v || '')}"`;
+        }
+        html += '></span>';
       }
 
       lastIndex = currentIdx;

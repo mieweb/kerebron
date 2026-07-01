@@ -1,4 +1,4 @@
-.codejar-linenumbers-inner-wrap {
+.codecrock-linenumbers-inner-wrap {
   position: absolute;
   top: 0px;
   left: 0px;
@@ -6,12 +6,14 @@
   overflow: hidden;
 }
 
-.codejar-linenumbers {
+.codecrock-linenumbers {
   mix-blend-mode: initial;
   height: 100%;
+  width: 40px;
+  background: rgba(128, 128, 128, 0.15);
 }
 
-.codejar-linenumber {
+.codecrock-linenumber {
   position: relative;
   top: 0px;
 }

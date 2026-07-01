@@ -5,8 +5,8 @@ import { ExtensionOdt } from '@kerebron/extension-odt';
 import { ExtensionTables } from '@kerebron/extension-tables';
 import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
 import { ExtensionMenuLegacy } from '@kerebron/extension-menu-legacy';
-import { ExtensionCodeJar } from '@kerebron/extension-codejar';
-import { ExtensionAutocomplete } from '@kerebron/extension-autocomplete';
+import { ExtensionCodeCrock } from '@kerebron/extension-codecrock';
+import { ExtensionAutocomplete } from '@kerebron/extension-ui/autocomplete';
 
 export class DevAdvancedEditorKit implements EditorKit {
   name = 'dev-advanced-editor';
@@ -25,7 +25,7 @@ export class DevAdvancedEditorKit implements EditorKit {
       new ExtensionDevToolkit(),
       new ExtensionMenuLegacy(this.menu),
 
-      new ExtensionCodeJar(),
+      new ExtensionCodeCrock(),
       new ExtensionAutocomplete(),
     ];
   }

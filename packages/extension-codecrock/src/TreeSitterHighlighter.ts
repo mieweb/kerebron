@@ -72,7 +72,7 @@ export class TreeSitterHighlighter {
       decorations.push({
         startIndex,
         endIndex,
-        className: 'ts-' + name.replaceAll('.', '_'),
+        class: 'ts-' + name.replaceAll('.', '_'),
       });
     }
 

@@ -5,15 +5,12 @@ type Options = {
   class: string;
   wrapClass: string;
   width: string;
-  backgroundColor: string;
   color: string;
 };
 
 export const lineNumberOptions: Options = {
-  class: 'codejar-linenumbers',
-  wrapClass: 'codejar-wrap',
-  width: '35px',
-  backgroundColor: 'rgba(128, 128, 128, 0.15)',
+  class: 'codecrock-linenumbers',
+  wrapClass: 'codecrock-wrap',
   color: '',
 };
 
@@ -62,7 +59,7 @@ export function refreshNumbers(
   lineNumbers.innerText = text;
 
   // Hack editor styles
-  editor.style.paddingLeft = `calc(40px + 5px)`;
+  editor.style.marginLeft = `calc(40px + 5px)`;
 }
 
 export function initLineNumbers(
@@ -76,7 +73,7 @@ export function initLineNumbers(
   wrap.style.position = 'relative';
 
   const innerWrap = document.createElement('div');
-  innerWrap.className = 'codejar-linenumbers-inner-wrap';
+  innerWrap.className = 'codecrock-linenumbers-inner-wrap';
   innerWrap.style.background = css.background;
   innerWrap.style.marginTop = css.borderTopWidth;
   innerWrap.style.marginBottom = css.borderBottomWidth;
@@ -93,7 +90,6 @@ export function initLineNumbers(
   // Add own styles
   gutter.style.width = opts.width;
   gutter.style.overflow = 'hidden';
-  gutter.style.backgroundColor = opts.backgroundColor;
 
   // Copy editor styles
   gutter.style.fontFamily = css.fontFamily;
@@ -106,7 +102,7 @@ export function initLineNumbers(
 
   // Add line numbers
   const lineNumbers = document.createElement('div');
-  lineNumbers.setAttribute('class', 'codejar-linenumber');
+  lineNumbers.setAttribute('class', 'codecrock-linenumber');
   lineNumbers.style.color = opts.color || css.color;
   lineNumbers.style.setProperty('mix-blend-mode', 'unset');
   gutter.appendChild(lineNumbers);
