@@ -1,5 +1,7 @@
 import type { Node, Schema } from 'prosemirror-model';
 import { Slice } from 'prosemirror-model';
+import { Plugin } from 'prosemirror-state';
+
 import {
   AssetLoad,
   type Converter,
@@ -16,6 +18,7 @@ import {
 import { mdToPmConverter, mdToPmConverterText } from './mdToPmConverter.ts';
 import type { Token } from './types.ts';
 import { getDefaultsPreProcessFilters } from './preprocess/preProcess.ts';
+import { createMarkdownPlugin } from './createMarkdownPlugin.ts';
 
 export interface MdConfig {
   sourceMap?: boolean;
@@ -27,6 +30,7 @@ export interface MdConfig {
 }
 
 export type { Token };
+export type { MarkdownResult };
 
 export class ExtensionMarkdown extends Extension {
   name = 'markdown';
@@ -105,5 +109,11 @@ export class ExtensionMarkdown extends Extension {
         this.editor.hooks['pm2md.pre'] = [];
       }
     }
+  }
+
+  override getProseMirrorPlugins(): Plugin[] {
+    return [
+      createMarkdownPlugin(this, this.editor),
+    ];
   }
 }
