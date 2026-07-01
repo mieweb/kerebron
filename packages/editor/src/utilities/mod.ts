@@ -3,3 +3,4 @@ export * from './createNodeFromContent.ts';
 export * from './SmartOutput.ts';
 export * from './getShadowRoot.ts';
 export * from './toRawTextResult.ts';
+export * from './debounce.ts';

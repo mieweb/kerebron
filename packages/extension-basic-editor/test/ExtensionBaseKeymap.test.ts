@@ -19,7 +19,7 @@ Deno.test('ExtensionBaseKeymap should handle commands', () => {
   // Test selectNodeForward command
   editor.chain().selectNodeForward().run();
   // Test commands for each key in baseKeymap
-  const baseKeymap = editor.getExtension('base-keymap');
+  const baseKeymap = editor.ci.resolve('base-keymap');
   if (baseKeymap) {
     Object.values(baseKeymap.getKeyboardShortcuts()).forEach(
       (action?: string) => {

@@ -21,6 +21,7 @@ import {
   Command,
   CommandFactories,
 } from './commands/types.ts';
+import { Container } from './Container.ts';
 
 function ensureDocSchema(
   doc: ProseMirrorNode,
@@ -59,6 +60,9 @@ export class CoreEditor extends EventTarget {
   private linkSource?: CoreEditor;
 
   public readonly hooks: HookMap;
+
+  public readonly ci = new Container();
+  version = 0;
 
   private constructor(
     config: Partial<EditorConfig>,
@@ -120,7 +124,7 @@ export class CoreEditor extends EventTarget {
   }
 
   getExtension<T extends Extension>(name: string): T | undefined {
-    return this.extensionManager.getExtension<T>(name);
+    return this.ci.resolve<T>(name);
   }
 
   public get run() {
@@ -254,6 +258,11 @@ export class CoreEditor extends EventTarget {
 
   public dispatchTransaction(transaction: Transaction) {
     this.state = this.state.apply(transaction);
+
+    if (transaction.docChanged) {
+      this.version++;
+    }
+
     if (this.view) {
       this.view.updateState(this.state);
       const event = new CustomEvent('transaction', {

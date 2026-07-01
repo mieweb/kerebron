@@ -17,7 +17,7 @@ import { type Command } from 'prosemirror-state';
 import { addAttributesToSchema } from './utilities/getHtmlAttributes.ts';
 import { TrackSelecionPlugin } from './plugins/TrackSelecionPlugin.ts';
 
-export function splitExtensions(extensions: Iterable<AnyExtension>) {
+function splitExtensions(extensions: Iterable<AnyExtension>) {
   const baseExtensions = Array.from(extensions).filter((extension) =>
     extension.type === 'extension'
   ) as Extension[];
@@ -50,18 +50,6 @@ export class ExtensionManager {
       );
 
     this.setupExtensions(new Set(extensions));
-  }
-
-  getExtension<T extends Extension>(name: string): T | undefined {
-    const { nodeExtensions, markExtensions, baseExtensions } = splitExtensions(
-      this.extensions,
-    );
-
-    for (const extension of baseExtensions) {
-      if (extension.name === name) {
-        return <T> extension;
-      }
-    }
   }
 
   private initPlugins(editor: CoreEditor, schema: Schema) {
@@ -306,11 +294,18 @@ export class ExtensionManager {
     for (const extension of baseExtensions) {
       if (Array.isArray(extension.conflicts)) {
         for (const name of extension.conflicts) {
-          if (this.getExtension(name)) {
+          const anotherExtension = baseExtensions.find((it) =>
+            it.name === name
+          );
+          if (anotherExtension) {
             throw new Error(`Extension conflict: ${extension.name} vs ${name}`);
           }
         }
       }
+    }
+
+    for (const extension of baseExtensions) {
+      editor.ci.register(extension.name, extension);
     }
 
     this.initPlugins(editor, schema);
