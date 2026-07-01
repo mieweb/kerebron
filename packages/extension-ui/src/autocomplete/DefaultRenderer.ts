@@ -4,21 +4,27 @@ import {
   SuggestionKeyDownProps,
   SuggestionProps,
 } from './types.ts';
+import { anchorElement, OverLayer } from '../overlayer/mod.ts';
 
 const CSS_PREFIX = 'kb-autocomplete';
 
 export class DefaultRenderer<Item> extends EventTarget
   implements AutocompleteRenderer {
   command: (props: any) => void;
-  wrapper: HTMLDialogElement | undefined;
+  wrapper: HTMLElement | undefined;
   list: HTMLElement | undefined;
   items: Array<Item> = [];
   pos: number = -1;
   props: SuggestionProps<Item, any> | undefined;
   readonly keyDownHandler: (this: HTMLElement, ev: KeyboardEvent) => any;
+  overlayer: OverLayer;
+  anchor?: string;
 
   constructor(private editor: CoreEditor) {
     super();
+
+    this.overlayer = this.editor.ci.resolve('overlayer');
+
     this.command = () => {};
 
     this.keyDownHandler = (event) => {
@@ -29,8 +35,16 @@ export class DefaultRenderer<Item> extends EventTarget
     };
   }
 
+  setCommand(command: (props: any) => void) {
+    this.command = command;
+    this.refresh();
+  }
+
+  setResponse() {
+    this.refresh();
+  }
+
   onUpdate(props: SuggestionProps<Item>) {
-    this.command = props.command;
     this.items.splice(0, this.items.length, ...props.items);
     this.props = props;
     this.refresh();
@@ -107,9 +121,8 @@ export class DefaultRenderer<Item> extends EventTarget
 
   refresh() {
     if (!this.wrapper) {
-      this.wrapper = document.createElement('dialog');
+      this.wrapper = this.overlayer.createElement('div');
       this.wrapper.classList.add(CSS_PREFIX + '__wrapper');
-      document.body.appendChild(this.wrapper);
 
       this.list = document.createElement('ul');
       this.wrapper.appendChild(this.list);
@@ -143,31 +156,34 @@ export class DefaultRenderer<Item> extends EventTarget
       // this.wrapper.style.display = '';
     }
 
-    const rect = this.props?.clientRect?.();
-    if (rect?.height) {
-      const left = rect.left;
-      const bottom = rect.bottom;
-      this.wrapper.style.left = left + 'px';
-      this.wrapper.style.top = bottom + 'px';
+    if (this.anchor) {
+      anchorElement(this.wrapper, this.anchor, {
+        container: this.editor.config.element,
+      });
     } else {
       visible = false;
     }
 
-    if (visible) {
-      if (!this.wrapper.open) {
-        const el = document.activeElement;
-        const previousFocus = el instanceof HTMLElement ? el : null;
-        this.wrapper.show();
-        requestAnimationFrame(() => {
-          if (previousFocus && previousFocus.isConnected) {
-            previousFocus.focus();
-          }
-        });
-      }
-    } else {
-      if (this.wrapper.open) {
-        this.wrapper.close();
-      }
-    }
+    //   if (visible) {
+    //     if (!this.wrapper.matches(':popover-open')) {
+    //       const el = document.activeElement;
+    //       const previousFocus = el instanceof HTMLElement ? el : null;
+    //       this.wrapper.showPopover();
+    //       requestAnimationFrame(() => {
+    //         if (previousFocus && previousFocus.isConnected) {
+    //           previousFocus.focus();
+    //         }
+    //       });
+    //     }
+    //   } else {
+    //     if (this.wrapper.matches(':popover-open')) {
+    //       this.wrapper.hidePopover();
+    //     }
+    //   }
+  }
+
+  setAnchorSelector(anchor: string): void {
+    this.anchor = anchor;
+    this.refresh();
   }
 }

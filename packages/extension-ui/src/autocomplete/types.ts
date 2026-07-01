@@ -47,30 +47,26 @@ export interface SuggestionProps<I = any, TSelected = any> {
    */
   items: I[];
 
-  /**
-   * A function that is called when a suggestion is selected.
-   * @param props The props object.
-   * @returns void
-   */
-  command: (props: TSelected) => void;
-
   // /**
   //  * The decoration node HTML element
   //  * @default null
   //  */
   // decorationNode: Element | null;
 
+  // anchor: HTMLElement;
+
   /**
    * The function that returns the client rect
    * @default null
    * @example () => new DOMRect(0, 0, 0, 0)
    */
-  clientRect?: (() => DOMRect | null) | null;
+  // clientRect?: (() => DOMRect | null) | null;
 }
 
 export interface AutocompleteRenderer<I = any, TSelected = any> {
-  // setDecorationNode(node: HTMLElement): void;
-  onBeforeUpdate?: () => void;
+  setAnchorSelector(anchor: string): void;
+  setCommand: (command: (props: TSelected) => void) => void;
+  setResponse: () => void;
   onUpdate: (props: SuggestionProps<I, TSelected>) => void;
   onKeyDown?: (props: SuggestionKeyDownProps) => boolean;
   destroy: () => void;
@@ -88,7 +84,7 @@ export interface AutocompleteRenderer<I = any, TSelected = any> {
   ): void;
 }
 
-export type MatchedSource = undefined | {
+export type MatchedSource = {
   match: SuggestionMatch;
   source: AutocompleteSource;
 };

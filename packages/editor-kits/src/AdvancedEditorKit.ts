@@ -6,7 +6,9 @@ import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionCustomMenu } from '@kerebron/extension-menu';
 import { ExtensionOdt } from '@kerebron/extension-odt';
 import { ExtensionTables } from '@kerebron/extension-tables';
-import { ExtensionAutocomplete } from '@kerebron/extension-autocomplete';
+import { ExtensionUi } from '@kerebron/extension-ui';
+import { ExtensionAutocomplete } from '@kerebron/extension-ui/autocomplete';
+import { ExtensionHover } from '@kerebron/extension-ui/hover';
 
 export class AdvancedEditorKit implements EditorKit {
   name = 'advanced-editor';
@@ -25,7 +27,9 @@ export class AdvancedEditorKit implements EditorKit {
       new ExtensionDevToolkit(),
       new ExtensionCustomMenu(this.menu),
       new ExtensionCodeCrock(),
+      new ExtensionUi(),
       new ExtensionAutocomplete(),
+      new ExtensionHover(),
     ];
   }
 }

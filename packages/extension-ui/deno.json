@@ -1,0 +1,13 @@
+{
+  "name": "@kerebron/extension-ui",
+  "tasks": {},
+  "imports": {},
+  "exports": {
+    ".": "./src/mod.ts",
+    "./autocomplete": "./src/autocomplete/mod.ts",
+    "./autocomplete/AutocompletePlugin": "./src/autocomplete/AutocompletePlugin.ts",
+    "./autocomplete/DefaultRenderer": "./src/autocomplete/DefaultRenderer.ts",
+    "./hover": "./src/hover/mod.ts",
+    "./OverLayer": "./src/overlayer/mod.ts"
+  }
+}

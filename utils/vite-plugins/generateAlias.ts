@@ -14,6 +14,8 @@ export function generateAlias() {
       'packages/extension-menu-legacy/assets',
     '@kerebron/extension-codecrock/assets': __dirname + '/../../' +
       'packages/extension-codecrock/assets',
+    '@kerebron/extension-ui/assets': __dirname + '/../../' +
+      'packages/extension-ui/assets',
     '@kerebron/extension-basic-editor/assets': __dirname + '/../../' +
       'packages/extension-basic-editor/assets',
   };

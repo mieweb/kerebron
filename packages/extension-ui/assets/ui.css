@@ -1,0 +1,32 @@
+/* Autocomplete */
+.kb-autocomplete__wrapper {
+  position: absolute;
+  /*position: fixed;*/
+  /*z-index: 99999;*/
+  margin: 0;
+  padding: 6px var(--kb-space-sm);
+  background: var(--kb-color-surface-elevated);
+  list-style: none;
+
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.kb-autocomplete__wrapper li.active {
+  background: rgba(232, 234, 237, 0.08);
+  color: #fff;
+}
+
+.kb-autocomplete--decor {
+  outline: 3px dotted red;
+}
+
+/* Hover */
+.kb-hover__wrapper {
+  background: var(--kb-color-surface-elevated);
+  outline: 3px dotted blue;
+}
+
+.kb-hover--decor {
+  outline: 3px dotted green;
+}

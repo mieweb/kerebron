@@ -1,4 +1,4 @@
-# Side by side editing
+# Autocomplete, hover and diagnostic test
 
 {{ EXAMPLE }}
 
