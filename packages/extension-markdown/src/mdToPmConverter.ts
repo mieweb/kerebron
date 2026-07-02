@@ -1,5 +1,6 @@
 import { Node, Schema } from 'prosemirror-model';
 import { DOMParser } from 'prosemirror-model';
+import { EditorState, Transaction } from 'prosemirror-state';
 
 import { MdConfig } from '@kerebron/extension-markdown';
 import { elementFromString } from '@kerebron/extension-basic-editor/ExtensionHtml';
@@ -143,5 +144,22 @@ export async function mdToPmConverterText(
     },
   );
 
-  return defaultMarkdownParser.parse(content);
+  const origDocument = defaultMarkdownParser.parse(content);
+
+  const filterCommands = [...(config.hooks || [])];
+  let state = EditorState.create({ doc: origDocument });
+  const dispatch = (tr: Transaction) => {
+    state = state.apply(tr);
+  };
+
+  if (filterCommands.length > 0) {
+    for (const filter of filterCommands) {
+      await filter(
+        state,
+        (tr) => dispatch(tr),
+      );
+    }
+  }
+
+  return state.doc;
 }

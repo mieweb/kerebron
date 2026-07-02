@@ -4,7 +4,9 @@ import { AsyncCommandFactory } from '@kerebron/editor/commands';
 import { UrlRewriter } from '@kerebron/editor';
 
 export const rewriteUrls: AsyncCommandFactory =
-  (urlRewriter?: UrlRewriter) => async (state, dispatch): Promise<boolean> => {
+  (getUrlRewriter?: () => UrlRewriter | undefined) =>
+  async (state, dispatch): Promise<boolean> => {
+    const urlRewriter = getUrlRewriter?.();
     if (!urlRewriter) {
       return false;
     }

@@ -14,11 +14,11 @@ import { addEnterAfterImage } from './addEnterAfterImage.ts';
 import { fixParaEnding } from './fixParaEnding.ts';
 
 export interface PreProcessConfig {
-  urlRewriter?: UrlRewriter;
+  getUrlRewriter?: () => UrlRewriter | undefined;
 }
 
 export function getDefaultsPreProcessFilters(
-  { urlRewriter }: PreProcessConfig,
+  config: PreProcessConfig,
 ): Array<Command | AsyncCommand> {
   return [
     insertToc,
@@ -31,6 +31,6 @@ export function getDefaultsPreProcessFilters(
     trimLines,
     addEnterAfterImage,
     addEmptyLines,
-    rewriteUrls(urlRewriter),
+    rewriteUrls(config.getUrlRewriter),
   ];
 }

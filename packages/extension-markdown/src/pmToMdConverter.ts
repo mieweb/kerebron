@@ -493,7 +493,7 @@ export async function extPmToMdConverter(
     },
   }, schema);
 
-  const filterCommands = [...editor.hooks['pm2md.pre']];
+  const filterCommands = [...(config.hooks || [])];
   let state = EditorState.create({ doc: origDocument });
   const dispatch = (tr: Transaction) => {
     state = state.apply(tr);

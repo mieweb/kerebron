@@ -45,10 +45,7 @@ export interface EditorConfig {
   languageID?: string;
   readOnly?: boolean;
   debug?: boolean;
-  hooks?: HookMap;
 }
-
-type HookMap = Record<string, Array<Command | AsyncCommand>>;
 
 export class CoreEditor extends EventTarget {
   public readonly config: Partial<EditorConfig>;
@@ -58,8 +55,6 @@ export class CoreEditor extends EventTarget {
   public ui: EditorUi = defaultUi(this);
   private linkListener?: EventListenerOrEventListenerObject;
   private linkSource?: CoreEditor;
-
-  public readonly hooks: HookMap;
 
   public readonly ci = new Container();
   version = 0;
@@ -72,7 +67,6 @@ export class CoreEditor extends EventTarget {
     super();
 
     this.config = { ...config };
-    this.hooks = { ...this.config.hooks };
 
     this.commandManager = new CommandManager(
       this,

@@ -7,7 +7,11 @@ import {
   Extension,
   type UrlRewriter,
 } from '@kerebron/editor';
-import { Command } from '@kerebron/editor/commands';
+import {
+  Command,
+  CommandFactories,
+  CommandFactory,
+} from '@kerebron/editor/commands';
 import { init } from '@kerebron/odt-wasm';
 
 import { OdtParser, OdtParserConfig } from './OdtParser.ts';
@@ -129,6 +133,21 @@ export class ExtensionOdt extends Extension {
 
     return {
       'application/vnd.oasis.opendocument.text': odtConverter,
+    };
+  }
+
+  override getCommandFactories(): Partial<CommandFactories> {
+    const setFromOdtUrlRewriter: CommandFactory = (
+      urlRewriter: UrlRewriter,
+    ) => {
+      return () => {
+        this.urlFromRewriter = urlRewriter;
+        return true;
+      };
+    };
+
+    return {
+      setFromOdtUrlRewriter,
     };
   }
 }

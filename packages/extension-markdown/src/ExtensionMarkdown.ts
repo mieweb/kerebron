@@ -19,6 +19,13 @@ import { mdToPmConverter, mdToPmConverterText } from './mdToPmConverter.ts';
 import type { Token } from './types.ts';
 import { getDefaultsPreProcessFilters } from './preprocess/preProcess.ts';
 import { createMarkdownPlugin } from './createMarkdownPlugin.ts';
+import {
+  AsyncCommand,
+  Command,
+  CommandFactories,
+  CommandFactory,
+} from '@kerebron/editor/commands';
+import { rewriteUrls } from './preprocess/rewriteUrls.ts';
 
 export interface MdConfig {
   sourceMap?: boolean;
@@ -27,17 +34,23 @@ export interface MdConfig {
   serializerDebug?: (...args: any[]) => void;
   assetLoad?: AssetLoad;
   urlRewriter?: UrlRewriter;
+  hooks?: HookArray;
 }
+
+type HookArray = Array<Command | AsyncCommand>;
+type HookMap = Record<string, HookArray>;
 
 export type { Token };
 export type { MarkdownResult };
 
 export class ExtensionMarkdown extends Extension {
   name = 'markdown';
+
+  hooks: HookMap = {};
   urlFromRewriter?: UrlRewriter;
   urlToRewriter?: UrlRewriter;
 
-  public constructor(public override config: Partial<MdConfig> = {}) {
+  public constructor(public override config: Partial<MdConfig> = {}) { // TODO move all config to dynamic commands
     super(config);
   }
 
@@ -54,6 +67,7 @@ export class ExtensionMarkdown extends Extension {
               assetLoad: this.editor.config.assetLoad,
               ...this.config,
               urlRewriter: this.urlToRewriter,
+              hooks: this.hooks['pm2md.pre'],
             },
             schema,
             editor,
@@ -63,6 +77,7 @@ export class ExtensionMarkdown extends Extension {
             assetLoad: this.editor.config.assetLoad,
             ...this.config,
             urlRewriter: this.urlFromRewriter,
+            hooks: this.hooks['md2pm.post'],
           }, schema),
       },
     };
@@ -100,15 +115,62 @@ export class ExtensionMarkdown extends Extension {
   }
 
   override created(): void {
-    if (!this.editor.hooks['pm2md.pre']) {
-      if (this.editor.schema.topNodeType.name === 'doc') {
-        this.editor.hooks['pm2md.pre'] = getDefaultsPreProcessFilters({
-          urlRewriter: this.config.urlRewriter,
-        });
-      } else {
-        this.editor.hooks['pm2md.pre'] = [];
-      }
+    if (this.editor.schema.topNodeType.name === 'doc') {
+      this.hooks['pm2md.pre'] = getDefaultsPreProcessFilters({
+        getUrlRewriter: () => this.urlToRewriter,
+      });
+    } else {
+      this.hooks['pm2md.pre'] = [];
     }
+    this.hooks['md2pm.post'] = [
+      rewriteUrls(() => this.urlFromRewriter),
+    ];
+  }
+
+  override getCommandFactories(): Partial<CommandFactories> {
+    const getMarkdownHooks: CommandFactory = (
+      type: string,
+      cb: (hooks: HookArray) => void,
+    ) => {
+      return () => {
+        cb(this.hooks[type]);
+        return true;
+      };
+    };
+
+    const setMarkdownHooks: CommandFactory = (
+      type: string,
+      hooks: HookArray,
+    ) => {
+      return () => {
+        this.hooks[type] = hooks;
+        return true;
+      };
+    };
+
+    const setFromMarkdownUrlRewriter: CommandFactory = (
+      urlRewriter: UrlRewriter,
+    ) => {
+      return () => {
+        this.urlFromRewriter = urlRewriter;
+        return true;
+      };
+    };
+    const setToMarkdownUrlRewriter: CommandFactory = (
+      urlRewriter: UrlRewriter,
+    ) => {
+      return () => {
+        this.urlToRewriter = urlRewriter;
+        return true;
+      };
+    };
+
+    return {
+      getMarkdownHooks,
+      setMarkdownHooks,
+      setFromMarkdownUrlRewriter,
+      setToMarkdownUrlRewriter,
+    };
   }
 
   override getProseMirrorPlugins(): Plugin[] {

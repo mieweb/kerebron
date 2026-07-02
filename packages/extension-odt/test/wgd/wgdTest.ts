@@ -295,51 +295,10 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
         assetLoad,
       });
 
-      extMd.urlToRewriter = async (url: string, ctx: UrlRewriteContext) => {
-        if (!opts.rewriteRules) {
-          return url;
-        }
-
-        for (const rule of opts.rewriteRules) {
-          if (!rule.tag || ctx.type === rule.tag) {
-            if (rule.match) {
-              const matchRegExp = new RegExp(rule.match);
-              const matches = matchRegExp.exec(url);
-              if (matches) {
-                if (rule.mdTemplate) {
-                  ctx.setMeta?.('mdTemplate', rule.mdTemplate);
-                }
-                if (rule.replace) {
-                  let newUrl = rule.replace;
-                  const vals = Array.from(matches.values());
-                  for (let i = vals.length - 1; i >= 0; i--) {
-                    newUrl = newUrl.replace('$' + i, vals[i]);
-                  }
-                  return newUrl;
-                }
-              }
-            }
-          }
-        }
-
-        return url;
-      };
-
       const extOdt = new ExtensionOdt({
         debug: opts.debug,
         postProcessCommands: [],
       });
-
-      extOdt.urlFromRewriter = async (href, ctx) => {
-        const id = urlToFolderId(href);
-        if (id) {
-          href = 'gdoc:' + id;
-        }
-        if (ctx.type === 'IMG') {
-          href = href.replace(/^Pictures\//, '');
-        }
-        return href;
-      };
 
       const editor = CoreEditor.create({
         assetLoad,
@@ -355,16 +314,57 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
             },
           },
         ],
-        hooks: {
-          'pm2md.pre': [
-            ...getDefaultsPreProcessFilters({
-              urlRewriter: extMd.urlToRewriter,
-            }),
-            rawHtmlMacro(),
-            rawMarkdownMacro(),
-          ],
-        },
       });
+
+      editor
+        .chain()
+        .setFromOdtUrlRewriter(async (href, ctx) => {
+          const id = urlToFolderId(href);
+          if (id) {
+            href = 'gdoc:' + id;
+          }
+          if (ctx.type === 'IMG') {
+            href = href.replace(/^Pictures\//, '');
+          }
+          return href;
+        })
+        .setMarkdownHooks('pm2md.pre', [
+          ...getDefaultsPreProcessFilters({
+            getUrlRewriter:
+              () => async (url: string, ctx: UrlRewriteContext) => {
+                if (!opts.rewriteRules) {
+                  return url;
+                }
+
+                for (const rule of opts.rewriteRules) {
+                  if (!rule.tag || ctx.type === rule.tag) {
+                    if (rule.match) {
+                      const matchRegExp = new RegExp(rule.match);
+                      const matches = matchRegExp.exec(url);
+                      if (matches) {
+                        if (rule.mdTemplate) {
+                          ctx.setMeta?.('mdTemplate', rule.mdTemplate);
+                        }
+                        if (rule.replace) {
+                          let newUrl = rule.replace;
+                          const vals = Array.from(matches.values());
+                          for (let i = vals.length - 1; i >= 0; i--) {
+                            newUrl = newUrl.replace('$' + i, vals[i]);
+                          }
+                          return newUrl;
+                        }
+                      }
+                    }
+                  }
+                }
+
+                return url;
+              },
+          }),
+          rawHtmlMacro(),
+          rawMarkdownMacro(),
+        ])
+        .run();
 
       const input = Deno.readFileSync(__dirname + '/' + odtName);
 
