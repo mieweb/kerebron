@@ -122,6 +122,7 @@
     "semiColons": true,
     "exclude": [
       ".github/**/*.md",
+      "**/*.html",
       "**/*.md",
       "**/*.odt.xml",
       "**/*.xml",

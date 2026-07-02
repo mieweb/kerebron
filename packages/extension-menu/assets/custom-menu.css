@@ -426,10 +426,8 @@
 }
 
 /* List-style item button styles */
-.kb-custom-menu__overflow-item:not(.kb-custom-menu__overflow-item--grid)
-  .kb-menu__button,
-.kb-custom-menu__overflow-item:not(.kb-custom-menu__overflow-item--grid)
-  .kb-dropdown__label {
+.kb-custom-menu__overflow-item:not(.kb-custom-menu__overflow-item--grid) .kb-menu__button,
+.kb-custom-menu__overflow-item:not(.kb-custom-menu__overflow-item--grid) .kb-dropdown__label {
   min-height: 36px;
   padding: var(--kb-space-sm) 0;
   border: none;
@@ -445,8 +443,7 @@
 }
 
 /* Hide buttons without icons in list-style items (empty buttons in submenu items) */
-.kb-custom-menu__overflow-item:not(.kb-custom-menu__overflow-item--grid)
-  .kb-menu__button:not(:has(svg)):not(:has(.kb-icon)) {
+.kb-custom-menu__overflow-item:not(.kb-custom-menu__overflow-item--grid) .kb-menu__button:not(:has(svg)):not(:has(.kb-icon)) {
   display: none;
 }
 
@@ -455,8 +452,7 @@
   display: flex !important;
 }
 
-.kb-custom-menu__overflow-item[data-tool-id='tool-toggle-underline']
-  .kb-menu__button {
+.kb-custom-menu__overflow-item[data-tool-id='tool-toggle-underline'] .kb-menu__button {
   display: flex;
 }
 
