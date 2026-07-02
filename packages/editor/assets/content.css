@@ -1,15 +1,19 @@
 /* Typography */
-.kb-editor p {
+.kb-editor > p {
   margin-bottom: 1em;
 }
 
-.kb-editor p:first-child,
-.kb-editor h1:first-child,
-.kb-editor h2:first-child,
-.kb-editor h3:first-child,
-.kb-editor h4:first-child,
-.kb-editor h5:first-child,
-.kb-editor h6:first-child {
+.kb-editor li > p {
+  margin-bottom: 0;
+}
+
+.kb-editor > p:first-child,
+.kb-editor > h1:first-child,
+.kb-editor > h2:first-child,
+.kb-editor > h3:first-child,
+.kb-editor > h4:first-child,
+.kb-editor > h5:first-child,
+.kb-editor > h6:first-child {
   margin-top: var(--kb-space-md);
 }
 
