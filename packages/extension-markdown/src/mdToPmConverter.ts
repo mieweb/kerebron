@@ -100,7 +100,18 @@ export async function mdToPmConverterText(
         getAttrs: (tok) => ({ lang: tok.attrGet('lang') || undefined }),
         noCloseToken: true,
       },
-      hr: { node: 'hr' },
+      hr: {
+        custom: (
+          state: MarkdownParseState,
+          token: Token,
+          tokens: Token[],
+          i: number,
+        ) => {
+          state.openNode(schema.nodes['paragraph'], {});
+          state.addNode(schema.nodes['hr'], {});
+          state.closeNode();
+        },
+      },
       image: {
         node: 'image',
         getAttrs: (tok) => {
