@@ -15,7 +15,7 @@ import { ExtensionSelection } from './ExtensionSelection.ts';
 import { ExtensionBaseKeymap } from './ExtensionBaseKeymap.ts';
 import { ExtensionDropcursor } from './ExtensionDropcursor.ts';
 import { ExtensionGapcursor } from './ExtensionGapcursor.ts';
-import { ExtensionHtml } from './ExtensionHtml.ts';
+import { ExtensionHtml } from './media/ExtensionHtml.ts';
 import { ExtensionRemoteSelection } from './remote-selection/ExtensionRemoteSelection.ts';
 import { NodeText } from './NodeText.ts';
 import { NodeDocumentCode } from './NodeDocumentCode.ts';

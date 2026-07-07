@@ -70,6 +70,7 @@
     "npm:vue@3.5.21": "3.5.21_typescript@5.9.3",
     "npm:web-tree-sitter@0.26.6": "0.26.6",
     "npm:wrangler@*": "4.58.0_unenv@2.0.0-rc.24_workerd@1.20260107.1",
+    "npm:xpath@0.0.34": "0.0.34",
     "npm:y-protocols@1.0.6": "1.0.6_yjs@13.6.30",
     "npm:yjs@13.6.30": "13.6.30"
   },
@@ -4222,6 +4223,9 @@
     "ws@8.18.0": {
       "integrity": "sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw=="
     },
+    "xpath@0.0.34": {
+      "integrity": "sha512-FxF6+rkr1rNSQrhUNYrAFJpRXNzlDoMxeXN5qI84939ylEv3qqPFKa85Oxr6tDaJKqwW6KKyo2v26TSv3k6LeA=="
+    },
     "y-protocols@1.0.6_yjs@13.6.30": {
       "integrity": "sha512-vHRF2L6iT3rwj1jub/K5tYcTT/mEYDUppgNPXwp8fmLpui9f7Yeq3OEtTLVF012j39QnV+KEQpNqoN7CWU7Y9Q==",
       "dependencies": [
@@ -4461,6 +4465,7 @@
       "npm:vscode-languageserver-protocol@3.17.5",
       "npm:vscode-languageserver-textdocument@1.0.12",
       "npm:web-tree-sitter@0.26.6",
+      "npm:xpath@0.0.34",
       "npm:y-protocols@1.0.6",
       "npm:yjs@13.6.30"
     ],

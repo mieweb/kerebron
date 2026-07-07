@@ -4,12 +4,13 @@ import { ExtensionSelection } from './ExtensionSelection.ts';
 import { ExtensionBaseKeymap } from './ExtensionBaseKeymap.ts';
 import { ExtensionDropcursor } from './ExtensionDropcursor.ts';
 import { ExtensionGapcursor } from './ExtensionGapcursor.ts';
-import { ExtensionHtml } from './ExtensionHtml.ts';
-import { ExtensionMediaUpload } from './ExtensionMediaUpload.ts';
 import { ExtensionTextAlign } from './ExtensionTextAlign.ts';
 import { ExtensionUser } from './ExtensionUser.ts';
 import { ExtensionRemoteSelection } from './remote-selection/ExtensionRemoteSelection.ts';
 import { ExtensionPairing } from './pairing/ExtensionPairing.ts';
+import { ExtensionHtml } from './media/ExtensionHtml.ts';
+import { ExtensionMediaUpload } from './media/ExtensionMediaUpload.ts';
+import { ExtensionPaste } from './media/ExtensionPaste.ts';
 
 import { MarkLink } from './MarkLink.ts';
 import { MarkStrong } from './MarkStrong.ts';
@@ -41,7 +42,6 @@ import { NodeMath } from './NodeMath.ts';
 import { NodeDefinitionList } from './NodeDefinitionList.ts';
 import { NodeDefinitionTerm } from './NodeDefinitionTerm.ts';
 import { NodeDefinitionDesc } from './NodeDefinitionDesc.ts';
-import { NodeFrontmatter } from './NodeFrontmatter.ts';
 import { NodeInlineShortCode } from './NodeInlineShortCode.ts';
 import { NodeIframe } from './NodeIframe.ts';
 import { NodeCommentAnchor } from './NodeCommentAnchor.ts';
@@ -64,6 +64,7 @@ export class BasicEditorKit implements EditorKit {
       new ExtensionTextAlign(),
       new ExtensionPairing(),
       new ExtensionUser(),
+      new ExtensionPaste(),
       new NodeDocument(),
       new NodeText(),
       new NodeParagraph(),
@@ -82,7 +83,6 @@ export class BasicEditorKit implements EditorKit {
       new NodeDefinitionDesc(),
       new NodeTaskList(),
       new NodeTaskItem(),
-      new NodeFrontmatter(),
       new NodeImage(),
       new NodeVideo(),
       new NodeBlockquote(),

@@ -2,16 +2,19 @@ import {
   DOMParser,
   DOMSerializer,
   Fragment,
-  Node,
+  Node as PMNode,
   type ParseOptions,
   Schema,
 } from 'prosemirror-model';
 
 import { type Converter, type CoreEditor, Extension } from '@kerebron/editor';
 
+import { HtmlPasteRule } from './ExtensionPaste.ts';
+
 export type CreateNodeFromContentOptions = {
   parseOptions?: ParseOptions;
   errorOnInvalidContent?: boolean;
+  pasteRules: HtmlPasteRule[];
 };
 
 export function getHTMLFromFragment(
@@ -55,6 +58,9 @@ export function elementFromString(value: string): HTMLElement {
   // add a wrapper to preserve leading and trailing whitespace
   const wrappedValue = `<html lang="en"><body>${value}</body></html>`;
 
+  // TODO: consider using `const clean = DOMPurify.sanitize(html);` to prevent loading external resources
+  // Or check all src/href attrs, etc. for js
+
   const body =
     new globalThis.DOMParser().parseFromString(wrappedValue, 'text/html').body;
 
@@ -90,12 +96,13 @@ function prepareContentCheckSchema(schema: Schema): Schema {
   return contentCheckSchema;
 }
 
-export function createNodeFromHTML(
+export async function createNodeFromHTML(
   content: string,
   schema: Schema,
   options?: CreateNodeFromContentOptions,
-): Node {
+): Promise<PMNode> {
   options = {
+    pasteRules: [],
     parseOptions: {},
     ...options,
   };
@@ -108,8 +115,11 @@ export function createNodeFromHTML(
     );
   }
 
+  const body = elementFromString(content);
+  // const processed = await processHtml(body, {});
+
   const parser = DOMParser.fromSchema(schema);
-  return parser.parse(elementFromString(content), options.parseOptions);
+  return parser.parse(body, options.parseOptions);
 }
 
 export function createFragmentFromHTML(
@@ -118,6 +128,7 @@ export function createFragmentFromHTML(
   options?: CreateNodeFromContentOptions,
 ): Fragment {
   options = {
+    pasteRules: [],
     parseOptions: {},
     ...options,
   };
@@ -131,7 +142,9 @@ export function createFragmentFromHTML(
   }
 
   const parser = DOMParser.fromSchema(schema);
-  return parser.parseSlice(elementFromString(content), options.parseOptions)
+  const htmlElement = elementFromString(content);
+
+  return parser.parseSlice(htmlElement, options.parseOptions)
     .content;
 }
 
@@ -144,13 +157,16 @@ export class ExtensionHtml extends Extension {
   ): Record<string, Converter> {
     return {
       'text/html': {
-        fromDoc: async (document: Node): Promise<Uint8Array> => {
+        fromDoc: async (document: PMNode): Promise<Uint8Array> => {
           const html = getHTMLFromFragment(document.content, editor.schema);
           return new TextEncoder().encode(html);
         },
-        toDoc: async (buffer: Uint8Array): Promise<Node> => {
+        toDoc: async (buffer: Uint8Array): Promise<PMNode> => {
           const html = new TextDecoder().decode(buffer);
-          return createNodeFromHTML(html, editor.schema);
+
+          const body = elementFromString(html);
+          const parser = DOMParser.fromSchema(schema);
+          return parser.parse(body);
         },
       },
     };

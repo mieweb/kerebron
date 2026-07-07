@@ -181,13 +181,11 @@ function createMediaUploadPlugin(options: MediaUploadOptions = {}): Plugin {
     props: {
       /** Handle file drops */
       handleDrop(view, event, slice, moved) {
-        // If content was moved from within the editor, let the default handler deal with it
         if (moved) return false;
 
         const files = Array.from(event.dataTransfer?.files || []);
         if (files.length === 0) return false;
 
-        // Check if any files are images or videos
         const {
           allowedImageTypes = ['^image/'],
           allowedVideoTypes = ['^video/'],
@@ -195,50 +193,42 @@ function createMediaUploadPlugin(options: MediaUploadOptions = {}): Plugin {
         const hasMedia = files.some((file) =>
           isImage(file, allowedImageTypes) || isVideo(file, allowedVideoTypes)
         );
-        if (!hasMedia) return false;
+        if (hasMedia) {
+          event.preventDefault();
 
-        // Prevent default drop behavior
-        event.preventDefault();
+          const coords = { left: event.clientX, top: event.clientY };
+          const pos = view.posAtCoords(coords);
+          if (!pos) return false;
 
-        // Get drop position
-        const coords = { left: event.clientX, top: event.clientY };
-        const pos = view.posAtCoords(coords);
-        if (!pos) return false;
+          handleMediaFiles(view, files, pos.pos, options);
 
-        // Handle the media files
-        handleMediaFiles(view, files, pos.pos, options);
-
-        return true;
+          return true;
+        }
       },
 
-      /** Handle paste events with images (videos typically don't paste) */
       handlePaste(view, event, slice) {
         const items = Array.from(event.clipboardData?.items || []);
         const imageItems = items.filter((item) =>
           item.type.startsWith('image/')
         );
 
-        if (imageItems.length === 0) return false;
+        if (imageItems.length > 0) {
+          event.preventDefault();
 
-        // Prevent default paste behavior
-        event.preventDefault();
+          const files: File[] = [];
+          for (const item of imageItems) {
+            const file = item.getAsFile();
+            if (file) files.push(file);
+          }
 
-        // Convert clipboard items to files
-        const files: File[] = [];
-        for (const item of imageItems) {
-          const file = item.getAsFile();
-          if (file) files.push(file);
+          if (files.length === 0) return false;
+
+          const { from } = view.state.selection;
+
+          handleMediaFiles(view, files, from, options);
+
+          return true;
         }
-
-        if (files.length === 0) return false;
-
-        // Get current cursor position
-        const { from } = view.state.selection;
-
-        // Handle the image files
-        handleMediaFiles(view, files, from, options);
-
-        return true;
       },
     },
   });
