@@ -9,6 +9,7 @@ import type { Token } from './types.ts';
 
 import { MarkdownParser, type MarkdownParseState } from './MarkdownParser.ts';
 import { sitterTokenizer } from './treeSitterTokenizer.ts';
+import { YamlService } from '@kerebron/editor/yaml';
 
 function listIsTight(tokens: readonly Token[], i: number) {
   while (++i < tokens.length) {
@@ -42,7 +43,21 @@ export async function mdToPmConverterText(
     tokenizer,
     {
       frontmatter: {
-        node: 'frontmatter',
+        custom: (
+          state: MarkdownParseState,
+          token: Token,
+        ) => {
+          const topNode = state.stack[0];
+          if (topNode?.type.name === 'doc') {
+            const frontmatter = token.content;
+            const end = frontmatter.indexOf('\n---\n', 4);
+            if (frontmatter.startsWith('---\n') && end > -1) {
+              const meta = config.yaml?.parse(frontmatter.substring(4, end)) ||
+                undefined;
+              topNode.attrs = { ...topNode.attrs, meta };
+            }
+          }
+        },
       },
       blockquote: { block: 'blockquote' },
       paragraph: { block: 'paragraph' },

@@ -393,10 +393,22 @@ export class CoreEditor extends EventTarget {
     this.dispatchTransaction(tr);
   }
 
+  getMediaTypes(): string[] {
+    return Object.keys(this.extensionManager.converters);
+  }
+
   patchDocumentText(mediaType: string, content: string) {
     return this.patchDocument(mediaType, new TextEncoder().encode(content));
   }
 
+  /*
+  Warning: doc.attrs.meta is not serialized because it is a map.
+  Use replacer:
+
+  const json = JSON.stringify(obj, (_, value) =>
+    value instanceof Map ? Object.fromEntries(value) : value
+  );
+  */
   public getJSON(): JSONContent {
     return this.state.doc.toJSON();
   }

@@ -17,6 +17,8 @@ import { type Command } from 'prosemirror-state';
 import { addAttributesToSchema } from './utilities/getHtmlAttributes.ts';
 import { TrackSelecionPlugin } from './plugins/TrackSelecionPlugin.ts';
 
+import * as yaml from './utilities/yaml.ts';
+
 function splitExtensions(extensions: Iterable<AnyExtension>) {
   const baseExtensions = Array.from(extensions).filter((extension) =>
     extension.type === 'extension'
@@ -307,6 +309,7 @@ export class ExtensionManager {
     for (const extension of baseExtensions) {
       editor.ci.register(extension.name, extension);
     }
+    editor.ci.register('yaml', yaml);
 
     this.initPlugins(editor, schema);
 

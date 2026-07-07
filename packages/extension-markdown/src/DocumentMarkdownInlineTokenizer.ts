@@ -297,6 +297,9 @@ export class DocumentMarkdownInlineTokenizer {
     let value = open ? info.open : info.close;
 
     if (!value) {
+      if (['highlight', 'textColor'].includes(mark.type.name)) {
+        return;
+      }
       /** Skip unknown marks (like textColor, highlight) - they'll be lost in markdown but won't crash */
       console.warn(
         'Unsupported mark type for markdown: ' + mark.type.name +

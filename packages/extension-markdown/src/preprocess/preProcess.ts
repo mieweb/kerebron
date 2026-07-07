@@ -1,6 +1,6 @@
+import { UrlRewriter } from '@kerebron/editor';
 import { AsyncCommand, Command } from '@kerebron/editor/commands';
 
-import { UrlRewriter } from '@kerebron/editor';
 import { addEmptyLines } from './addEmptyLines.ts';
 import { fixIdLinks } from './fixIdLinkts.ts';
 import { fixShortCodes } from './fixShortCodes.ts';

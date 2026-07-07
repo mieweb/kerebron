@@ -10,7 +10,6 @@ import {
   type CoreEditor,
   NodeAndPos,
   nodeToTreeStringOutput,
-  RawTextMapEntry,
   RawTextResult,
   SourceMap,
 } from '@kerebron/editor';
@@ -19,7 +18,6 @@ import { MarkdownSerializer } from './MarkdownSerializer.ts';
 import { DocumentMarkdownTokenizer } from './DocumentMarkdownTokenizer.ts';
 import { SmartOutput } from '@kerebron/editor/utilities';
 import { MdConfig } from '@kerebron/extension-markdown';
-import { getDefaultsPreProcessFilters } from './preprocess/preProcess.ts';
 import { EditorState, Transaction } from 'prosemirror-state';
 
 // function convertDomToLowerCase(node: Node) {
@@ -108,6 +106,28 @@ export async function extPmToMdConverter(
 
   // TODO: refactor to Tokenizer
   const defaultMarkdownTokenizer = new DocumentMarkdownTokenizer({
+    doc(node) {
+      return {
+        open: async (node, pos, idx) => {
+          const token = new Token(
+            'frontmatter',
+            'frontmatter',
+            NESTING_SELF_CLOSING,
+          );
+          if (node.attrs.meta) {
+            console.log('node.attrs', node.attrs);
+            if (config.yaml) {
+              const frontmatter = config.yaml.stringify(node.attrs.meta);
+              token.content = `---\n${frontmatter}\n---\n`;
+            } else {
+              const frontmatter = '# No yaml service';
+              token.content = `---\n${frontmatter}\n---\n`;
+            }
+          }
+          return token;
+        },
+      };
+    },
     paragraph(node) {
       return {
         open: async (node, pos, idx) => {

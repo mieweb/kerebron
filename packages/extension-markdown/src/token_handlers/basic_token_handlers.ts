@@ -87,7 +87,7 @@ export function getBasicTokensHandlers(): Record<string, Array<TokenHandler>> {
     'frontmatter': [
       (token: Token, ctx: ContextStash) => {
         ctx.current.log(
-          '---' + '\n' + token.content + '\n---\n\n',
+          token.content,
           token,
         );
       },

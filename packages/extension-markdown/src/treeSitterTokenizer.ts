@@ -449,6 +449,15 @@ function treeToTokens(
             pushInlineNode(token, 'hard_line_break');
           }
           break;
+        case 'backslash_escape':
+          {
+            const token = new Token('text', '', NESTING_SELF_CLOSING);
+            token.map = map;
+            token.meta = 'noEscText';
+            token.content = nodeText(node) ?? '';
+            pushInlineNode(token, 'backslash_escape');
+          }
+          break;
         default:
           console.debug('inline_node', node);
           throw new Error(`Unhandled inline node type: ${node.type}`);

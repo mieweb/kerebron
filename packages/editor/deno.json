@@ -10,6 +10,7 @@
     "./plugins/keymap": "./src/plugins/keymap/mod.ts",
     "./search": "./src/search/mod.ts",
     "./user": "./src/user/mod.ts",
-    "./utilities": "./src/utilities/mod.ts"
+    "./utilities": "./src/utilities/mod.ts",
+    "./yaml": "./src/utilities/yaml.ts"
   }
 }
