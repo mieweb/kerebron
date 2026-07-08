@@ -13,6 +13,7 @@ import type {
 import { baseCommandFactories } from './baseCommandFactories.ts';
 import { keyCommandFactories } from './keyCommandFactories.ts';
 import { replaceCommandFactories } from './replaceCommandFactories.ts';
+import { searchCommandFactories } from '../search/search.ts';
 
 type CommandRunner = (...args: any[]) => boolean;
 
@@ -28,6 +29,7 @@ export class CommandManager {
     this.mergeCommandFactories(baseCommandFactories, 'baseCommand');
     this.mergeCommandFactories(keyCommandFactories, 'key');
     this.mergeCommandFactories(replaceCommandFactories, 'replace');
+    this.mergeCommandFactories(searchCommandFactories, 'search');
   }
 
   public mergeCommandFactories(

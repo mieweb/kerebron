@@ -18,6 +18,7 @@ import { addAttributesToSchema } from './utilities/getHtmlAttributes.ts';
 import { TrackSelecionPlugin } from './plugins/TrackSelecionPlugin.ts';
 
 import * as yaml from './utilities/yaml.ts';
+import { createSearchPlugin } from './search/search.ts';
 
 function splitExtensions(extensions: Iterable<AnyExtension>) {
   const baseExtensions = Array.from(extensions).filter((extension) =>
@@ -164,6 +165,7 @@ export class ExtensionManager {
 
     this.plugins.push(new InputRulesPlugin(inputRules));
     this.plugins.push(new KeymapPlugin(Object.fromEntries(keyBindings)));
+    this.plugins.push(createSearchPlugin());
     this.plugins.push(new TrackSelecionPlugin(editor));
   }
 

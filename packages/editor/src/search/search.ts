@@ -7,7 +7,7 @@ import {
 } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 
-import { type Command } from '../commands/types.ts';
+import { type Command, CommandFactory } from '../commands/types.ts';
 import { SearchQuery, SearchResult } from './query.ts';
 
 class SearchState {
@@ -45,7 +45,7 @@ const searchKey: PluginKey<SearchState> = new PluginKey('search');
 
 /// Returns a plugin that stores a current search query and searched
 /// range, and highlights matches of the query.
-export function search(
+export function createSearchPlugin(
   options: {
     initialQuery?: SearchQuery;
     initialRange?: { from: number; to: number };
@@ -183,20 +183,20 @@ function findCommand(wrap: boolean, dir: -1 | 1): Command {
 
 /// Find the next instance of the search query after the current
 /// selection and move the selection to it.
-export const findNext = findCommand(true, 1);
+export const findNext: Command = findCommand(true, 1);
 
 /// Find the next instance of the search query and move the selection
 /// to it. Don't wrap around at the end of document or search range.
-export const findNextNoWrap = findCommand(false, 1);
+export const findNextNoWrap: Command = findCommand(false, 1);
 
 /// Find the previous instance of the search query and move the
 /// selection to it.
-export const findPrev = findCommand(true, -1);
+export const findPrev: Command = findCommand(true, -1);
 
 /// Find the previous instance of the search query and move the
 /// selection to it. Don't wrap at the start of the document or search
 /// range.
-export const findPrevNoWrap = findCommand(false, -1);
+export const findPrevNoWrap: Command = findCommand(false, -1);
 
 function replaceCommand(wrap: boolean, moveForward: boolean): Command {
   return (state, dispatch) => {
@@ -246,15 +246,15 @@ function replaceCommand(wrap: boolean, moveForward: boolean): Command {
 /// Replace the currently selected instance of the search query, and
 /// move to the next one. Or select the next match, if none is already
 /// selected.
-export const replaceNext = replaceCommand(true, true);
+export const replaceNext: Command = replaceCommand(true, true);
 
 /// Replace the next instance of the search query. Don't wrap around
 /// at the end of the document.
-export const replaceNextNoWrap = replaceCommand(false, true);
+export const replaceNextNoWrap: Command = replaceCommand(false, true);
 
 /// Replace the currently selected instance of the search query, if
 /// any, and keep it selected.
-export const replaceCurrent = replaceCommand(false, false);
+export const replaceCurrent: Command = replaceCommand(false, false);
 
 /// Replace all instances of the search query.
 export const replaceAll: Command = (state, dispatch) => {
@@ -281,4 +281,34 @@ export const replaceAll: Command = (state, dispatch) => {
     dispatch(tr);
   }
   return true;
+};
+
+const searchFactory: CommandFactory = (
+  query: SearchQuery,
+  range: { from: number; to: number } | null = null,
+) => {
+  const search: Command = (state, dispatch) => {
+    const tr = state.tr;
+    setSearchState(tr, query, range);
+
+    if (dispatch) {
+      dispatch(tr);
+    }
+
+    return true;
+  };
+
+  return search;
+};
+
+export const searchCommandFactories: Record<string, CommandFactory> = {
+  search: searchFactory,
+  findNext: () => findNext,
+  findNextNoWrap: () => findNextNoWrap,
+  findPrev: () => findPrev,
+  findPrevNoWrap: () => findPrevNoWrap,
+  replaceNext: () => replaceNext,
+  replaceNextNoWrap: () => replaceNextNoWrap,
+  replaceCurrent: () => replaceCurrent,
+  replaceAll: () => replaceAll,
 };
