@@ -1,12 +1,12 @@
-import { history, redo, undo } from 'prosemirror-history';
 import { Plugin } from 'prosemirror-state';
 
 import { type CoreEditor, Extension } from '@kerebron/editor';
 import {
-  type Command,
   type CommandFactories,
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
+
+import { history, redo, undo } from './history.ts';
 
 export class ExtensionHistory extends Extension {
   name = 'history';

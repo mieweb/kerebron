@@ -23,6 +23,7 @@ export abstract class Extension {
   protected editor!: CoreEditor;
 
   readonly conflicts?: Array<string>;
+  readonly overrides?: Array<string>;
 
   public constructor(public config: Partial<ExtensionConfig> = {}) {
   }

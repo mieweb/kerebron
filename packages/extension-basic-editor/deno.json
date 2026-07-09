@@ -8,7 +8,7 @@
     "./ExtensionBasicCodeEditor": "./src/ExtensionBasicCodeEditor.ts",
     "./ExtensionSelection": "./src/ExtensionSelection.ts",
     "./ExtensionBaseKeymap": "./src/ExtensionBaseKeymap.ts",
-    "./ExtensionHistory": "./src/ExtensionHistory.ts",
+    "./ExtensionHistory": "./src/history/ExtensionHistory.ts",
     "./ExtensionDropcursor": "./src/ExtensionDropcursor.ts",
     "./ExtensionGapcursor": "./src/ExtensionGapcursor.ts",
     "./ExtensionRemoteSelection": "./src/remote-selection/ExtensionRemoteSelection.ts",

@@ -120,7 +120,7 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
 
   // === 1. Undo ===
   // Use a wrapper that dynamically gets the undo command from the editor
-  // This handles both prosemirror-history and y-prosemirror undo
+  // This handles both history and y-prosemirror undo
   undoRedoGroup.push(
     new MenuItem({
       title: 'Undo last change',

@@ -39,7 +39,6 @@ export interface EditorConfig {
   element: HTMLElement;
   content: Content;
   parseOptions: ParseOptions;
-  // extensions: AnyExtensionOrReq[];
   assetLoad?: AssetLoad;
   uri?: string;
   languageID?: string;

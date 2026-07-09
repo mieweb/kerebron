@@ -296,6 +296,15 @@ export class ExtensionManager {
     );
 
     for (const extension of baseExtensions) {
+      if (Array.isArray(extension.overrides)) {
+        for (const name of extension.overrides) {
+          for (const ext of this.extensions) {
+            if (ext.name === name) {
+              this.extensions.delete(ext);
+            }
+          }
+        }
+      }
       if (Array.isArray(extension.conflicts)) {
         for (const name of extension.conflicts) {
           const anotherExtension = baseExtensions.find((it) =>
