@@ -83,9 +83,14 @@ export async function pmToMdConverter(
   document: Node,
   config: MdConfig,
   schema: Schema,
-  editor: CoreEditor,
+  eventTarget: EventTarget,
 ): Promise<Uint8Array> {
-  const result = await extPmToMdConverter(document, config, schema, editor);
+  const result = await extPmToMdConverter(
+    document,
+    config,
+    schema,
+    eventTarget,
+  );
   return new TextEncoder().encode(result.content);
 }
 
@@ -98,7 +103,7 @@ export async function extPmToMdConverter(
   origDocument: Node,
   config: MdConfig,
   schema: Schema,
-  editor: CoreEditor,
+  eventTarget: EventTarget,
 ): Promise<MarkdownResult> {
   const ctx = new MdStashContext();
 
@@ -538,7 +543,7 @@ export async function extPmToMdConverter(
         tokens,
       },
     });
-    editor.dispatchEvent(event);
+    eventTarget.dispatchEvent(event);
   }
 
   const markdownSerializerConfig = {
@@ -553,7 +558,7 @@ export async function extPmToMdConverter(
       output,
     },
   });
-  editor.dispatchEvent(event);
+  eventTarget.dispatchEvent(event);
 
   const debugMap: Record<
     number,
@@ -640,7 +645,7 @@ export async function extPmToMdConverter(
         rawTextMap,
       },
     });
-    editor.dispatchEvent(event);
+    eventTarget.dispatchEvent(event);
   }
 
   return {

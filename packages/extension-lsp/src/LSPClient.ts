@@ -1,15 +1,19 @@
-import type * as lsp from 'vscode-languageserver-protocol';
+import * as lsp from 'vscode-languageserver-protocol';
 import {
   MessageType,
   TextDocumentSyncKind,
 } from 'vscode-languageserver-protocol';
 
-import { Workspace, WorkspaceFile } from './workspace.ts';
-
-import { LSPSource, LSPWorkspace } from './LSPWorkspace.ts';
+import { EditorUi } from '@kerebron/editor';
+import type { ContentMapper, WorkspaceModifyParams } from '@kerebron/workspace';
+import { contentChangesFor } from './computeIncrementalChanges.ts';
 
 const defaultNotificationHandlers: {
-  [method: string]: (client: LSPClient, params: any) => void;
+  [method: string]: (
+    client: LSPClient,
+    params: any,
+    config: LSPClientConfig,
+  ) => void;
 } = {
   'window/logMessage': (client, params: lsp.LogMessageParams) => {
     if (params.type == MessageType.Error) {
@@ -22,10 +26,14 @@ const defaultNotificationHandlers: {
       console.log('[lsp] ' + params.message);
     }
   },
-  'window/showMessage': (client, params: lsp.ShowMessageParams) => {
+  'window/showMessage': (
+    client,
+    params: lsp.ShowMessageParams,
+    config: LSPClientConfig,
+  ) => {
     if (params.type > MessageType.Info) return;
-    for (const f of client.workspace.files) {
-      const ui = f.getUi();
+    for (const f of Object.entries(client.entries)) {
+      const ui = config.ui;
       if (!ui) continue;
       ui.showMessage(params.message);
     }
@@ -119,14 +127,10 @@ const clientCapabilities: lsp.ClientCapabilities = {
 
 /// Configuration options that can be passed to the LSP client.
 export type LSPClientConfig = {
+  ui: EditorUi;
+  lang: string;
   /// The project root URI passed to the server, when necessary.
   rootUri?: string;
-  /// An optional function to create a
-  /// [workspace](#lsp-client.Workspace) object for the client to use.
-  /// When not given, this will default to a simple workspace that
-  /// only opens files that have an active editor, and only allows one
-  /// editor per file.
-  workspace?: (client: LSPClient) => Workspace;
   /// The amount of milliseconds after which requests are
   /// automatically timed out. Defaults to 3000.
   timeout?: number;
@@ -136,7 +140,7 @@ export type LSPClientConfig = {
   /// someone is able to compromise your LSP server or your connection
   /// to it. You can pass an HTML sanitizer here to strip out
   /// suspicious HTML structure.
-  sanitizeHTML?: (html: string) => string;
+  // sanitizeHTML?: (html: string) => string;
   /// When no handler is found for a notification, it will be passed
   /// to this function, if given.
   unhandledNotification?: (
@@ -157,10 +161,86 @@ export class LSPError extends Error {
   }
 }
 
-export class LSPClient extends EventTarget {
-  sources: Record<string, LSPSource> = {};
+export interface LSPClientEventMap {
+  'initialize': CustomEvent<lsp.InitializeParams>;
+  'initialized': CustomEvent<lsp.InitializedParams>;
+  'textDocument/didOpen': CustomEvent<lsp.DidOpenTextDocumentParams>;
+  'textDocument/didChange': CustomEvent<lsp.DidChangeTextDocumentParams>;
+  'textDocument/didClose': CustomEvent<lsp.DidCloseTextDocumentParams>;
+  'textDocument/completion': CustomEvent<lsp.CompletionParams>;
+  'textDocument/diagnostic': CustomEvent<lsp.DocumentDiagnosticParams>;
+  'textDocument/publishDiagnostics': CustomEvent<
+    { params: lsp.PublishDiagnosticsParams }
+  >;
+  'window/logMessage': CustomEvent<lsp.LogMessageParams>;
+  'window/showMessage': CustomEvent<lsp.ShowMessageParams>;
+  'close': CustomEvent<void>;
+}
 
-  workspace: Workspace;
+export interface LSPClient extends EventTarget {
+  addEventListener<K extends keyof LSPClientEventMap>(
+    type: K,
+    listener: (event: LSPClientEventMap[K]) => void,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+
+  // fallback DOM signature (required)
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject | null,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+
+  removeEventListener<K extends keyof LSPClientEventMap>(
+    type: K,
+    listener: (event: LSPClientEventMap[K]) => void,
+    options?: boolean | EventListenerOptions,
+  ): void;
+  // fallback DOM signature (required)
+  removeEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject | null,
+    options?: boolean | EventListenerOptions,
+  ): void;
+
+  dispatchEvent<K extends keyof LSPClientEventMap>(
+    event: LSPClientEventMap[K],
+  ): boolean;
+  dispatchEvent(event: Event): boolean;
+
+  lang: string;
+
+  hasCapability(name: keyof lsp.ServerCapabilities): boolean;
+  connect(): void;
+
+  restart(): Promise<void>;
+  changeFile(modified: WorkspaceModifyParams): Promise<boolean>;
+  closeFile(uri: string): Promise<void>;
+
+  request<Params, Result>(
+    method: string,
+    params: Params,
+  ): Promise<Result>;
+  notification<Params>(method: string, params: Params): Promise<boolean>;
+
+  getEntry(uri: string): LSPEntry | undefined;
+
+  destroy(): void;
+}
+
+interface LSPEntry {
+  getContentMapper: () => Promise<ContentMapper>;
+  uri: string;
+  version: number;
+  syncedText?: string;
+  opened: boolean;
+}
+
+export class LSPClientImpl extends EventTarget implements LSPClient {
+  entries: Record<string, LSPEntry> = {};
+
+  // sources: Record<string, () => Promise<ContentMapper>> = {};
+  // workspace: Workspace;
   private nextReqID = 0;
   private requests: Request<any>[] = [];
 
@@ -171,19 +251,23 @@ export class LSPClient extends EventTarget {
   private initializing: ReturnType<typeof setInterval> | undefined;
 
   private readonly receiveListener: EventListenerOrEventListenerObject;
+  private readonly startInitializingListener:
+    EventListenerOrEventListenerObject;
+
   active: boolean = false;
 
   constructor(
     private readonly transport: Transport,
-    readonly config: LSPClientConfig = {},
+    readonly config: LSPClientConfig,
   ) {
     super();
 
     this.timeout = config.timeout ?? 3000;
 
     this.receiveListener = (event) => this.receiveMessage(event);
+    this.startInitializingListener = (event) => this.startInitializing();
 
-    transport.addEventListener('message', this.receiveListener);
+    transport.addEventListener('open', this.startInitializingListener);
     transport.addEventListener('initialized', () => {
       try {
         console.info('LSP initialized');
@@ -200,18 +284,21 @@ export class LSPClient extends EventTarget {
         }
       }
     });
-    transport.addEventListener('open', () => {
-      this.startInitializing();
-    });
+    transport.addEventListener('message', this.receiveListener);
     transport.addEventListener('close', (event) => {
       this.active = false;
       this.serverCapabilities = null;
       this.dispatchEvent(new CloseEvent('close'));
     });
+  }
 
-    this.workspace = config.workspace
-      ? config.workspace(this)
-      : new LSPWorkspace(this);
+  destroy(): void {
+    this.transport.removeEventListener('message', this.receiveListener);
+    this.transport.removeEventListener('open', this.startInitializingListener);
+  }
+
+  get lang(): string {
+    return this.config.lang;
   }
 
   startInitializing() {
@@ -266,19 +353,23 @@ export class LSPClient extends EventTarget {
     }
   }
 
-  onInitialized() {
+  async onInitialized() {
     this.transport.send(
       JSON.stringify({ jsonrpc: '2.0', method: 'initialized', params: {} }),
     );
 
-    this.workspace.connected();
+    for (const [uri, entry] of Object.entries(this.entries)) {
+      if (entry.opened) {
+        return;
+      }
+
+      await this.didOpen(entry);
+    }
+
+    this.dispatchEvent(new CustomEvent('initialized'));
   }
 
-  connect(uri: string, source: LSPSource) {
-    if (this.sources[uri] && this.sources[uri] !== source) {
-      throw new Error(`Source for ${uri} already connected`);
-    }
-    this.sources[uri] = source;
+  connect() {
     this.active = true;
     if (!this.transport.isConnected()) {
       this.transport.connect();
@@ -286,52 +377,120 @@ export class LSPClient extends EventTarget {
   }
 
   disconnect(uri: string) {
-    delete this.sources[uri];
-    this.workspace.closeFile(uri);
-    if (Object.keys(this.sources).length === 0) {
+    if (Object.keys(this.entries).length === 0) {
       this.active = false;
       this.serverCapabilities = null;
       this.transport.removeEventListener('data', this.receiveListener);
-      this.workspace.disconnected();
       this.dispatchEvent(new CloseEvent('close'));
     }
   }
 
+  async changeFile(modified: WorkspaceModifyParams): Promise<boolean> {
+    const entry: LSPEntry = this.entries[modified.uri] || {
+      uri: modified.uri,
+      version: modified.version,
+      syncedText: undefined,
+      opened: false,
+    };
+
+    entry.version = modified.version;
+    entry.getContentMapper = modified.getContentMapper;
+
+    if (!this.entries[modified.uri]) {
+      this.entries[modified.uri] = entry;
+      return await this.didOpen(entry);
+    } else {
+      return await this.didChange(entry);
+    }
+  }
+
   /// Send a `textDocument/didOpen` notification to the server.
-  async didOpen(file: WorkspaceFile) {
+  async didOpen(entry: LSPEntry) {
     if (!this.transport.isInitialized()) {
+      entry.opened = false;
+      this.connect();
       return false;
     }
+
+    const mapper = await entry.getContentMapper();
+    const text = mapper.getTextContent();
+
     await this.notification<lsp.DidOpenTextDocumentParams>(
       'textDocument/didOpen',
       {
         textDocument: {
-          uri: file.uri,
-          languageId: file.languageId,
-          text: file.content,
-          version: file.version,
+          uri: entry.uri,
+          languageId: this.lang,
+          text,
+          version: entry.version,
         },
       },
     );
+
+    entry.opened = true;
+    entry.syncedText = text;
+
     await this.notification<lsp.DocumentDiagnosticParams>(
       'textDocument/diagnostic',
       {
         textDocument: {
-          uri: file.uri,
+          uri: entry.uri,
         },
       },
     );
     return true;
   }
 
-  /// Send a `textDocument/didClose` notification to the server.
-  didClose(uri: string) {
+  async didChange(entry: LSPEntry): Promise<boolean> {
+    if (!this.transport.isInitialized()) {
+      entry.opened = false;
+      this.connect();
+      return false;
+    }
+
+    if (!entry.opened) {
+      return this.didOpen(entry);
+    }
+
+    const mapper = await entry.getContentMapper();
+    const text = mapper.getTextContent();
+
+    await this.notification<lsp.DidChangeTextDocumentParams>(
+      'textDocument/didChange',
+      {
+        textDocument: { uri: entry.uri, version: entry.version },
+        contentChanges: contentChangesFor(
+          this.supportSync == lsp.TextDocumentSyncKind.Incremental,
+          text,
+          entry.syncedText,
+        ),
+      },
+    );
+
+    entry.syncedText = text;
+
+    await this.notification<lsp.DocumentDiagnosticParams>(
+      'textDocument/diagnostic',
+      {
+        textDocument: {
+          uri: entry.uri,
+        },
+      },
+    );
+    return true;
+  }
+
+  async closeFile(uri: string): Promise<void> {
+    delete this.entries[uri];
     if (!this.transport.isInitialized()) {
       return;
     }
-    this.notification<lsp.DidCloseTextDocumentParams>('textDocument/didClose', {
-      textDocument: { uri },
-    });
+    await this.notification<lsp.DidCloseTextDocumentParams>(
+      'textDocument/didClose',
+      {
+        textDocument: { uri },
+      },
+    );
   }
 
   private receiveMessage(event: Event) {
@@ -364,7 +523,11 @@ export class LSPClient extends EventTarget {
           this.config.unhandledNotification(this, value.method, value.params);
         } else {
           if (defaultNotificationHandlers[value.method]) {
-            defaultNotificationHandlers[value.method](this, value.params);
+            defaultNotificationHandlers[value.method](
+              this,
+              value.params,
+              this.config,
+            );
           }
         }
       }
@@ -471,11 +634,7 @@ export class LSPClient extends EventTarget {
   }
 
   hasCapability(name: keyof lsp.ServerCapabilities) {
-    return this.serverCapabilities ? !!this.serverCapabilities[name] : null;
-  }
-
-  syncFiles() {
-    this.workspace.syncFiles();
+    return this.serverCapabilities ? !!this.serverCapabilities[name] : false;
   }
 
   private timeoutRequest<T>(
@@ -489,5 +648,9 @@ export class LSPClient extends EventTarget {
       req.reject(LSPError.createTimeout());
       this.requests.splice(index, 1);
     }
+  }
+
+  getEntry(uri: string): LSPEntry | undefined {
+    return this.entries[uri];
   }
 }

@@ -34,9 +34,7 @@ class HoverState {
     decorationId: string;
     id: number;
     range: TextRange;
-    // pos: number;
-    // inside: number;
-    // node: PmNode;
+    trigger: HoverTrigger;
     uri?: string;
     source: HoverSource;
     renderer: MarkdownRenderer;
@@ -77,12 +75,10 @@ class HoverState {
       }
 
       const match = source.match(trigger);
-      console.log('matchSource', match);
-
       if (match) {
         matched = match;
 
-        this.handleSource(match);
+        this.handleSource(match, trigger);
         break;
       }
     }
@@ -91,24 +87,19 @@ class HoverState {
       this.dispatchMeta({ clearRequest: true });
     }
 
-    console.groupEnd();
-
     return undefined;
   }
 
-  handleSource(match?: HoverMatch) {
-    if (match) {
-      this.dispatchMeta({
-        setRequest: {
-          source: match.source,
-          range: match.range,
-          text: match.text,
-          uri: match.uri,
-        },
-      });
-    } else {
-      this.clearRequest();
-    }
+  handleSource(match: HoverMatch, trigger: HoverTrigger) {
+    this.dispatchMeta({
+      setRequest: {
+        source: match.source,
+        range: match.range,
+        text: match.text,
+        uri: match.uri,
+        trigger,
+      },
+    });
   }
 
   onMouseLeave(view: EditorView, event: Event | undefined) {
@@ -192,14 +183,11 @@ class HoverState {
     }
 
     if (pluginMeta.trigger) {
-      console.group('hover.trigger', pluginMeta.trigger);
       this.matchSource(pluginMeta?.trigger);
-      console.groupEnd();
       return true;
     }
 
     if (pluginMeta?.setRequest) {
-      console.group('setRequest');
       const id = this.idGenerator++;
       const decorationId = `id_${Math.floor(Math.random() * 0xffffffff)}`;
 
@@ -229,13 +217,20 @@ class HoverState {
         range: pluginMeta.setRequest.range,
         uri: pluginMeta.setRequest.uri,
         source: pluginMeta.setRequest.source,
+        trigger: pluginMeta.setRequest.trigger,
         renderer,
       };
 
       const request = this.request;
 
       const go = async () => {
-        const item = await request.source.getItem(request.range);
+        const item = await request.source.getItem(
+          request.range,
+          request.trigger,
+        );
+        if (!item) {
+          return;
+        }
 
         this.dispatchMeta({
           setResponse: {
@@ -246,8 +241,6 @@ class HoverState {
       };
       go();
 
-      console.groupEnd();
-
       return true;
     }
 
@@ -256,16 +249,13 @@ class HoverState {
         id: pluginMeta?.setResponse.id,
         text: pluginMeta?.setResponse.text,
       };
-      console.group('setResponse', this.response, this.request?.renderer);
 
       this.request?.renderer.setResponse({ text: this.response.text });
 
-      console.groupEnd();
       return true;
     }
 
     if (pluginMeta.clearRequest) {
-      console.trace('clearRequest');
       this.clearRequest();
       return true;
     }
@@ -367,10 +357,18 @@ export class HoverPlugin<Item, TSelected> extends Plugin<HoverState> {
       key: HoverPluginKey,
       state: {
         init() {
+          const prevState = HoverPluginKey.getState(editor.state);
+          if (prevState) { // preserve config after loadDocument
+            return prevState;
+          }
           return new HoverState(editor);
         },
 
         apply(transaction, nextHoverState: HoverState, prevState, state) {
+          if (transaction.docChanged) {
+            nextHoverState.dispatchMeta({ clearRequest: true });
+          }
+
           if (transaction.isGeneric) {
             return nextHoverState;
           }
@@ -381,10 +379,6 @@ export class HoverPlugin<Item, TSelected> extends Plugin<HoverState> {
 
           if (nextHoverState.handleCommands(pluginMeta, transaction)) {
             return nextHoverState;
-          }
-
-          if (transaction.docChanged) {
-            nextHoverState.dispatchMeta({ clearRequest: true });
           }
 
           return nextHoverState;

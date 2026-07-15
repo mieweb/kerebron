@@ -1,5 +1,7 @@
-import type { Node } from 'prosemirror-model';
-import type { CoreEditor, RawTextMapEntry } from '@kerebron/editor';
+import { ContentMapper } from '@kerebron/workspace';
+import { EditorState } from 'prosemirror-state';
+import { extPmToMdConverter } from './pmToMdConverter.ts';
+import type { MarkdownResult, MdConfig } from './ExtensionMarkdown.ts';
 
 interface RawTextPosItem {
   nodeIdx: number;
@@ -9,40 +11,15 @@ interface RawTextPosItem {
   targetCol: number;
 }
 
-function findFirstLetterPosition(
-  node: Node,
-  startPos: number,
-): [number, number] | null {
-  let firstLetterPos: number = -1;
-  let textLen = 0;
-
-  node.descendants((child, posInParent) => {
-    if (child.isText && child.text && child.text.length > 0) {
-      firstLetterPos = startPos + posInParent + 1; // First char of first text node
-      textLen = child.text.length;
-      return false; // Stop
-    }
-    return true;
-  });
-
-  if (firstLetterPos === -1) {
-    return null;
-  }
-
-  return [firstLetterPos, textLen];
-}
-
-export class PositionMapper {
+export class MarkdownContentMapper implements ContentMapper {
   private readonly rawTextArr: RawTextPosItem[];
-  public readonly doc: Node;
 
   constructor(
-    editor: CoreEditor,
-    public readonly rawTextMap: Array<RawTextMapEntry>,
+    docNodeSize: number,
+    private result: MarkdownResult,
   ) {
-    this.doc = editor.state.doc;
     this.rawTextArr = [];
-    for (const item of rawTextMap) {
+    for (const item of result.rawTextMap) {
       if (item.nodeIdx >= 0) {
         this.rawTextArr.push({
           nodeIdx: item.nodeIdx,
@@ -59,12 +36,16 @@ export class PositionMapper {
       if (next < this.rawTextArr.length) {
         this.rawTextArr[i].maxNodeIdx = this.rawTextArr[next].nodeIdx - 1;
       } else {
-        this.rawTextArr[i].maxNodeIdx = this.doc.nodeSize;
+        this.rawTextArr[i].maxNodeIdx = docNodeSize;
       }
     }
   }
 
-  toRawTextPos(pos: number) {
+  getTextContent(): string {
+    return this.result.content;
+  }
+
+  toRawTextPos(pos: number): number {
     for (let i = 0; i < this.rawTextArr.length; i++) {
       const item = this.rawTextArr[i];
       if (pos >= item.nodeIdx && pos <= item.maxNodeIdx) {
@@ -74,17 +55,14 @@ export class PositionMapper {
     return -1;
   }
 
-  toRawTextLspPos(pos: number) {
+  toRawTextLineCol(pos: number): [number, number] {
     for (let i = 0; i < this.rawTextArr.length; i++) {
       const item = this.rawTextArr[i];
       if (pos >= item.nodeIdx && pos <= item.maxNodeIdx) {
-        return {
-          line: item.targetRow,
-          character: item.targetCol + pos - item.nodeIdx,
-        };
+        return [item.targetRow, item.targetCol + pos - item.nodeIdx];
       }
     }
-    return { line: 0, character: 0 };
+    return [0, 0];
   }
 
   fromLineChar(line: number, character: number) {
@@ -106,5 +84,18 @@ export class PositionMapper {
       }
     }
     return -1;
+  }
+
+  static async create(
+    state: EditorState,
+    config: MdConfig,
+  ): Promise<MarkdownContentMapper> {
+    const result = await extPmToMdConverter(
+      state.doc,
+      config,
+      state.schema,
+      new EventTarget(),
+    );
+    return new MarkdownContentMapper(state.doc.nodeSize, result);
   }
 }

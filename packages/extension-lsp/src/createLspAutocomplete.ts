@@ -48,7 +48,8 @@ export function createLspAutocomplete(
     getItems: async (query: string, props: AutocompleteProps) => {
       const { mapper } = await extensionLsp.source.getMappedContent();
 
-      const lspPos = mapper.toRawTextLspPos(props.range.from);
+      const [line, character] = mapper.toRawTextLineCol(props.range.from);
+      const lspPos = { line, character };
 
       const client = extensionLsp.getClient(extensionLsp.mainLang);
       if (client) {

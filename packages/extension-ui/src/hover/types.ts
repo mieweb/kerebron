@@ -18,9 +18,10 @@ export interface HoverMatch {
   range: TextRange;
   text?: string;
   uri?: string;
+  trigger: HoverTrigger;
 }
 
 export interface HoverSource<I = any> {
   match: (trigger: HoverTrigger) => HoverMatch | undefined;
-  getItem: (range: TextRange) => I | Promise<I>;
+  getItem: (range: TextRange, trigger: HoverTrigger) => I | Promise<I>;
 }

@@ -23,6 +23,7 @@
     "packages/tree-sitter",
     "packages/legacy-compat",
     "packages/custom-elements",
+    "packages/workspace",
 
     "examples/browser-ui",
     "examples/browser-vanilla-code-editor",

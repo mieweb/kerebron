@@ -2,6 +2,8 @@ import { MarkSpec, NodeSpec, Schema } from 'prosemirror-model';
 import { Plugin } from 'prosemirror-state';
 import { NodeViewConstructor } from 'prosemirror-view';
 
+import { WorkspaceImpl } from '@kerebron/workspace';
+
 import { Converter, Extension } from './Extension.ts';
 import type { AnyExtension, AnyExtensionOrReq, EditorKit } from './types.ts';
 import type { CoreEditor } from './CoreEditor.ts';
@@ -321,6 +323,7 @@ export class ExtensionManager {
       editor.ci.register(extension.name, extension);
     }
     editor.ci.register('yaml', yaml);
+    editor.ci.register('workspace', new WorkspaceImpl());
 
     this.initPlugins(editor, schema);
 

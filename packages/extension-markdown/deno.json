@@ -5,7 +5,6 @@
   "exports": {
     ".": "./src/ExtensionMarkdown.ts",
     "./MarkdownSerializer": "./src/MarkdownSerializer.ts",
-    "./PositionMapper": "./src/PositionMapper.ts",
     "./preProcess": "./src/preprocess/preProcess.ts"
   }
 }

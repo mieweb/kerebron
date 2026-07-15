@@ -90,6 +90,8 @@ export class CoreEditor extends EventTarget {
     instance.createView(content);
     instance.setupPlugins();
 
+    instance.dispatchEvent(new CustomEvent('ready'));
+
     return instance;
   }
 

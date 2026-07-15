@@ -1,71 +1,72 @@
-import { Plugin } from 'prosemirror-state';
+import { EditorState, Plugin } from 'prosemirror-state';
 
 import { CoreEditor } from '@kerebron/editor';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { debounce } from '@kerebron/editor/utilities';
 
-import { PositionMapper } from './PositionMapper.ts';
-import { MarkdownResult } from './pmToMdConverter.ts';
-
-export interface MarkdownMeta {
-  snapshot?: {
-    version: number;
-    mapper: PositionMapper;
-    markdownResult: MarkdownResult;
-  };
-  clearSnapshot?: boolean;
-}
+import { Workspace } from '@kerebron/workspace';
+import { MarkdownContentMapper } from './MarkdownContentMapper.ts';
 
 class MarkdownPluginState {
   capturing = false;
+  workspace: Workspace;
 
   constructor(
     private editor: CoreEditor,
     private extensionMarkdown: ExtensionMarkdown,
   ) {
+    this.workspace = editor.ci.resolve('workspace')!;
     this.performSnapshot = debounce(
       this.performSnapshot.bind(this),
       800,
     ) as typeof this.performSnapshot;
   }
 
-  snapshot?: {
-    version: number;
-    mapper: PositionMapper;
-    markdownResult: MarkdownResult;
-  };
-
   async performSnapshot() {
     const editor = this.editor;
 
     const version = editor.version;
-    if (version === this.snapshot?.version) {
+
+    const uri = this.editor.config.uri;
+    if (!uri) {
       return;
     }
 
-    const markdownResult = await this.extensionMarkdown.toMarkdown(
-      editor.state.doc,
-    );
-    if (editor.version !== version) { // Changed during toMarkdown
-    }
-
-    const mapper = new PositionMapper(editor, markdownResult.rawTextMap);
-
-    this.snapshot = {
-      markdownResult,
+    const ctx: {
+      version: number;
+      state: EditorState;
+      materialized?: MarkdownContentMapper;
+    } = {
       version,
-      mapper,
+      state: this.editor.state,
+      materialized: undefined,
+    };
+    const getContentMapper = async () => {
+      if (ctx.materialized) {
+        return ctx.materialized;
+      }
+      ctx.materialized = await MarkdownContentMapper.create(
+        ctx.state,
+        this.extensionMarkdown.config,
+      );
+      return ctx.materialized;
     };
 
-    this.dispatchMeta({
-      snapshot: this.snapshot,
-    });
-  }
-
-  dispatchMeta(meta: MarkdownMeta) {
-    const tr = this.editor.state.tr;
-    tr.setMeta('markdown', meta);
-    this.editor.dispatchTransaction(tr);
+    if (this.workspace.getFile(uri)) {
+      this.workspace.modifyFile({
+        uri,
+        lang: 'markdown',
+        version,
+        getContentMapper,
+      });
+    } else {
+      this.workspace.openFile({
+        uri,
+        lang: 'markdown',
+        version,
+        getContentMapper,
+      });
+    }
   }
 }
 
@@ -73,7 +74,6 @@ export function createMarkdownPlugin<MarkdownPluginState>(
   extensionMarkdown: ExtensionMarkdown,
   editor: CoreEditor,
 ): Plugin {
-  editor.version;
   return new Plugin({
     state: {
       init() {
@@ -85,6 +85,18 @@ export function createMarkdownPlugin<MarkdownPluginState>(
         }
         return value;
       },
+    },
+    view() {
+      return {
+        destroy() {
+          const uri = editor.config.uri;
+          if (!uri) {
+            return;
+          }
+          const workspace: Workspace = editor.ci.resolve('workspace')!;
+          workspace.closeFile(uri);
+        },
+      };
     },
   });
 }

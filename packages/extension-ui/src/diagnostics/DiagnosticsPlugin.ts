@@ -1,5 +1,4 @@
-import { Plugin, PluginKey, Selection } from 'prosemirror-state';
-import { Decoration, DecorationSet } from 'prosemirror-view';
+import { Plugin, PluginKey } from 'prosemirror-state';
 
 import { type CoreEditor } from '@kerebron/editor';
 
@@ -10,7 +9,7 @@ export const DiagnosticsPluginKey = new PluginKey<DiagnosticsState>(
 );
 
 class DiagnosticsState {
-  hoverSources: DiagnosticsSource[] = [];
+  diagnosticsSources: DiagnosticsSource[] = [];
 
   decorationId?: string;
 
@@ -43,8 +42,6 @@ export class DiagnosticsPlugin<Item, TSelected>
           if (!tr.docChanged) {
             return pluginState;
           }
-
-          const workspace = tr.getMeta('workspace');
 
           // let codeBlockChanged = false;
 

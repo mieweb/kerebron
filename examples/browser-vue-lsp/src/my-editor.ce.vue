@@ -13,8 +13,6 @@
 </template>
 <script lang="ts">
 import { CoreEditor } from '@kerebron/editor';
-import { ExtensionMarkdown } from '@kerebron/extension-markdown';
-import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
 import { DevAdvancedEditorKit } from '@kerebron/editor-kits/DevAdvancedEditorKit';
 import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
 import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
@@ -126,19 +124,33 @@ export default {
 
       }
 
-      if (false)
-      this.editor.addEventListener('selection', (event: CustomEvent) => {
-        const selection = event.detail.selection;
-        const extensionMarkdown: ExtensionMarkdown | undefined = this.editor.ci.resolve('markdown');
-        if (extensionMarkdown) {
-          const result = extensionMarkdown.toMarkdown(this.editor.state.doc);
-          this.md = result.content;
+      if (false) {
 
-          const mapper = new PositionMapper(this.editor, result.rawTextMap);
-          this.from = mapper.toRawTextPos(selection.from);
-          this.to = mapper.toRawTextPos(selection.to);
-        }
-      });
+      }
+
+      // let snapshot: { version: number, getContentMapper: () => Promise<ContentMapper> } | undefined;
+
+      // const workspace: Workspace = editor.ci.resolve('workspace')!;
+      // workspace.addEventListener('modifyFile', (event: CustomEvent<WorkspaceModifyParams>) => {
+      //   if (event.detail.uri !== editor.config.uri) {
+      //     return;
+      //   }
+      //   snapshot = {
+      //     version: event.detail.version,
+      //     getContentMapper: event.detail.getContentMapper
+      //   }
+      // });
+
+      // this.editor.addEventListener('selection', (event: CustomEvent) => {
+      //   const selection = event.detail.selection;
+      //   if (snapshot) {
+      //     const contentMapper: ContentMapper = await snapshot.getContentMapper();
+
+      //     this.md = contentMapper.getTextContent();
+      //     this.from = contentMapper.toRawTextPos(selection.from);
+      //     this.to = contentMapper.toRawTextPos(selection.to);
+      //   }
+      // });
 
     },
     mdToHtml(md: string) {

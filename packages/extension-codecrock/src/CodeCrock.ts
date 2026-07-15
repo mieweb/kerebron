@@ -1,3 +1,5 @@
+import { debounce } from '@kerebron/editor/utilities';
+
 const globalWindow = window;
 
 type Options = {
@@ -74,14 +76,6 @@ function insert(text: string) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
   document.execCommand('insertHTML', false, text);
-}
-
-export function debounce(cb: any, wait: number) {
-  let timeout = 0;
-  return (...args: any) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => cb(...args), wait);
-  };
 }
 
 function findPadding(text: string): [string, number, number] {
@@ -192,8 +186,8 @@ export class CodeCrock extends EventTarget {
       this.editor.addEventListener(type, fn);
     };
 
-    function getCaretOffset(root: HTMLElement) {
-      const sel = window.getSelection();
+    const getCaretOffset = (root: HTMLElement) => {
+      const sel = this.getSelection();
       if (!sel || sel.rangeCount === 0) return 0;
 
       const range = sel.getRangeAt(0);
@@ -203,7 +197,7 @@ export class CodeCrock extends EventTarget {
       preRange.setEnd(range.endContainer, range.endOffset);
 
       return preRange.toString().length;
-    }
+    };
 
     function getRowCol(root: HTMLElement) {
       const text = root.textContent;
@@ -540,9 +534,13 @@ export class CodeCrock extends EventTarget {
   }
 
   getSelection() {
-    const sel = window.getSelection();
-    return sel;
-    // return this.editor.getRootNode().getSelection() as Selection;
+    const root = this.editor.getRootNode();
+    // ShadowRoot does not implement getSelection(); fall back to the
+    // window's selection for elements rendered inside a shadow DOM.
+    if (typeof (root as any).getSelection === 'function') {
+      return (root as any).getSelection() as Selection;
+    }
+    return this.options.window.getSelection();
   }
 
   private uneditable(node: Node): Element | undefined {
@@ -579,21 +577,24 @@ export class CodeCrock extends EventTarget {
 
   save(): Position | undefined {
     const s = this.getSelection();
-
-    const pos: Position = { start: 0, end: 0, dir: undefined };
-    if (!s) {
-      return pos;
-    }
+    if (!s) return undefined;
 
     let { anchorNode, anchorOffset, focusNode, focusOffset } = s;
     if (!anchorNode) {
-      console.warn('No anchorNode');
       return undefined;
     }
     if (!focusNode) {
-      console.warn('No focusNode');
       return undefined;
     }
+
+    if (
+      !this.editor.contains(anchorNode) ||
+      !this.editor.contains(focusNode)
+    ) {
+      return undefined;
+    }
+
+    const pos: Position = { start: 0, end: 0, dir: undefined };
 
     const textContent = this.editor.textContent.replace(/\u200B/g, '');
     // If the anchor and focus are the editor element, return either a full

@@ -1,0 +1,8 @@
+{
+  "name": "@kerebron/workspace",
+  "tasks": {},
+  "imports": {},
+  "exports": {
+    ".": "./src/mod.ts"
+  }
+}

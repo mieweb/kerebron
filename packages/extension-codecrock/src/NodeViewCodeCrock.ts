@@ -7,13 +7,11 @@ import {
   NodeView,
   NodeViewConstructor,
 } from 'prosemirror-view';
-import { Diagnostic } from 'vscode-languageserver-protocol';
 
-import { CoreEditor, RawTextResult } from '@kerebron/editor';
-import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
-import { toRawTextResult } from '@kerebron/editor/utilities';
+import { CoreEditor } from '@kerebron/editor';
+import { debounce } from '@kerebron/editor/utilities';
 
-import { CodeCrock, debounce, Position } from './CodeCrock.ts';
+import { CodeCrock, Position } from './CodeCrock.ts';
 import { computeChange, forwardSelection, valueChanged } from './utils.ts';
 import { TreeSitterHighlighter } from './TreeSitterHighlighter.ts';
 import { DecorationInline, Decorator } from './Decorator.ts';
@@ -23,7 +21,8 @@ import {
   refreshNumbers,
 } from './codeCrockLineNumbers.ts';
 import { NodeCodeCrockConfig } from './NodeCodeCrock.ts';
-import { DomOffset } from './DomOffset.ts';
+import { Workspace } from '@kerebron/workspace';
+import { CodeContentMapper } from './CodeContentMapper.ts';
 
 function replaceExt(uri: string, lang: string) {
   switch (lang) {
@@ -47,6 +46,12 @@ function replaceExt(uri: string, lang: string) {
   return parts.join('.');
 }
 
+interface SnapshotCtx {
+  version: number;
+  text: string;
+  materialized?: CodeContentMapper;
+}
+
 export class NodeViewCodeCrock implements NodeView {
   private node: PmNode;
   private readonly view: EditorView;
@@ -63,7 +68,8 @@ export class NodeViewCodeCrock implements NodeView {
 
   lang: string = 'plaintext';
   uri: string = 'file:///' + Math.random() + '.txt';
-  diagListener: (event: Event) => void;
+  workspace: Workspace;
+  ctx?: SnapshotCtx;
 
   constructor(
     private editor: CoreEditor,
@@ -73,6 +79,8 @@ export class NodeViewCodeCrock implements NodeView {
     this.node = args[0];
     this.view = args[1];
     this.getPos = args[2];
+
+    this.workspace = editor.ci.resolve('workspace')!;
 
     this.updating = false;
     const dom = document.createElement('div');
@@ -106,8 +114,6 @@ export class NodeViewCodeCrock implements NodeView {
       if (typeof pos === 'undefined') {
         return false;
       }
-      // const node = this.view.state.doc.nodeAt(pos);
-      // if (!node) return false;
 
       const targetPos = pos + (dir < 0 ? 0 : this.node.nodeSize);
       const selection = Selection.near(
@@ -118,13 +124,9 @@ export class NodeViewCodeCrock implements NodeView {
       this.view.dispatch(
         this.view.state.tr.setSelection(selection).scrollIntoView(),
       );
-      this.view.focus();
-      editor.chain().ArrowDown().run();
-
-      // if (!editor.chain().exitCode().run()) {
-      //   return false;
-      // }
       // this.view.focus();
+      // editor.chain().ArrowDown().run();
+
       return true;
     };
 
@@ -159,17 +161,30 @@ export class NodeViewCodeCrock implements NodeView {
         if (document.activeElement === this.element) {
           forwardSelection(this.codeCrock, this.view, this.getPos);
         }
-      }
 
-      const tr = this.view.state.tr;
-      tr.setMeta('workspace', {
-        operation: 'modifyFile',
-        node: this.node,
-        pos: this.getPos(),
-        lang: this.lang,
-        uri: this.uri,
-      });
-      this.view.dispatch(tr);
+        const version = this.editor.version;
+        const ctx: SnapshotCtx = {
+          version,
+          text: this.codeCrock.toString(),
+          materialized: undefined,
+        };
+        const getContentMapper = async () => {
+          if (ctx.materialized) {
+            return ctx.materialized;
+          }
+          ctx.materialized = await CodeContentMapper.create(ctx.text);
+          return ctx.materialized;
+        };
+
+        this.workspace.modifyFile({
+          lang: this.lang,
+          uri: this.uri,
+          version,
+          getContentMapper,
+        });
+
+        this.ctx = ctx;
+      }
     });
 
     this.highlighter = new TreeSitterHighlighter();
@@ -179,76 +194,6 @@ export class NodeViewCodeCrock implements NodeView {
     dom.append(this.element);
 
     this.lineNumbers = initLineNumbers(this.element, lineNumberOptions);
-
-    this.source = {
-      ui: this.editor.ui,
-      getMappedContent: async () => {
-        const editor = this.editor;
-        const result: RawTextResult = toRawTextResult(
-          this.codeCrock.toString(),
-          0,
-        );
-        const mapper = new PositionMapper(editor, result.rawTextMap);
-        return {
-          ...result,
-          mapper,
-        };
-      },
-    };
-
-    let lastDiag = 0;
-    this.diagListener = (event: Event) => {
-      const detail = (event as CustomEvent).detail;
-      console.log('diagListener', detail.params.uri);
-
-      if (detail.params.uri !== this.uri) {
-        return;
-      }
-
-      event.preventDefault();
-
-      lastDiag = +Date();
-
-      const client = this.extensionLsp?.getClient(this.lang);
-      if (client) {
-        const file = client.workspace.getFile(this.uri);
-        if (file) {
-          const { mapper } = file;
-          console.debug({
-            diagnostics: detail.params.diagnostics,
-            mapper,
-          });
-
-          const diagnostics: Diagnostic[] = detail.params.diagnostics;
-
-          const decors: DecorationInline[] = [];
-
-          for (const diag of diagnostics) {
-            const startIndex = mapper.fromLineChar(
-              diag.range.start.line,
-              diag.range.start.character,
-            );
-            const endIndex = mapper.fromLineChar(
-              diag.range.end.line,
-              diag.range.end.character,
-            );
-
-            decors.push({
-              startIndex,
-              endIndex,
-              attrs: {
-                class: 'kb-lsp__error',
-                title: diag.message || '',
-              },
-            });
-          }
-
-          this.decorator.decorationGroups.innerDiag = decors;
-          console.log('decors', decors);
-          this.highlight(this.element);
-        }
-      }
-    };
 
     this.handleMove = debounce(this.handleMove.bind(this), 500);
     this.dom.addEventListener('mousemove', this.handleMove);
@@ -275,35 +220,51 @@ export class NodeViewCodeCrock implements NodeView {
           }),
         );
       }
-      await this.setLang(lang);
+      this.setLang(lang);
     });
     return select;
   }
 
-  async setLang(lang: string) {
+  setLang(lang: string) {
     this.languageDropDown.value = lang || '';
-    await this.highlighter.init(lang);
-    this.highlight(this.element);
     this.lang = lang;
 
     this.uri = replaceExt(this.uri, lang);
     this.element.setAttribute('data-uri', this.uri);
 
-    const tr = this.view.state.tr;
-    tr.setMeta('workspace', {
-      operation: 'openFile',
-      node: this.node,
-      pos: this.getPos(),
+    const version = this.editor.version;
+    const ctx: SnapshotCtx = {
+      version,
+      text: this.codeCrock.toString(),
+      materialized: undefined,
+    };
+    const getContentMapper = async () => {
+      if (ctx.materialized) {
+        return ctx.materialized;
+      }
+      ctx.materialized = await CodeContentMapper.create(ctx.text);
+      return ctx.materialized;
+    };
+
+    this.workspace.openFile({
       uri: this.uri,
       lang,
+      version,
+      getContentMapper,
     });
-    this.view.dispatch(tr);
+
+    this.ctx = ctx;
+
+    this.highlighter.init(lang)
+      .then(() => {
+        this.highlight(this.element);
+      });
   }
 
-  async init() {
+  init() {
     this.codeCrock.updateCode(this.node.textContent, false);
     if (this.node.attrs.lang) {
-      await this.setLang(this.node.attrs.lang);
+      this.setLang(this.node.attrs.lang);
     }
   }
 
@@ -376,16 +337,15 @@ export class NodeViewCodeCrock implements NodeView {
       if (cd.spec?.refresh) {
         this.decorator.refreshers.push(cd.spec?.refresh);
       }
+
       decors.push({
         startIndex: cd.from,
         endIndex: cd.to,
         attrs: {
           class: cd.spec.class,
+          title: cd.spec.title,
           'data-decoration-id': cd.spec['data-decoration-id'],
         },
-        // class: cd.spec.class || '',
-        // decorationId: cd.spec.decorationId || '',
-        // title: type?.attrs?.title || '',
       });
     }
 
@@ -419,6 +379,7 @@ export class NodeViewCodeCrock implements NodeView {
       // if (JSON.stringify(oldDecors) !== JSON.stringify(decors)) {
       // }
     }
+
     this.codeCrock.forceHighlight();
 
     this.node = updateNode;
@@ -438,9 +399,27 @@ export class NodeViewCodeCrock implements NodeView {
     this.dom.classList.remove('focused');
   }
 
-  stopEvent(_e: Event) {
+  stopEvent(event: Event) {
+    const type = event.type;
+    if (
+      type === 'keydown' ||
+      type === 'keyup' ||
+      type === 'keypress' ||
+      type === 'beforeinput' ||
+      type === 'input' ||
+      type === 'compositionstart' ||
+      type === 'compositionupdate' ||
+      type === 'compositionend' ||
+      type === 'paste' ||
+      type === 'cut' ||
+      type === 'copy' ||
+      type === 'dragstart' ||
+      type === 'dragover' ||
+      type === 'drop'
+    ) {
+      return true;
+    }
     return false;
-    // return true;
   }
 
   ignoreMutation() {
@@ -450,88 +429,11 @@ export class NodeViewCodeCrock implements NodeView {
   frame: undefined | ReturnType<typeof requestAnimationFrame>;
 
   handleMove(e: MouseEvent) {
-    this.forceUpdateDecorations = true;
-    return;
-    if (this.frame) return;
-
-    this.frame = requestAnimationFrame(async () => {
-      this.frame = undefined;
-
-      let range;
-
-      if (document.caretPositionFromPoint) {
-        const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
-        if (!pos) return;
-        range = document.createRange();
-        range.setStart(pos.offsetNode, pos.offset);
-      } else if (document.caretRangeFromPoint) {
-        range = document.caretRangeFromPoint(e.clientX, e.clientY);
-      }
-
-      if (range) {
-        const node = range.startContainer;
-        const offset = range.startOffset;
-
-        const domOffset = new DomOffset(this.element, node, offset);
-
-        const { charCount, line, character } = domOffset;
-
-        const client = this.extensionLsp?.getClient(this.lang);
-        if (client) {
-          const hover = await client.request(
-            'textDocument/hover',
-            {
-              textDocument: {
-                uri: this.uri,
-              },
-              position: {
-                line,
-                character,
-              },
-            },
-          );
-
-          if (hover?.range?.start && hover?.range?.end) {
-            const start = domOffset.calculateOffsetFromLsp(hover?.range.start);
-            const end = domOffset.calculateOffsetFromLsp(hover?.range.end);
-
-            if (start < end) {
-              console.log('hover', hover.contents, hover.range, start, end);
-            }
-          }
-
-          // client.workspace.changedFile(
-          //   this.uri,
-          // );
-        }
-      }
-    });
   }
 
   destroy() {
     this.dom.removeEventListener('mousemove', this.handleMove);
-
-    const tr = this.view.state.tr;
-    tr.setMeta('workspace', {
-      operation: 'closeFile',
-      node: this.node,
-      pos: this.getPos(),
-      uri: this.uri,
-    });
-    this.view.dispatch(tr);
-
-    const client = this.extensionLsp?.getClient(this.lang);
-    if (client) {
-      if (this.uri) {
-        client.disconnect(this.uri);
-      }
-      if (this.diagListener) {
-        client.removeEventListener(
-          'textDocument/publishDiagnostics',
-          this.diagListener,
-        );
-      }
-    }
+    this.workspace.closeFile(this.uri);
     this.codeCrock.destroy();
   }
 }

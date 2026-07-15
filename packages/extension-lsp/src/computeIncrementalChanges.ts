@@ -99,3 +99,20 @@ export function computeIncrementalChanges(
 
   return changes;
 }
+
+const enum Sync {
+  AlwaysIfSmaller = 1024,
+}
+
+export function contentChangesFor(
+  supportInc: boolean,
+  newContent: string,
+  oldContent?: string,
+): lsp.TextDocumentContentChangeEvent[] {
+  if (!supportInc || newContent.length < Sync.AlwaysIfSmaller || !oldContent) {
+    return [{ text: newContent }];
+  }
+
+  const changes = computeIncrementalChanges(oldContent, newContent);
+  return changes.reverse();
+}

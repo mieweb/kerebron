@@ -20,8 +20,6 @@ import { NodeCodeBlock } from '@kerebron/extension-basic-editor/NodeCodeBlock';
 
 import { NodeViewCodeCrock } from './NodeViewCodeCrock.ts';
 
-export const codeCrockBlockKey = new PluginKey('code-crock-block');
-
 function arrowHandler(dir: 'left' | 'right' | 'up' | 'down'): Command {
   return function (
     state: EditorState,

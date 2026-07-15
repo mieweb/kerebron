@@ -15,7 +15,6 @@
   padding: var(--kb-space-sm);
   background: var(--kb-color-surface);
   border-bottom: 1px solid var(--kb-color-border);
-  z-index: var(--kb-z-dropdown);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -55,11 +54,6 @@
     position: relative;
     border-radius: var(--kb-radius-md) var(--kb-radius-md) 0 0;
   }
-}
-
-.kb-menu {
-  background-color: var(--kb-color-surface);
-  z-index: 10000;
 }
 
 /* Toolbar items */
