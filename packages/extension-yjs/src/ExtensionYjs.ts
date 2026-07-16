@@ -23,7 +23,7 @@ export interface YjsConfig {
 export class ExtensionYjs extends Extension {
   name = 'yjs';
 
-  override conflicts = ['history'];
+  override overrides = ['history'];
   requires = ['remote-selection'];
 
   override getCommandFactories(): Partial<CommandFactories> {

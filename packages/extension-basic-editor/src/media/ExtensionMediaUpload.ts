@@ -23,7 +23,7 @@ export interface MediaUploadOptions {
   uploadHandler?: (file: File) => Promise<string>;
 }
 
-const mediaUploadKey = new PluginKey('mediaUpload');
+const mediaUploadKey = new PluginKey<MediaUploadOptions>('mediaUpload');
 
 /** Convert a File to a base64 data URL */
 function fileToDataURL(file: File): Promise<string> {
@@ -175,8 +175,29 @@ async function handleMediaFiles(
 
 /** Create the media upload plugin */
 function createMediaUploadPlugin(options: MediaUploadOptions = {}): Plugin {
-  return new Plugin({
+  return new Plugin<MediaUploadOptions>({
     key: mediaUploadKey,
+
+    state: {
+      init(): MediaUploadOptions {
+        return options;
+      },
+      apply(tr, value) {
+        if (tr.isGeneric) {
+          return value;
+        }
+
+        const options: MediaUploadOptions | undefined = tr.getMeta(
+          'setMediaUploadOptions',
+        );
+
+        if (options) {
+          return options;
+        }
+
+        return value;
+      },
+    },
 
     props: {
       /** Handle file drops */
@@ -185,6 +206,8 @@ function createMediaUploadPlugin(options: MediaUploadOptions = {}): Plugin {
 
         const files = Array.from(event.dataTransfer?.files || []);
         if (files.length === 0) return false;
+
+        const options = mediaUploadKey.getState(view.state) || {};
 
         const {
           allowedImageTypes = ['^image/'],
