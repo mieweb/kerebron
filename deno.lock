@@ -67,7 +67,7 @@
     "npm:vscode-languageserver-textdocument@1.0.12": "1.0.12",
     "npm:vue-router@4.5.1": "4.5.1_vue@3.5.21__typescript@5.9.3",
     "npm:vue@3.5.21": "3.5.21_typescript@5.9.3",
-    "npm:web-tree-sitter@0.26.6": "0.26.6",
+    "npm:web-tree-sitter@0.26.11": "0.26.11",
     "npm:wrangler@*": "4.58.0_unenv@2.0.0-rc.24_workerd@1.20260107.1",
     "npm:xpath@0.0.34": "0.0.34",
     "npm:y-protocols@1.0.6": "1.0.6_yjs@13.6.30",
@@ -3675,9 +3675,6 @@
       ],
       "bin": true
     },
-    "rope-sequence@1.3.4": {
-      "integrity": "sha512-UT5EDe2cu2E/6O4igUr5PSFs23nvvukicWHx6GnOPlHAiiYbzNuCRQCuiUdHJQcqKalLKlrYJnjY0ySGsXNQXQ=="
-    },
     "roughjs@4.6.6": {
       "integrity": "sha512-ZUz/69+SYpFN/g/lUlo2FXcIjRkSu3nDarreVdGGndHEBJ6cXPdKguS8JGxwj5HA5xIbVKSmLgr5b3AWxtRfvQ==",
       "dependencies": [
@@ -4167,8 +4164,8 @@
         "typescript"
       ]
     },
-    "web-tree-sitter@0.26.6": {
-      "integrity": "sha512-fSPR7VBW/fZQdUSp/bXTDLT+i/9dwtbnqgEBMzowrM4U3DzeCwDbY3MKo0584uQxID4m/1xpLflrlT/rLIRPew=="
+    "web-tree-sitter@0.26.11": {
+      "integrity": "sha512-Q5Dm3YTIXSXuH6FxX6RuzX2Qwpc4DPGiYMU87Wg5Z8OIStiQFiUex4zMDc0vBTw78EphaYJacncJghCHzbZptg=="
     },
     "workerd@1.20260107.1": {
       "integrity": "sha512-4ylAQJDdJZdMAUl2SbJgTa77YHpa88l6qmhiuCLNactP933+rifs7I0w1DslhUIFgydArUX5dNLAZnZhT7Bh7g==",
@@ -4453,7 +4450,7 @@
       "npm:vite@8.1.2",
       "npm:vscode-languageserver-protocol@3.17.5",
       "npm:vscode-languageserver-textdocument@1.0.12",
-      "npm:web-tree-sitter@0.26.6",
+      "npm:web-tree-sitter@0.26.11",
       "npm:xpath@0.0.34",
       "npm:y-protocols@1.0.6",
       "npm:yjs@13.6.30"

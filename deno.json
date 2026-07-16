@@ -91,7 +91,7 @@
     "vite": "npm:vite@8.1.2",
     "vite-plugin-wasm": "npm:vite-plugin-wasm@3.6.0",
 
-    "web-tree-sitter": "npm:web-tree-sitter@0.26.6"
+    "web-tree-sitter": "npm:web-tree-sitter@0.26.11"
   },
   "lint": {
     "exclude": [

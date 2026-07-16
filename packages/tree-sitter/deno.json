@@ -3,6 +3,6 @@
   "tasks": {},
   "imports": {},
   "exports": {
-    ".": "./mod.ts"
+    ".": "./src/mod.ts"
   }
 }

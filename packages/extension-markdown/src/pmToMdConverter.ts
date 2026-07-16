@@ -120,7 +120,6 @@ export async function extPmToMdConverter(
             NESTING_SELF_CLOSING,
           );
           if (node.attrs.meta) {
-            console.log('node.attrs', node.attrs);
             if (config.yaml) {
               const frontmatter = config.yaml.stringify(node.attrs.meta);
               token.content = `---\n${frontmatter}\n---\n`;

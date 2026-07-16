@@ -1,6 +1,6 @@
-import { type Node as TreeSitterNode } from 'web-tree-sitter';
-
-import { createParser, Parser, type Tree } from '@kerebron/tree-sitter';
+import { AssetLoad } from '@kerebron/editor';
+import { createParser, ExtendedNode } from '@kerebron/tree-sitter';
+import type { Parser, Tree, TreeSitterNode } from '@kerebron/tree-sitter';
 
 import { getLangTreeSitter } from '@kerebron/wasm';
 import {
@@ -9,15 +9,9 @@ import {
   NESTING_SELF_CLOSING,
   Token,
 } from './types.ts';
-import { AssetLoad } from '@kerebron/editor';
-
-interface HasStartPosition {
-  startPosition: { row: number; column: number };
-  endPosition: { row: number; column: number };
-}
 
 function treeToTokens(
-  tree: Tree,
+  rootNode: TreeSitterNode,
   inlineParser: Parser,
   source: string,
 ): Array<Token> {
@@ -127,6 +121,7 @@ function treeToTokens(
         case 'code_span_delimiter':
           break;
 
+        case 'inline':
         case 'text':
           {
             const text = nodeText(node) ?? '';
@@ -487,7 +482,11 @@ function treeToTokens(
       if (!inlineTree) {
         throw new Error('!inlineTree');
       }
-      walkInline(inlineTree?.rootNode.children, inlineText, node.startPosition);
+      const inlineRootNode = new ExtendedNode(inlineTree.rootNode, inlineText);
+      const children = inlineRootNode.children.length > 0
+        ? inlineRootNode.children
+        : [inlineRootNode];
+      walkInline(children, inlineText, node.startPosition);
 
       return;
     }
@@ -1228,7 +1227,7 @@ function treeToTokens(
     }
   };
 
-  walkRecursive(tree.rootNode);
+  walkRecursive(rootNode);
 
   return retVal;
 }
@@ -1257,7 +1256,11 @@ export async function sitterTokenizer(assetLoad: AssetLoad) {
         throw new Error('Tree is null');
       }
 
-      return treeToTokens(tree, inlineParser, source);
+      return treeToTokens(
+        new ExtendedNode(tree.rootNode, source),
+        inlineParser,
+        source,
+      );
     },
   };
 }
