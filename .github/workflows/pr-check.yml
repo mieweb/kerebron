@@ -17,12 +17,13 @@ jobs:
         run: |
           echo "Checking commit messages in this PR..."
           INVALID=0
-          for msg in $(git log --pretty=format:"%s" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}); do
+          while IFS= read -r msg; do
+            [ -z "$msg" ] && continue
             if ! echo "$msg" | grep -E "^(feat|fix|chore|docs|test|refactor|ci|build)(\(.+\))?: .+" >/dev/null; then
               echo "::error ::Invalid commit message: '$msg'"
               INVALID=1
             fi
-          done
+          done <<< "$(git log --pretty=format:"%s" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})"
           if [ $INVALID -eq 1 ]; then
             echo "::notice ::Please squash/fixup your commits and follow the Conventional Commit format:"
             echo "::notice ::<type>(scope): short description"
@@ -46,14 +47,15 @@ jobs:
           )
 
           # Loop through commits
-          for msg in $COMMITS; do
+          while IFS= read -r msg; do
+            [ -z "$msg" ] && continue
             for pattern in "${TRIVIAL_REGEXES[@]}"; do
               if echo "$msg" | grep -Ei "$pattern" >/dev/null; then
                 echo "::error ::Trivial commit detected: '$msg'"
                 INVALID=1
               fi
             done
-          done
+          done <<< "$COMMITS"
 
           if [ $INVALID -eq 1 ]; then
             echo "::notice ::Please squash/fixup trivial commits before merging."
