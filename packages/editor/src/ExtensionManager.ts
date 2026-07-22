@@ -22,14 +22,59 @@ import { TrackSelecionPlugin } from './plugins/TrackSelecionPlugin.ts';
 import * as yaml from './utilities/yaml.ts';
 import { createSearchPlugin } from './search/search.ts';
 
-function splitExtensions(extensions: Iterable<AnyExtension>) {
-  const baseExtensions = Array.from(extensions).filter((extension) =>
+/**
+ * Defensively converts an unknown value into a real array.
+ *
+ * Some runtimes (notably iOS 26.5 / JavaScriptCore inside a Cordova WKWebView)
+ * have been observed to throw `TypeError: {} is not iterable` when a `for...of`
+ * loop or spread is applied to a value that is not a proper array. To stay
+ * resilient we prefer `.forEach` (which does not rely on the iterator protocol)
+ * for Set/Map-like collections, fall back to `Array.from` for other iterables,
+ * and coerce everything else to an empty array while logging a diagnostic so the
+ * offending value can be identified on-device.
+ */
+function toArraySafe<T>(value: unknown, context?: string): T[] {
+  if (Array.isArray(value)) {
+    return value as T[];
+  }
+
+  if (value && typeof (value as { forEach?: unknown }).forEach === 'function') {
+    const out: T[] = [];
+    (value as { forEach: (cb: (item: T) => void) => void }).forEach((item) => {
+      out.push(item);
+    });
+    return out;
+  }
+
+  if (
+    value &&
+    typeof (value as { [Symbol.iterator]?: unknown })[Symbol.iterator] ===
+      'function'
+  ) {
+    return Array.from(value as Iterable<T>);
+  }
+
+  if (context && value !== undefined && value !== null) {
+    console.warn(
+      `[kerebron] ExtensionManager: expected an iterable for ${context}, received ${
+        Object.prototype.toString.call(value)
+      }; using an empty list instead.`,
+      value,
+    );
+  }
+
+  return [];
+}
+
+export function splitExtensions(extensions: Iterable<AnyExtension>) {
+  const all = toArraySafe<AnyExtension>(extensions);
+  const baseExtensions = all.filter((extension) =>
     extension.type === 'extension'
   ) as Extension[];
-  const nodeExtensions = Array.from(extensions).filter((extension) =>
+  const nodeExtensions = all.filter((extension) =>
     extension.type === 'node'
   ) as Node[];
-  const markExtensions = Array.from(extensions).filter((extension) =>
+  const markExtensions = all.filter((extension) =>
     extension.type === 'mark'
   ) as Mark[];
 
@@ -48,9 +93,15 @@ export class ExtensionManager {
   public converters: Record<string, Converter> = {};
 
   constructor(public readonly editorKits: EditorKit[], private debug = false) {
-    const extensions: AnyExtensionOrReq[] = editorKits
+    const extensions: AnyExtensionOrReq[] = toArraySafe<EditorKit>(editorKits)
       .reduce(
-        (prev: AnyExtensionOrReq[], cur) => prev.concat(cur.getExtensions()),
+        (prev: AnyExtensionOrReq[], cur) =>
+          prev.concat(
+            toArraySafe<AnyExtensionOrReq>(
+              cur.getExtensions(),
+              'EditorKit.getExtensions()',
+            ),
+          ),
         [],
       );
 
@@ -175,7 +226,7 @@ export class ExtensionManager {
     const allExtensions = new Map<string, AnyExtensionOrReq>();
 
     const createMap = (extensions: Set<AnyExtensionOrReq>) => {
-      for (const extension of extensions) {
+      extensions.forEach((extension) => {
         if ('name' in extension) {
           const existing = allExtensions.get(extension.name);
           if (
@@ -186,12 +237,13 @@ export class ExtensionManager {
           allExtensions.set(extension.name, extension);
         }
         if ('requires' in extension) {
-          const childExtensions = Array.from(extension.requires).filter((e) =>
-            typeof e !== 'string'
-          );
+          const childExtensions = toArraySafe<AnyExtensionOrReq | string>(
+            extension.requires,
+            `${'name' in extension ? extension.name : 'extension'}.requires`,
+          ).filter((e) => typeof e !== 'string') as AnyExtensionOrReq[];
           createMap(new Set(childExtensions));
         }
-      }
+      });
     };
 
     createMap(extensions);
@@ -211,7 +263,10 @@ export class ExtensionManager {
       }
 
       if ('requires' in extension) {
-        const requires = extension.requires || [];
+        const requires = toArraySafe<AnyExtensionOrReq | string>(
+          extension.requires,
+          `${'name' in extension ? extension.name : 'extension'}.requires`,
+        );
         const requireNames = requires.map((
           e: string | AnyExtensionOrReq,
         ): string => typeof e === 'string' ? e : ('name' in e ? e.name : ''));
@@ -239,14 +294,17 @@ export class ExtensionManager {
       }
     }
 
-    for (const extension of allExtensions.values()) {
+    allExtensions.forEach((extension) => {
       recursiveInitializeExtension(extension);
-    }
+    });
 
     if (allExtensions.size > 0) {
+      const remaining: string[] = [];
+      allExtensions.forEach((_extension, key) => {
+        remaining.push(key);
+      });
       throw new Error(
-        'Not all extensions initialized: ' +
-          Array.from(allExtensions.keys()).join(', '),
+        'Not all extensions initialized: ' + remaining.join(', '),
       );
     }
   }

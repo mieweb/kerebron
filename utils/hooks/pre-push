@@ -13,7 +13,14 @@ else
 fi
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
-COMMITS=$(git log origin/$BRANCH..HEAD --pretty=format:"%s")
+# In CI the checkout is a detached HEAD, so "origin/$BRANCH" resolves to
+# "origin/HEAD" (unset) and the range is ambiguous. Only diff against the
+# upstream branch when it actually exists; otherwise skip the range check.
+if [ "$BRANCH" != "HEAD" ] && git rev-parse --verify --quiet "origin/$BRANCH" >/dev/null; then
+  COMMITS=$(git log "origin/$BRANCH..HEAD" --pretty=format:"%s")
+else
+  COMMITS=""
+fi
 
 TRIVIAL_REGEXES=(
   "(fix|chore).*(typo|wip)"
@@ -21,14 +28,15 @@ TRIVIAL_REGEXES=(
 
 INVALID=0
 
-for msg in $COMMITS; do
+while IFS= read -r msg; do
+  [ -z "$msg" ] && continue
   for pattern in "${TRIVIAL_REGEXES[@]}"; do
     if echo "$msg" | grep -Ei "$pattern" >/dev/null; then
       echo -e "${RED}Trivial commit detected: '$msg'${NC}"
       INVALID=1
     fi
   done
-done
+done <<< "$COMMITS"
 
 if [ $INVALID -eq 1 ]; then
   echo "Please squash/fixup trivial commits before pushing."
