@@ -37,6 +37,10 @@ export function buildPairingTransaction(
     if (!raw) continue;
 
     const match = raw.match(/^[^0-9a-z\/]*(\/?)[\s]*([\w]+)/i);
+    if (!match) {
+      continue;
+    }
+
     const isClosing = match[1] === '/';
     const name = match[2];
 
