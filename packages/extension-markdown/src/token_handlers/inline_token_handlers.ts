@@ -173,6 +173,11 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
         }
       },
     ],
+    'entity': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log(token.content);
+      },
+    ],
     'strong_open': [
       (token: Token, ctx: ContextStash) => {
         ctx.current.log(token.markup || '**', token);
@@ -405,6 +410,11 @@ export function getHtmlInlineTokensHandlers(): Record<
     'text': [
       (token: Token, ctx: ContextStash) => {
         ctx.current.log(escapeHtml(token.content), token);
+      },
+    ],
+    'entity': [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log(token.content, token);
       },
     ],
     ...getHtmlInlineFormatTokensHandlers(),

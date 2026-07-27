@@ -3,13 +3,15 @@ import { DOMParser } from 'prosemirror-model';
 import { EditorState, Transaction } from 'prosemirror-state';
 
 import { MdConfig } from '@kerebron/extension-markdown';
-import { elementFromString } from '@kerebron/extension-basic-editor/ExtensionHtml';
+import {
+  decodeEntity,
+  elementFromString,
+} from '@kerebron/extension-basic-editor/ExtensionHtml';
 
 import type { Token } from './types.ts';
 
 import { MarkdownParser, type MarkdownParseState } from './MarkdownParser.ts';
 import { sitterTokenizer } from './treeSitterTokenizer.ts';
-import { YamlService } from '@kerebron/editor/yaml';
 
 function listIsTight(tokens: readonly Token[], i: number) {
   while (++i < tokens.length) {
@@ -121,6 +123,16 @@ export async function mdToPmConverterText(
             title: tok.attrGet('title') || null,
             alt: firstChild?.content || null,
           };
+        },
+      },
+      entity: {
+        custom: (
+          state: MarkdownParseState,
+          token: Token,
+          tokens: Token[],
+          i: number,
+        ) => {
+          state.addText(decodeEntity(token.content));
         },
       },
       hardbreak: { node: 'br' },

@@ -67,6 +67,15 @@ export function elementFromString(value: string): HTMLElement {
   return removeWhitespaces(body);
 }
 
+export function decodeEntity(value: string): string {
+  const wrappedValue = `<html lang="en"><body>${value}</body></html>`;
+
+  const body =
+    new globalThis.DOMParser().parseFromString(wrappedValue, 'text/html').body;
+
+  return body.innerText;
+}
+
 function prepareContentCheckSchema(schema: Schema): Schema {
   const contentCheckSchema = new Schema({
     topNode: schema.spec.topNode,

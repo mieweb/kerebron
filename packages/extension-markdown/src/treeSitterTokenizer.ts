@@ -129,6 +129,27 @@ function treeToTokens(
           }
           break;
 
+        case 'entity_reference':
+          {
+            const text = nodeText(node) ?? '';
+            const map: [number, number, number, number] = [
+              startPosition.row + node.startPosition?.row,
+              startPosition.row + node.endPosition?.row,
+              0,
+              0,
+            ];
+
+            const entityToken = new Token(
+              'entity',
+              'entity',
+              NESTING_SELF_CLOSING,
+            );
+            entityToken.map = map;
+            entityToken.content = text;
+            pushInlineNode(entityToken, 'entity');
+          }
+          break;
+
         case 'latex_block':
           {
             const delimiter = node.children
@@ -454,8 +475,17 @@ function treeToTokens(
           }
           break;
         default:
-          console.debug('inline_node', node);
-          throw new Error(`Unhandled inline node type: ${node.type}`);
+          {
+            console.debug(`Unhandled inline node type: ${node.type}`, node);
+            const token = new Token('text', '', NESTING_SELF_CLOSING);
+            token.map = map;
+            token.meta = 'noEscText';
+            token.content = `Error: Unhandled inline node type: ${node.type} ${
+              JSON.stringify(node)
+            }`;
+            pushInlineNode(token, 'backslash_escape');
+          }
+          break;
       }
     }
   };

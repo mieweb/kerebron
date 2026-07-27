@@ -8,7 +8,7 @@ import { Workspace } from '@kerebron/workspace';
 import { MarkdownContentMapper } from './MarkdownContentMapper.ts';
 
 class MarkdownPluginState {
-  capturing = false;
+  capturing = true;
   workspace: Workspace;
 
   constructor(
@@ -47,7 +47,7 @@ class MarkdownPluginState {
       }
       ctx.materialized = await MarkdownContentMapper.create(
         ctx.state,
-        this.extensionMarkdown.config,
+        { ...this.extensionMarkdown.config, sourceMap: true },
       );
       return ctx.materialized;
     };

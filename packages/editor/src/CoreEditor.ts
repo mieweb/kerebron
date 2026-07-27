@@ -103,6 +103,7 @@ export class CoreEditor extends EventTarget {
 
     const instance = new CoreEditor(
       {
+        assetLoad: this.config.assetLoad,
         ...config,
       },
       this.schema,
