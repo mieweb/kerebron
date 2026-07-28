@@ -37,6 +37,41 @@ import {
   undoInputRuleCommand,
 } from '../plugins/input-rules/InputRulesPlugin.ts';
 
+/// When the cursor is at the start of a textblock that is *not* the
+/// first child of a list item, lift that textblock out of the list
+/// instead of merging it into the previous paragraph.
+const liftListItemParagraph = (): Command => (state, dispatch) => {
+  const { $cursor } = state.selection as TextSelection;
+  if (!$cursor || $cursor.parentOffset > 0) return false;
+  if (!$cursor.parent.isTextblock) return false;
+
+  // Walk up: find the list_item ancestor and check whether the
+  // textblock is its first child at that depth.
+  for (let depth = $cursor.depth; depth > 0; depth--) {
+    const node = $cursor.node(depth);
+    if (
+      node.type.name === 'list_item' || node.type.name === 'bullet_list' ||
+      node.type.name === 'task_item' || node.type.name === 'task_list'
+    ) {
+      // Is the cursor's textblock the first child of the list_item?
+      const listItemDepth = node.type.name === 'list_item' ? depth : depth - 1;
+      const listItem = node.type.name === 'list_item'
+        ? node
+        : $cursor.node(depth - 1);
+      // index of the textblock within the list_item
+      if ($cursor.index(listItemDepth) === 0) return false; // first paragraph — let joinBackward handle it
+
+      const range = $cursor.blockRange();
+      if (!range) return false;
+      const target = liftTarget(range);
+      if (target == null) return false;
+      if (dispatch) dispatch(state.tr.lift(range, target).scrollIntoView());
+      return true;
+    }
+  }
+  return false;
+};
+
 /// Returns a command function that wraps the selection in a list with
 /// the given type an attributes. If `dispatch` is null, only return a
 /// value to indicate whether this is possible, but don't actually
@@ -1088,6 +1123,7 @@ export const baseCommandFactories: Record<string, CommandFactory> = {
   joinUp,
   joinDown,
   lift,
+  liftListItemParagraph,
   newlineInCode,
   exitCode,
   createParagraphNear,

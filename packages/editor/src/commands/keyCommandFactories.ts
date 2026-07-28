@@ -4,6 +4,7 @@ import { baseCommandFactories } from './baseCommandFactories.ts';
 const backspace = firstCommand(
   baseCommandFactories.undoInputRule(),
   baseCommandFactories.deleteSelection(),
+  baseCommandFactories.liftListItemParagraph(),
   baseCommandFactories.joinBackward(),
   baseCommandFactories.selectNodeBackward(),
 );
