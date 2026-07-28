@@ -17,7 +17,7 @@ import {
   appendNewParagraph,
   appendTextToFirstNode,
 } from './utils/pmCommands.ts';
-import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
+import { YjsEditorKit } from '../src/YjsEditorKit.ts';
 
 async function sleep(ms: number) {
   await new Promise((resolve) => setTimeout(resolve, 1000));

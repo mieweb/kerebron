@@ -4,6 +4,7 @@
   "imports": {},
   "exports": {
     ".": "./src/mod.ts",
+    "./LspEditorKit": "./src/LspEditorKit.ts",
     "./LSPWebSocketTransport": "./src/LSPWebSocketTransport.ts"
   }
 }

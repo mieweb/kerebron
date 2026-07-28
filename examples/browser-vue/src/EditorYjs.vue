@@ -11,7 +11,7 @@
 </template>
 <script lang="ts">
 import { CoreEditor } from '@kerebron/editor';
-import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
+import { YjsEditorKit } from '@kerebron/extension-yjs/YjsEditorKit';
 import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
 import { createAssetLoad } from '@kerebron/wasm/web';
 

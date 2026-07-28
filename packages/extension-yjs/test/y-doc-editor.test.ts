@@ -1,7 +1,7 @@
 import { CoreEditor } from '@kerebron/editor';
 import { assetLoad } from '@kerebron/wasm/deno';
 import { assert, assertEquals } from '@kerebron/test-utils';
-import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
+import { YjsEditorKit } from '../src/YjsEditorKit.ts';
 import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
 
 import { createTestServer, shutdownServer } from './utils/createTestServer.ts';

@@ -4,7 +4,7 @@ import { CoreEditor } from '@kerebron/editor';
 import { ExtensionSelection } from '@kerebron/extension-basic-editor/ExtensionSelection';
 import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
 
-import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
+import { YjsEditorKit } from '@kerebron/extension-yjs/YjsEditorKit';
 import { WebsocketProvider } from '@kerebron/extension-yjs/WebsocketProvider';
 
 const ydoc = new Y.Doc();

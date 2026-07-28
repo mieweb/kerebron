@@ -20,7 +20,8 @@ import {
   MenuItem,
 } from '@kerebron/extension-menu-legacy';
 
-import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
+import { DevAdvancedEditorKit } from '@kerebron/editor-kits/DevAdvancedEditorKit';
+import { YjsEditorKit } from '@kerebron/extension-yjs/YjsEditorKit';
 
 export default {
   name: 'my-editor',
@@ -86,6 +87,7 @@ export default {
         ]
       });
 
+      this.editor.chain().changeRoom(this.roomId).run();
       if (this.user) {
         this.editor.chain().changeUser({ ...this.user }).run();
       }
@@ -121,10 +123,5 @@ export default {
 </script>
 <style>
 @import '@kerebron/editor/assets/index.css';
-@import '@kerebron/editor-kits/assets/AdvancedEditorKit.css';
-
-:host {
-  position: relative;
-}
-
+@import '@kerebron/editor-kits/assets/DevAdvancedEditorKit.css';
 </style>

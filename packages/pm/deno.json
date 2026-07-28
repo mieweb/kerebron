@@ -1,0 +1,10 @@
+{
+  "name": "@kerebron/pm",
+  "tasks": {},
+  "imports": {},
+  "exports": {
+    "./model": "./src/model.ts",
+    "./state": "./src/state.ts",
+    "./view": "./src/view.ts"
+  }
+}

@@ -11,7 +11,7 @@ import { EditorState, TextSelection } from 'prosemirror-state';
 import { CoreEditor } from '@kerebron/editor';
 import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
 import { assertEquals } from '@kerebron/test-utils';
-import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
+import { YjsEditorKit } from '../src/YjsEditorKit.ts';
 
 import { ySyncPluginKey } from '../src/keys.ts';
 import { YSyncPluginState } from '../src/ySyncPlugin.ts';

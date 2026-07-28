@@ -6,6 +6,7 @@
   },
   "exports": {
     ".": "./src/ExtensionYjs.ts",
+    "./YjsEditorKit": "./src/YjsEditorKit.ts",
     "./YjsProvider": "./src/YjsProvider.ts",
     "./WebsocketProvider": "./src/WebsocketProvider.ts",
     "./MarkYChange": "./src/MarkYChange.ts",

@@ -1,6 +1,7 @@
 {
   "license": "MIT",
   "workspace": [
+    "packages/pm",
     "packages/editor",
     "packages/editor-browserless",
     "packages/editor-react",

@@ -13,7 +13,7 @@ import {
 import { assetLoad } from '@kerebron/wasm/deno';
 import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
 import { assert, assertEquals, assertObjectMatch } from '@kerebron/test-utils';
-import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
+import { YjsEditorKit } from '../src/YjsEditorKit.ts';
 
 import {
   prosemirrorJSONToYDoc,

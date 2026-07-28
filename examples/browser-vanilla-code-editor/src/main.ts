@@ -1,8 +1,7 @@
 import { CoreEditor } from '@kerebron/editor';
 import { CodeEditorKit } from '@kerebron/editor-kits/CodeEditorKit';
-import { LspEditorKit } from '@kerebron/editor-kits/LspEditorKit';
-import { YjsEditorKit } from '@kerebron/editor-kits/YjsEditorKit';
-import type { ExtensionBasicCodeEditor } from '@kerebron/extension-basic-editor/ExtensionBasicCodeEditor';
+import { LspEditorKit } from '@kerebron/extension-lsp/LspEditorKit';
+import { YjsEditorKit } from '@kerebron/extension-yjs/YjsEditorKit';
 import type { LSPTransportGetter, Transport } from '@kerebron/extension-lsp';
 import { LSPWebSocketTransport } from '@kerebron/extension-lsp/LSPWebSocketTransport';
 import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';

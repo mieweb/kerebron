@@ -30,7 +30,6 @@ export default {
       this.roomId = event.detail;
     },
     setUser(event) {
-      console.log('setUser1', event.detail)
       if (!event.detail) {
         return;
       }
@@ -38,7 +37,6 @@ export default {
     }
   },
   mounted() {
-    console.log(this.$refs.roomSelector);
     this.user = this.$refs.roomSelector.user;
   },
 };
