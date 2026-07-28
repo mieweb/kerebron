@@ -9,16 +9,6 @@ import {
   Extension,
   type UrlRewriter,
 } from '@kerebron/editor';
-
-import {
-  extPmToMdConverter,
-  MarkdownResult,
-  pmToMdConverter,
-} from './pmToMdConverter.ts';
-import { mdToPmConverter, mdToPmConverterText } from './mdToPmConverter.ts';
-import type { Token } from './types.ts';
-import { getDefaultsPreProcessFilters } from './preprocess/preProcess.ts';
-import { createMarkdownPlugin } from './createMarkdownPlugin.ts';
 import {
   AsyncCommand,
   Command,
@@ -27,7 +17,17 @@ import {
 } from '@kerebron/editor/commands';
 import { FrontmatterService } from '@kerebron/editor/frontmatter';
 
-import { rewriteUrls } from './preprocess/rewriteUrls.ts';
+import {
+  extPmToMdConverter,
+  MarkdownResult,
+  pmToMdConverter,
+} from './pmToMdConverter.ts';
+import { mdToPmConverter, mdToPmConverterText } from './mdToPmConverter.ts';
+import type { Token } from './types.ts';
+import {
+  createMarkdownPlugin,
+  MarkdownPluginKey,
+} from './createMarkdownPlugin.ts';
 
 export interface MdConfig {
   sourceMap?: boolean;
@@ -40,18 +40,14 @@ export interface MdConfig {
   frontmatter?: FrontmatterService;
 }
 
-type HookArray = Array<Command | AsyncCommand>;
-type HookMap = Record<string, HookArray>;
+export type HookArray = Array<Command | AsyncCommand>;
+export type HookMap = Record<string, HookArray>;
 
 export type { Token };
 export type { MarkdownResult };
 
 export class ExtensionMarkdown extends Extension {
   name = 'markdown';
-
-  hooks: HookMap = {};
-  urlFromRewriter?: UrlRewriter;
-  urlToRewriter?: UrlRewriter;
 
   public constructor(public override config: Partial<MdConfig> = {}) { // TODO move all config to dynamic commands
     super(config);
@@ -63,29 +59,33 @@ export class ExtensionMarkdown extends Extension {
   ): Record<string, Converter> {
     const converters: Record<string, Converter> = {
       'text/x-markdown': {
-        fromDoc: (source: Node) =>
-          pmToMdConverter(
+        fromDoc: (source: Node) => {
+          const markdownState = MarkdownPluginKey.getState(editor.state)!;
+          return pmToMdConverter(
             source,
             {
               assetLoad: this.editor.config.assetLoad,
               ...this.config,
-              urlRewriter: this.urlToRewriter,
-              hooks: this.hooks['pm2md.pre'],
+              urlRewriter: markdownState.urlToRewriter,
+              hooks: markdownState.hooks['pm2md.pre'],
               frontmatter: editor.ci.resolve(
                 'frontmatter',
               ) as FrontmatterService,
             },
             schema,
             editor,
-          ),
-        toDoc: (source: Uint8Array) =>
-          mdToPmConverter(source, {
+          );
+        },
+        toDoc: (source: Uint8Array) => {
+          const markdownState = MarkdownPluginKey.getState(editor.state)!;
+          return mdToPmConverter(source, {
             assetLoad: this.editor.config.assetLoad,
             ...this.config,
-            urlRewriter: this.urlFromRewriter,
-            hooks: this.hooks['md2pm.post'],
+            urlRewriter: markdownState.urlFromRewriter,
+            hooks: markdownState.hooks['md2pm.post'],
             frontmatter: editor.ci.resolve('frontmatter') as FrontmatterService,
-          }, schema),
+          }, schema);
+        },
       },
     };
     converters['text/markdown'] = converters['text/x-markdown'];
@@ -124,26 +124,18 @@ export class ExtensionMarkdown extends Extension {
     return new Slice(fragment, 0, 0);
   }
 
-  override created(): void {
-    if (this.editor.schema.topNodeType.name === 'doc') {
-      this.hooks['pm2md.pre'] = getDefaultsPreProcessFilters({
-        getUrlRewriter: () => this.urlToRewriter,
-      });
-    } else {
-      this.hooks['pm2md.pre'] = [];
-    }
-    this.hooks['md2pm.post'] = [
-      rewriteUrls(() => this.urlFromRewriter),
-    ];
-  }
-
   override getCommandFactories(): Partial<CommandFactories> {
     const getMarkdownHooks: CommandFactory = (
       type: string,
       cb: (hooks: HookArray) => void,
     ) => {
-      return () => {
-        cb(this.hooks[type]);
+      return (state, dispatch) => {
+        const pluginState = MarkdownPluginKey.getState(state);
+        if (pluginState) {
+          cb(pluginState.hooks[type]);
+        } else {
+          cb([]);
+        }
         return true;
       };
     };
@@ -152,8 +144,14 @@ export class ExtensionMarkdown extends Extension {
       type: string,
       hooks: HookArray,
     ) => {
-      return () => {
-        this.hooks[type] = hooks;
+      return (state, dispatch) => {
+        if (dispatch) {
+          dispatch(
+            state.tr.setMeta(MarkdownPluginKey, {
+              setMarkdownHooks: { type, hooks },
+            }),
+          );
+        }
         return true;
       };
     };
@@ -161,16 +159,28 @@ export class ExtensionMarkdown extends Extension {
     const setFromMarkdownUrlRewriter: CommandFactory = (
       urlRewriter: UrlRewriter,
     ) => {
-      return () => {
-        this.urlFromRewriter = urlRewriter;
+      return (state, dispatch) => {
+        if (dispatch) {
+          dispatch(
+            state.tr.setMeta(MarkdownPluginKey, {
+              setFromMarkdownUrlRewriter: { urlRewriter },
+            }),
+          );
+        }
         return true;
       };
     };
     const setToMarkdownUrlRewriter: CommandFactory = (
       urlRewriter: UrlRewriter,
     ) => {
-      return () => {
-        this.urlToRewriter = urlRewriter;
+      return (state, dispatch) => {
+        if (dispatch) {
+          dispatch(
+            state.tr.setMeta(MarkdownPluginKey, {
+              setToMarkdownUrlRewriter: { urlRewriter },
+            }),
+          );
+        }
         return true;
       };
     };

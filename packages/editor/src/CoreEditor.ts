@@ -117,6 +117,12 @@ export class CoreEditor extends EventTarget {
     instance.createView(content, selection);
     instance.setupPlugins();
 
+    {
+      const oldState = this.state;
+      const tr = instance.state.tr.setMeta('cloned', oldState);
+      instance.dispatchTransaction(tr);
+    }
+
     return instance;
   }
 
@@ -355,6 +361,12 @@ export class CoreEditor extends EventTarget {
     const dispatch = (tr: Transaction) => {
       newState = newState.apply(tr);
     };
+
+    {
+      const oldState = this.state;
+      const tr = newState.tr.setMeta('cloned', oldState);
+      dispatch(tr);
+    }
 
     const cmd = runInputRulesTexts();
     cmd(newState, dispatch);

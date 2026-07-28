@@ -1,15 +1,35 @@
-import { EditorState, Plugin } from 'prosemirror-state';
+import { EditorState, Plugin, PluginKey, Transaction } from 'prosemirror-state';
 
 import { CoreEditor } from '@kerebron/editor';
-import { ExtensionMarkdown } from '@kerebron/extension-markdown';
+import { type UrlRewriter } from '@kerebron/editor';
 import { debounce } from '@kerebron/editor/utilities';
-
 import { Workspace } from '@kerebron/workspace';
+
+import { ExtensionMarkdown, HookArray, HookMap } from './ExtensionMarkdown.ts';
 import { MarkdownContentMapper } from './MarkdownContentMapper.ts';
+import { getDefaultsPreProcessFilters } from './preprocess/preProcess.ts';
+import { rewriteUrls } from './preprocess/rewriteUrls.ts';
+
+interface MarkdownMeta {
+  setMarkdownHooks?: {
+    type: string;
+    hooks: HookArray;
+  };
+  setFromMarkdownUrlRewriter?: {
+    urlRewriter: UrlRewriter;
+  };
+  setToMarkdownUrlRewriter?: {
+    urlRewriter: UrlRewriter;
+  };
+}
 
 class MarkdownPluginState {
   capturing = true;
   workspace: Workspace;
+  hooks: HookMap = {};
+
+  urlFromRewriter?: UrlRewriter;
+  urlToRewriter?: UrlRewriter;
 
   constructor(
     private editor: CoreEditor,
@@ -68,18 +88,75 @@ class MarkdownPluginState {
       });
     }
   }
+
+  handleCommands(
+    pluginMeta: MarkdownMeta | undefined,
+    transaction: Transaction,
+  ) {
+    if (!pluginMeta) {
+      return false;
+    }
+
+    if (pluginMeta.setMarkdownHooks) {
+      const { type, hooks } = pluginMeta.setMarkdownHooks;
+      this.hooks[type] = hooks;
+      return true;
+    }
+    if (pluginMeta.setFromMarkdownUrlRewriter) {
+      const { urlRewriter } = pluginMeta.setFromMarkdownUrlRewriter;
+      this.urlFromRewriter = urlRewriter;
+      return true;
+    }
+    if (pluginMeta.setToMarkdownUrlRewriter) {
+      const { urlRewriter } = pluginMeta.setToMarkdownUrlRewriter;
+      this.urlToRewriter = urlRewriter;
+      return true;
+    }
+  }
 }
 
-export function createMarkdownPlugin<MarkdownPluginState>(
+export const MarkdownPluginKey = new PluginKey<MarkdownPluginState>('markdown');
+
+export function createMarkdownPlugin(
   extensionMarkdown: ExtensionMarkdown,
   editor: CoreEditor,
 ): Plugin {
-  return new Plugin({
+  return new Plugin<MarkdownPluginState>({
+    key: MarkdownPluginKey,
     state: {
-      init() {
-        return new MarkdownPluginState(editor, extensionMarkdown);
+      init(_config, state) {
+        const pluginState = new MarkdownPluginState(editor, extensionMarkdown);
+        if (state.schema.topNodeType.name === 'doc') {
+          pluginState.hooks['pm2md.pre'] = getDefaultsPreProcessFilters({
+            getUrlRewriter: () => pluginState.urlToRewriter,
+          });
+        } else {
+          pluginState.hooks['pm2md.pre'] = [];
+        }
+        pluginState.hooks['md2pm.post'] = [
+          rewriteUrls(() => pluginState.urlFromRewriter),
+        ];
+
+        return pluginState;
       },
       apply(tr, value, _oldState, _editorState) {
+        const oldClonedState: EditorState | undefined = tr.getMeta('cloned');
+        if (oldClonedState) {
+          const oldClonedPluginState = MarkdownPluginKey.getState(
+            oldClonedState,
+          );
+          if (oldClonedPluginState) {
+            return oldClonedPluginState;
+          }
+        }
+
+        const pluginMeta: MarkdownMeta | undefined = tr.getMeta(
+          MarkdownPluginKey,
+        );
+        if (value.handleCommands(pluginMeta, tr)) {
+          return value;
+        }
+
         if (tr.docChanged && value.capturing) {
           value.performSnapshot();
         }

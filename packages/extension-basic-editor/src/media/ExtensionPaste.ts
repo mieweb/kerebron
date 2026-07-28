@@ -235,15 +235,23 @@ export class ExtensionPaste extends Extension {
         key: PastePluginKey,
         state: {
           init() {
-            const prevState = PastePluginKey.getState(editor.state);
-            if (prevState) { // preserve config after loadDocument
-              return prevState;
-            }
             return new PasteState(editor);
           },
           apply(transaction, nextPasteState: PasteState, prevState, state) {
             if (transaction.isGeneric) {
               return nextPasteState;
+            }
+
+            const oldClonedState: EditorState | undefined = transaction.getMeta(
+              'cloned',
+            );
+            if (oldClonedState) {
+              const oldClonedPluginState = PastePluginKey.getState(
+                oldClonedState,
+              );
+              if (oldClonedPluginState) {
+                return oldClonedPluginState;
+              }
             }
 
             const pluginMeta: PasteMeta | undefined = transaction.getMeta(
