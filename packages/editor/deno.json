@@ -11,6 +11,7 @@
     "./search": "./src/search/mod.ts",
     "./user": "./src/user/mod.ts",
     "./utilities": "./src/utilities/mod.ts",
+    "./frontmatter": "./src/utilities/frontmatter.ts",
     "./yaml": "./src/utilities/yaml.ts"
   }
 }

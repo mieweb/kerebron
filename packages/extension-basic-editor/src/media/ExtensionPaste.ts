@@ -1,4 +1,10 @@
-import { EditorState, Plugin, PluginKey, Transaction } from 'prosemirror-state';
+import {
+  AllSelection,
+  EditorState,
+  Plugin,
+  PluginKey,
+  Transaction,
+} from 'prosemirror-state';
 import { DOMParser, Slice } from 'prosemirror-model';
 import { EditorView } from 'prosemirror-view';
 
@@ -7,6 +13,7 @@ import { type CoreEditor, Extension } from '@kerebron/editor';
 
 import { elementFromString } from './ExtensionHtml.ts';
 import { YamlService } from '@kerebron/editor/yaml';
+import { BlankFrontmatterServiceImpl } from '@kerebron/editor/frontmatter';
 
 type PasteRuleStep =
   | PasteRuleStepDefault
@@ -251,6 +258,42 @@ export class ExtensionPaste extends Extension {
           },
         },
         props: {
+          handleDOMEvents: {
+            copy(view, event) {
+              if (!event.clipboardData) {
+                return false;
+              }
+
+              const cloned = editor.clone();
+              event.preventDefault();
+
+              (async () => {
+                if (!(cloned.state.selection instanceof AllSelection)) {
+                  cloned.ci.register(
+                    'frontmatter',
+                    new BlankFrontmatterServiceImpl(),
+                  );
+                }
+
+                cloned.chain().keepSelection().run();
+                const md = new TextDecoder().decode(
+                  await cloned.saveDocument('text/x-markdown'),
+                );
+                const html = new TextDecoder().decode(
+                  await cloned.saveDocument('text/html'),
+                );
+
+                await navigator.clipboard.write([
+                  new ClipboardItem({
+                    'text/plain': new Blob([md], { type: 'text/plain' }),
+                    'text/html': new Blob([html], { type: 'text/html' }),
+                  }),
+                ]);
+              })();
+
+              return false;
+            },
+          },
           handlePaste(view: EditorView, event: ClipboardEvent, slice: Slice) {
             const { clipboardData } = event;
 

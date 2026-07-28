@@ -1106,6 +1106,62 @@ function toggleMark(
   };
 }
 
+const isList = (node: Node) =>
+  node.type.name === 'bullet_list' ||
+  node.type.name === 'ordered_list' ||
+  node.type.name === 'task_list';
+
+export const keepRange =
+  (from: number, to: number): Command => (state, dispatch?) => {
+    const $from = state.doc.resolve(from);
+    const $to = state.doc.resolve(to);
+
+    for (let d = $from.depth; d > 0; d--) {
+      if (isList($from.node(d))) {
+        from = $from.before(d);
+        break;
+      }
+    }
+
+    for (let d = $to.depth; d > 0; d--) {
+      if (isList($to.node(d))) {
+        to = $to.after(d);
+        break;
+      }
+    }
+
+    if (!dispatch) return true;
+
+    const slice = state.doc.slice(from, to);
+
+    let tr = state.tr.replace(0, state.doc.content.size, slice);
+    tr = tr.setSelection(TextSelection.atStart(tr.doc));
+
+    if (!dispatch) return true;
+
+    dispatch(tr);
+    return true;
+  };
+
+const keepSelection: CommandFactory = () => (state, dispatch?) => {
+  if (!dispatch) return true;
+
+  const slice = state.selection.content();
+
+  const tr = state.tr.replace(
+    0,
+    state.doc.content.size,
+    slice,
+  );
+
+  tr.setSelection(TextSelection.atStart(tr.doc));
+
+  if (!dispatch) return true;
+
+  dispatch(tr);
+  return true;
+};
+
 const undoInputRule: CommandFactory = () => undoInputRuleCommand;
 
 export const command: CommandFactory = (fn: Command) => (...props) => {
@@ -1113,6 +1169,8 @@ export const command: CommandFactory = (fn: Command) => (...props) => {
 };
 
 export const baseCommandFactories: Record<string, CommandFactory> = {
+  keepRange,
+  keepSelection,
   wrapInList,
   wrapRangeInList,
   deleteSelection,

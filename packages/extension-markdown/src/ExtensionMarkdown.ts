@@ -25,8 +25,9 @@ import {
   CommandFactories,
   CommandFactory,
 } from '@kerebron/editor/commands';
+import { FrontmatterService } from '@kerebron/editor/frontmatter';
+
 import { rewriteUrls } from './preprocess/rewriteUrls.ts';
-import { YamlService } from '@kerebron/editor/yaml';
 
 export interface MdConfig {
   sourceMap?: boolean;
@@ -36,7 +37,7 @@ export interface MdConfig {
   assetLoad?: AssetLoad;
   urlRewriter?: UrlRewriter;
   hooks?: HookArray;
-  yaml?: YamlService;
+  frontmatter?: FrontmatterService;
 }
 
 type HookArray = Array<Command | AsyncCommand>;
@@ -70,7 +71,9 @@ export class ExtensionMarkdown extends Extension {
               ...this.config,
               urlRewriter: this.urlToRewriter,
               hooks: this.hooks['pm2md.pre'],
-              yaml: editor.ci.resolve('yaml') as YamlService,
+              frontmatter: editor.ci.resolve(
+                'frontmatter',
+              ) as FrontmatterService,
             },
             schema,
             editor,
@@ -81,7 +84,7 @@ export class ExtensionMarkdown extends Extension {
             ...this.config,
             urlRewriter: this.urlFromRewriter,
             hooks: this.hooks['md2pm.post'],
-            yaml: editor.ci.resolve('yaml') as YamlService,
+            frontmatter: editor.ci.resolve('frontmatter') as FrontmatterService,
           }, schema),
       },
     };
@@ -94,7 +97,9 @@ export class ExtensionMarkdown extends Extension {
       source,
       {
         sourceMap: true,
-        yaml: this.editor.ci.resolve('yaml') as YamlService,
+        frontmatter: this.editor.ci.resolve(
+          'frontmatter',
+        ) as FrontmatterService,
       },
       this.editor.schema,
       this.editor,

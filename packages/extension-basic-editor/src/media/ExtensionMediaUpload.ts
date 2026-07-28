@@ -230,6 +230,10 @@ function createMediaUploadPlugin(options: MediaUploadOptions = {}): Plugin {
       },
 
       handlePaste(view, event, slice) {
+        if ((event.clipboardData?.types || []).includes('text/html')) {
+          return;
+        }
+
         const items = Array.from(event.clipboardData?.items || []);
         const imageItems = items.filter((item) =>
           item.type.startsWith('image/')

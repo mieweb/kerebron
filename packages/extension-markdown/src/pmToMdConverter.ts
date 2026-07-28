@@ -120,11 +120,11 @@ export async function extPmToMdConverter(
             NESTING_SELF_CLOSING,
           );
           if (node.attrs.meta) {
-            if (config.yaml) {
-              const frontmatter = config.yaml.stringify(node.attrs.meta);
-              token.content = `---\n${frontmatter}\n---\n`;
+            if (config.frontmatter) {
+              const frontmatter = config.frontmatter.stringify(node.attrs.meta);
+              token.content = frontmatter;
             } else {
-              const frontmatter = '# No yaml service';
+              const frontmatter = '# No frontmatter service';
               token.content = `---\n${frontmatter}\n---\n`;
             }
           }

@@ -1,9 +1,10 @@
-import { EditorView } from 'prosemirror-view';
 import {
   Node as ProseMirrorNode,
   ParseOptions,
   Schema,
 } from 'prosemirror-model';
+import { Selection } from 'prosemirror-state';
+import { EditorView } from 'prosemirror-view';
 
 import { ExtensionManager } from './ExtensionManager.ts';
 import type { AssetLoad, Content, EditorKit, JSONContent } from './types.ts';
@@ -16,7 +17,6 @@ import { Extension } from './Extension.ts';
 import { defaultUi, EditorUi } from './ui.ts';
 import { runInputRulesTexts } from './plugins/input-rules/InputRulesPlugin.ts';
 import {
-  AsyncCommand,
   ChainedCommands,
   Command,
   CommandFactories,
@@ -113,7 +113,8 @@ export class CoreEditor extends EventTarget {
 
     const content = this.getJSON();
 
-    instance.createView(content);
+    const selection = this.state.selection;
+    instance.createView(content, selection);
     instance.setupPlugins();
 
     return instance;
@@ -205,10 +206,10 @@ export class CoreEditor extends EventTarget {
     }
   }
 
-  private createView(content: any) {
+  private createView(content: any, selection?: Selection) {
     const doc = createNodeFromObject(content, this.schema);
 
-    this.state = EditorState.create({ doc });
+    this.state = EditorState.create({ doc, selection });
 
     if (this.config.element) {
       const view = new EditorView(this.config.element, {

@@ -20,6 +20,7 @@ import { addAttributesToSchema } from './utilities/getHtmlAttributes.ts';
 import { TrackSelecionPlugin } from './plugins/TrackSelecionPlugin.ts';
 
 import * as yaml from './utilities/yaml.ts';
+import { FrontmatterServiceImpl } from '@kerebron/editor/frontmatter';
 import { createSearchPlugin } from './search/search.ts';
 
 function splitExtensions(extensions: Iterable<AnyExtension>) {
@@ -323,6 +324,7 @@ export class ExtensionManager {
       editor.ci.register(extension.name, extension);
     }
     editor.ci.register('yaml', yaml);
+    editor.ci.register('frontmatter', new FrontmatterServiceImpl(yaml));
     editor.ci.register('workspace', new WorkspaceImpl());
 
     this.initPlugins(editor, schema);

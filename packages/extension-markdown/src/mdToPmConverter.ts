@@ -51,11 +51,8 @@ export async function mdToPmConverterText(
         ) => {
           const topNode = state.stack[0];
           if (topNode?.type.name === 'doc') {
-            const frontmatter = token.content;
-            const end = frontmatter.indexOf('\n---\n', 4);
-            if (frontmatter.startsWith('---\n') && end > -1) {
-              const meta = config.yaml?.parse(frontmatter.substring(4, end)) ||
-                undefined;
+            if (config.frontmatter) {
+              const meta = config.frontmatter.parse(token.content) || undefined;
               topNode.attrs = { ...topNode.attrs, meta };
             }
           }
