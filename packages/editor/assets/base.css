@@ -13,6 +13,18 @@
   position: relative;
 }
 
+/* Reset */
+.kb-editor {
+  all: initial;
+  display: block;
+}
+.kb-editor,
+.kb-editor * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 /* ProseMirror core styles */
 .kb-editor {
   word-wrap: break-word;
