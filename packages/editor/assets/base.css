@@ -17,6 +17,7 @@
 .kb-editor {
   all: initial;
   display: block;
+  -webkit-user-modify: read-write;
 }
 .kb-editor,
 .kb-editor * {
