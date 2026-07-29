@@ -11,7 +11,14 @@ export function getLangsList(): string[] {
 export function getLangTreeSitter(
   lang: string,
 ) {
-  const langManifest = manifest.find((item) => item.repo.endsWith('-' + lang));
+  let langToLoad = lang;
+  if (langToLoad === 'ts') {
+    langToLoad = 'typescript';
+  }
+
+  const langManifest = manifest.find((item) =>
+    item.repo.endsWith('-' + langToLoad)
+  );
   if (!langManifest) {
     throw new Error('No grammar for: ' + lang);
   }

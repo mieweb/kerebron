@@ -187,8 +187,7 @@ export class NodeViewCodeCrock implements NodeView {
       }
     });
 
-    this.highlighter = new TreeSitterHighlighter();
-    this.highlighter.assetLoad = this.editor.config.assetLoad;
+    this.highlighter = new TreeSitterHighlighter(this.editor.config.assetLoad!);
     this.decorator = new Decorator();
 
     dom.append(this.element);

@@ -1,6 +1,6 @@
-import { createParser, type Parser } from '@kerebron/tree-sitter';
+import { createParser, ExtendedNode, type Parser } from '@kerebron/tree-sitter';
 
-import { fetchTextResource, getLangTreeSitter } from '@kerebron/wasm';
+import { getLangTreeSitter } from '@kerebron/wasm';
 
 import { DecorationInline, Decorator } from './Decorator.ts';
 import { AssetLoad } from '@kerebron/editor';
@@ -8,8 +8,10 @@ import { AssetLoad } from '@kerebron/editor';
 export class TreeSitterHighlighter {
   parser: Parser | undefined;
   hightligtScm: string | undefined;
-  assetLoad?: AssetLoad;
   lang?: string;
+
+  constructor(private assetLoad: AssetLoad) {
+  }
 
   async init(lang: string): Promise<boolean> {
     this.lang = lang;
@@ -51,7 +53,7 @@ export class TreeSitterHighlighter {
     }
 
     const tree = this.parser.parse(code)!;
-    const root = tree.rootNode;
+    const root = new ExtendedNode(tree.rootNode, code);
 
     const highlightsQuery = root.query(this.hightligtScm);
 

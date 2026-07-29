@@ -1,6 +1,8 @@
-import { Tree } from 'web-tree-sitter';
+import { Node, Query, Tree } from 'web-tree-sitter';
+import { QueryError, QueryOptions } from './Query.ts';
 
 export interface TreeSitterNode {
+  id: number;
   tree: Tree;
   startIndex: number;
   endIndex: number;
@@ -94,6 +96,7 @@ interface WhitespaceNodeParams extends SoftNodeParams {
 class WhitespaceNode extends SoftNode implements TreeSitterNodeExt {
   type = 'whitespace';
   typeId = -1;
+  id: number;
   parent: TreeSitterNodeExt | null;
   text: string;
   children: TreeSitterNodeExt[] = [];
@@ -102,6 +105,7 @@ class WhitespaceNode extends SoftNode implements TreeSitterNodeExt {
     super(params);
     this.parent = params.parent;
     this.text = params.text;
+    this.id = -1;
   }
 
   toJSON() {
@@ -121,6 +125,7 @@ interface SoftTextNodeParams extends SoftNodeParams {
 class SoftTextNode extends SoftNode implements TreeSitterNodeExt {
   type = 'text';
   typeId = -2;
+  id: number;
   parent: TreeSitterNode | null;
   text: string;
   children: TreeSitterNodeExt[] = [];
@@ -129,6 +134,7 @@ class SoftTextNode extends SoftNode implements TreeSitterNodeExt {
     super(params);
     this.parent = params.parent;
     this.text = params.text;
+    this.id = -1;
   }
 
   toJSON() {
@@ -141,15 +147,16 @@ class SoftTextNode extends SoftNode implements TreeSitterNodeExt {
 }
 
 export class ExtendedNode implements TreeSitterNodeExt {
-  xxx = 1;
   tree: Tree;
   type: string;
   typeId: number;
   text: string;
   _children: TreeSitterNode[];
   parent: TreeSitterNode | null;
+  id: number;
 
   constructor(private node: TreeSitterNode, public readonly treeText: string) {
+    this.id = node.id;
     this.tree = node.tree;
     this.treeText = treeText;
     this.type = node.type;
@@ -188,6 +195,36 @@ export class ExtendedNode implements TreeSitterNodeExt {
       endIndex: this.endIndex,
       children: this.children.map((i) => i.toJSON()),
     };
+  }
+
+  query(queryString: string, options: QueryOptions) {
+    const { matchLimit } = options || {};
+    let query;
+    try {
+      query = new Query(this.tree.language, queryString);
+    } catch (error) {
+      if (error instanceof QueryError) {
+        error.message = `${error.message} in the following query: ${
+          JSON.stringify(queryString)
+        }`;
+      }
+      throw error;
+    }
+    const result = query.matches(this as any, {
+      startPosition: this.startPosition,
+      endPosition: this.endPosition,
+      matchLimit,
+    });
+    // without this soft nodes will be missing
+    for (const eachResult of result) {
+      for (const eachCapture of eachResult.captures) {
+        eachCapture.node = new ExtendedNode(
+          eachCapture.node as any,
+          this.treeText,
+        ) as any;
+      }
+    }
+    return result;
   }
 }
 
@@ -310,7 +347,6 @@ export const childrenWithSoftNodes = (
         gapText,
         () => ({ index: thisChild.endIndex, position: thisChild.endPosition }),
         node,
-        `L ${prevChild.endIndex} ${node.endIndex} `,
       );
     }
 
