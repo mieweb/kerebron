@@ -28,6 +28,7 @@ import {
   createMarkdownPlugin,
   MarkdownPluginKey,
 } from './createMarkdownPlugin.ts';
+import { sitterTokenizer } from './treeSitterTokenizer.ts';
 
 export interface MdConfig {
   sourceMap?: boolean;
@@ -38,6 +39,7 @@ export interface MdConfig {
   urlRewriter?: UrlRewriter;
   hooks?: HookArray;
   frontmatter?: FrontmatterService;
+  tokenizer?: { parse: (source: string) => Array<Token> };
 }
 
 export type HookArray = Array<Command | AsyncCommand>;
@@ -48,6 +50,7 @@ export type { MarkdownResult };
 
 export class ExtensionMarkdown extends Extension {
   name = 'markdown';
+  tokenizer: { parse: (source: string) => Array<Token> } | undefined;
 
   public constructor(public override config: Partial<MdConfig> = {}) { // TODO move all config to dynamic commands
     super(config);
@@ -76,10 +79,17 @@ export class ExtensionMarkdown extends Extension {
             editor,
           );
         },
-        toDoc: (source: Uint8Array) => {
+        toDoc: async (source: Uint8Array) => {
+          if (!this.tokenizer && this.editor.config.assetLoad) {
+            this.tokenizer = await sitterTokenizer(
+              this.editor.config.assetLoad,
+            );
+          }
+
           const markdownState = MarkdownPluginKey.getState(editor.state)!;
-          return mdToPmConverter(source, {
+          return await mdToPmConverter(source, {
             assetLoad: this.editor.config.assetLoad,
+            tokenizer: this.tokenizer,
             ...this.config,
             urlRewriter: markdownState.urlFromRewriter,
             hooks: markdownState.hooks['md2pm.post'],

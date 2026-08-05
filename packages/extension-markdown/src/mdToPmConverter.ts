@@ -34,15 +34,13 @@ export async function mdToPmConverterText(
   config: MdConfig,
   schema: Schema,
 ): Promise<Node> {
-  if (!config.assetLoad) {
-    throw new Error('No config.assetLoad');
+  if (!config.tokenizer) {
+    throw new Error('No config.tokenizer');
   }
-
-  const tokenizer = await sitterTokenizer(config.assetLoad);
 
   const defaultMarkdownParser = new MarkdownParser(
     schema,
-    tokenizer,
+    config.tokenizer,
     {
       frontmatter: {
         custom: (
