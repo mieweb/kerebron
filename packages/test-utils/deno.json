@@ -3,6 +3,9 @@
   "tasks": {},
   "imports": {},
   "exports": {
-    ".": "./src/test-utils.ts"
+    ".": "./src/test-utils.ts",
+    "./Diff": "./src/Diff.ts",
+    "./OtelTelemetry": "./src/OtelTelemetry.ts",
+    "./FileTelemetry": "./src/FileTelemetry.ts"
   }
 }

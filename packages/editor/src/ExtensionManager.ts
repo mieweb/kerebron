@@ -22,6 +22,7 @@ import { TrackSelecionPlugin } from './plugins/TrackSelecionPlugin.ts';
 import * as yaml from './utilities/yaml.ts';
 import { FrontmatterServiceImpl } from '@kerebron/editor/frontmatter';
 import { createSearchPlugin } from './search/search.ts';
+import { NoTelemetry } from './utilities/Telemetry.ts';
 
 function splitExtensions(extensions: Iterable<AnyExtension>) {
   const baseExtensions = Array.from(extensions).filter((extension) =>
@@ -326,6 +327,7 @@ export class ExtensionManager {
     editor.ci.register('yaml', yaml);
     editor.ci.register('frontmatter', new FrontmatterServiceImpl(yaml));
     editor.ci.register('workspace', new WorkspaceImpl());
+    editor.ci.register('telemetry', new NoTelemetry());
 
     this.initPlugins(editor, schema);
 

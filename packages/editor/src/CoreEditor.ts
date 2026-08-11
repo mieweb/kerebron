@@ -22,6 +22,7 @@ import {
   CommandFactories,
 } from './commands/types.ts';
 import { Container } from './Container.ts';
+import { Telemetry } from '@kerebron/editor/Telemetry';
 
 function ensureDocSchema(
   doc: ProseMirrorNode,
@@ -370,6 +371,11 @@ export class CoreEditor extends EventTarget {
 
     const cmd = runInputRulesTexts();
     cmd(newState, dispatch);
+
+    const telemetry: Telemetry = this.ci.resolve('telemetry')!;
+    if (telemetry.enabled) {
+      telemetry.event('doc.afterInputRules', newState.doc);
+    }
 
     this.state = newState;
 
