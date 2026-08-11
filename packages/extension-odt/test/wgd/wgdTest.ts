@@ -10,6 +10,8 @@ import {
   nodeToTreeString,
   UrlRewriteContext,
 } from '@kerebron/editor';
+import { Command } from '@kerebron/editor/commands';
+import { FileTelemetry } from '@kerebron/test-utils/FileTelemetry';
 import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionOdt } from '@kerebron/extension-odt';
@@ -18,7 +20,6 @@ import { assetLoad } from '@kerebron/wasm/deno';
 import { urlToFolderId } from './idParsers.ts';
 import { Schema } from 'prosemirror-model';
 import { getDefaultsPreProcessFilters } from '@kerebron/extension-markdown/preProcess';
-import { Command } from '@kerebron/editor/commands';
 
 const __dirname = import.meta.dirname;
 
@@ -290,7 +291,6 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
 
       const serializerDebug = undefined;
       const extMd = new ExtensionMarkdown({
-        debugTokens: opts.debug,
         serializerDebug,
         assetLoad,
       });
@@ -401,16 +401,14 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
         }) as EventListener,
       );
 
-      editor.addEventListener(
-        'md:tokens',
-        ((event: CustomEvent) => {
-          const { tokens } = event.detail;
-          Deno.writeTextFileSync(
-            __dirname + '/' + mdName + '.tokens.debug.json',
-            JSON.stringify(tokens, null, 2),
-          );
-        }) as EventListener,
-      );
+      const telemetry = new FileTelemetry(mdName);
+      telemetry.map[__dirname + '/' + mdName + '.pm2md.debug.tokens.json'] = [
+        'pm2md',
+        'tokens',
+      ];
+      telemetry.map[__dirname + '/' + mdName + '.pm2md.debug.sourcemap.json'] =
+        ['pm2md', 'sourcemap'];
+      editor.ci.register('telemetry', telemetry);
 
       await editor.loadDocument(
         'application/vnd.oasis.opendocument.text',
