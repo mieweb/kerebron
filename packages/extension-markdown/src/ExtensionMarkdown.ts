@@ -29,17 +29,18 @@ import {
   MarkdownPluginKey,
 } from './createMarkdownPlugin.ts';
 import { sitterTokenizer } from './treeSitterTokenizer.ts';
+import { Telemetry } from '@kerebron/editor/Telemetry';
 
 export interface MdConfig {
   sourceMap?: boolean;
-  dispatchSourceMap?: boolean;
-  debugTokens?: boolean;
   serializerDebug?: (...args: any[]) => void;
   assetLoad?: AssetLoad;
   urlRewriter?: UrlRewriter;
   hooks?: HookArray;
   frontmatter?: FrontmatterService;
   tokenizer?: { parse: (source: string) => Array<Token> };
+  telemetry: Telemetry;
+  htmlListItems?: boolean;
 }
 
 export type HookArray = Array<Command | AsyncCommand>;
@@ -64,37 +65,48 @@ export class ExtensionMarkdown extends Extension {
       'text/x-markdown': {
         fromDoc: (source: Node) => {
           const markdownState = MarkdownPluginKey.getState(editor.state)!;
-          return pmToMdConverter(
-            source,
-            {
-              assetLoad: this.editor.config.assetLoad,
-              ...this.config,
-              urlRewriter: markdownState.urlToRewriter,
-              hooks: markdownState.hooks['pm2md.pre'],
-              frontmatter: editor.ci.resolve(
-                'frontmatter',
-              ) as FrontmatterService,
-            },
-            schema,
-            editor,
-          );
+          const telemetry: Telemetry = editor.ci.resolve('telemetry')!;
+          return telemetry.span('pm2md', () => {
+            return pmToMdConverter(
+              source,
+              {
+                telemetry,
+                assetLoad: this.editor.config.assetLoad,
+                ...this.config,
+                urlRewriter: markdownState.urlToRewriter,
+                hooks: markdownState.hooks['pm2md.pre'],
+                frontmatter: editor.ci.resolve(
+                  'frontmatter',
+                ) as FrontmatterService,
+              },
+              schema,
+              editor,
+            );
+          });
         },
         toDoc: async (source: Uint8Array) => {
           if (!this.tokenizer && this.editor.config.assetLoad) {
             this.tokenizer = await sitterTokenizer(
               this.editor.config.assetLoad,
+              this.editor.ci.resolve('telemetry')!,
             );
           }
 
           const markdownState = MarkdownPluginKey.getState(editor.state)!;
-          return await mdToPmConverter(source, {
-            assetLoad: this.editor.config.assetLoad,
-            tokenizer: this.tokenizer,
-            ...this.config,
-            urlRewriter: markdownState.urlFromRewriter,
-            hooks: markdownState.hooks['md2pm.post'],
-            frontmatter: editor.ci.resolve('frontmatter') as FrontmatterService,
-          }, schema);
+          const telemetry: Telemetry = editor.ci.resolve('telemetry')!;
+          return telemetry.span('md2pm', async () => {
+            return await mdToPmConverter(source, {
+              telemetry,
+              assetLoad: this.editor.config.assetLoad,
+              tokenizer: this.tokenizer,
+              ...this.config,
+              urlRewriter: markdownState.urlFromRewriter,
+              hooks: markdownState.hooks['md2pm.post'],
+              frontmatter: editor.ci.resolve(
+                'frontmatter',
+              ) as FrontmatterService,
+            }, schema);
+          });
         },
       },
     };
@@ -103,9 +115,12 @@ export class ExtensionMarkdown extends Extension {
   }
 
   toMarkdown(source: Node): Promise<MarkdownResult> {
+    const telemetry: Telemetry = this.editor.ci.resolve('telemetry')!;
+
     return extPmToMdConverter(
       source,
       {
+        telemetry,
         sourceMap: true,
         frontmatter: this.editor.ci.resolve(
           'frontmatter',
@@ -117,9 +132,11 @@ export class ExtensionMarkdown extends Extension {
   }
 
   async fromMarkdown(source: string): Promise<Slice> {
+    const telemetry: Telemetry = this.editor.ci.resolve('telemetry')!;
+
     const doc = await mdToPmConverterText(
       source,
-      { assetLoad: this.editor.config.assetLoad, ...this.config },
+      { telemetry, assetLoad: this.editor.config.assetLoad, ...this.config },
       this.editor.schema,
     );
 

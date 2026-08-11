@@ -3,6 +3,7 @@ import { assertEquals } from '@kerebron/test-utils';
 import { MarkdownSerializer } from '@kerebron/extension-markdown/MarkdownSerializer';
 import { sitterTokenizer } from '../src/treeSitterTokenizer.ts';
 import { assetLoad } from '@kerebron/wasm/deno';
+import { FileTelemetry } from '@kerebron/test-utils/FileTelemetry';
 
 const __dirname = import.meta.dirname;
 const sampleMarkdown = new TextDecoder().decode(
@@ -10,7 +11,9 @@ const sampleMarkdown = new TextDecoder().decode(
 );
 
 Deno.test('example-document.md', async () => {
-  const tokenizer = await sitterTokenizer(assetLoad);
+  const telemetry = new FileTelemetry('example-document.md');
+
+  const tokenizer = await sitterTokenizer(assetLoad, telemetry);
   const tokens = tokenizer.parse(sampleMarkdown);
 
   // Deno.writeTextFileSync(__dirname + '/example-document.tree.json', JSON.stringify(tree?.rootNode, null, 2));

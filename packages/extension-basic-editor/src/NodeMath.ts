@@ -1,9 +1,6 @@
 import { type NodeSpec } from 'prosemirror-model';
 import { Node } from '@kerebron/editor';
-
-// import { MathMLToLaTeX } from 'mathml-to-latex';
-// const latex = MathMLToLaTeX.convert(mathMl);
-// https://mathlive.io/mathfield/
+import temml from 'temml';
 
 export class NodeMath extends Node {
   override name = 'math';
@@ -36,9 +33,14 @@ export class NodeMath extends Node {
         }),
       }],
       toDOM(node) {
+        let content = node.attrs.content;
+        if (node.attrs.lang === 'latex') {
+          content = temml.renderToString(content);
+        }
+
         const parser = new DOMParser();
         const parsed = parser.parseFromString(
-          node.attrs.content,
+          content,
           'application/xml',
         );
 
@@ -50,8 +52,6 @@ export class NodeMath extends Node {
 
         // Import and return the parsed MathML element
         return document.importNode(parsed.documentElement, true);
-        // const { xml } = node.attrs;
-        // return ['math', {}, []];
       },
     };
   }

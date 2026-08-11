@@ -7,8 +7,8 @@ import { Workspace } from '@kerebron/workspace';
 
 import { ExtensionMarkdown, HookArray, HookMap } from './ExtensionMarkdown.ts';
 import { MarkdownContentMapper } from './MarkdownContentMapper.ts';
-import { getDefaultsPreProcessFilters } from './preprocess/preProcess.ts';
-import { rewriteUrls } from './preprocess/rewriteUrls.ts';
+import { getDefaultsPreProcessFilters } from './pm2md/preProcess.ts';
+import { rewriteUrls } from './pm2md/rewriteUrls.ts';
 
 interface MarkdownMeta {
   setMarkdownHooks?: {

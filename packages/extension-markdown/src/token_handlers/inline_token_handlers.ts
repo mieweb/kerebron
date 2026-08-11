@@ -2,18 +2,23 @@ import MathMl2LaTeX from 'mathml2latex';
 
 import type {
   ContextStash,
+  SerializerContext,
   TokenHandler,
 } from '@kerebron/extension-markdown/MarkdownSerializer';
 
 import type { Token } from '../types.ts';
 import { fixCharacters } from '../utils.ts';
 
-export function escapeMarkdown(token: Token): Array<[string, Token]> {
+export function escapeMarkdown(
+  token: Token,
+  current: SerializerContext,
+): Array<[string, Token]> {
   const markdownChars = [
     { char: '\\', escape: '\\\\' },
     // { char: '*', escape: '\\*' },
     // { char: '_', escape: '\\_' },
     { char: '#', escape: '\\#' },
+    { char: '$', escape: '\\$' },
     // { char: '[', escape: '\\[' },
     // { char: ']', escape: '\\]' },
     // { char: '(', escape: '\\(' },
@@ -34,11 +39,15 @@ export function escapeMarkdown(token: Token): Array<[string, Token]> {
     { char: '—', escape: '---' },
   ];
 
+  const escapeChars: string[] = (current.meta.escapeChars || '').split('');
+
   const startPos = token.map && token.map.length > 0 ? token.map[0] : 0;
   if (!startPos) {
     let escapedText = fixCharacters(token.content);
     for (const { char, escape } of markdownChars) {
-      escapedText = escapedText.replaceAll(char, escape);
+      if (escapeChars.includes(char)) {
+        escapedText = escapedText.replaceAll(char, escape);
+      }
     }
 
     return [[escapedText, token]];
@@ -72,6 +81,11 @@ export function escapeMarkdown(token: Token): Array<[string, Token]> {
     const char = charArr[idx];
 
     inStr += char;
+    if (!escapeChars.includes(char)) {
+      currentOutStr += char;
+      continue;
+    }
+
     if (markdownCharsMap[char]) {
       flush();
     }
@@ -167,7 +181,7 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
         if (token.meta === 'noEscText') {
           ctx.current.log(token.content);
         } else {
-          for (const pair of escapeMarkdown(token)) {
+          for (const pair of escapeMarkdown(token, ctx.current)) {
             ctx.current.log(pair[0], pair[1]);
           }
         }
@@ -233,12 +247,12 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
 
     'code_open': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('`', token);
+        ctx.current.log(token.markup || '`', token);
       },
     ],
     'code_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('`', token);
+        ctx.current.log(token.markup || '`', token);
       },
     ],
 

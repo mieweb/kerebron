@@ -1,4 +1,4 @@
-import type { Token } from './types.ts';
+import { MdConfig } from '@kerebron/extension-markdown';
 import {
   Attrs,
   Mark,
@@ -7,6 +7,10 @@ import {
   NodeType,
   Schema,
 } from 'prosemirror-model';
+
+import { Telemetry } from '@kerebron/editor/Telemetry';
+
+import type { Token } from './types.ts';
 
 function maybeMerge(a: Node, b: Node): Node | undefined {
   if (a.isText && b.isText && Mark.sameSet(a.marks, b.marks)) {
@@ -78,9 +82,16 @@ export class MarkdownParseState {
       let tok = toks[i];
       let handler = this.tokenHandlers[tok.type];
       if (!handler) {
-        console.log(Object.keys(this.tokenHandlers));
+        const lineNo = (4 === tok.map?.length) ? tok.map[0] + 1 : -1;
         throw new Error(
-          'Token type `' + tok.type + '` not supported by Markdown parser',
+          'Token type `' + tok.type +
+            '` not supported by Markdown parser, content: ' + tok.content,
+          {
+            cause: {
+              lineNo,
+              tokenHandlers: Object.keys(this.tokenHandlers),
+            },
+          },
         );
       }
       handler(this, tok, toks, i);
@@ -256,10 +267,6 @@ export interface ParseSpec {
   ignore?: boolean;
 }
 
-interface MarkdownTokenizer {
-  parse(markdown: string, markdownEnv?: Record<string, any>): Array<Token>;
-}
-
 /// A configuration of a Markdown parser. Such a parser uses
 /// [markdown-it](https://github.com/markdown-it/markdown-it) to
 /// tokenize a file, and then runs the custom rules it is given over
@@ -274,6 +281,8 @@ export class MarkdownParser {
       i: number,
     ) => void;
   };
+  tokenizer: { parse: (source: string) => Array<Token> };
+  telemetry: Telemetry;
 
   /// Create a parser with the given configuration. You can configure
   /// the markdown-it parser to parse the dialect you want, and provide
@@ -284,27 +293,31 @@ export class MarkdownParser {
   constructor(
     /// The parser's document schema.
     readonly schema: Schema,
-    /// This parser's markdown-it tokenizer.
-    readonly tokenizer: MarkdownTokenizer,
+    readonly config: MdConfig,
     /// The value of the `tokens` object used to construct this
     /// parser. Can be useful to copy and modify to base other parsers
     /// on.
     readonly tokens: { [name: string]: ParseSpec },
   ) {
     this.tokenHandlers = tokenHandlers(schema, tokens);
+    if (!this.config.tokenizer) {
+      throw new Error('!config.tokenizer');
+    }
+    this.tokenizer = this.config.tokenizer;
+    this.telemetry = this.config.telemetry;
   }
 
   /// Parse a string as [CommonMark](http://commonmark.org/) markup,
   /// and create a ProseMirror document as prescribed by this parser's
   /// rules.
-  ///
-  /// The second argument, when given, is passed through to the
-  /// [Markdown
-  /// parser](https://markdown-it.github.io/markdown-it/#MarkdownIt.parse).
-  parse(text: string, markdownEnv: Record<string, any> = {}) {
+  parse(text: string) {
     const state = new MarkdownParseState(this.schema, this.tokenHandlers);
 
-    const tokens = this.tokenizer.parse(text, markdownEnv);
+    const tokens = this.tokenizer.parse(text);
+
+    if (this.telemetry.enabled) {
+      this.telemetry.event('tokens', tokens);
+    }
 
     state.parseTokens(tokens);
 

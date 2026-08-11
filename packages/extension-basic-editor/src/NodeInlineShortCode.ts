@@ -90,7 +90,7 @@ export class NodeInlineShortCode extends Node {
   override getInputRules(type: NodeType): InputRule[] {
     return [
       replaceInlineNode(
-        /\{\{[^}]+\}\}/,
+        /\{\{[^}]+\}\}/g,
         type,
         (match: RegExpMatchArray) => {
           const content = fixCharacters(

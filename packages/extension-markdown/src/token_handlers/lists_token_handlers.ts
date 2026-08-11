@@ -5,9 +5,15 @@ import {
   type TokenHandler,
   writeIndented,
 } from '@kerebron/extension-markdown/MarkdownSerializer';
-import { getInlineTokensHandlers } from './inline_token_handlers.ts';
+import {
+  getHtmlInlineFormatTokensHandlers,
+  getInlineTokensHandlers,
+} from './inline_token_handlers.ts';
 import { TokenSource } from '../TokenSource.ts';
 import { numberString } from '../utils.ts';
+import { getTableTokensHandlers } from './table_token_handlers.ts';
+import { getBasicTokensHandlers } from './basic_token_handlers.ts';
+import { getFootnoteTokensHandlers } from './footnote_token_handlers.ts';
 
 function getLongDefinitionTokensHandlers(): Record<
   string,
@@ -220,6 +226,17 @@ function getShortDefinitionTokensHandlers(): Record<
   };
 }
 
+function getHtmlListItemTokensHandlers(): Record<string, Array<TokenHandler>> {
+  return {
+    ...getInlineTokensHandlers(),
+    ...getHtmlInlineFormatTokensHandlers(),
+    ...getTableTokensHandlers(),
+    ...getBasicTokensHandlers(),
+    ...getFootnoteTokensHandlers(),
+    ...getListsTokensHandlers(),
+  };
+}
+
 export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
   return {
     'dl_open': getShortDefinitionTokensHandlers()['dl_open'],
@@ -338,12 +355,20 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
         if (ctx.output.colPos !== 0) {
           ctx.current.log('\n');
         }
+
+        if (ctx.current.meta['use_html_list_items']) {
+          ctx.stash('list_item_open');
+          ctx.current.handlers = getHtmlListItemTokensHandlers();
+        }
       },
     ],
     'list_item_close': [
       (token: Token, ctx: ContextStash) => {
         if (ctx.output.colPos !== 0) {
           ctx.current.log('\n');
+          if (ctx.current.meta['use_html_list_items']) {
+            ctx.unstash('/list_item_open');
+          }
         }
       },
     ],

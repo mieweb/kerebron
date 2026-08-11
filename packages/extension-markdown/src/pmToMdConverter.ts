@@ -312,6 +312,9 @@ export async function extPmToMdConverter(
           }
           if (ctx.current.meta['list_type'] === 'ul') {
             token.markup = ctx.current.meta['list_type_symbol'] || '-';
+            if (['-', '+'].includes(node.attrs['type'])) {
+              token.markup = node.attrs['type'];
+            }
           }
           return token;
         },
@@ -511,7 +514,14 @@ export async function extPmToMdConverter(
       //   // }
       //   return token;
       // },
-      open: 'code_open',
+      open: async (mark: Mark) => {
+        const token = new Token('code_open', 'code', 1);
+        token.markup = mark.attrs.type;
+        // token.attrSet('href', mark.attrs.href);
+        // token.attrSet('origUrl', mark.attrs.origUrl);
+        // token.attrSet('mdTemplate', mark.attrs.mdTemplate);
+        return token;
+      },
       close: 'code_close',
       escape: false,
     },
@@ -536,17 +546,13 @@ export async function extPmToMdConverter(
 
   const tokens = await defaultMarkdownTokenizer.serialize(filteredDoc);
 
-  if (config.debugTokens) {
-    const event = new CustomEvent('md:tokens', {
-      detail: {
-        tokens,
-      },
-    });
-    eventTarget.dispatchEvent(event);
+  if (config.telemetry.enabled) {
+    config.telemetry.event('tokens', tokens);
   }
 
   const markdownSerializerConfig = {
     debug: config.serializerDebug,
+    htmlListItems: config.htmlListItems,
   };
 
   const serializer = new MarkdownSerializer(markdownSerializerConfig);
@@ -636,15 +642,12 @@ export async function extPmToMdConverter(
     sourceMap.sourcesContent = [debugOutput.toString()];
   }
 
-  if (config.dispatchSourceMap) {
-    const event = new CustomEvent('md:sourcemap', {
-      detail: {
-        sourceMap,
-        debugMap,
-        rawTextMap,
-      },
+  if (config.telemetry.enabled) {
+    config.telemetry.event('sourcemap', {
+      sourceMap,
+      debugMap,
+      rawTextMap,
     });
-    eventTarget.dispatchEvent(event);
   }
 
   return {

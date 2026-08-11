@@ -289,6 +289,7 @@ export type TokenHandler = (
 
 export interface MarkdownSerializerConfig {
   debug?: (...args: any[]) => void;
+  htmlListItems?: boolean;
 }
 
 export class MarkdownSerializer {
@@ -302,6 +303,10 @@ export class MarkdownSerializer {
       ...getFootnoteTokensHandlers(),
       ...getListsTokensHandlers(),
     });
+
+    if (config.htmlListItems) {
+      this.ctx.current.meta['use_html_list_items'] = true;
+    }
 
     if (config.debug) {
       this.ctx.current.debug = config.debug;

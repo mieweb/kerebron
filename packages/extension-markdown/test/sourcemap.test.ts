@@ -7,6 +7,7 @@ import { BasicEditorKit } from '@kerebron/extension-basic-editor/BasicEditorKit'
 import { ExtensionMarkdown } from '@kerebron/extension-markdown';
 import { ExtensionTables } from '@kerebron/extension-tables';
 import { assetLoad } from '@kerebron/wasm/deno';
+import { FileTelemetry } from '@kerebron/test-utils/FileTelemetry';
 
 globalThis.DOMParser = DOMParser as any;
 globalThis.XMLSerializer = XMLSerializer;
@@ -25,7 +26,6 @@ const sampleMarkdown = new TextDecoder().decode(
 Deno.test('sourcemap test', async () => {
   const markdownExtension = new ExtensionMarkdown({
     sourceMap: true,
-    debugTokens: true,
   });
 
   const editor = CoreEditor.create({
@@ -48,28 +48,16 @@ Deno.test('sourcemap test', async () => {
     new TextEncoder().encode(sampleMarkdown),
   );
 
-  editor.addEventListener(
-    'md:tokens',
-    ((event: CustomEvent) => {
-      const { tokens } = event.detail;
-      Deno.writeTextFileSync(
-        __dirname + '/sourcemap.debug.tokens.json',
-        JSON.stringify(tokens, null, 2),
-      );
-    }) as EventListener,
-  );
-
-  editor.addEventListener(
-    'md:sourcemap',
-    ((event: CustomEvent) => {
-      const { sourceMap, debugMap, rawTextMap } = event.detail;
-      sourceMap.file = 'sourcemap.result.md';
-      Deno.writeTextFileSync(
-        __dirname + '/sourcemap.result.json',
-        JSON.stringify(sourceMap, null, 2),
-      );
-    }) as EventListener,
-  );
+  const telemetry = new FileTelemetry('sourcemap');
+  telemetry.map[__dirname + '/sourcemap.pm2md.debug.tokens.json'] = [
+    'pm2md',
+    'tokens',
+  ];
+  telemetry.map[__dirname + '/sourcemap.pm2md.debug.sourcemap.json'] = [
+    'pm2md',
+    'sourcemap',
+  ];
+  editor.ci.register('telemetry', telemetry);
 
   const markdown = new TextDecoder().decode(
     await editor.saveDocument('text/x-markdown'),

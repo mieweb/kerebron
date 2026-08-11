@@ -5,6 +5,7 @@ import { getLangTreeSitter } from '@kerebron/wasm';
 
 import { sitterTokenizer } from '../src/treeSitterTokenizer.ts';
 import { assetLoad } from '@kerebron/wasm/deno';
+import { FileTelemetry } from '@kerebron/test-utils/FileTelemetry';
 
 const __dirname = import.meta.dirname;
 const source = new TextDecoder().decode(
@@ -35,7 +36,9 @@ Deno.test('tree test', async () => {
     JSON.stringify(tree?.rootNode, null, 2),
   );
 
-  const tokenizer = await sitterTokenizer(assetLoad);
+  const telemetry = new FileTelemetry('tree');
+
+  const tokenizer = await sitterTokenizer(assetLoad, telemetry);
   const tokens = tokenizer.parse(source);
 
   Deno.writeTextFileSync(

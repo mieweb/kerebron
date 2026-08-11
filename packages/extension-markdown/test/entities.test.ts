@@ -6,6 +6,7 @@ import { assetLoad } from '@kerebron/wasm/deno';
 
 import { MarkdownSerializer } from '@kerebron/extension-markdown/MarkdownSerializer';
 import { sitterTokenizer } from '../src/treeSitterTokenizer.ts';
+import { FileTelemetry } from '@kerebron/test-utils/FileTelemetry';
 
 const __dirname = import.meta.dirname;
 const sampleMarkdown = new TextDecoder().decode(
@@ -13,7 +14,9 @@ const sampleMarkdown = new TextDecoder().decode(
 );
 
 Deno.test('entities.md', async () => {
-  const tokenizer = await sitterTokenizer(assetLoad);
+  const telemetry = new FileTelemetry('entities.md');
+
+  const tokenizer = await sitterTokenizer(assetLoad, telemetry);
   const tokens = tokenizer.parse(sampleMarkdown);
   Deno.writeTextFileSync(
     __dirname + '/entities.tokens.json',
@@ -48,6 +51,6 @@ Deno.test('sourcemap test', async () => {
     await editor.saveDocument('text/html'),
   );
 
-  assertEquals(outMd.trim(), 'Copyright (c) 2026');
+  assertEquals(outMd.trim(), 'Copyright © 2026');
   assertEquals(outHtml.trim(), '<p>Copyright © 2026</p>');
 });

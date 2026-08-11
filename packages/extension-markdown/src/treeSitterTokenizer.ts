@@ -1,8 +1,7 @@
 import { AssetLoad } from '@kerebron/editor';
-import { createParser, ExtendedNode } from '@kerebron/tree-sitter';
-import type { Parser, Tree, TreeSitterNode } from '@kerebron/tree-sitter';
+import type { TreeSitterNode } from '@kerebron/tree-sitter';
+import { Telemetry } from '@kerebron/editor/Telemetry';
 
-import { getLangTreeSitter } from '@kerebron/wasm';
 import {
   NESTING_CLOSING,
   NESTING_OPENING,
@@ -10,10 +9,13 @@ import {
   Token,
 } from './types.ts';
 
+import { CodeContentMapper } from '@kerebron/workspace/CodeContentMapper';
+import { StackableMarkdownParser } from './StackableMarkdownParser.ts';
+
 function treeToTokens(
   rootNode: TreeSitterNode,
-  inlineParser: Parser,
   source: string,
+  telemetry: Telemetry,
 ): Array<Token> {
   const retVal: Array<Token> = [];
   let blockLevel = 0;
@@ -50,9 +52,9 @@ function treeToTokens(
 
   const walkInline = (
     children: TreeSitterNode[],
-    inlineContent: string,
-    startPosition = { row: 0, column: 0 },
   ) => {
+    const inlineContent = source;
+
     const nodeText = (node?: TreeSitterNode | null) => {
       if (!node) {
         return undefined;
@@ -66,8 +68,8 @@ function treeToTokens(
       for (const row of rows) {
         if (rowOffset > 0) {
           const map: [number, number, number, number] = [ // TODO verify in viewer
-            startPosition.row + node.startPosition?.row + rowOffset,
-            startPosition.row + node.endPosition?.row + rowOffset,
+            node.startPosition?.row + rowOffset,
+            node.endPosition?.row + rowOffset,
             0,
             0,
           ];
@@ -79,12 +81,10 @@ function treeToTokens(
         }
 
         const map: [number, number, number, number] = [
-          startPosition.row + node.startPosition?.row + rowOffset,
-          startPosition.row + node.endPosition?.row + rowOffset,
-          startPosition.column + node.startPosition?.column,
-          (+node.endPosition.row === +node.startPosition.row
-            ? startPosition.column
-            : 0) + node.endPosition?.column,
+          node.startPosition?.row + rowOffset,
+          node.endPosition?.row + rowOffset,
+          node.startPosition?.column,
+          node.endPosition?.column,
         ];
 
         const token = new Token('text', '', NESTING_SELF_CLOSING);
@@ -99,12 +99,10 @@ function treeToTokens(
 
     for (const node of children) {
       const map: [number, number, number, number] = [
-        startPosition.row + node.startPosition?.row,
-        startPosition.row + node.endPosition?.row,
-        startPosition.column + node.startPosition?.column,
-        (+node.endPosition.row === +node.startPosition.row
-          ? startPosition.column
-          : 0) + node.endPosition?.column,
+        node.startPosition?.row,
+        node.endPosition?.row,
+        node.startPosition?.column,
+        node.endPosition?.column,
       ];
       if (node.type.length === 1) { // single letter type is text
         const token = new Token('text', '', NESTING_SELF_CLOSING);
@@ -133,8 +131,8 @@ function treeToTokens(
           {
             const text = nodeText(node) ?? '';
             const map: [number, number, number, number] = [
-              startPosition.row + node.startPosition?.row,
-              startPosition.row + node.endPosition?.row,
+              node.startPosition?.row,
+              node.endPosition?.row,
               0,
               0,
             ];
@@ -160,18 +158,33 @@ function treeToTokens(
               .map((c: any) => nodeText(c))
               .join('');
 
-            if (nodeText(delimiter) === '$$') {
+            const text = nodeText(delimiter) || '';
+            if ('$$' === text) {
               const token = new Token(
                 'fence',
                 'pre',
                 NESTING_SELF_CLOSING,
               );
               token.level = blockLevel;
-              token.markup = '$$';
+              token.markup = text;
               token.meta = 'noEscText';
               token.attrSet('lang', 'latex');
 
               token.content = content.trim();
+              retVal.push(token);
+            } else if ('$' === text) {
+              const token = new Token(
+                'math',
+                'math',
+                NESTING_SELF_CLOSING,
+              );
+              token.level = blockLevel;
+
+              token.markup = text;
+              token.meta = 'noEscText';
+              token.attrSet('lang', 'latex');
+
+              token.content = content;
               retVal.push(token);
             } else {
               const token = new Token('math', '', NESTING_SELF_CLOSING);
@@ -254,7 +267,7 @@ function treeToTokens(
                 pushInlineNode(token, 'link_text');
               });
 
-            // walkInline(node.children, inlineContent);
+            // walkInline(node.children);
 
             const closeToken = new Token(
               tokenName + '_close',
@@ -262,6 +275,43 @@ function treeToTokens(
               NESTING_CLOSING,
             );
             pushInlineNode(closeToken, '/shortcut_link');
+          }
+          break;
+
+        case 'uri_autolink':
+          {
+            const tokenName = 'link';
+            const tagName = 'a';
+            const openToken = new Token(
+              tokenName + '_open',
+              tagName,
+              NESTING_OPENING,
+            );
+
+            let href = node.text;
+            if (href.startsWith('<') && href.endsWith('>')) {
+              href = href.substring(1, href.length - 1);
+            }
+            openToken.attrSet('href', href || '');
+
+            pushInlineNode(openToken, 'inline_link');
+
+            node.children
+              .filter((c: any) => c.type === 'link_text')
+              .forEach((c: any) => {
+                const token = new Token('text', '', NESTING_SELF_CLOSING);
+                token.map = map;
+                token.meta = 'noEscText';
+                token.content = nodeText(c) ?? '';
+                pushInlineNode(token, 'inline_link_txt');
+              });
+
+            const closeToken = new Token(
+              tokenName + '_close',
+              tagName,
+              NESTING_CLOSING,
+            );
+            pushInlineNode(closeToken, '/inline_link');
           }
           break;
 
@@ -352,7 +402,7 @@ function treeToTokens(
             }
             pushInlineNode(openToken, 'strongem');
 
-            walkInline(node.children, inlineContent);
+            walkInline(node.children);
 
             const closeToken = new Token(
               tokenName + '_close',
@@ -382,7 +432,7 @@ function treeToTokens(
             );
             pushInlineNode(openToken, 'em');
 
-            walkInline(children.filter((c: any) => !!c), inlineContent);
+            walkInline(children.filter((c: any) => !!c));
 
             const closeToken = new Token(
               tokenName + '_close',
@@ -403,7 +453,7 @@ function treeToTokens(
             );
             pushInlineNode(openToken, 's');
 
-            walkInline(node.children.filter((c: any) => !!c), inlineContent);
+            walkInline(node.children.filter((c: any) => !!c));
 
             const closeToken = new Token(
               tokenName + '_close',
@@ -424,7 +474,7 @@ function treeToTokens(
             );
             pushInlineNode(openToken, 'code');
 
-            walkInline(node.children.filter((c: any) => !!c), inlineContent);
+            walkInline(node.children.filter((c: any) => !!c));
 
             const closeToken = new Token(
               tokenName + '_close',
@@ -434,6 +484,7 @@ function treeToTokens(
             pushInlineNode(closeToken, '/code');
           }
           break;
+        case 'html':
         case 'html_tag':
           {
             const tokenName = 'html_block';
@@ -476,14 +527,47 @@ function treeToTokens(
           break;
         default:
           {
-            console.debug(`Unhandled inline node type: ${node.type}`, node);
+            const mapper = CodeContentMapper.create(source);
+            const [line, col] = mapper.toRawTextLineCol(node.startIndex);
+
             const token = new Token('text', '', NESTING_SELF_CLOSING);
             token.map = map;
             token.meta = 'noEscText';
-            token.content = `Error: Unhandled inline node type: ${node.type} ${
-              JSON.stringify(node)
-            }`;
-            pushInlineNode(token, 'backslash_escape');
+
+            const json = 'toJSON' in node ? (node as any).toJSON() : {};
+            token.content =
+              `Error: Unhandled inline node type: ${node.type}, text: ${node.text} ${
+                JSON.stringify({
+                  ...json,
+                  lineNo: line,
+                  colNo: col + 1,
+                })
+              }`;
+            pushInlineNode(token, 'unhandled_inline');
+
+            if (true) {
+              console.debug(
+                `Unhandled inline node type: ${node.type}, text: ${node.text}`,
+                {
+                  cause: {
+                    ...json,
+                    lineNo: line,
+                    colNo: col + 1,
+                  },
+                },
+              );
+            } else {
+              throw new Error(
+                `Unhandled inline node type: ${node.type}, text: ${node.text}`,
+                {
+                  cause: {
+                    node,
+                    lineNo: line,
+                    colNo: col + 1,
+                  },
+                },
+              );
+            }
           }
           break;
       }
@@ -508,15 +592,8 @@ function treeToTokens(
         throw new Error('!inlineText');
       }
 
-      const inlineTree = inlineParser.parse(inlineText);
-      if (!inlineTree) {
-        throw new Error('!inlineTree');
-      }
-      const inlineRootNode = new ExtendedNode(inlineTree.rootNode, inlineText);
-      const children = inlineRootNode.children.length > 0
-        ? inlineRootNode.children
-        : [inlineRootNode];
-      walkInline(children, inlineText, node.startPosition);
+      const children = node.children.length > 0 ? node.children : [node];
+      walkInline(children);
 
       return;
     }
@@ -1240,20 +1317,66 @@ function treeToTokens(
         }
         break;
 
-      default:
-        // Log unhandled node types for debugging
-        console.warn(
-          `Unhandled node type: ${node.type}, children: ${
-            node.children.map((c: any) => c.type).join(', ')
-          }`,
-          {
-            ...node,
-            children: undefined,
-            _children: undefined,
-            tree: undefined,
-          },
+      default: {
+        const mapper = CodeContentMapper.create(source);
+        const [line, col] = mapper.toRawTextLineCol(node.startIndex);
+
+        const json = 'toJSON' in node ? (node as any).toJSON() : {};
+
+        const tokenName = 'fence';
+        const tagName = 'pre';
+
+        const info = node.children.filter((c: any) => !!c).find((c: any) =>
+          c.type === 'info_string'
         );
-        throw new Error(`Unhandled node type: ${node.type}`);
+
+        const token = new Token(
+          tokenName,
+          tagName,
+          NESTING_SELF_CLOSING,
+        );
+        token.meta = 'noEscText';
+        token.level = blockLevel;
+        token.markup = '```';
+
+        const content =
+          `Error: Unhandled node type: ${node.type}, text: ${node.text} ${
+            JSON.stringify({
+              ...json,
+              lineNo: line,
+              colNo: col + 1,
+            })
+          }`;
+
+        token.content = content;
+        token.attrSet('margin_before', '1');
+        token.attrSet('margin_after', '1');
+        retVal.push(token);
+
+        if (true) {
+          console.debug(
+            `Unhandled node type: ${node.type}, text: ${node.text}`,
+            {
+              cause: {
+                ...json,
+                lineNo: line,
+                colNo: col + 1,
+              },
+            },
+          );
+        } else {
+          throw new Error(
+            `Unhandled node type: ${node?.type}, text: ${node?.text}`,
+            {
+              cause: {
+                lineNo: line + 1,
+                colNo: col + 1,
+                node,
+              },
+            },
+          );
+        }
+      }
     }
   };
 
@@ -1262,35 +1385,51 @@ function treeToTokens(
   return retVal;
 }
 
-export async function sitterTokenizer(assetLoad: AssetLoad) {
-  const jsonManifest = getLangTreeSitter('markdown');
-  const blockUrl: string = jsonManifest.files.find((url) =>
-    url.indexOf('_inline') === -1
-  )!;
-  const inlineUrl: string = jsonManifest.files.find((url) =>
-    url.indexOf('_inline') > -1
-  )!;
-
-  const markdownWasm = await assetLoad(jsonManifest.dir + '/' + blockUrl);
-  const inlineWasm = await assetLoad(jsonManifest.dir + '/' + inlineUrl);
-
-  const blockParser: Parser =
-    (await createParser(markdownWasm, { assetLoad })) as unknown as Parser;
-  const inlineParser: Parser =
-    (await createParser(inlineWasm, { assetLoad })) as unknown as Parser;
+export async function sitterTokenizer(
+  assetLoad: AssetLoad,
+  telemetry: Telemetry,
+) {
+  const parser = await StackableMarkdownParser.create(assetLoad);
 
   return {
     parse: (source: string): Array<Token> => {
-      const tree: Tree | null = blockParser.parse(source);
-      if (!tree) {
+      let arr;
+      try {
+        arr = parser.parse(source);
+      } catch (err: any) {
+        const preview = source.length > 200
+          ? source.slice(0, 200) + '…'
+          : source;
+        throw new Error(
+          `StackableMarkdownParser.parse() threw (source length=${source.length}): ${
+            err?.message ?? err
+          }\n  preview: ${JSON.stringify(preview)}`,
+          { cause: err },
+        );
+      }
+
+      if (!arr) {
         throw new Error('Tree is null');
       }
 
-      return treeToTokens(
-        new ExtendedNode(tree.rootNode, source),
-        inlineParser,
+      const rootNode = arr[0];
+      const trees = arr[1];
+
+      if (telemetry.enabled) {
+        telemetry.event('tree', rootNode);
+      }
+
+      const retVal = treeToTokens(
+        rootNode,
         source,
+        telemetry,
       );
+
+      for (const tree of trees) {
+        tree.delete();
+      }
+
+      return retVal;
     },
   };
 }

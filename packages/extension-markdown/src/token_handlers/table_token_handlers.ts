@@ -120,6 +120,14 @@ class TableBuilder {
     });
   }
 
+  changeRowType(type: 'header' | 'body') {
+    if (this.rows.length === 0) {
+      return;
+    }
+
+    this.rows[this.rows.length - 1].type = type;
+  }
+
   appendCell(align: 'left' | 'right', token: Token) {
     const lastRow = this.rows[this.rows.length - 1];
     const startPos = token.map && token.map.length > 0 ? token.map[0] : 0;
@@ -337,6 +345,7 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
 
         const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
         tableBuilder.appendCell(align as TextAlign, token);
+        tableBuilder.changeRowType('header');
         ctx.current.meta['table_cell_para_count'] = 0;
       },
     ],

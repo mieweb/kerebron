@@ -11,7 +11,6 @@ import {
 import type { Token } from './types.ts';
 
 import { MarkdownParser, type MarkdownParseState } from './MarkdownParser.ts';
-import { sitterTokenizer } from './treeSitterTokenizer.ts';
 
 function listIsTight(tokens: readonly Token[], i: number) {
   while (++i < tokens.length) {
@@ -40,7 +39,7 @@ export async function mdToPmConverterText(
 
   const defaultMarkdownParser = new MarkdownParser(
     schema,
-    config.tokenizer,
+    config,
     {
       frontmatter: {
         custom: (
@@ -62,7 +61,10 @@ export async function mdToPmConverterText(
       task_list: {
         block: 'task_list',
       },
-      list_item: { block: 'list_item' },
+      list_item: {
+        block: 'list_item',
+        getAttrs: (tok) => ({ type: tok.markup }),
+      },
       bullet_list: {
         block: 'bullet_list',
         getAttrs: (_, tokens, i) => ({ tight: listIsTight(tokens, i) }),
@@ -131,6 +133,7 @@ export async function mdToPmConverterText(
         },
       },
       hardbreak: { node: 'br' },
+      softbreak: { node: 'softbreak' },
       em: { mark: 'em' },
       underline: { mark: 'underline' },
       strong: { mark: 'strong' },
@@ -143,6 +146,20 @@ export async function mdToPmConverterText(
         }),
       },
       code: { mark: 'code' },
+      math: {
+        custom: (
+          state: MarkdownParseState,
+          token: Token,
+          tokens: Token[],
+          i: number,
+        ) => {
+          state.openNode(schema.nodes['math'], {
+            content: token.content,
+            lang: token.attrGet('lang'),
+          });
+          state.closeNode();
+        },
+      },
       html_block: { // TODO
         custom: (
           state: MarkdownParseState,
@@ -151,9 +168,11 @@ export async function mdToPmConverterText(
           i: number,
         ) => {
           const parser = DOMParser.fromSchema(schema);
-          const parsed = parser.parse(elementFromString(token.content));
+          const parsed = parser.parse(elementFromString(token.content), {
+            topNode: schema.node('paragraph'),
+          });
 
-          state.importNodes(parsed.children);
+          state.importNodes(parsed.content.content);
         },
       },
       footnote_ref: {
@@ -179,6 +198,10 @@ export async function mdToPmConverterText(
 
   const origDocument = defaultMarkdownParser.parse(content);
 
+  if (config.telemetry.enabled) {
+    config.telemetry.event('origDocument', origDocument);
+  }
+
   const filterCommands = [...(config.hooks || [])];
   let state = EditorState.create({ doc: origDocument });
   const dispatch = (tr: Transaction) => {
@@ -192,6 +215,10 @@ export async function mdToPmConverterText(
         (tr) => dispatch(tr),
       );
     }
+  }
+
+  if (config.telemetry.enabled) {
+    config.telemetry.event('filteredDocument', state.doc);
   }
 
   return state.doc;
