@@ -4,7 +4,13 @@
     "version": "latest",
     "files": [
       "web-tree-sitter.tar.gz/web-tree-sitter.wasm",
-      "web-tree-sitter.tar.gz/web-tree-sitter.js"
+      "web-tree-sitter.tar.gz/web-tree-sitter.wasm.map",
+      "web-tree-sitter.tar.gz/web-tree-sitter.js",
+      "web-tree-sitter.tar.gz/web-tree-sitter.js.map",
+      "web-tree-sitter.tar.gz/debug/web-tree-sitter.wasm",
+      "web-tree-sitter.tar.gz/debug/web-tree-sitter.wasm.map",
+      "web-tree-sitter.tar.gz/debug/web-tree-sitter.js",
+      "web-tree-sitter.tar.gz/debug/web-tree-sitter.js.map"
     ]
   },
   {

@@ -199,6 +199,13 @@ async function main() {
 
         if (fileToExtract) {
           await tgz.uncompress(downloadPath, path.join(wasmDir, 'tar'));
+
+          const dirs = fileToExtract.split(path.sep);
+          dirs.pop();
+          if (dirs.length > 0) {
+            fs.mkdirSync(path.join(wasmDir, ...dirs), { recursive: true });
+          }
+
           await Deno.copyFile(
             path.join(wasmDir, 'tar', fileToExtract),
             path.join(wasmDir, fileToExtract),

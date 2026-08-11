@@ -1,4 +1,4 @@
 export { Language, Node, Parser, Tree } from 'web-tree-sitter';
 
-export * from './childrenWithSoftNodes.ts';
+export * from './ExtendedNode.ts';
 export { createParser } from './parser.ts';
