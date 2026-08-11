@@ -3,6 +3,7 @@
   "tasks": {},
   "imports": {},
   "exports": {
-    ".": "./src/mod.ts"
+    ".": "./src/mod.ts",
+    "./CodeContentMapper": "./src/CodeContentMapper.ts"
   }
 }

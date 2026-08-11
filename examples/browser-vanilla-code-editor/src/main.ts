@@ -4,9 +4,13 @@ import { LspEditorKit } from '@kerebron/extension-lsp/LspEditorKit';
 import { YjsEditorKit } from '@kerebron/extension-yjs/YjsEditorKit';
 import type { LSPTransportGetter, Transport } from '@kerebron/extension-lsp';
 import { LSPWebSocketTransport } from '@kerebron/extension-lsp/LSPWebSocketTransport';
-import { PositionMapper } from '@kerebron/extension-markdown/PositionMapper';
 
 import YjsRoom from '@kerebron/custom-elements/YjsRoom';
+import type {
+  ContentMapper,
+  Workspace,
+  WorkspaceModifyParams,
+} from '@kerebron/workspace';
 YjsRoom.register();
 
 window.addEventListener('load', async () => {
@@ -54,17 +58,34 @@ window.addEventListener('load', async () => {
     ],
   });
 
-  editor.addEventListener('selection', (event: CustomEvent) => {
-    const selection = event.detail.selection;
-    const extensionMarkdown: ExtensionBasicCodeEditor | undefined = editor
-      .ci.resolve('basic-code-editor');
-    if (extensionMarkdown) {
-      const result = extensionMarkdown.toRawText(editor.state.doc);
-      const code = result.content;
+  let snapshot: {
+    version: number;
+    getContentMapper: () => Promise<ContentMapper>;
+  } | undefined;
 
-      const mapper = new PositionMapper(editor, result.rawTextMap);
-      const from = mapper.toRawTextPos(selection.from);
-      const to = mapper.toRawTextPos(selection.to);
+  const workspace: Workspace = editor.ci.resolve('workspace')!;
+  workspace.addEventListener(
+    'modifyFile',
+    (event: CustomEvent<WorkspaceModifyParams>) => {
+      if (event.detail.uri !== editor.config.uri) {
+        return;
+      }
+      snapshot = {
+        version: event.detail.version,
+        getContentMapper: event.detail.getContentMapper,
+      };
+    },
+  );
+
+  editor.addEventListener('selection', async (event: CustomEvent) => {
+    const selection = event.detail.selection;
+
+    if (snapshot) {
+      const contentMapper: ContentMapper = await snapshot.getContentMapper();
+
+      const code = contentMapper.getTextContent();
+      const from = contentMapper.toRawTextPos(selection.from);
+      const to = contentMapper.toRawTextPos(selection.to);
 
       if (from > -1 && to > -1) {
         const parts = [
@@ -76,9 +97,9 @@ window.addEventListener('load', async () => {
           '<span class="md-selected">' + parts[1] + '</span>' +
           '<span>' + parts[2] + '</span>';
 
-        document.getElementById('markdown').innerHTML = preHtml;
+        document.getElementById('markdown')!.innerHTML = preHtml;
       } else {
-        return code;
+        // return code;
       }
     }
   });
