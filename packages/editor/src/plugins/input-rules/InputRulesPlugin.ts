@@ -210,30 +210,34 @@ export const runInputRulesTexts: CommandFactory = () => {
         } else if (rule.inCode === 'only') {
           continue;
         }
-        const match = rule.regex.exec(text);
-        if (!match) {
-          continue;
-        }
 
-        const index = match.index;
+        const matches = rule.regex.global
+          ? [...text.matchAll(rule.regex)]
+          : [text.match(rule.regex)];
+        for (const match of matches.reverse()) {
+          if (!match) {
+            continue;
+          }
+          if ('undefined' == typeof match.index) {
+            continue;
+          }
 
-        const from = pos + index;
-        const to = pos + index + match[0].length;
+          const index = match.index;
 
-        let subTr = rule.handler(
-          tr,
-          state,
-          match,
-          from,
-          to,
-        );
-        if (!subTr) continue;
+          const from = pos + index;
+          const to = pos + index + match[0].length;
 
-        tr = subTr;
-        doc = tr.doc;
+          rule.handler(
+            tr,
+            state,
+            match,
+            from,
+            to,
+          );
 
-        if (rule.undoable) {
-          tr.setMeta(plugin, { transform: tr, from, to, text });
+          if (rule.undoable) {
+            tr.setMeta(plugin, { transform: tr, from, to, text });
+          }
         }
       }
     }

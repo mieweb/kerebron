@@ -111,18 +111,14 @@ export function replaceInlineNode(
       tr = state.tr;
     }
 
-    const attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
-
     const $pos = state.doc.resolve(start);
     if ($pos.parent.type === state.schema.nodes.code_block) {
       return tr;
     }
 
+    const attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
     const node = nodeType.createAndFill(attrs);
 
-    const from = tr.mapping.map(start);
-    const to = tr.mapping.map(end);
-
-    return tr.replaceWith(from, to, Fragment.from(node));
+    return tr.replaceWith(start, end, Fragment.from(node));
   });
 }
