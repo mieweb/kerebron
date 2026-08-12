@@ -358,7 +358,10 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
 
         if (ctx.current.meta['use_html_list_items']) {
           ctx.stash('list_item_open');
-          ctx.current.handlers = getHtmlListItemTokensHandlers();
+          ctx.current.handlers = {
+            ...ctx.current.handlers,
+            ...getHtmlInlineFormatTokensHandlers(),
+          };
         }
       },
     ],
@@ -366,9 +369,9 @@ export function getListsTokensHandlers(): Record<string, Array<TokenHandler>> {
       (token: Token, ctx: ContextStash) => {
         if (ctx.output.colPos !== 0) {
           ctx.current.log('\n');
-          if (ctx.current.meta['use_html_list_items']) {
-            ctx.unstash('/list_item_open');
-          }
+        }
+        if (ctx.current.meta['use_html_list_items']) {
+          ctx.unstash('/list_item_open');
         }
       },
     ],

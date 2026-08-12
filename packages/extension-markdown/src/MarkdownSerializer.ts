@@ -307,6 +307,7 @@ export class MarkdownSerializer {
     if (config.htmlListItems) {
       this.ctx.current.meta['use_html_list_items'] = true;
     }
+    this.ctx.current.meta['escapeChars'] = '…©®™±—';
 
     if (config.debug) {
       this.ctx.current.debug = config.debug;

@@ -1,3 +1,5 @@
+import { nodeToTreeString } from '@kerebron/editor';
+import { Node } from '@kerebron/pm/model';
 import { Telemetry } from '@kerebron/editor/Telemetry';
 
 export class FileTelemetry implements Telemetry {
@@ -70,6 +72,9 @@ export class FileTelemetry implements Telemetry {
         .replace(')', '');
 
       console.info('EVENT', sourceFile, fileName);
+      if (data instanceof Node) {
+        data = nodeToTreeString(data);
+      }
       Deno.writeTextFileSync(
         fileName,
         typeof data === 'string' ? data : JSON.stringify(data, null, 2),
