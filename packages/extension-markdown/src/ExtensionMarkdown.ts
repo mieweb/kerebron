@@ -41,6 +41,7 @@ export interface MdConfig {
   tokenizer?: { parse: (source: string) => Array<Token> };
   telemetry: Telemetry;
   htmlListItems?: boolean;
+  listMargins?: Record<string, number>;
 }
 
 export type HookArray = Array<Command | AsyncCommand>;

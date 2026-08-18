@@ -1,7 +1,7 @@
 import { assetLoad } from '@kerebron/wasm/deno';
 
 import { StackableMarkdownParser } from '../src/StackableMarkdownParser.ts';
-import { ExtendedNode } from '@kerebron/tree-sitter';
+import { assertEquals } from '@kerebron/test-utils';
 
 const __dirname = import.meta.dirname;
 const sampleMarkdown = new TextDecoder().decode(
@@ -13,6 +13,7 @@ Deno.test('3-in-1 parser', async () => {
   const [root] = parser.parse(sampleMarkdown)!;
 
   const json = root.toJSON();
+  assertEquals(JSON.stringify(json).includes('"type":"html"'), true);
   // console.log(JSON.stringify(json, null, 2));
   // <strong class=\"test\">html</strong>
 });

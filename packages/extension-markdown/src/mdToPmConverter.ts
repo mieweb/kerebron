@@ -160,7 +160,7 @@ export async function mdToPmConverterText(
           state.closeNode();
         },
       },
-      html_block: { // TODO
+      html_inline: {
         custom: (
           state: MarkdownParseState,
           token: Token,
@@ -168,11 +168,45 @@ export async function mdToPmConverterText(
           i: number,
         ) => {
           const parser = DOMParser.fromSchema(schema);
-          const parsed = parser.parse(elementFromString(token.content), {
-            topNode: schema.node('paragraph'),
-          });
+          const div = elementFromString(token.content);
 
-          state.importNodes(parsed.content.content);
+          const slice = parser.parseSlice(div);
+          if (state.stack.find((s) => s.type.name === 'paragraph')) {
+            state.importNodes(slice.content.content);
+          } else {
+            state.openNode(schema.nodes['paragraph'], {});
+            state.importNodes(slice.content.content);
+            state.closeNode();
+          }
+        },
+      },
+      html_block: {
+        custom: (
+          state: MarkdownParseState,
+          token: Token,
+          tokens: Token[],
+          i: number,
+        ) => {
+          const parser = DOMParser.fromSchema(schema);
+          const div = elementFromString(token.content);
+
+          const hasBlock = [...div.children].some((el) =>
+            /^(P|DIV|TABLE|UL|OL|LI|BLOCKQUOTE|H[1-6])$/.test(el.tagName)
+          );
+
+          if (hasBlock) {
+            const parsed = parser.parse(div);
+            state.importNodes(parsed.content.content);
+          } else {
+            const slice = parser.parseSlice(div);
+            if (state.stack.find((s) => s.type.name === 'paragraph')) {
+              state.importNodes(slice.content.content);
+            } else {
+              state.openNode(schema.nodes['paragraph'], {});
+              state.importNodes(slice.content.content);
+              state.closeNode();
+            }
+          }
         },
       },
       footnote_ref: {

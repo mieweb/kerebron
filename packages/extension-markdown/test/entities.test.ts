@@ -51,6 +51,6 @@ Deno.test('sourcemap test', async () => {
     await editor.saveDocument('text/html'),
   );
 
-  assertEquals(outMd.trim(), 'Copyright (c) 2026');
+  assertEquals(outMd.trim(), 'Copyright © 2026');
   assertEquals(outHtml.trim(), '<p>Copyright © 2026</p>');
 });

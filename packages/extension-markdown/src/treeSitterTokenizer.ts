@@ -593,7 +593,18 @@ function treeToTokens(
       }
 
       const children = node.children.length > 0 ? node.children : [node];
-      walkInline(children);
+      const firstNonEmpty = children.findIndex((c) => c.type !== 'whitespace');
+      const lastNonEmpty = children.findLastIndex((c) =>
+        c.type !== 'whitespace'
+      );
+      if (firstNonEmpty > -1) {
+        walkInline(
+          children.slice(
+            firstNonEmpty,
+            lastNonEmpty > -1 ? lastNonEmpty + 1 : children.length,
+          ),
+        );
+      }
 
       return;
     }
@@ -1269,21 +1280,10 @@ function treeToTokens(
 
           retVal.push(openToken);
 
-          // node.children?.forEach((child) => walkRecursive(child, ctx));
           blockLevel++;
-          walkRecursive(
-            node.children
-              .filter((c: any) => !!c)
-              .find((c: any) => c.type === 'paragraph'),
-            ctx,
-          );
-
-          const lists = node.children
-            .filter((c: any) => !!c)
-            .filter((c: any) => c.type === 'list');
-          for (const list of lists) {
-            walkRecursive(list, ctx);
-          }
+          node.children.filter((c: any) =>
+            ['paragraph', 'list', 'block_continuation'].includes(c.type)
+          ).forEach((c: any) => walkRecursive(c, ctx));
           blockLevel--;
 
           const closeToken = new Token(

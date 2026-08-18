@@ -421,6 +421,7 @@ export function getHtmlInlineTokensHandlers(): Record<
   Array<TokenHandler>
 > {
   return {
+    'in_html': [],
     'text': [
       (token: Token, ctx: ContextStash) => {
         ctx.current.log(escapeHtml(token.content), token);
@@ -488,13 +489,13 @@ export function getHtmlInlineTokensHandlers(): Record<
     'hardbreak': [
       (token: Token, ctx: ContextStash) => {
         const tag = token.tag || 'br';
-        ctx.current.log(`<${tag} />`, token);
+        ctx.current.log(`<${tag} />\n`, token);
       },
     ],
     'softbreak': [
       (token: Token, ctx: ContextStash) => {
         const tag = token.tag || 'wbr';
-        ctx.current.log(`<${tag} />`, token);
+        ctx.current.log(`<${tag} />\n`, token);
       },
     ],
 

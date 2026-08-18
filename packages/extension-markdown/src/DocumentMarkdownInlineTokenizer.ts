@@ -254,7 +254,13 @@ export class DocumentMarkdownInlineTokenizer {
         }
 
         if (nodeSpec.selfClose) {
-          if (typeof nodeSpec.selfClose === 'string') {
+          if (tag === 'wbr') {
+            const token = new Token('text', '', 0);
+            token.meta = 'wbr';
+            token.map = [currentPos];
+            token.content = '\n';
+            inlineTokens.push(token);
+          } else if (typeof nodeSpec.selfClose === 'string') {
             const token = new Token(nodeSpec.selfClose, tag, 0);
             token.meta = 'nodeSpec.selfClose';
             token.level = level;

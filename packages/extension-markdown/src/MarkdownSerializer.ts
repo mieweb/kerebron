@@ -24,6 +24,16 @@ export function writeIndented(
     tl: 4,
   };
 
+  if (currentCtx.meta['listMargins']) {
+    for (const [key, value] of Object.entries(currentCtx.meta['listMargins'])) {
+      if (
+        'number' === typeof value && value > 0 && typeIndent[key as ListType]
+      ) {
+        typeIndent[key as ListType] = value;
+      }
+    }
+  }
+
   let offset = 0;
   const startPos = token
     ? (token.map && token.map.length > 0 ? token.map[0] : 0)
@@ -68,7 +78,7 @@ export function writeIndented(
           if (currentCtx.itemRow === 0) {
             prefix += currentCtx.itemSymbol + ' ';
           } else {
-            prefix += '  ';
+            prefix += ' '.repeat(typeIndent[currentCtx.listType]);
           }
           break;
 
@@ -114,6 +124,9 @@ export function writeIndented(
     const rightTrimmed = line
       .replace(regex, '')
       .replace(/[ \t\u00A0]+$/g, '');
+    const leftTrimmed = line
+      .replace(regex, '')
+      .replace(/^[ \t\u00A0]+/g, '');
 
     if (isLastLine) {
       if (hasBreak) {
@@ -121,9 +134,15 @@ export function writeIndented(
         output.log(rightTrimmed + (hasBreak ? '  ' : ''), tok);
         offset += (rightTrimmed + (hasBreak ? '  ' : '')).length;
       } else {
-        output.log(line ? prefix : prefix.trim());
-        output.log(line, tok);
-        offset += line.length;
+        if (output.colPos === 0) {
+          output.log(leftTrimmed ? prefix : prefix.trim());
+          output.log(leftTrimmed, tok);
+          offset += leftTrimmed.length;
+        } else {
+          output.log(line ? prefix : prefix.trim());
+          output.log(line, tok);
+          offset += line.length;
+        }
       }
     } else {
       output.log(rightTrimmed ? prefix : prefix.trim());
@@ -290,6 +309,7 @@ export type TokenHandler = (
 export interface MarkdownSerializerConfig {
   debug?: (...args: any[]) => void;
   htmlListItems?: boolean;
+  listMargins?: Record<string, number>;
 }
 
 export class MarkdownSerializer {
@@ -307,7 +327,11 @@ export class MarkdownSerializer {
     if (config.htmlListItems) {
       this.ctx.current.meta['use_html_list_items'] = true;
     }
-    this.ctx.current.meta['escapeChars'] = '…©®™±—';
+    if (config.listMargins) {
+      this.ctx.current.meta['listMargins'] = config.listMargins;
+    }
+    // this.ctx.current.meta['escapeChars'] = '…©®™±—';
+    this.ctx.current.meta['escapeChars'] = '';
 
     if (config.debug) {
       this.ctx.current.debug = config.debug;
@@ -324,7 +348,7 @@ export class MarkdownSerializer {
     const tokenSource = new TokenSource(tokens);
     tokenSource.iterate(0, (token, i) => {
       if (!this.ctx.current.meta['html_mode']) {
-        if (token.level === 0 && token.nesting !== NESTING_CLOSING) {
+        if (token.level === 0) {
           if (this.ctx.output.colPos !== 0) {
             this.ctx.current.log('\n');
           }

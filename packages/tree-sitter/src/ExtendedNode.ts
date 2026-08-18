@@ -33,58 +33,27 @@ type GetReferencePoint = () => {
 interface SoftNodeParams {
   tree: Tree;
   treeText: string;
-  _startIndexOffset: number;
-  _startRowOffset: number;
-  _startColOffset: number;
-  _endIndexOffset: number;
-  _endRowOffset: number;
-  _endColOffset: number;
-  getReferencePoint: GetReferencePoint;
+  startIndex: number;
+  startPosition: Position;
+  endIndex: number;
+  endPosition: Position;
 }
 
 class SoftNode {
-  _startIndexOffset: number;
-  _startRowOffset: number;
-  _startColOffset: number;
-  _endIndexOffset: number;
-  _endRowOffset: number;
-  _endColOffset: number;
-  getReferencePoint: GetReferencePoint;
+  readonly startIndex: number;
+  readonly startPosition: Position;
+  readonly endIndex: number;
+  readonly endPosition: Position;
   tree: Tree;
   treeText: string;
 
   constructor(params: SoftNodeParams) {
     this.tree = params.tree;
     this.treeText = params.treeText;
-    this.getReferencePoint = params.getReferencePoint;
-    this._startIndexOffset = params._startIndexOffset;
-    this._startRowOffset = params._startRowOffset;
-    this._startColOffset = params._startColOffset;
-    this._endIndexOffset = params._endIndexOffset;
-    this._endRowOffset = params._endRowOffset;
-    this._endColOffset = params._endColOffset;
-  }
-
-  get startIndex() {
-    return this._startIndexOffset + this.getReferencePoint().index;
-  }
-
-  get startPosition() {
-    return {
-      row: this._startRowOffset + this.getReferencePoint().position.row,
-      column: this._startColOffset + this.getReferencePoint().position.column,
-    };
-  }
-
-  get endIndex() {
-    return this._endIndexOffset + this.getReferencePoint().index;
-  }
-
-  get endPosition() {
-    return {
-      row: this._endRowOffset + this.getReferencePoint().position.row,
-      column: this._endColOffset + this.getReferencePoint().position.column,
-    };
+    this.startIndex = params.startIndex;
+    this.startPosition = params.startPosition;
+    this.endIndex = params.endIndex;
+    this.endPosition = params.endPosition;
   }
 }
 
@@ -190,11 +159,17 @@ export class ExtendedNode implements TreeSitterNodeExt {
   }
 
   get startPosition() {
-    return this.node.startPosition;
+    return incrementPositionByOffset(
+      this.node.startPosition,
+      this.offsets?.startPosition,
+    );
   }
 
   get endPosition() {
-    return this.node.endPosition;
+    return incrementPositionByOffset(
+      this.node.endPosition,
+      this.offsets?.startPosition,
+    );
   }
 
   get text(): string {
@@ -205,7 +180,6 @@ export class ExtendedNode implements TreeSitterNodeExt {
     let c: TreeSitterNodeExt[] = childrenWithSoftNodes(
       this,
       this._children,
-      this.treeText,
       this.offsets,
     );
 
@@ -217,12 +191,9 @@ export class ExtendedNode implements TreeSitterNodeExt {
   }
 
   toJSON() {
-    // console.log('tj', this.type);
     const children = this.children.map((i) => i.toJSON());
-    // console.log('/tj', this.type);
 
     return {
-      typeId: this.typeId,
       type: this.type,
       text: this.text,
       startIndex: this.startIndex,
@@ -264,18 +235,41 @@ export class ExtendedNode implements TreeSitterNodeExt {
   }
 }
 
+function incrementPositionByOffset(pos: Position, offsets?: Position) {
+  const row = offsets?.row || 0;
+  const column = offsets?.column || 0;
+
+  if (row === 0) {
+    return {
+      row: pos.row,
+      column: pos.column + column,
+    };
+  } else {
+    return {
+      row: pos.row + row,
+      column: pos.column,
+    };
+  }
+}
+
+function incrementPositionByText(pos: Position, text: string): Position {
+  const rows = text.split('\n');
+  const lastLine = rows.pop() || '';
+
+  return incrementPositionByOffset(pos, {
+    row: rows.length,
+    column: lastLine.length,
+  });
+}
+
 export const childrenWithSoftNodes = (
-  node: ExtendedNode,
+  parentNode: ExtendedNode,
   children: TreeSitterNode[],
-  treeText: string,
   offsets?: Offsets,
 ): ExtendedNode[] => {
   if (children.length === 0) {
     return [];
   }
-
-  // firstChild.startIndex += (offsets?.startIndex || 0);
-  // firstChild.endIndex += (offsets?.startIndex || 0);
 
   interface CopiedChild {
     startIndex: number;
@@ -284,146 +278,165 @@ export const childrenWithSoftNodes = (
     node: TreeSitterNode;
   }
 
-  const adjustPos = (pos: { row: number; column: number }) => {
-    const row = offsets?.startPosition.row || 0;
-    const column = offsets?.startPosition.column || 0;
-
-    return {
-      row: pos.row + row,
-      column: pos.row > 0 ? pos.column : pos.column + column,
-    };
-  };
-
   const newChildren = [];
   const childrenCopy: Array<CopiedChild> = [...children].map((c) => {
     return {
       startIndex: c.startIndex + (offsets?.startIndex || 0),
       endIndex: c.endIndex + (offsets?.startIndex || 0),
-      startPosition: adjustPos(c.startPosition),
-      endPosition: adjustPos(c.endPosition),
+      startPosition: incrementPositionByOffset(
+        c.startPosition,
+        offsets?.startPosition,
+      ),
+      endPosition: incrementPositionByOffset(
+        c.endPosition,
+        offsets?.startPosition,
+      ),
       node: c,
     };
   });
-  let firstChild: CopiedChild = childrenCopy.shift()!;
+  const firstChild: CopiedChild = childrenCopy.shift()!;
+  // console.log('firstChild', toJSON(firstChild), toJSON(node));
 
   const handleGaps = (
     gapText: string,
-    getReferencePoint: GetReferencePoint,
-    parentNode: TreeSitterNodeExt,
+    index: number,
+    position: Position,
   ) => {
-    const { index, position } = getReferencePoint();
-    let start = index - (offsets?.startIndex || 0);
+    let startIndex = index; // - (offsets?.startIndex || 0);
     let startPosition = position;
     const chunks = gapText.split(/(?<!\s)(?=\s+)/g);
-    let colOffset = startPosition.column;
-    let rowOffset = startPosition.row;
-    for (const eachGap of chunks) {
-      if (eachGap.length == 0) {
+    // let colOffset = startPosition.column;
+    // let rowOffset = startPosition.row;
+
+    for (const text of chunks) {
+      if (text.length == 0) {
         continue;
       }
-      const end = start + eachGap.length;
-      if (eachGap.match(/^\s/)) {
-        const rowOffsetBefore = rowOffset;
-        const colOffsetBefore = colOffset;
-        rowOffset += (eachGap.match(/\n/g) || []).length;
-        // reset column offset on new row
-        if (rowOffsetBefore != rowOffset) {
-          colOffset = eachGap.split('\n').slice(-1)[0].length;
-        } else {
-          colOffset += eachGap.length;
-        }
+      const endIndex = startIndex + text.length;
+      const endPosition = incrementPositionByText(position, text);
+
+      // console.log('CZUNK', text);
+
+      const whiteMatch = text.match(/^\s+/);
+
+      if (whiteMatch) {
+        const whitePrefix = whiteMatch[0];
+        const suffix = text.substring(whitePrefix.length);
+
+        // const endPosition = incrementPositionByText(position, text);
+
         newChildren.push(
           new WhitespaceNode({
-            tree: node.tree,
-            treeText,
+            tree: parentNode.tree,
+            treeText: parentNode.treeText,
             parent: parentNode,
-            getReferencePoint,
-            text: eachGap,
-            _startIndexOffset: start - index,
-            _startRowOffset: rowOffsetBefore - position.row,
-            _startColOffset: colOffsetBefore - position.column,
-            _endIndexOffset: end - index,
-            _endRowOffset: rowOffset - position.row,
-            _endColOffset: colOffset - position.column,
+            text: whitePrefix,
+            startIndex,
+            endIndex: startIndex + whitePrefix.length,
+            startPosition,
+            endPosition: incrementPositionByText(startPosition, whitePrefix),
           }),
         );
-        // sometimes the gap isn't always whitespace
-      } else {
-        const colOffsetBefore = colOffset;
-        colOffset += eachGap.length;
         newChildren.push(
           new SoftTextNode({
-            tree: node.tree,
-            treeText,
+            tree: parentNode.tree,
+            treeText: parentNode.treeText,
             parent: parentNode,
-            getReferencePoint,
-            text: eachGap,
-            _startIndexOffset: start - index,
-            _startRowOffset: rowOffset - position.row,
-            _startColOffset: colOffsetBefore - position.column,
-            _endIndexOffset: end - index,
-            _endRowOffset: rowOffset - position.row,
-            _endColOffset: colOffset - position.column,
+            text: suffix,
+            startIndex: startIndex + whitePrefix.length,
+            endIndex,
+            startPosition: incrementPositionByText(startPosition, whitePrefix),
+            endPosition,
+          }),
+        );
+
+        // sometimes the gap isn't always whitespace
+      } else {
+        newChildren.push(
+          new SoftTextNode({
+            tree: parentNode.tree,
+            treeText: parentNode.treeText,
+            parent: parentNode,
+            text,
+            startIndex,
+            endIndex,
+            startPosition,
+            endPosition,
           }),
         );
       }
-      start = end;
+      startIndex = endIndex;
+      startPosition = endPosition;
     }
   };
 
   // preceding whitespace
-  if (node.startIndex != firstChild.startIndex) {
-    const thisNode = node;
-    const gapText = treeText.slice(node.startIndex, firstChild.startIndex);
+  if (parentNode.startIndex != firstChild.startIndex) {
+    const gapText = parentNode.treeText.slice(
+      parentNode.startIndex,
+      firstChild.startIndex,
+    );
     // whitespace and non-whitespace chunks
 
+    // console.log(` 1 handleGaps ${JSON.stringify(gapText)}`);
     handleGaps(
       gapText,
-      () => ({
-        index: thisNode.startIndex,
-        position: thisNode.startPosition,
-      }),
-      node,
+      parentNode.startIndex,
+      parentNode.startPosition,
     );
   }
-  newChildren.push(firstChild.node);
+
+  const extNode = new ExtendedNode(
+    firstChild.node,
+    parentNode.treeText,
+    offsets,
+  );
+  extNode.mappers = parentNode.mappers;
+  newChildren.push(extNode);
+
   // gaps between sibilings
   let prevChild = firstChild;
   for (const eachSecondaryNode of childrenCopy) {
-    if (prevChild.endIndex != eachSecondaryNode.startIndex) {
-      const thisChild = prevChild;
-      const gapText = treeText.slice(
+    if (prevChild.endIndex !== eachSecondaryNode.startIndex) {
+      const gapText = parentNode.treeText.slice(
         prevChild.endIndex,
         eachSecondaryNode.startIndex,
       );
 
+      // console.log(` 2 handleGaps ${JSON.stringify(gapText)}`);
       handleGaps(
         gapText,
-        () => ({
-          index: thisChild.endIndex,
-          position: thisChild.endPosition,
-        }),
-        node,
+        prevChild.endIndex,
+        prevChild.endPosition,
       );
     }
-    newChildren.push(eachSecondaryNode.node);
+
+    const extNode = new ExtendedNode(
+      eachSecondaryNode.node,
+      parentNode.treeText,
+      offsets,
+    );
+    // console.log(` 2 EX ${JSON.stringify(extNode.text)}`);
+    extNode.mappers = parentNode.mappers;
+    newChildren.push(extNode);
+
     prevChild = eachSecondaryNode;
   }
 
   // gap between last child and parent
-  if (prevChild.endIndex != node.endIndex) {
-    const gapText = treeText.slice(prevChild.endIndex, node.endIndex);
-    const thisChild = prevChild;
+  if (prevChild.endIndex != parentNode.endIndex) {
+    const gapText = parentNode.treeText.slice(
+      prevChild.endIndex,
+      parentNode.endIndex,
+    );
+
+    // console.log(` 3 handleGaps ${JSON.stringify(gapText)}`);
     handleGaps(
       gapText,
-      () => ({ index: thisChild.endIndex, position: thisChild.endPosition }),
-      node,
+      prevChild.endIndex,
+      prevChild.endPosition,
     );
   }
 
-  return newChildren.map((item) => {
-    const extNode = new ExtendedNode(item, treeText, offsets);
-    extNode.mappers = node.mappers;
-    return extNode;
-  });
+  return newChildren;
 };

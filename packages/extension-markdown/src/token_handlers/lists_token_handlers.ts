@@ -404,12 +404,12 @@ export function getHtmlListsTokensHandlers(): Record<
         if (token.attrGet('not_first_para')) {
           ctx.current.log('<br />\n', token);
         }
-        ctx.current.log('<ul>\n', token);
+        ctx.current.log('<ul>', token);
       },
     ],
     'bullet_list_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('</ul>\n', token);
+        ctx.current.log('</ul>', token);
       },
     ],
 
@@ -433,17 +433,17 @@ export function getHtmlListsTokensHandlers(): Record<
           const start = token.attrGet('start');
           if (start) {
             ctx.current.itemNumber = (+start || 1) - 1;
-            ctx.current.log(`<ol start="${start}">\n`, token);
+            ctx.current.log(`<ol start="${start}">`, token);
           } else {
             ctx.current.itemNumber = 0;
-            ctx.current.log('<ol>\n', token);
+            ctx.current.log('<ol>', token);
           }
         }
       },
     ],
     'ordered_list_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('</ol>\n', token);
+        ctx.current.log('</ol>', token);
       },
     ],
 
@@ -457,7 +457,7 @@ export function getHtmlListsTokensHandlers(): Record<
           );
         }
 
-        ctx.current.log('<li>\n', token);
+        ctx.current.log('<li>', token);
 
         if (token.attrGet('type') !== 'none') {
           ctx.current.itemNumber++;
@@ -466,7 +466,7 @@ export function getHtmlListsTokensHandlers(): Record<
     ],
     'list_item_close': [
       (token: Token, ctx: ContextStash) => {
-        ctx.current.log('</li>\n', token);
+        ctx.current.log('</li>', token);
       },
     ],
   };
