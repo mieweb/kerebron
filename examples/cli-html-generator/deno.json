@@ -2,7 +2,8 @@
   "name": "example-html-generator",
   "tasks": {
     "dev": "deno test --allow-net --allow-ffi --allow-read --watch ./src/*.ts",
-    "start": "deno run --allow-net --allow-ffi --allow-read --allow-env --allow-sys --allow-write --allow-run ./src/main.ts"
+    "start": "deno run --allow-net --allow-ffi --allow-read --allow-env --allow-sys --allow-write --allow-run ./src/main.ts",
+    "md": "deno run --allow-net --allow-ffi --allow-read --allow-env --allow-sys --allow-write --allow-run ./src/markdown-transform.ts"
   },
   "license": "MIT",
   "imports": {},
