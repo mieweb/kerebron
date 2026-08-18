@@ -119,6 +119,10 @@ export function replaceInlineNode(
     const attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
     const node = nodeType.createAndFill(attrs);
 
-    return tr.replaceWith(start, end, Fragment.from(node));
+    return tr.replaceWith(
+      tr.mapping.map(start),
+      tr.mapping.map(end),
+      Fragment.from(node),
+    );
   });
 }

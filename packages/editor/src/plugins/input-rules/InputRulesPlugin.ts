@@ -187,10 +187,14 @@ export const runInputRulesTexts: CommandFactory = () => {
     for (let i = 0; i < rules.length; i++) {
       const rule = rules[i];
 
-      const textNodePositions: { pos: number; node: ProseMirrorNode }[] = [];
-      doc.descendants((node, pos) => {
+      const textNodePositions: {
+        pos: number;
+        node: ProseMirrorNode;
+        index: number;
+      }[] = [];
+      doc.descendants((node, pos, parent, index) => {
         if (node.isText) {
-          textNodePositions.push({ pos, node });
+          textNodePositions.push({ pos, node, index });
         }
       });
 
@@ -200,7 +204,7 @@ export const runInputRulesTexts: CommandFactory = () => {
 
       // Process from the end of the document to the start to avoid position invalidation
       for (let i = textNodePositions.length - 1; i >= 0; i--) {
-        const { pos, node } = textNodePositions[i];
+        const { pos, node, index } = textNodePositions[i];
         if (!node.isText || !node.text) continue;
 
         let text = node.text;
@@ -208,6 +212,10 @@ export const runInputRulesTexts: CommandFactory = () => {
         if (node.type.spec.code) {
           if (!rule.inCode) continue;
         } else if (rule.inCode === 'only') {
+          continue;
+        }
+
+        if (rule.regex.source.startsWith('^') && index > 0) { // Must be first in block
           continue;
         }
 
@@ -225,7 +233,7 @@ export const runInputRulesTexts: CommandFactory = () => {
           const index = match.index;
 
           const from = pos + index;
-          const to = pos + index + match[0].length;
+          const to = from + match[0].length;
 
           rule.handler(
             tr,
