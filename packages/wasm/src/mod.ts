@@ -15,6 +15,9 @@ export function getLangTreeSitter(
   if (langToLoad === 'ts') {
     langToLoad = 'typescript';
   }
+  if (langToLoad === 'sh') {
+    langToLoad = 'bash';
+  }
 
   const langManifest = manifest.find((item) =>
     item.repo.endsWith('-' + langToLoad)

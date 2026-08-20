@@ -138,5 +138,13 @@
     "queries": {
       "highlights.scm": "master/queries/highlights.scm"
     }
+  },
+  {
+    "repo": "tree-sitter/tree-sitter-bash",
+    "version": "latest",
+    "files": ["tree-sitter-bash.wasm"],
+    "queries": {
+      "highlights.scm": "master/queries/highlights.scm"
+    }
   }
 ]
