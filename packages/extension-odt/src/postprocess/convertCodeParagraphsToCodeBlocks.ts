@@ -52,6 +52,8 @@ export const convertCodeParagraphsToCodeBlocks: Command = (
         const startPos = tr.mapping.map(pos);
         const endPos = tr.mapping.map(pos + 1 + codeSize);
 
+        codeText = codeText.replaceAll('—', '-');
+
         if (codeText.trim()) {
           const textNode = schema.text(codeText);
           const codeBlock = schema.nodes.code_block.createAndFill(null, [
