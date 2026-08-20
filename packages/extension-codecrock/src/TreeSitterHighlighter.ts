@@ -20,10 +20,11 @@ export class TreeSitterHighlighter {
       this.hightligtScm = undefined;
       return true;
     }
-    const treeSitterConfig = getLangTreeSitter(lang);
-    const wasmUrl = treeSitterConfig.files[0]; // TODO add support for split parsers like markdown
 
     try {
+      const treeSitterConfig = getLangTreeSitter(lang);
+      const wasmUrl = treeSitterConfig.files[0]; // TODO add support for split parsers like markdown
+
       const wasm = await this.assetLoad(treeSitterConfig.dir + '/' + wasmUrl);
       this.parser = await createParser(wasm, { assetLoad: this.assetLoad });
 
