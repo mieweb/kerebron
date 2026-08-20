@@ -3,6 +3,12 @@
   "tasks": {},
   "imports": {},
   "exports": {
-    ".": "./src/mod.ts"
+    ".": "./src/mod.ts",
+    "./ui": "./src/ui.ts",
+    "./CodeCrock.ts": "./src/CodeCrock.ts",
+    "./utils.ts": "./src/utils.ts",
+    "./TreeSitterHighlighter.ts": "./src/TreeSitterHighlighter.ts",
+    "./Decorator.ts": "./src/Decorator.ts",
+    "./codeCrockLineNumbers.ts": "./src/codeCrockLineNumbers.ts"
   }
 }

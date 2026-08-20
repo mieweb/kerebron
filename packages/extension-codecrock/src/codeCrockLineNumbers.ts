@@ -63,10 +63,11 @@ export function refreshNumbers(
 }
 
 export function initLineNumbers(
-  editor: HTMLElement,
+  dom: HTMLElement,
+  editable: HTMLElement,
   opts: Options,
 ): HTMLElement {
-  const css = getComputedStyle(editor);
+  const css = getComputedStyle(editable);
 
   const wrap = document.createElement('div');
   wrap.className = opts.wrapClass;
@@ -108,17 +109,17 @@ export function initLineNumbers(
   gutter.appendChild(lineNumbers);
 
   // Tweak editor styles
-  editor.style.paddingLeft =
+  editable.style.paddingLeft =
     `calc(${opts.width} + ${gutter.style.paddingLeft} + 5px)`;
-  editor.style.whiteSpace = 'pre';
+  editable.style.whiteSpace = 'pre';
 
   // Swap editor with a wrap
-  editor.parentNode!.insertBefore(wrap, editor);
-  wrap.appendChild(editor);
+  dom.insertBefore(wrap, editable);
+  wrap.appendChild(editable);
 
-  editor.addEventListener(
+  editable.addEventListener(
     'scroll',
-    () => lineNumbers.style.top = `-${editor.scrollTop}px`,
+    () => lineNumbers.style.top = `-${editable.scrollTop}px`,
   );
 
   return lineNumbers;

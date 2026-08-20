@@ -1,5 +1,4 @@
 import { Node as PmNode } from 'prosemirror-model';
-import { Selection } from 'prosemirror-state';
 import {
   Decoration,
   DecorationSource,
@@ -9,58 +8,38 @@ import {
 } from 'prosemirror-view';
 
 import { CoreEditor } from '@kerebron/editor';
-import { debounce } from '@kerebron/editor/utilities';
+import { Workspace } from '@kerebron/workspace';
 
 import { CodeCrock, Position } from './CodeCrock.ts';
-import { computeChange, forwardSelection, valueChanged } from './utils.ts';
 import { TreeSitterHighlighter } from './TreeSitterHighlighter.ts';
 import { DecorationInline, Decorator } from './Decorator.ts';
-import {
-  initLineNumbers,
-  lineNumberOptions,
-  refreshNumbers,
-} from './codeCrockLineNumbers.ts';
+import { refreshNumbers } from './codeCrockLineNumbers.ts';
 import { NodeCodeCrockConfig } from './NodeCodeCrock.ts';
-import { Workspace } from '@kerebron/workspace';
-import { CodeContentMapper } from './CodeContentMapper.ts';
+import {
+  applyChangeOverPos,
+  computeChange,
+  forwardSelection,
+  performSnapshot,
+  replaceExt,
+  STOP_EVENTS,
+  valueChanged,
+} from './utils.ts';
+import {
+  addEditable,
+  addLanguageDropDown,
+  addLineNumbers,
+  CodeNodeView,
+} from './ui.ts';
 
-function replaceExt(uri: string, lang: string) {
-  switch (lang) {
-    case 'markdown':
-      lang = 'md';
-      break;
-    case 'mermaid':
-      lang = 'mmd';
-      break;
-    case 'javascript':
-      lang = 'js';
-      break;
-    case 'typescript':
-      lang = 'ts';
-      break;
-  }
-
-  const parts = uri.split('.');
-  parts.pop();
-  parts.push(lang);
-  return parts.join('.');
-}
-
-interface SnapshotCtx {
-  version: number;
-  text: string;
-  materialized?: CodeContentMapper;
-}
-
-export class NodeViewCodeCrock implements NodeView {
-  private node: PmNode;
-  private readonly view: EditorView;
-  private readonly getPos: () => number | undefined;
+export class NodeViewCodeCrock implements NodeView, CodeNodeView {
+  node: PmNode;
+  readonly view: EditorView;
+  readonly getPos: () => number | undefined;
 
   dom: HTMLDivElement;
   codeCrock: CodeCrock;
   updating: boolean;
-  element: HTMLDivElement;
+  editable: HTMLDivElement;
   highlighter: TreeSitterHighlighter;
   decorator: Decorator;
   languageDropDown: HTMLSelectElement;
@@ -69,11 +48,10 @@ export class NodeViewCodeCrock implements NodeView {
   lang: string = 'plaintext';
   uri: string = 'file:///' + Math.random() + '.txt';
   workspace: Workspace;
-  ctx?: SnapshotCtx;
 
   constructor(
-    private editor: CoreEditor,
-    private config: NodeCodeCrockConfig,
+    public readonly editor: CoreEditor,
+    public readonly config: NodeCodeCrockConfig,
     ...args: Parameters<NodeViewConstructor>
   ) {
     this.node = args[0];
@@ -87,94 +65,40 @@ export class NodeViewCodeCrock implements NodeView {
     this.dom = dom;
     dom.className = 'codecrock-root';
 
-    this.languageDropDown = this.addLanguageDropDown();
+    this.languageDropDown = addLanguageDropDown(this);
 
     const root = (editor.view && 'root' in editor.view)
       ? editor.view.root
       : document || document;
 
-    this.element = document.createElement('div');
-    this.element.classList.add('codecrock');
-
-    this.codeCrock = new CodeCrock(
-      this.element,
-      (element) => this.highlight(element),
-      {
-        tab: '  ',
-        indentOn: new RegExp('^(?!)'),
-        moveToNewLine: new RegExp('^(?!)'),
-        history: false,
-        readOnly: this.config.readOnly,
-      },
-    );
-
-    const blur = (dir: 1 | -1) => {
-      this.view.focus();
-      const pos = this.getPos();
-      if (typeof pos === 'undefined') {
-        return false;
-      }
-
-      const targetPos = pos + (dir < 0 ? 0 : this.node.nodeSize);
-      const selection = Selection.near(
-        this.view.state.doc.resolve(targetPos),
-        dir,
-      );
-
-      this.view.dispatch(
-        this.view.state.tr.setSelection(selection).scrollIntoView(),
-      );
-      // this.view.focus();
-      // editor.chain().ArrowDown().run();
-
-      return true;
+    const { codeCrock, editable } = addEditable(this);
+    this.editable = editable;
+    (editable as any).getLocalPos = (offset: number) => {
+      const element = this.editable;
+      const localPos = offset;
+      return {
+        pos: (this.getPos() || 0) + offset,
+        node: this.node,
+        uri: this.uri,
+        localPos,
+        element,
+      };
     };
 
-    this.codeCrock.addEventListener('blur-previous', () => {
-      blur(-1);
-    });
-    this.codeCrock.addEventListener('blur-next', () => {
-      blur(1);
-    });
-    this.codeCrock.addEventListener('prepend-empty-line', () => {
-      const pos = this.getPos();
-      if (typeof pos === 'undefined') {
-        return false;
-      }
-      editor.chain().replaceRangeText({ from: pos, to: pos }, '').run();
-    });
-    this.codeCrock.addEventListener('append-empty-line', () => {
-      const pos = this.getPos();
-      if (typeof pos === 'undefined') {
-        return false;
-      }
-      editor.chain().replaceRangeText({
-        from: pos + this.node.nodeSize,
-        to: pos + this.node.nodeSize,
-      }, '').run();
-    });
+    this.codeCrock = codeCrock;
 
     this.codeCrock.onUpdate(() => {
       if (!this.updating) {
         const textUpdate = this.codeCrock.toString();
         valueChanged(textUpdate, this.node, this.getPos, this.view);
-        if (document.activeElement === this.element) {
+        if (document.activeElement === this.editable) {
           forwardSelection(this.codeCrock, this.view, this.getPos);
         }
 
-        const version = this.editor.version;
-        const ctx: SnapshotCtx = {
-          version,
-          text: this.codeCrock.toString(),
-          materialized: undefined,
-        };
-        const getContentMapper = async () => {
-          if (ctx.materialized) {
-            return ctx.materialized;
-          }
-          ctx.materialized = await CodeContentMapper.create(ctx.text);
-          return ctx.materialized;
-        };
+        const { version, getContentMapper } = performSnapshot(
+          this,
+          this.codeCrock,
+        );
 
         this.workspace.modifyFile({
           lang: this.lang,
@@ -182,46 +106,13 @@ export class NodeViewCodeCrock implements NodeView {
           version,
           getContentMapper,
         });
-
-        this.ctx = ctx;
       }
     });
 
     this.highlighter = new TreeSitterHighlighter(this.editor.config.assetLoad!);
     this.decorator = new Decorator();
 
-    dom.append(this.element);
-
-    this.lineNumbers = initLineNumbers(this.element, lineNumberOptions);
-
-    this.handleMove = debounce(this.handleMove.bind(this), 500);
-    this.dom.addEventListener('mousemove', this.handleMove);
-  }
-
-  addLanguageDropDown() {
-    const select = document.createElement('select');
-    select.classList.add('codecrock-select');
-    for (const lang of [''].concat(this.config.languageWhitelist || [])) {
-      const option = document.createElement('option');
-      option.value = lang;
-      option.innerText = lang;
-      select.appendChild(option);
-    }
-    this.dom.appendChild(select);
-    select.addEventListener('change', async () => {
-      const lang = select.value;
-      const pos = this.getPos();
-      if (pos) {
-        this.view.dispatch(
-          this.view.state.tr.setNodeMarkup(pos, undefined, {
-            ...this.node.attrs,
-            lang,
-          }),
-        );
-      }
-      this.setLang(lang);
-    });
-    return select;
+    this.lineNumbers = addLineNumbers(this, this.editable);
   }
 
   setLang(lang: string) {
@@ -229,21 +120,9 @@ export class NodeViewCodeCrock implements NodeView {
     this.lang = lang;
 
     this.uri = replaceExt(this.uri, lang);
-    this.element.setAttribute('data-uri', this.uri);
+    this.editable.setAttribute('data-uri', this.uri);
 
-    const version = this.editor.version;
-    const ctx: SnapshotCtx = {
-      version,
-      text: this.codeCrock.toString(),
-      materialized: undefined,
-    };
-    const getContentMapper = async () => {
-      if (ctx.materialized) {
-        return ctx.materialized;
-      }
-      ctx.materialized = await CodeContentMapper.create(ctx.text);
-      return ctx.materialized;
-    };
+    const { version, getContentMapper } = performSnapshot(this, this.codeCrock);
 
     this.workspace.openFile({
       uri: this.uri,
@@ -252,11 +131,9 @@ export class NodeViewCodeCrock implements NodeView {
       getContentMapper,
     });
 
-    this.ctx = ctx;
-
     this.highlighter.init(lang)
       .then(() => {
-        this.highlight(this.element);
+        this.highlight(this.editable);
       });
   }
 
@@ -268,7 +145,7 @@ export class NodeViewCodeCrock implements NodeView {
   }
 
   setSelection(anchor: number, head: number) {
-    this.element.focus();
+    this.editable.focus();
     this.updating = true;
 
     const pos = this.getPos();
@@ -287,20 +164,21 @@ export class NodeViewCodeCrock implements NodeView {
     this.updating = false;
   }
 
-  highlight(editor: HTMLElement) {
+  highlight(editable: HTMLElement) {
     const pos = this.codeCrock.save();
 
     if (!this.highlighter) {
-      editor.innerHTML = editor.textContent;
+      editable.innerHTML = editable.textContent;
     } else {
-      const content = editor.textContent;
-      editor.innerHTML = this.highlighter.highlight(content, this.decorator) ||
+      const content = editable.textContent;
+      editable.innerHTML =
+        this.highlighter.highlight(content, this.decorator) ||
         content;
     }
 
     this.codeCrock.restore(pos);
 
-    refreshNumbers(this.lineNumbers, editor);
+    refreshNumbers(this.lineNumbers, editable);
     this.decorator.refresh();
   }
 
@@ -366,6 +244,7 @@ export class NodeViewCodeCrock implements NodeView {
       const pos = applyChangeOverPos(savedPos, change);
 
       this.updating = true;
+      console.info('codeCrock.updateCode');
       this.codeCrock.updateCode(updateNode.textContent, true);
       this.updating = false;
 
@@ -391,7 +270,7 @@ export class NodeViewCodeCrock implements NodeView {
 
   selectNode() {
     this.dom.classList.add('focused');
-    this.element.focus();
+    this.editable.focus();
   }
 
   deselectNode() {
@@ -399,65 +278,15 @@ export class NodeViewCodeCrock implements NodeView {
   }
 
   stopEvent(event: Event) {
-    const type = event.type;
-    if (
-      type === 'keydown' ||
-      type === 'keyup' ||
-      type === 'keypress' ||
-      type === 'beforeinput' ||
-      type === 'input' ||
-      type === 'compositionstart' ||
-      type === 'compositionupdate' ||
-      type === 'compositionend' ||
-      type === 'paste' ||
-      type === 'cut' ||
-      type === 'copy' ||
-      type === 'dragstart' ||
-      type === 'dragover' ||
-      type === 'drop'
-    ) {
-      return true;
-    }
-    return false;
+    return STOP_EVENTS.includes(event.type);
   }
 
   ignoreMutation() {
     return true;
   }
 
-  frame: undefined | ReturnType<typeof requestAnimationFrame>;
-
-  handleMove(e: MouseEvent) {
-  }
-
   destroy() {
-    this.dom.removeEventListener('mousemove', this.handleMove);
     this.workspace.closeFile(this.uri);
     this.codeCrock.destroy();
   }
-}
-
-function applyChangeOverPos(
-  pos: Position | undefined,
-  change: { from: number; to: number; text: string },
-): Position | undefined {
-  if (!pos) {
-    return pos;
-  }
-
-  const lenGrowth = change.text.length - (change.to - change.from);
-  if (!lenGrowth) {
-    return pos;
-  }
-
-  pos = { ...pos };
-
-  if (change.to <= pos.start) {
-    pos.start += lenGrowth;
-  }
-  if (change.to <= pos.end) {
-    pos.end += lenGrowth;
-  }
-
-  return pos;
 }

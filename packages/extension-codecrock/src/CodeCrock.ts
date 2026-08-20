@@ -272,7 +272,7 @@ export class CodeCrock extends EventTarget {
         const range = document.createRange();
         range.selectNodeContents(editor);
 
-        const selection = window.getSelection();
+        const selection = this.getSelection();
         if (selection) {
           selection.removeAllRanges();
           selection.addRange(range);
@@ -325,6 +325,13 @@ export class CodeCrock extends EventTarget {
       if (this.prev !== this.toString()) debounceHighlight();
       debounceRecordHistory(event);
       this.onUpdateCbk(this.toString());
+
+      const selection = this.save();
+      if (selection) {
+        this.dispatchEvent(
+          new CustomEvent('selectionchange', { detail: selection }),
+        );
+      }
     });
 
     on('focus', (_event) => {
@@ -535,12 +542,14 @@ export class CodeCrock extends EventTarget {
 
   getSelection() {
     const root = this.editor.getRootNode();
-    // ShadowRoot does not implement getSelection(); fall back to the
-    // window's selection for elements rendered inside a shadow DOM.
+
     if (typeof (root as any).getSelection === 'function') {
       return (root as any).getSelection() as Selection;
     }
-    return this.options.window.getSelection();
+
+    const doc = root instanceof Document ? root : root.ownerDocument;
+
+    return doc?.defaultView?.getSelection() ?? null;
   }
 
   private uneditable(node: Node): Element | undefined {
