@@ -100,18 +100,16 @@ class MarkdownPluginState {
     if (pluginMeta.setMarkdownHooks) {
       const { type, hooks } = pluginMeta.setMarkdownHooks;
       this.hooks[type] = hooks;
-      return true;
     }
     if (pluginMeta.setFromMarkdownUrlRewriter) {
       const { urlRewriter } = pluginMeta.setFromMarkdownUrlRewriter;
       this.urlFromRewriter = urlRewriter;
-      return true;
     }
     if (pluginMeta.setToMarkdownUrlRewriter) {
       const { urlRewriter } = pluginMeta.setToMarkdownUrlRewriter;
       this.urlToRewriter = urlRewriter;
-      return true;
     }
+    return true;
   }
 }
 
