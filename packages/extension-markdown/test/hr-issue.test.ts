@@ -1,4 +1,4 @@
-import { assert } from '@kerebron/test-utils';
+import { assert, assertEquals } from '@kerebron/test-utils';
 
 import { CoreEditor } from '@kerebron/editor';
 import { assetLoad } from '@kerebron/wasm/deno';
@@ -23,8 +23,14 @@ Deno.test({
     const json = editor.getJSON();
 
     assert(
-      json.content![1].content!.find((item) => item.type === 'hr'),
+      json.content![1].type === 'hr',
       'No hr',
     );
+
+    const serializedMarkdown = new TextDecoder().decode(
+      await editor.saveDocument('text/x-markdown'),
+    );
+
+    assertEquals(serializedMarkdown, sampleMarkdown);
   },
 });

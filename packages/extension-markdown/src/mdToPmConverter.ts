@@ -106,9 +106,7 @@ export async function mdToPmConverterText(
           tokens: Token[],
           i: number,
         ) => {
-          state.openNode(schema.nodes['paragraph'], {});
           state.addNode(schema.nodes['hr'], {});
-          state.closeNode();
         },
       },
       image: {
