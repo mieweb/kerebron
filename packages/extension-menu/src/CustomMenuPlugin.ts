@@ -4,6 +4,7 @@ import { EditorState, Plugin, PluginKey } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 
 import type { CoreEditor } from '@kerebron/editor';
+import { debounce } from '@kerebron/editor/utilities';
 
 import type { MenuElement } from './menu.ts';
 import { getIcon } from './icons.ts';
@@ -98,9 +99,9 @@ export class CustomMenuView {
 
     // Use ResizeObserver to dynamically show/hide items based on available width
     if (typeof ResizeObserver !== 'undefined') {
-      this.resizeObserver = new ResizeObserver(() => {
+      this.resizeObserver = new ResizeObserver(debounce(() => {
         this.render();
-      });
+      }, 200));
       this.resizeObserver.observe(this.toolbar);
     }
 

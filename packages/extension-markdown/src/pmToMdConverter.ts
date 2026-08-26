@@ -546,7 +546,7 @@ export async function extPmToMdConverter(
 
   const tokens = await defaultMarkdownTokenizer.serialize(filteredDoc);
 
-  if (config.telemetry.enabled) {
+  if (config.telemetry?.enabled) {
     config.telemetry.event('tokens', tokens);
   }
 
@@ -642,7 +642,7 @@ export async function extPmToMdConverter(
     sourceMap.sourcesContent = [debugOutput.toString()];
   }
 
-  if (config.telemetry.enabled) {
+  if (config.telemetry?.enabled) {
     config.telemetry.event('sourcemap', {
       sourceMap,
       debugMap,
