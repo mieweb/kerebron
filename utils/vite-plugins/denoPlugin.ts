@@ -3,6 +3,7 @@ import type { DenoResolveResult } from './resolver.ts';
 import resolvePlugin from './resolvePlugin.ts';
 import denoPrefixPlugin from './prefixPlugin.ts';
 import { denoCssPlugin } from './denoCssPlugin.ts';
+import { versionPlugin } from './versionPlugin.ts';
 
 const __dirname = import.meta.dirname!;
 
@@ -15,5 +16,6 @@ export function deno(): Plugin[] {
     denoPrefixPlugin(cache),
     resolvePlugin(cache, __dirname + '/../../'),
     denoCssPlugin(__dirname + '/../../'),
+    versionPlugin(),
   ];
 }

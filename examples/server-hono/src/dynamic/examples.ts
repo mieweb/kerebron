@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import type { Hono } from 'hono';
 
 import { markdownToHtml } from './markdown.ts';
-import { ventoEnv } from './vento.ts';
+import { renderTemplate } from './vento.ts';
 
 const __dirname = import.meta.dirname;
 const examplesDir = __dirname + '/../../../';
@@ -19,24 +19,19 @@ export async function install(
 
     const readmeHtml = await markdownToHtml(readmeMd, { example });
 
-    const template = await ventoEnv.load('example.vto');
-    const result = await template({
+    const pageHtml = await renderTemplate('example.vto', {
       readmeHtml,
       examples,
     });
 
     app.get('/examples/' + example + '.html', async (c) => {
       try {
-        return c.html(result.content);
+        return c.html(pageHtml);
       } catch (error) {
         if (isBuild) {
           throw error;
         }
-        const template = await ventoEnv.load('error.vto');
-        const result = await template({
-          error,
-        });
-        return c.html(result.content, 500);
+        return c.html(await renderTemplate('error.vto', { error }), 500);
       }
     });
   }

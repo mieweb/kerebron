@@ -15,6 +15,7 @@ import { DummyEditorView } from './DummyEditorView.ts';
 import { createNodeFromObject } from './utilities/createNodeFromContent.ts';
 import { Extension } from './Extension.ts';
 import { defaultUi, EditorUi } from './ui.ts';
+import { VERSION } from './version.ts';
 import { runInputRulesTexts } from './plugins/input-rules/InputRulesPlugin.ts';
 import {
   ChainedCommands,
@@ -223,6 +224,7 @@ export class CoreEditor extends EventTarget {
         state: this.state,
         attributes: {
           class: 'kb-editor',
+          'data-kerebron-version': VERSION,
         },
         dispatchTransaction: (tx: Transaction) => this.dispatchTransaction(tx),
         editable: () => !this.config.readOnly,

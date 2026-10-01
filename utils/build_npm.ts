@@ -287,6 +287,13 @@ async function processModule(moduleRoot: string, json: DenoJson) {
         );
       }
 
+      if (json.name === '@kerebron/editor' && version) {
+        Deno.writeTextFileSync(
+          path.resolve('npm', json.name, 'esm', 'version.js'),
+          `export const VERSION = ${JSON.stringify(version)};\n`,
+        );
+      }
+
       if (json.name !== '@kerebron/editor') {
         const esmFiles = Array
           .from(Deno.readDirSync(path.resolve('npm', json.name, 'esm')))
