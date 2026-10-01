@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import type { Hono } from 'hono';
 
 import { markdownToHtml } from './markdown.ts';
-import { ventoEnv } from './vento.ts';
+import { renderTemplate } from './vento.ts';
 import { examples } from './examples.ts';
 
 const __dirname = import.meta.dirname;
@@ -30,17 +30,13 @@ export function install({ app }: { app: Hono }) {
 
       const contentHtml = await markdownToHtml(buffer);
 
-      const template = await ventoEnv.load('static.vto');
-      const result = await template({ contentHtml, examples });
-
-      return c.html(result.content);
+      return c.html(
+        await renderTemplate('static.vto', { contentHtml, examples }),
+      );
     });
   }
 
   app.notFound(async (c) => {
-    const template = await ventoEnv.load('404.vto');
-    const result = await template({ examples });
-
-    return c.html(result.content);
+    return c.html(await renderTemplate('404.vto', { examples }));
   });
 }

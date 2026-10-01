@@ -1023,6 +1023,12 @@
   justify-content: center;
 }
 
+.kb-custom-menu__version {
+  font-size: var(--kb-text-xs);
+  color: var(--kb-color-text-muted);
+  user-select: text;
+}
+
 /* Reset to Default button */
 .kb-custom-menu__reset-button {
   display: flex;

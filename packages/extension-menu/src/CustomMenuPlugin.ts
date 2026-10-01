@@ -4,6 +4,7 @@ import { EditorState, Plugin, PluginKey } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 
 import type { CoreEditor } from '@kerebron/editor';
+import { VERSION } from '@kerebron/editor';
 import { debounce } from '@kerebron/editor/utilities';
 
 import type { MenuElement } from './menu.ts';
@@ -34,6 +35,7 @@ export class CustomMenuView {
   tools: ToolItem[] = [];
   root: Document | ShadowRoot;
   private closeOverflowHandler: ((e: MouseEvent) => void) | null = null;
+  private showVersion = false;
   private closePinnedDropdownHandler: ((e: MouseEvent) => void) | null = null;
   private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
   private submenuStack: Array<{ title: string; tools: ToolItem[] }> = [];
@@ -1054,6 +1056,16 @@ export class CustomMenuView {
       footer.appendChild(resetButton);
       this.overflowMenu.appendChild(footer);
     }
+
+    if (!isSubmenu && this.showVersion) {
+      const versionFooter = document.createElement('div');
+      versionFooter.classList.add(
+        CSS_PREFIX + '__overflow-footer',
+        CSS_PREFIX + '__version',
+      );
+      versionFooter.textContent = 'Kerebron ' + VERSION;
+      this.overflowMenu.appendChild(versionFooter);
+    }
   }
 
   private render() {
@@ -1257,6 +1269,7 @@ export class CustomMenuView {
         if (!isOpen) {
           // Opening - reset submenu stack to show main menu
           this.submenuStack = [];
+          this.showVersion = e.shiftKey;
           this.renderOverflowMenu();
 
           // Opening - add close handler after a short delay
