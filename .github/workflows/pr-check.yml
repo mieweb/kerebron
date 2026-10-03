@@ -23,7 +23,7 @@ jobs:
               echo "::error ::Invalid commit message: '$msg'"
               INVALID=1
             fi
-          done <<< "$(git log --pretty=format:"%s" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})"
+          done <<< "$(git log --no-merges --pretty=format:"%s" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})"
           if [ $INVALID -eq 1 ]; then
             echo "::notice ::Please squash/fixup your commits and follow the Conventional Commit format:"
             echo "::notice ::<type>(scope): short description"
@@ -37,7 +37,7 @@ jobs:
 
           # Fetch PR commits
           git fetch origin ${{ github.event.pull_request.base.ref }}
-          COMMITS=$(git log --pretty=format:"%s" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+          COMMITS=$(git log --no-merges --pretty=format:"%s" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
 
           INVALID=0
 

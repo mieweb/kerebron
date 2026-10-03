@@ -15,6 +15,11 @@ fi
 COMMIT_MSG_FILE="$1"                    # Git passes the path to the commit message
 COMMIT_MSG=$(head -n1 "$COMMIT_MSG_FILE")  # Read the first line of the commit message
 
+# Git's own merge commits (e.g. "Merge branch 'main' into feature")
+if [ -f "$(git rev-parse --git-dir)/MERGE_HEAD" ] && [[ "$COMMIT_MSG" =~ ^Merge\  ]]; then
+  exit 0
+fi
+
 if ! echo "$COMMIT_MSG" | grep -E "^(feat|fix|chore|docs|test|refactor|ci|build|fixup)(\(.+\))?: .+" >/dev/null; then
   echo -e "${RED}Commit message is not a Conventional Commit: ${NC}"
   echo "   '$COMMIT_MSG'"
