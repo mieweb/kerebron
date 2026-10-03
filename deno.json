@@ -62,7 +62,7 @@
   },
   "imports": {
     "@deno/dnt": "jsr:@deno/dnt@0.42.3",
-    "@std/assert": "jsr:@std/assert@1",
+    "@std/assert": "jsr:@std/assert@^1.0.19",
     "@std/fs": "jsr:@std/fs@1.0.19",
     "@std/path": "jsr:@std/path@1.1.2",
     "asserts": "https://deno.land/std@0.178.0/testing/asserts.ts",
@@ -80,7 +80,7 @@
     "yjs": "npm:yjs@13.6.30",
     "y-protocols": "npm:y-protocols@1.0.6",
     "lib0": "npm:lib0@0.2.109",
-    "orderedmap": "npm:orderedmap@latest",
+    "orderedmap": "npm:orderedmap@^2.1.1",
 
     "@xmldom/xmldom": "npm:@xmldom/xmldom@0.9.10",
     "linkedom": "npm:linkedom@0.18.12",
