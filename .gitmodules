@@ -1,3 +1,5 @@
+# Source of truth for the markdown grammar. packages/wasm/src/wasm.json pins
+# the fork release (tag + SHA-256) built from this exact submodule commit.
 [submodule "vendor/tree-sitter-markdown"]
 	path = vendor/tree-sitter-markdown
 	url = https://github.com/mieweb/tree-sitter-markdown.git
