@@ -12,6 +12,14 @@ import {
 import { CodeContentMapper } from '@kerebron/workspace/CodeContentMapper';
 import { StackableMarkdownParser } from './StackableMarkdownParser.ts';
 
+// tree-sitter inline node -> [token name, html tag]
+const WRAPPING_INLINE_NODES: Record<string, [string, string]> = {
+  strikethrough: ['strike', 'strike'],
+  subscript: ['subscript', 'sub'],
+  superscript: ['superscript', 'sup'],
+  highlight: ['highlight', 'mark'],
+};
+
 function treeToTokens(
   rootNode: TreeSitterNode,
   source: string,
@@ -443,15 +451,17 @@ function treeToTokens(
           }
           break;
         case 'strikethrough':
+        case 'subscript':
+        case 'superscript':
+        case 'highlight':
           {
-            const tokenName = 'strike';
-            const tagName = 'strike';
+            const [tokenName, tagName] = WRAPPING_INLINE_NODES[node.type];
             const openToken = new Token(
               tokenName + '_open',
               tagName,
               NESTING_OPENING,
             );
-            pushInlineNode(openToken, 's');
+            pushInlineNode(openToken, tagName);
 
             walkInline(node.children.filter((c: any) => !!c));
 
@@ -460,7 +470,7 @@ function treeToTokens(
               tagName,
               NESTING_CLOSING,
             );
-            pushInlineNode(closeToken, '/s');
+            pushInlineNode(closeToken, '/' + tagName);
           }
           break;
         case 'code_span':

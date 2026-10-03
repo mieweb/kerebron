@@ -1,0 +1,4 @@
+[submodule "vendor/tree-sitter-markdown"]
+	path = vendor/tree-sitter-markdown
+	url = https://github.com/mieweb/tree-sitter-markdown.git
+	branch = kerebron

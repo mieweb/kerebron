@@ -110,6 +110,7 @@
       "**/server-hono/src/lsp",
       "**/browser-react",
       "**/browser-vanilla-code-editor",
+      "vendor",
       "KEEP REMOVING THOSE!"
     ],
     "rules": {
@@ -133,7 +134,8 @@
       "**/*.md",
       "**/*.odt.xml",
       "**/*.xml",
-      "**/dist"
+      "**/dist",
+      "vendor"
     ]
   },
   "unstable": ["raw-imports"],

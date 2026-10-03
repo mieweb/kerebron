@@ -174,6 +174,16 @@ function getLinkTokensHandlers(): Record<string, Array<TokenHandler>> {
   };
 }
 
+function delimiterHandlers(
+  name: string,
+  markup: string,
+): Record<string, Array<TokenHandler>> {
+  const handler = (token: Token, ctx: ContextStash) => {
+    ctx.current.log(token.markup || markup, token);
+  };
+  return { [name + '_open']: [handler], [name + '_close']: [handler] };
+}
+
 export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
   return {
     'text': [
@@ -222,16 +232,10 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
         ctx.current.log(token.markup || '_', token);
       },
     ],
-    'strike_open': [
-      (token: Token, ctx: ContextStash) => {
-        ctx.current.log(token.markup || '~', token);
-      },
-    ],
-    'strike_close': [
-      (token: Token, ctx: ContextStash) => {
-        ctx.current.log(token.markup || '~', token);
-      },
-    ],
+    ...delimiterHandlers('strike', '~~'),
+    ...delimiterHandlers('subscript', '~'),
+    ...delimiterHandlers('superscript', '^'),
+    ...delimiterHandlers('highlight', '=='),
 
     'link_open': [
       (token: Token, ctx: ContextStash) => {
@@ -411,6 +415,27 @@ export function getHtmlInlineFormatTokensHandlers(): Record<
       (token: Token, ctx: ContextStash) => {
         const tag = token.tag || 'u';
         ctx.current.log(`</${tag}>`, token);
+      },
+    ],
+    ...htmlTagHandlers('subscript', 'sub'),
+    ...htmlTagHandlers('superscript', 'sup'),
+    ...htmlTagHandlers('highlight', 'mark'),
+  };
+}
+
+function htmlTagHandlers(
+  name: string,
+  defaultTag: string,
+): Record<string, Array<TokenHandler>> {
+  return {
+    [name + '_open']: [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log(`<${token.tag || defaultTag}>`, token);
+      },
+    ],
+    [name + '_close']: [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log(`</${token.tag || defaultTag}>`, token);
       },
     ],
   };

@@ -22,14 +22,14 @@
     }
   },
   {
-    "repo": "tree-sitter-grammars/tree-sitter-markdown",
-    "version": "latest",
+    "repo": "mieweb/tree-sitter-markdown",
+    "version": "v0.5.3-kerebron.1",
     "files": ["tree-sitter-markdown.wasm", "tree-sitter-markdown_inline.wasm"],
     "queries": {
-      "highlights.scm": "split_parser/tree-sitter-markdown/queries/highlights.scm",
-      "injections.scm": "split_parser/tree-sitter-markdown/queries/injections.scm",
-      "highlights-inline.scm": "split_parser/tree-sitter-markdown-inline/queries/highlights.scm",
-      "injections-inline.scm": "split_parser/tree-sitter-markdown-inline/queries/injections.scm"
+      "highlights.scm": "{version}/tree-sitter-markdown/queries/highlights.scm",
+      "injections.scm": "{version}/tree-sitter-markdown/queries/injections.scm",
+      "highlights-inline.scm": "{version}/tree-sitter-markdown-inline/queries/highlights.scm",
+      "injections-inline.scm": "{version}/tree-sitter-markdown-inline/queries/injections.scm"
     }
   },
   {

@@ -471,6 +471,24 @@ export async function extPmToMdConverter(
       mixable: true,
       expelEnclosingWhitespace: true,
     },
+    subscript: {
+      open: 'subscript_open',
+      close: 'subscript_close',
+      mixable: true,
+      expelEnclosingWhitespace: true,
+    },
+    superscript: {
+      open: 'superscript_open',
+      close: 'superscript_close',
+      mixable: true,
+      expelEnclosingWhitespace: true,
+    },
+    highlight: {
+      open: 'highlight_open',
+      close: 'highlight_close',
+      mixable: true,
+      expelEnclosingWhitespace: true,
+    },
     math: {
       open: 'math_inline_open',
       close: 'math_inline_close',

@@ -19,7 +19,7 @@ _underscore_
 
 *italic*
 
-~strikethrough~
+~~strikethrough~~
 > blockquote
 - hyphen
 + plus

@@ -136,6 +136,9 @@ export async function mdToPmConverterText(
       underline: { mark: 'underline' },
       strong: { mark: 'strong' },
       strike: { mark: 'strike' },
+      subscript: { mark: 'subscript' },
+      superscript: { mark: 'superscript' },
+      highlight: { mark: 'highlight' },
       link: {
         mark: 'link',
         getAttrs: (tok) => ({

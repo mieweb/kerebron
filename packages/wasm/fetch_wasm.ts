@@ -145,9 +145,13 @@ async function main() {
       let totalSize = 0;
 
       for (const queryName in queries) {
-        const queryPath = queries[queryName];
+        // `{version}` pins queries to the same tag as the wasm files
+        const queryPath = queries[queryName].replace(
+          '{version}',
+          release.version,
+        );
         const queryUrl =
-          `https://raw.githubusercontent.com/${repo}/refs/heads/${queryPath}`;
+          `https://raw.githubusercontent.com/${repo}/${queryPath}`;
 
         const destPath = path.join(wasmDir, queryName);
         await downloadFile(queryUrl, destPath);
