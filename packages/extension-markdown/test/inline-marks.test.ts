@@ -104,3 +104,24 @@ Deno.test('marks markdown cannot express round-trip losslessly', async () => {
     assertEquals(output, source);
   }
 });
+
+Deno.test('marks nested in a colored HTML tag survive round-trip', async () => {
+  const source = 'a <span style="color: blue;"><mark>x</mark></span> b\n';
+  const editor = CoreEditor.create({
+    assetLoad,
+    editorKits: [new BrowserLessEditorKit()],
+  });
+  await editor.loadDocumentText('text/x-markdown', source);
+
+  const markTypes = () =>
+    editor.getJSON().content![0].content!
+      .find((item) => item.text === 'x')?.marks?.map((m) => m.type).sort();
+  assertEquals(markTypes(), ['highlight', 'textColor']);
+
+  const output = new TextDecoder().decode(
+    await editor.saveDocument('text/x-markdown'),
+  );
+  assertEquals(output, source);
+  await editor.loadDocumentText('text/x-markdown', output);
+  assertEquals(markTypes(), ['highlight', 'textColor']);
+});
