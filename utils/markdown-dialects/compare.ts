@@ -6,14 +6,14 @@
  *
  * Requires `pandoc` on PATH.
  */
-import { CoreEditor } from '@kerebron/editor';
-import { assetLoad } from '@kerebron/wasm/deno';
-import { BrowserLessEditorKit } from '@kerebron/editor-browserless/BrowserLessEditorKit';
 import { marked } from 'npm:marked@16.4.2';
 import { micromark } from 'npm:micromark@4.0.2';
 import { gfm, gfmHtml } from 'npm:micromark-extension-gfm@3.0.0';
 
 import { type DialectCase, groups } from './cases.ts';
+import { normalizeHtml } from './normalize.ts';
+import { kerebron, quietly } from './render.ts';
+import { expectedHtml, kerebronHtml, type Spec, specs } from './spec.ts';
 
 const LIBRARY_VERSIONS =
   'marked 16.4.2, micromark 4.0.2 + micromark-extension-gfm 3.0.0';
@@ -37,118 +37,9 @@ interface Result extends DialectCase {
   refs: Record<Reference, string>;
 }
 
-// --- normalization: compare content, not each renderer's markup style ---
-
-const TAG_ALIASES: Record<string, string> = {
-  strike: 'del',
-  s: 'del',
-  b: 'strong',
-  i: 'em',
-};
-const DROPPED_TAGS = new Set([
-  'p',
-  'div',
-  'span',
-  'label',
-  'thead',
-  'tbody',
-  'figure',
-  'figcaption',
-  'section',
-]);
-const KEPT_ATTRS = new Set(['href', 'src', 'alt', 'title', 'start']);
-const INLINE_MARKS = new Set([
-  'em',
-  'strong',
-  'del',
-  'sub',
-  'sup',
-  'mark',
-  'u',
-  'code',
-]);
-const BLOCK_TAGS =
-  'ul|ol|li|table|tr|td|th|blockquote|h[1-6]|hr|br|pre|dl|dt|dd';
-const ENTITIES: Record<string, string> = {
-  amp: '&',
-  lt: '<',
-  gt: '>',
-  quot: '"',
-  '#39': "'",
-  copy: '©',
-  nbsp: ' ',
-};
-
-function keptAttrs(attrs: string): string {
-  let out = '';
-  for (
-    const [, key, value = ''] of attrs.matchAll(/([\w-]+)(?:="([^"]*)")?/g)
-  ) {
-    const align = key === 'style' && value.match(/text-align:\s*(\w+)/)?.[1];
-    if (align || key === 'align') out += ` align="${align || value}"`;
-    else if (key === 'checked') out += ' checked';
-    else if (KEPT_ATTRS.has(key)) {
-      out += ` ${key}="${value.startsWith('#') ? '#' : value}"`;
-    }
-  }
-  return out;
-}
-
-// `<strong><em>x</em></strong>` and `<em><strong>x</strong></em>` mean the same thing.
-function sortNestedMarks(html: string): string {
-  return html.replace(
-    /<(\w+)><(\w+)>([^<]*)<\/\2><\/\1>/g,
-    (match, outer, inner, text) =>
-      INLINE_MARKS.has(outer) && INLINE_MARKS.has(inner) && inner < outer
-        ? `<${inner}><${outer}>${text}</${outer}></${inner}>`
-        : match,
-  );
-}
-
-export function normalizeHtml(html: string): string {
-  const normalized = html
-    .replace(
-      /Error: Unhandled (?:inline )?node type: (\w+)[^<]*/g,
-      '⚠unhandled:$1',
-    )
-    .replace(/<math[\s\S]*?<\/math>/g, '<math>')
-    .replace(/<wbr\s*\/?>/g, '\n')
-    .replace(
-      /<(\/?)([a-zA-Z][\w-]*)([^>]*)>/g,
-      (_, closing, rawName, attrs) => {
-        const name = TAG_ALIASES[rawName.toLowerCase()] ??
-          rawName.toLowerCase();
-        if (DROPPED_TAGS.has(name)) return ' ';
-        return closing ? `</${name}>` : `<${name}${keptAttrs(attrs)}>`;
-      },
-    )
-    .replace(/<a[^>]*><\/a>|<\/input>/g, '')
-    .replace(/\s+/g, ' ')
-    .replace(
-      new RegExp(`\\s*(</?(?:${BLOCK_TAGS})(?: [^>]*)?>)\\s*`, 'g'),
-      '$1',
-    )
-    .replace(/<code>\s+|\s+<\/code>/g, (m) => m.trim())
-    .replace(/&(#?\w+);/g, (m, entity) => ENTITIES[entity] ?? m)
-    .trim();
-  return sortNestedMarks(normalized);
-}
-
 // --- renderers ---
 
 const decoder = new TextDecoder();
-
-async function kerebron(md: string) {
-  const editor = CoreEditor.create({
-    assetLoad,
-    editorKits: [new BrowserLessEditorKit()],
-  });
-  await editor.loadDocumentText('text/x-markdown', md);
-  return {
-    html: decoder.decode(await editor.saveDocument('text/html')),
-    saved: decoder.decode(await editor.saveDocument('text/x-markdown')).trim(),
-  };
-}
 
 async function pandoc(from: string, md: string): Promise<string> {
   const child = new Deno.Command('pandoc', {
@@ -177,11 +68,7 @@ async function compare(sample: DialectCase): Promise<Result> {
     saved: first.saved,
     stable: normalizeHtml(reloaded.html) === html,
     refs: {
-      gfm: normalizeHtml(micromark(sample.md, {
-        allowDangerousHtml: true,
-        extensions: [gfm()],
-        htmlExtensions: [gfmHtml()],
-      })),
+      gfm: normalizeHtml(micromarkGfm(sample.md)),
       marked: normalizeHtml(marked.parse(sample.md, { async: false })),
       pandocGfm: normalizeHtml(await pandoc('gfm', sample.md)),
       pandoc: normalizeHtml(await pandoc('markdown', sample.md)),
@@ -189,16 +76,12 @@ async function compare(sample: DialectCase): Promise<Result> {
   };
 }
 
-// Kerebron logs unsupported nodes/marks; the report already shows them.
-async function quietly<T>(run: () => Promise<T>): Promise<T> {
-  const { debug, warn } = console;
-  console.debug = console.warn = () => {};
-  try {
-    return await run();
-  } finally {
-    Object.assign(console, { debug, warn });
-  }
-}
+const micromarkGfm = (md: string) =>
+  micromark(md, {
+    allowDangerousHtml: true,
+    extensions: [gfm()],
+    htmlExtensions: [gfmHtml()],
+  });
 
 // --- report ---
 
@@ -257,7 +140,7 @@ function summary(results: Result[]): string {
     (matching.map((r) => code(r.md)).join(', ') || 'none');
 
   return [
-    '### Summary',
+    '### Dialect sample summary',
     '',
     '| Reference | Samples where Kerebron matches |',
     '| --- | --- |',
@@ -290,6 +173,86 @@ function summary(results: Result[]): string {
   ].join('\n');
 }
 
+interface SpecRow {
+  spec: Spec;
+  section: string;
+  example: number;
+  kerebron: boolean;
+  marked: boolean;
+  micromark: boolean;
+}
+
+async function specRows(): Promise<SpecRow[]> {
+  const rows: SpecRow[] = [];
+  for (const spec of specs) {
+    for (const ex of spec.examples) {
+      const expected = expectedHtml(ex);
+      rows.push({
+        spec,
+        section: ex.section,
+        example: ex.example,
+        kerebron: (await kerebronHtml(ex)) === expected,
+        marked: normalizeHtml(marked.parse(ex.markdown, { async: false })) ===
+          expected,
+        micromark: normalizeHtml(micromarkGfm(ex.markdown)) === expected,
+      });
+    }
+  }
+  return rows;
+}
+
+function specCompliance(rows: SpecRow[]): string {
+  const score = (rs: SpecRow[], key: 'kerebron' | 'marked' | 'micromark') => {
+    const passed = rs.filter((r) => r[key]).length;
+    return `${passed} (${Math.round((100 * passed) / rs.length)}%)`;
+  };
+  const totals = specs.map((spec) => {
+    const rs = rows.filter((r) => r.spec === spec);
+    return `| ${spec.name} | ${rs.length} | ${score(rs, 'kerebron')} | ${
+      score(rs, 'marked')
+    } | ${score(rs, 'micromark')} |`;
+  });
+
+  const sections = specs.flatMap((spec) => {
+    const bySection = Map.groupBy(
+      rows.filter((r) => r.spec === spec),
+      (r) => r.section,
+    );
+    return [...bySection.entries()].map(([section, rs]) => ({
+      spec,
+      section,
+      rs,
+      fails: rs.filter((r) => !r.kerebron),
+    }));
+  }).sort((a, b) => b.fails.length - a.fails.length);
+
+  return [
+    '### Spec compliance',
+    '',
+    'Every example from the official specs, scored against the HTML the spec',
+    'expects (after `normalizeHtml()`). See [spec.ts](../utils/markdown-dialects/spec.ts).',
+    'micromark is a spec-exact parser; it shows how much normalization costs.',
+    '',
+    '| Spec | Examples | Kerebron | Marked | micromark + GFM |',
+    '| --- | --- | --- | --- | --- |',
+    ...totals,
+    '',
+    '#### By spec section',
+    '',
+    '| Section | Examples | Kerebron | Marked | Kerebron fails |',
+    '| --- | --- | --- | --- | --- |',
+    ...sections.map(({ spec, section, rs, fails }) =>
+      `| ${section} | ${rs.length} | ${rs.length - fails.length} | ${
+        rs.filter((r) => r.marked).length
+      } | ${
+        fails.map((r) => `[${r.example}](${spec.url}${r.example})`).join(
+          ' ',
+        ) || '✓'
+      } |`
+    ),
+  ].join('\n');
+}
+
 async function report(): Promise<string> {
   const sections: string[] = [];
   const all: Result[] = [];
@@ -315,6 +278,8 @@ async function report(): Promise<string> {
       dirty ? '+dirty' : ''
     }\` ` +
     `with ${pandocVersion}, ${LIBRARY_VERSIONS}. Do not edit by hand._`,
+    '',
+    specCompliance(await specRows()),
     '',
     summary(all),
     '',

@@ -10,6 +10,8 @@ can be refreshed after every parser or serializer change and reviewed with
 ```sh
 deno task markdown:dialects                  # regenerate the results below
 deno task markdown:dialects --md '~x~ ~~y~~' # compare one snippet in the terminal
+deno task test:spec                          # fail if a passing spec example regresses
+UPDATE_SPEC_BASELINE=1 deno task test:spec   # record newly passing spec examples
 ```
 
 Requires `pandoc` on `PATH` (`brew install pandoc`) and the grammar WASM files:
@@ -79,8 +81,8 @@ No single choice matches every renderer:
 
 | `~x~` means…  | Who                                                                                                  |
 | ------------- | ---------------------------------------------------------------------------------------------------- |
-| strikethrough | GFM spec ("one or two tildes"), GitHub, Marked, Kerebron before `4a3f79f`                            |
-| subscript     | Pandoc Markdown (`subscript` extension), Kerebron since `4a3f79f`                                    |
+| strikethrough | GFM spec ("one or two tildes"), GitHub, Marked, Kerebron before `3df7320`                            |
+| subscript     | Pandoc Markdown (`subscript` extension), Kerebron since `3df7320`                                    |
 | literal text  | Pandoc GFM (requires `~~`)                                                                           |
 
 `~~x~~` is strikethrough in every renderer, so Kerebron saves strikethrough
@@ -89,8 +91,43 @@ that way.
 Two consequences follow from that choice:
 - **On GitHub and in Marked:** a subscript Kerebron saves (`H~2~O`) shows as
   strikethrough.
-- **Older files:** files saved before `4a3f79f` used `~text~` for
+- **Older files:** files saved before `3df7320` used `~text~` for
   strikethrough, so they now load as subscript.
+
+## Reading the numbers
+
+The results have two parts that answer different questions.
+
+**Spec compliance** is the conformance measure. Every example from the
+CommonMark 0.31.2 and GFM 0.29 specs (680 in total) is rendered by Kerebron
+and compared with the HTML the spec itself expects. Marked and micromark are
+scored the same way for scale. micromark is spec-exact, so its few misses
+show what the normalization costs rather than real differences.
+
+[spec.test.ts](../utils/markdown-dialects/spec.test.ts) runs in
+`test:pre-push`. It fails when an example listed in
+[kerebron-passing.json](../utils/markdown-dialects/specs/kerebron-passing.json)
+stops passing. After a fix, record the newly passing examples with
+`UPDATE_SPEC_BASELINE=1 deno task test:spec` and commit the file.
+
+The **dialect sample** counts, like `37 / 65`, are **not** a conformance
+score:
+
+- **The total is just the sample count.** It is the number of hand-written
+  samples in [cases.ts](../utils/markdown-dialects/cases.ts), and it changes
+  whenever a sample is added.
+- **A match means identical HTML.** Kerebron's HTML has to equal the
+  renderer's exactly, after `normalizeHtml()`. Any difference counts as a miss.
+- **The samples are chosen to disagree.** They probe edge cases where dialects
+  differ, and about a third are tilde cases.
+- **No renderer can match them all.** GFM and Pandoc disagree on about a third
+  of the samples, so following one means missing the other. The "Follows
+  Pandoc instead of GFM" list is intentional.
+- **The real gaps are in "Matches neither".** That list holds the samples that
+  are bugs or unsupported syntax.
+
+Use those counts to compare runs: after a parser or serializer change, rerun
+the task and check with `git diff` that the counts only go up.
 
 ## Results
 
