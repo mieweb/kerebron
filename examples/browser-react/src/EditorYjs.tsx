@@ -15,13 +15,7 @@ const MyEditor: React.FC = () => {
   const [md, setMd] = useState<string>('');
 
   useEffect(() => {
-    const host = editorRef.current;
-    if (!host) return;
-
-    // destroy() swaps its element for an inert clone, so never mount into a React-owned node.
-    const mount = document.createElement('div');
-    mount.className = 'kb-component';
-    host.appendChild(mount);
+    if (!editorRef.current) return;
 
     const getLspTransport: LSPTransportGetter = (
       lang: string,
@@ -47,7 +41,7 @@ const MyEditor: React.FC = () => {
 
     // Initialize the editor
     const editor = CoreEditor.create({
-      element: mount,
+      element: editorRef.current,
       uri: 'file:///untitled.md',
       editorKits: [
         new AdvancedEditorKit(),
@@ -86,14 +80,13 @@ const MyEditor: React.FC = () => {
     return () => {
       editor.removeEventListener('transaction', onTransaction);
       editor.destroy();
-      host.replaceChildren();
     };
   }, []);
 
   return (
     <div>
       <div>
-        <div ref={editorRef} />
+        <div ref={editorRef} className='kb-component' />
       </div>
 
       <div>

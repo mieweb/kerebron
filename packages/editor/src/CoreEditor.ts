@@ -449,12 +449,6 @@ export class CoreEditor extends EventTarget {
     });
     this.dispatchEvent(event);
 
-    if (this.config.element) {
-      const oldEl = this.config.element;
-      const newEl = oldEl.cloneNode(true);
-      oldEl.replaceWith(newEl);
-    }
-
     this.view.destroy();
   }
 
