@@ -12,7 +12,9 @@ deno task markdown:dialects                  # regenerate the results below
 deno task markdown:dialects --md '~x~ ~~y~~' # compare one snippet in the terminal
 ```
 
-Requires `pandoc` on `PATH` (`brew install pandoc`). Samples live in
+Requires `pandoc` on `PATH` (`brew install pandoc`) and the grammar WASM files:
+run `deno task build:ext-wasm` first (`packages/wasm/assets` is gitignored).
+Samples live in
 [cases.ts](../utils/markdown-dialects/cases.ts); add one whenever you change how
 a construct is handled.
 
@@ -44,7 +46,7 @@ keeps content:
 
 ```mermaid
 flowchart LR
-  Source["Markdown source"] --> Grammar["tree-sitter-markdown-inline<br/>(vendor/tree-sitter-markdown)"]
+  Source["Markdown source"] --> Grammar["tree-sitter-markdown-inline<br/>(mieweb/tree-sitter-markdown release)"]
   Grammar -->|"strikethrough / subscript /<br/>superscript / highlight nodes"| Tokenizer["treeSitterTokenizer.ts<br/>WRAPPING_INLINE_NODES"]
   Tokenizer -->|"*_open / *_close tokens"| MdToPm["mdToPmConverter.ts<br/>token → mark"]
   MdToPm --> Doc["ProseMirror doc<br/>strike · subscript · superscript · highlight"]
@@ -56,8 +58,9 @@ flowchart LR
   class Grammar grammar
 ```
 
-- **The grammar decides the meaning.** The vendored fork
-  (`mieweb/tree-sitter-markdown@kerebron`) follows Pandoc: `~~x~~` is
+- **The grammar decides the meaning.** The fork release pinned in
+  [wasm.json](../packages/wasm/src/wasm.json)
+  (`mieweb/tree-sitter-markdown`, branch `kerebron`) follows Pandoc: `~~x~~` is
   strikethrough, `~x~` is subscript, `^x^` is superscript and `==x==` is
   highlight.
 - **Unknown node types become error text.** The tokenizer maps grammar nodes

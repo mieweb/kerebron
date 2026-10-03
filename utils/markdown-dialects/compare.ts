@@ -306,6 +306,7 @@ async function report(): Promise<string> {
     '--porcelain',
     'packages',
     'vendor',
+    'utils/markdown-dialects',
   ]);
   const pandocVersion = (await command('pandoc', ['--version'])).split('\n')[0];
 
