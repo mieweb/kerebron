@@ -47,6 +47,20 @@ export interface MdContext {
   meta: Record<string, any>;
 }
 
+function colorToken(
+  type: string,
+  nesting: 1 | -1,
+  mark: Mark,
+  defaultColor?: string,
+): Promise<Token> {
+  const token = new Token(type, '', nesting);
+  const color = mark.attrs.color;
+  if (color && color !== defaultColor) {
+    token.attrSet('color', color);
+  }
+  return Promise.resolve(token);
+}
+
 class MdStashContext {
   private ctxStash: Array<MdContext> = [];
   private currentCtx: MdContext;
@@ -484,8 +498,14 @@ export async function extPmToMdConverter(
       expelEnclosingWhitespace: true,
     },
     highlight: {
-      open: 'highlight_open',
-      close: 'highlight_close',
+      open: (mark: Mark) => colorToken('highlight_open', 1, mark, 'yellow'),
+      close: (mark: Mark) => colorToken('highlight_close', -1, mark, 'yellow'),
+      mixable: true,
+      expelEnclosingWhitespace: true,
+    },
+    textColor: {
+      open: (mark: Mark) => colorToken('text_color_open', 1, mark),
+      close: (mark: Mark) => colorToken('text_color_close', -1, mark),
       mixable: true,
       expelEnclosingWhitespace: true,
     },

@@ -64,3 +64,43 @@ Deno.test('pandoc-style inline marks round-trip', async () => {
   );
   assertEquals(output, source);
 });
+
+Deno.test('marks markdown cannot express round-trip losslessly', async () => {
+  const cases: Array<[string, string, string, Record<string, string>?]> = [
+    ['a ~b\\ c~ d\n', 'b c', 'subscript'],
+    ['a ^b\\ c^ d\n', 'b c', 'superscript'],
+    [
+      'a <mark style="background-color: red;">x</mark> b\n',
+      'x',
+      'highlight',
+      { color: 'red' },
+    ],
+    [
+      'a <span style="color: blue;">y</span> b\n',
+      'y',
+      'textColor',
+      { color: 'blue' },
+    ],
+  ];
+
+  for (const [source, text, markType, attrs] of cases) {
+    const editor = CoreEditor.create({
+      assetLoad,
+      editorKits: [new BrowserLessEditorKit()],
+    });
+    await editor.loadDocumentText('text/x-markdown', source);
+
+    const mark = editor.getJSON().content![0].content!
+      .find((item) => item.text === text)?.marks
+      ?.find((m) => m.type === markType);
+    assert(mark, `No ${markType} on "${text}" in ${source}`);
+    if (attrs) {
+      assertEquals(mark.attrs, attrs);
+    }
+
+    const output = new TextDecoder().decode(
+      await editor.saveDocument('text/x-markdown'),
+    );
+    assertEquals(output, source);
+  }
+});

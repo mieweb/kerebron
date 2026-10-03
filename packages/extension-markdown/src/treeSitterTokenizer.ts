@@ -20,6 +20,19 @@ const WRAPPING_INLINE_NODES: Record<string, [string, string]> = {
   highlight: ['highlight', 'mark'],
 };
 
+// Pandoc sub/superscript: `\ ` is an escaped space inside the mark
+function unescapeScriptSpaces(siblings: Token[], openToken: Token) {
+  const texts = siblings.slice(siblings.indexOf(openToken) + 1)
+    .filter((t) => t.type === 'text');
+  texts.forEach((t, idx) => {
+    t.content = t.content.replace(/\\([ \t])/g, '$1');
+    const next = texts[idx + 1];
+    if (t.content.endsWith('\\') && /^[ \t]/.test(next?.content ?? '')) {
+      t.content = t.content.slice(0, -1);
+    }
+  });
+}
+
 function treeToTokens(
   rootNode: TreeSitterNode,
   source: string,
@@ -464,6 +477,13 @@ function treeToTokens(
             pushInlineNode(openToken, tagName);
 
             walkInline(node.children.filter((c: any) => !!c));
+
+            if (node.type === 'subscript' || node.type === 'superscript') {
+              unescapeScriptSpaces(
+                retVal[retVal.length - 1].children!,
+                openToken,
+              );
+            }
 
             const closeToken = new Token(
               tokenName + '_close',

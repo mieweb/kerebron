@@ -184,15 +184,64 @@ function delimiterHandlers(
   return { [name + '_open']: [handler], [name + '_close']: [handler] };
 }
 
+// Pandoc sub/superscript content may not contain unescaped whitespace
+function scriptHandlers(
+  name: string,
+  markup: string,
+): Record<string, Array<TokenHandler>> {
+  return {
+    [name + '_open']: [(token: Token, ctx: ContextStash) => {
+      ctx.current.log(token.markup || markup, token);
+      ctx.current.meta['escapeSpaces'] = true;
+    }],
+    [name + '_close']: [(token: Token, ctx: ContextStash) => {
+      ctx.current.meta['escapeSpaces'] = false;
+      ctx.current.log(token.markup || markup, token);
+    }],
+  };
+}
+
+function escapeHtmlAttr(text: string) {
+  return text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+}
+
+// `markup` is used when the mark has no color, otherwise a styled HTML tag
+function colorTagHandlers(
+  name: string,
+  tag: string,
+  cssProp: string,
+  markup?: string,
+): Record<string, Array<TokenHandler>> {
+  return {
+    [name + '_open']: [(token: Token, ctx: ContextStash) => {
+      const color = token.attrGet('color');
+      ctx.current.log(
+        color
+          ? `<${tag} style="${cssProp}: ${escapeHtmlAttr(color)};">`
+          : markup ?? `<${tag}>`,
+        token,
+      );
+    }],
+    [name + '_close']: [(token: Token, ctx: ContextStash) => {
+      const color = token.attrGet('color');
+      ctx.current.log(color ? `</${tag}>` : markup ?? `</${tag}>`, token);
+    }],
+  };
+}
+
 export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
   return {
     'text': [
       (token: Token, ctx: ContextStash) => {
+        const escapeSpaces = (text: string) =>
+          ctx.current.meta['escapeSpaces']
+            ? text.replace(/[ \t]/g, '\\$&')
+            : text;
         if (token.meta === 'noEscText') {
-          ctx.current.log(token.content);
+          ctx.current.log(escapeSpaces(token.content));
         } else {
           for (const pair of escapeMarkdown(token, ctx.current)) {
-            ctx.current.log(pair[0], pair[1]);
+            ctx.current.log(escapeSpaces(pair[0]), pair[1]);
           }
         }
       },
@@ -233,9 +282,10 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
       },
     ],
     ...delimiterHandlers('strike', '~~'),
-    ...delimiterHandlers('subscript', '~'),
-    ...delimiterHandlers('superscript', '^'),
-    ...delimiterHandlers('highlight', '=='),
+    ...scriptHandlers('subscript', '~'),
+    ...scriptHandlers('superscript', '^'),
+    ...colorTagHandlers('highlight', 'mark', 'background-color', '=='),
+    ...colorTagHandlers('text_color', 'span', 'color'),
 
     'link_open': [
       (token: Token, ctx: ContextStash) => {
@@ -419,7 +469,8 @@ export function getHtmlInlineFormatTokensHandlers(): Record<
     ],
     ...htmlTagHandlers('subscript', 'sub'),
     ...htmlTagHandlers('superscript', 'sup'),
-    ...htmlTagHandlers('highlight', 'mark'),
+    ...colorTagHandlers('highlight', 'mark', 'background-color'),
+    ...colorTagHandlers('text_color', 'span', 'color'),
   };
 }
 
