@@ -27,9 +27,7 @@ _underscore_
 
 ~~strike~~ next to ~sub~
 
-Not marks: ~5 min to ~10 min
-
-Not marks: ~/home, a ~ b, a = b, 2 ^ 3
+Not marks: ~5 min to ~10 min, ~/home, a ~ b, a = b, 2 ^ 3, ~b c~, ^d e^
 
 ~~strikethrough~~
 > blockquote
