@@ -52,7 +52,7 @@
   },
   "tasks": {
     "build:all": "deno task build:ext-odt && deno task -f @kerebron build",
-    "dev": "deno task -f server-hono start",
+    "dev": "deno watch --allow-net --allow-ffi --allow-read --allow-env --allow-sys --allow-write --allow-run --node-modules-dir ./examples/server-hono/src/main.ts",
     "build:legacy-compat": "deno task -f legacy-compat build",
     "build:ext-odt": "deno task -f @kerebron/odt-wasm build",
     "build:ext-wasm": "deno task -f @kerebron/wasm build",
@@ -67,9 +67,9 @@
     "@std/path": "jsr:@std/path@1.1.2",
     "asserts": "https://deno.land/std@0.178.0/testing/asserts.ts",
 
-    "prosemirror-state": "npm:prosemirror-state@1.4.3",
-    "prosemirror-view": "npm:prosemirror-view@1.40.0",
-    "prosemirror-model": "npm:prosemirror-model@1.25.9",
+    "prosemirror-state": "npm:prosemirror-state@1.4.4",
+    "prosemirror-view": "npm:prosemirror-view@1.42.3",
+    "prosemirror-model": "npm:prosemirror-model@1.25.11",
     "prosemirror-transform": "npm:prosemirror-transform@1.10.4",
     "prosemirror-dev-toolkit": "npm:prosemirror-dev-toolkit@1.1.8",
 
@@ -80,7 +80,6 @@
     "yjs": "npm:yjs@13.6.30",
     "y-protocols": "npm:y-protocols@1.0.6",
     "lib0": "npm:lib0@0.2.109",
-    "orderedmap": "npm:orderedmap@latest",
 
     "@xmldom/xmldom": "npm:@xmldom/xmldom@0.9.10",
     "linkedom": "npm:linkedom@0.18.12",
@@ -89,10 +88,13 @@
     "vscode-languageserver-protocol": "npm:vscode-languageserver-protocol@3.17.5",
     "vscode-languageserver-textdocument": "npm:vscode-languageserver-textdocument@1.0.12",
 
-    "vite": "npm:vite@8.1.2",
+    "vite": "npm:vite@8.3.0",
     "vite-plugin-wasm": "npm:vite-plugin-wasm@3.6.0",
 
     "web-tree-sitter": "npm:web-tree-sitter@0.26.12",
+
+    "playwright": "npm:playwright@1.63.0",
+    "@playwright/test": "npm:@playwright/test@1.63.0",
 
     "@opentelemetry/api": "npm:@opentelemetry/api@1.9.1",
     "@opentelemetry/api-logs": "npm:@opentelemetry/api-logs@0.221.0"
