@@ -40,8 +40,8 @@ const ENTITIES: Record<string, string> = {
   copy: '©',
   nbsp: ' ',
 };
-// Generated footnote anchors differ per renderer (#fn1, #user-content-fn-1, ...)
-const FOOTNOTE_HREF = /^#(user-content-)?fn/;
+// Generated footnote anchors: Pandoc #fn1/#fnref1, micromark #user-content-fn-x/#user-content-fnref-x
+const FOOTNOTE_HREF = /^#(?:fn(?:ref)?\d+|user-content-fn(?:ref)?-[\w-]+)$/;
 
 function keptAttrs(attrs: string): string {
   let out = '';
@@ -52,7 +52,8 @@ function keptAttrs(attrs: string): string {
     if (align || key === 'align') out += ` align="${align || value}"`;
     else if (key === 'checked') out += ' checked';
     else if (KEPT_ATTRS.has(key)) {
-      out += ` ${key}="${FOOTNOTE_HREF.test(value) ? '#' : value}"`;
+      const footnote = key === 'href' && FOOTNOTE_HREF.test(value);
+      out += ` ${key}="${footnote ? '#' : value}"`;
     }
   }
   return out;
