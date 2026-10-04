@@ -92,6 +92,17 @@ function verifyWasmFile(filePath: string) {
   console.log(`  ✓ Verified ${path.basename(filePath)} is valid WASM`);
 }
 
+async function sha256(filePath: string): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    fs.readFileSync(filePath),
+  );
+  return Array.from(
+    new Uint8Array(digest),
+    (b) => b.toString(16).padStart(2, '0'),
+  ).join('');
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const mainDestDir = args[0];
@@ -118,6 +129,9 @@ async function main() {
     const versionArg = (group as any).version || 'latest';
     const files = group.files;
     const queries: Record<string, string> = group.queries;
+    // Pinned release assets; for mieweb/tree-sitter-markdown the source of truth
+    // is the vendor/tree-sitter-markdown submodule commit the release was built from
+    const pinnedSha256: Record<string, string> = (group as any).sha256 || {};
 
     const [org, project] = repo.split('/');
     const destDir = mainDestDir + '/' + project;
@@ -145,9 +159,13 @@ async function main() {
       let totalSize = 0;
 
       for (const queryName in queries) {
-        const queryPath = queries[queryName];
+        // `{version}` pins queries to the same tag as the wasm files
+        const queryPath = queries[queryName].replace(
+          '{version}',
+          release.version,
+        );
         const queryUrl =
-          `https://raw.githubusercontent.com/${repo}/refs/heads/${queryPath}`;
+          `https://raw.githubusercontent.com/${repo}/${queryPath}`;
 
         const destPath = path.join(wasmDir, queryName);
         await downloadFile(queryUrl, destPath);
@@ -184,7 +202,11 @@ async function main() {
         // Check if file already exists
         if (fs.existsSync(destPath)) {
           const existingSize = fs.statSync(destPath).size;
-          if (existingSize === asset.size) {
+          if (
+            existingSize === asset.size &&
+            (!pinnedSha256[wasmFile] ||
+              await sha256(destPath) === pinnedSha256[wasmFile])
+          ) {
             console.log(
               `  ⊙ ${wasmFile} already up-to-date (${
                 (asset.size / 1024).toFixed(0)
@@ -216,6 +238,18 @@ async function main() {
 
         if (destPath.endsWith('.wasm')) {
           await verifyWasmFile(destPath);
+        }
+        if (pinnedSha256[wasmFile]) {
+          const actual = await sha256(destPath);
+          if (actual !== pinnedSha256[wasmFile]) {
+            fs.rmSync(destPath);
+            throw new Error(
+              `SHA-256 mismatch for ${repo}@${release.version}/${wasmFile}: expected ${
+                pinnedSha256[wasmFile]
+              }, got ${actual}`,
+            );
+          }
+          console.log(`  ✓ Verified ${wasmFile} SHA-256`);
         }
         totalSize += size;
       }

@@ -19,7 +19,17 @@ _underscore_
 
 *italic*
 
-~strikethrough~
+~subscript~ and H~2~O
+
+^superscript^ and 2^10^
+
+==highlight==
+
+~~strike~~ next to ~sub~
+
+Not marks: ~5 min to ~10 min, ~/home, a ~ b, a = b, 2 ^ 3, ~b c~, ^d e^
+
+~~strikethrough~~
 > blockquote
 - hyphen
 + plus

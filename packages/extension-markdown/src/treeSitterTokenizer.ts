@@ -12,6 +12,27 @@ import {
 import { CodeContentMapper } from '@kerebron/workspace/CodeContentMapper';
 import { StackableMarkdownParser } from './StackableMarkdownParser.ts';
 
+// tree-sitter inline node -> [token name, html tag]
+const WRAPPING_INLINE_NODES: Record<string, [string, string]> = {
+  strikethrough: ['strike', 'strike'],
+  subscript: ['subscript', 'sub'],
+  superscript: ['superscript', 'sup'],
+  highlight: ['highlight', 'mark'],
+};
+
+// Pandoc sub/superscript: `\ ` is an escaped space inside the mark
+function unescapeScriptSpaces(siblings: Token[], openToken: Token) {
+  const texts = siblings.slice(siblings.indexOf(openToken) + 1)
+    .filter((t) => t.type === 'text');
+  texts.forEach((t, idx) => {
+    t.content = t.content.replace(/\\([ \t])/g, '$1');
+    const next = texts[idx + 1];
+    if (t.content.endsWith('\\') && /^[ \t]/.test(next?.content ?? '')) {
+      t.content = t.content.slice(0, -1);
+    }
+  });
+}
+
 function treeToTokens(
   rootNode: TreeSitterNode,
   source: string,
@@ -443,24 +464,33 @@ function treeToTokens(
           }
           break;
         case 'strikethrough':
+        case 'subscript':
+        case 'superscript':
+        case 'highlight':
           {
-            const tokenName = 'strike';
-            const tagName = 'strike';
+            const [tokenName, tagName] = WRAPPING_INLINE_NODES[node.type];
             const openToken = new Token(
               tokenName + '_open',
               tagName,
               NESTING_OPENING,
             );
-            pushInlineNode(openToken, 's');
+            pushInlineNode(openToken, tagName);
 
             walkInline(node.children.filter((c: any) => !!c));
+
+            if (node.type === 'subscript' || node.type === 'superscript') {
+              unescapeScriptSpaces(
+                retVal[retVal.length - 1].children!,
+                openToken,
+              );
+            }
 
             const closeToken = new Token(
               tokenName + '_close',
               tagName,
               NESTING_CLOSING,
             );
-            pushInlineNode(closeToken, '/s');
+            pushInlineNode(closeToken, '/' + tagName);
           }
           break;
         case 'code_span':

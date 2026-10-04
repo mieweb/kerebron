@@ -174,15 +174,83 @@ function getLinkTokensHandlers(): Record<string, Array<TokenHandler>> {
   };
 }
 
+function delimiterHandlers(
+  name: string,
+  markup: string,
+): Record<string, Array<TokenHandler>> {
+  const handler = (token: Token, ctx: ContextStash) => {
+    ctx.current.log(token.markup || markup, token);
+  };
+  return { [name + '_open']: [handler], [name + '_close']: [handler] };
+}
+
+// Pandoc sub/superscript content may not contain unescaped whitespace
+function scriptHandlers(
+  name: string,
+  markup: string,
+): Record<string, Array<TokenHandler>> {
+  return {
+    [name + '_open']: [(token: Token, ctx: ContextStash) => {
+      ctx.current.log(token.markup || markup, token);
+      ctx.current.meta['escapeSpaces'] = true;
+    }],
+    [name + '_close']: [(token: Token, ctx: ContextStash) => {
+      ctx.current.meta['escapeSpaces'] = false;
+      ctx.current.log(token.markup || markup, token);
+    }],
+  };
+}
+
+function escapeHtmlAttr(text: string) {
+  return text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+}
+
+// `markup` is used when the mark has no color, otherwise a styled HTML tag
+// whose content is written as HTML (markdown is not parsed inside it)
+function colorTagHandlers(
+  name: string,
+  tag: string,
+  cssProp: string,
+  markup?: string,
+): Record<string, Array<TokenHandler>> {
+  return {
+    [name + '_open']: [(token: Token, ctx: ContextStash) => {
+      const color = token.attrGet('color');
+      if (!color) {
+        ctx.current.log(markup ?? `<${tag}>`, token);
+        return;
+      }
+      ctx.current.log(
+        `<${tag} style="${cssProp}: ${escapeHtmlAttr(color)};">`,
+        token,
+      );
+      ctx.stash(name + '_open');
+      ctx.current.handlers = getHtmlInlineTokensHandlers();
+    }],
+    [name + '_close']: [(token: Token, ctx: ContextStash) => {
+      if (!token.attrGet('color')) {
+        ctx.current.log(markup ?? `</${tag}>`, token);
+        return;
+      }
+      ctx.current.log(`</${tag}>`, token);
+      ctx.unstash(name + '_close');
+    }],
+  };
+}
+
 export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
   return {
     'text': [
       (token: Token, ctx: ContextStash) => {
+        const escapeSpaces = (text: string) =>
+          ctx.current.meta['escapeSpaces']
+            ? text.replace(/[ \t]/g, '\\$&')
+            : text;
         if (token.meta === 'noEscText') {
-          ctx.current.log(token.content);
+          ctx.current.log(escapeSpaces(token.content));
         } else {
           for (const pair of escapeMarkdown(token, ctx.current)) {
-            ctx.current.log(pair[0], pair[1]);
+            ctx.current.log(escapeSpaces(pair[0]), pair[1]);
           }
         }
       },
@@ -222,16 +290,11 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
         ctx.current.log(token.markup || '_', token);
       },
     ],
-    'strike_open': [
-      (token: Token, ctx: ContextStash) => {
-        ctx.current.log(token.markup || '~', token);
-      },
-    ],
-    'strike_close': [
-      (token: Token, ctx: ContextStash) => {
-        ctx.current.log(token.markup || '~', token);
-      },
-    ],
+    ...delimiterHandlers('strike', '~~'),
+    ...scriptHandlers('subscript', '~'),
+    ...scriptHandlers('superscript', '^'),
+    ...colorTagHandlers('highlight', 'mark', 'background-color', '=='),
+    ...colorTagHandlers('text_color', 'span', 'color'),
 
     'link_open': [
       (token: Token, ctx: ContextStash) => {
@@ -413,6 +476,28 @@ export function getHtmlInlineFormatTokensHandlers(): Record<
         ctx.current.log(`</${tag}>`, token);
       },
     ],
+    ...htmlTagHandlers('subscript', 'sub'),
+    ...htmlTagHandlers('superscript', 'sup'),
+    ...colorTagHandlers('highlight', 'mark', 'background-color'),
+    ...colorTagHandlers('text_color', 'span', 'color'),
+  };
+}
+
+function htmlTagHandlers(
+  name: string,
+  defaultTag: string,
+): Record<string, Array<TokenHandler>> {
+  return {
+    [name + '_open']: [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log(`<${token.tag || defaultTag}>`, token);
+      },
+    ],
+    [name + '_close']: [
+      (token: Token, ctx: ContextStash) => {
+        ctx.current.log(`</${token.tag || defaultTag}>`, token);
+      },
+    ],
   };
 }
 
@@ -464,7 +549,7 @@ export function getHtmlInlineTokensHandlers(): Record<
     'code_close': [
       (token: Token, ctx: ContextStash) => {
         const tag = token.tag || 'code';
-        ctx.current.log(`<${tag}>`, token);
+        ctx.current.log(`</${tag}>`, token);
       },
     ],
 
