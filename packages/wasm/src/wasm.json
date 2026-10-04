@@ -27,7 +27,11 @@
     "files": ["tree-sitter-markdown.wasm", "tree-sitter-markdown_inline.wasm"],
     "sha256": {
       "tree-sitter-markdown.wasm": "4c526d7744bebc1a5671d9acd5a88feae8d193fea7a8eaedd1614a256e17569c",
-      "tree-sitter-markdown_inline.wasm": "ea9900fadcb30047b976b43107bd8eec6c9f9aee73c66e62da73268fe51430c1"
+      "tree-sitter-markdown_inline.wasm": "ea9900fadcb30047b976b43107bd8eec6c9f9aee73c66e62da73268fe51430c1",
+      "highlights.scm": "2eb06e766ccd672d49599d14f398f07f4f5f7f2208262993d3cd9207c1078e2f",
+      "injections.scm": "64b1a6006b40176d8db986cc41350e4f9b292fd06bfedb0abfcdb1fb989aca3e",
+      "highlights-inline.scm": "9a88072f0ce54972c32fe7952ccb2d29254b6a7228bda1c7babc18df15cba797",
+      "injections-inline.scm": "97bf17b9a973db8ee6868f543dd1eabdd81f19b8751a4fcf92db45f74462f4c5"
     },
     "queries": {
       "highlights.scm": "{version}/tree-sitter-markdown/queries/highlights.scm",

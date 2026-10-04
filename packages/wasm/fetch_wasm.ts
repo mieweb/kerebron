@@ -154,6 +154,20 @@ async function main() {
       console.log(`Found release: ${release.version}`);
       console.log();
 
+      const verifyPinned = async (filePath: string, name: string) => {
+        if (!pinnedSha256[name]) return;
+        const actual = await sha256(filePath);
+        if (actual !== pinnedSha256[name]) {
+          fs.rmSync(filePath);
+          throw new Error(
+            `SHA-256 mismatch for ${repo}@${release.version}/${name}: expected ${
+              pinnedSha256[name]
+            }, got ${actual}`,
+          );
+        }
+        console.log(`  ✓ Verified ${name} SHA-256`);
+      };
+
       // Check for required WASM files
       const wasmDir = destDir;
       let totalSize = 0;
@@ -169,6 +183,7 @@ async function main() {
 
         const destPath = path.join(wasmDir, queryName);
         await downloadFile(queryUrl, destPath);
+        await verifyPinned(destPath, queryName);
       }
 
       for (const wasmFile of files) {
@@ -239,18 +254,7 @@ async function main() {
         if (destPath.endsWith('.wasm')) {
           await verifyWasmFile(destPath);
         }
-        if (pinnedSha256[wasmFile]) {
-          const actual = await sha256(destPath);
-          if (actual !== pinnedSha256[wasmFile]) {
-            fs.rmSync(destPath);
-            throw new Error(
-              `SHA-256 mismatch for ${repo}@${release.version}/${wasmFile}: expected ${
-                pinnedSha256[wasmFile]
-              }, got ${actual}`,
-            );
-          }
-          console.log(`  ✓ Verified ${wasmFile} SHA-256`);
-        }
+        await verifyPinned(destPath, wasmFile);
         totalSize += size;
       }
 
