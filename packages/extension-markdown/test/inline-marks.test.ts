@@ -74,6 +74,9 @@ Deno.test('marks markdown cannot express round-trip losslessly', async () => {
     ['a ^b\\^c^ d\n', 'b^c', 'superscript'],
     ['a ~~b\\~c~~ d\n', 'b~c', 'strike'],
     ['a ==b\\=\\=c== d\n', 'b==c', 'highlight'],
+    // a literal backslash before a delimiter
+    ['a ~b\\\\\\~c~ d\n', 'b\\~c', 'subscript'],
+    ['a ==b\\\\== d\n', 'b\\', 'highlight'],
     // literal HTML-like text inside a colored range stays text
     [
       'a <span style="color: blue;">&lt;em&gt;x&lt;/em&gt; &amp;copy;</span> b\n',
@@ -117,23 +120,34 @@ Deno.test('marks markdown cannot express round-trip losslessly', async () => {
   }
 });
 
-Deno.test('marks nested in a colored HTML tag survive round-trip', async () => {
-  const source = 'a <span style="color: blue;"><mark>x</mark></span> b\n';
-  const editor = CoreEditor.create({
-    assetLoad,
-    editorKits: [new BrowserLessEditorKit()],
-  });
-  await editor.loadDocumentText('text/x-markdown', source);
+Deno.test('overlapping marks that markdown cannot nest survive round-trip', async () => {
+  const cases: Array<[string, string[]]> = [
+    [
+      'a <span style="color: blue;"><mark>x</mark></span> b\n',
+      ['highlight', 'textColor'],
+    ],
+    // strike and subscript both use `~`; the inner one falls back to HTML
+    ['a ~~<sub>x</sub>~~ b\n', ['strike', 'subscript']],
+    ['a **<span style="color: blue;">x</span>** b\n', ['strong', 'textColor']],
+  ];
 
-  const markTypes = () =>
-    editor.getJSON().content![0].content!
-      .find((item) => item.text === 'x')?.marks?.map((m) => m.type).sort();
-  assertEquals(markTypes(), ['highlight', 'textColor']);
+  for (const [source, expectedMarks] of cases) {
+    const editor = CoreEditor.create({
+      assetLoad,
+      editorKits: [new BrowserLessEditorKit()],
+    });
+    await editor.loadDocumentText('text/x-markdown', source);
 
-  const output = new TextDecoder().decode(
-    await editor.saveDocument('text/x-markdown'),
-  );
-  assertEquals(output, source);
-  await editor.loadDocumentText('text/x-markdown', output);
-  assertEquals(markTypes(), ['highlight', 'textColor']);
+    const markTypes = () =>
+      editor.getJSON().content![0].content!
+        .find((item) => item.text === 'x')?.marks?.map((m) => m.type).sort();
+    assertEquals(markTypes(), expectedMarks, source);
+
+    const output = new TextDecoder().decode(
+      await editor.saveDocument('text/x-markdown'),
+    );
+    assertEquals(output, source);
+    await editor.loadDocumentText('text/x-markdown', output);
+    assertEquals(markTypes(), expectedMarks, output);
+  }
 });

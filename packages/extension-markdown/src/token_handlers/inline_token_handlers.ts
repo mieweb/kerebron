@@ -174,38 +174,47 @@ function getLinkTokensHandlers(): Record<string, Array<TokenHandler>> {
   };
 }
 
-// Characters backslash-escaped in text while marks are open (see
+// Open delimiter marks: chars backslash-escaped in their text (see
 // WRAPPING_INLINE_NODES in treeSitterTokenizer.ts for the matching unescape)
-const pushEscapes = (ctx: ContextStash, chars: string) => {
-  ctx.current.meta['markEscapes'] = [
-    ...(ctx.current.meta['markEscapes'] ?? []),
-    chars,
-  ];
+interface OpenMark {
+  chars: string;
+  html: boolean;
+}
+const markStack = (ctx: ContextStash): OpenMark[] =>
+  ctx.current.meta['markStack'] ?? [];
+const pushMark = (ctx: ContextStash, mark: OpenMark) => {
+  ctx.current.meta['markStack'] = [...markStack(ctx), mark];
 };
-const popEscapes = (ctx: ContextStash) => {
-  ctx.current.meta['markEscapes'] = (ctx.current.meta['markEscapes'] ?? [])
-    .slice(0, -1);
+const popMark = (ctx: ContextStash): OpenMark | undefined => {
+  const stack = markStack(ctx);
+  ctx.current.meta['markStack'] = stack.slice(0, -1);
+  return stack[stack.length - 1];
 };
 const escapeMarkDelimiters = (text: string, ctx: ContextStash) => {
-  const chars: string = (ctx.current.meta['markEscapes'] ?? []).join('');
+  const chars = markStack(ctx).map((m) => m.chars).join('');
   return chars
     ? [...text].map((c) => chars.includes(c) ? '\\' + c : c).join('')
     : text;
 };
 
+// Falls back to an HTML tag when an enclosing mark already uses the same
+// delimiter character (strike + subscript would write `~~~x~~~`)
 function delimiterHandlers(
   name: string,
   markup: string,
   escaped: string,
+  htmlTag: string,
 ): Record<string, Array<TokenHandler>> {
   return {
     [name + '_open']: [(token: Token, ctx: ContextStash) => {
-      ctx.current.log(token.markup || markup, token);
-      pushEscapes(ctx, escaped);
+      const delimiter = token.markup || markup;
+      const html = markStack(ctx).some((m) => m.chars.includes(delimiter[0]));
+      ctx.current.log(html ? `<${htmlTag}>` : delimiter, token);
+      pushMark(ctx, { chars: html ? '' : escaped + '\\', html });
     }],
     [name + '_close']: [(token: Token, ctx: ContextStash) => {
-      popEscapes(ctx);
-      ctx.current.log(token.markup || markup, token);
+      const html = popMark(ctx)?.html;
+      ctx.current.log(html ? `</${htmlTag}>` : token.markup || markup, token);
     }],
   };
 }
@@ -228,7 +237,7 @@ function colorTagHandlers(
       const color = token.attrGet('color');
       if (!color) {
         ctx.current.log(markup ?? `<${tag}>`, token);
-        if (markup) pushEscapes(ctx, escaped);
+        if (markup) pushMark(ctx, { chars: escaped + '\\', html: false });
         return;
       }
       ctx.current.log(
@@ -240,7 +249,7 @@ function colorTagHandlers(
     }],
     [name + '_close']: [(token: Token, ctx: ContextStash) => {
       if (!token.attrGet('color')) {
-        if (markup) popEscapes(ctx);
+        if (markup) popMark(ctx);
         ctx.current.log(markup ?? `</${tag}>`, token);
         return;
       }
@@ -298,9 +307,9 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
         ctx.current.log(token.markup || '_', token);
       },
     ],
-    ...delimiterHandlers('strike', '~~', '~'),
-    ...delimiterHandlers('subscript', '~', ' \t~'),
-    ...delimiterHandlers('superscript', '^', ' \t^'),
+    ...delimiterHandlers('strike', '~~', '~', 'strike'),
+    ...delimiterHandlers('subscript', '~', ' \t~', 'sub'),
+    ...delimiterHandlers('superscript', '^', ' \t^', 'sup'),
     ...colorTagHandlers('highlight', 'mark', 'background-color', '==', '='),
     ...colorTagHandlers('text_color', 'span', 'color'),
 

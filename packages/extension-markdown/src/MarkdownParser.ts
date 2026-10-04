@@ -124,8 +124,14 @@ export class MarkdownParseState {
   }
 
   importNodes(nodes: readonly Node[]) {
+    // inline HTML keeps the markdown marks around it, e.g. `~~<sub>x</sub>~~`
+    const marks = this.top()?.marks ?? Mark.none;
     for (const node of nodes) {
-      this.push(node);
+      this.push(
+        node.isInline && marks.length
+          ? node.mark(marks.reduce((set, m) => m.addToSet(set), node.marks))
+          : node,
+      );
     }
   }
 }

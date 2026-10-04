@@ -12,30 +12,32 @@ import {
 import { CodeContentMapper } from '@kerebron/workspace/CodeContentMapper';
 import { StackableMarkdownParser } from './StackableMarkdownParser.ts';
 
-// tree-sitter inline node -> [token name, html tag, chars backslash-escaped inside]
-const WRAPPING_INLINE_NODES: Record<string, [string, string, string]> = {
-  strikethrough: ['strike', 'strike', '~'],
-  subscript: ['subscript', 'sub', ' \t~'],
-  superscript: ['superscript', 'sup', ' \t^'],
-  highlight: ['highlight', 'mark', '='],
+// tree-sitter inline node -> [token name, html tag]
+const WRAPPING_INLINE_NODES: Record<string, [string, string]> = {
+  strikethrough: ['strike', 'strike'],
+  subscript: ['subscript', 'sub'],
+  superscript: ['superscript', 'sup'],
+  highlight: ['highlight', 'mark'],
 };
 
-function unescapeDelimiters(
-  siblings: Token[],
-  openToken: Token,
-  chars: string,
-) {
+// CommonMark backslash escapes (ASCII punctuation) plus Pandoc's escaped space
+const ESCAPED_CHAR = /\\([!-/:-@[-`{-~ \t])/g;
+const unescapedTokens = new WeakSet<Token>();
+
+// Undo the serializer's escaping inside a mark once per text token, so nested
+// marks don't unescape the same text twice
+function unescapeDelimiters(siblings: Token[], openToken: Token) {
   const texts = siblings.slice(siblings.indexOf(openToken) + 1)
-    .filter((t) => t.type === 'text');
+    .filter((t) => t.type === 'text' && !unescapedTokens.has(t));
   texts.forEach((t, idx) => {
-    t.content = t.content.replace(
-      /\\(.)/g,
-      (m, c) => chars.includes(c) ? c : m,
-    );
-    const next = texts[idx + 1]?.content ?? '';
-    if (t.content.endsWith('\\') && chars.includes(next[0])) {
-      t.content = t.content.slice(0, -1);
+    let raw = t.content;
+    const trailingBackslashes = raw.match(/\\*$/)![0].length;
+    const next = texts[idx + 1]?.content[0] ?? '';
+    if (trailingBackslashes % 2 && /[!-/:-@[-`{-~ \t]/.test(next)) {
+      raw = raw.slice(0, -1);
     }
+    t.content = raw.replace(ESCAPED_CHAR, '$1');
+    unescapedTokens.add(t);
   });
 }
 
@@ -474,8 +476,7 @@ function treeToTokens(
         case 'superscript':
         case 'highlight':
           {
-            const [tokenName, tagName, escaped] =
-              WRAPPING_INLINE_NODES[node.type];
+            const [tokenName, tagName] = WRAPPING_INLINE_NODES[node.type];
             const openToken = new Token(
               tokenName + '_open',
               tagName,
@@ -488,7 +489,6 @@ function treeToTokens(
             unescapeDelimiters(
               retVal[retVal.length - 1].children!,
               openToken,
-              escaped,
             );
 
             const closeToken = new Token(
