@@ -7,7 +7,6 @@ const TAG_ALIASES: Record<string, string> = {
   i: 'em',
 };
 const DROPPED_TAGS = new Set([
-  'p',
   'div',
   'span',
   'label',
@@ -30,6 +29,8 @@ const INLINE_MARKS = new Set([
 ]);
 const BLOCK_TAGS =
   'ul|ol|li|table|tr|td|th|blockquote|h[1-6]|hr|br|pre|dl|dt|dd';
+const BLOCK_TAG = `</?(?:${BLOCK_TAGS})(?: [^>]*)?>`;
+const PARAGRAPH = '¶';
 const ENTITIES: Record<string, string> = {
   amp: '&',
   lt: '<',
@@ -39,6 +40,8 @@ const ENTITIES: Record<string, string> = {
   copy: '©',
   nbsp: ' ',
 };
+// Generated footnote anchors differ per renderer (#fn1, #user-content-fn-1, ...)
+const FOOTNOTE_HREF = /^#(user-content-)?fn/;
 
 function keptAttrs(attrs: string): string {
   let out = '';
@@ -49,7 +52,7 @@ function keptAttrs(attrs: string): string {
     if (align || key === 'align') out += ` align="${align || value}"`;
     else if (key === 'checked') out += ' checked';
     else if (KEPT_ATTRS.has(key)) {
-      out += ` ${key}="${value.startsWith('#') ? '#' : value}"`;
+      out += ` ${key}="${FOOTNOTE_HREF.test(value) ? '#' : value}"`;
     }
   }
   return out;
@@ -79,16 +82,19 @@ export function normalizeHtml(html: string): string {
       (_, closing, rawName, attrs) => {
         const name = TAG_ALIASES[rawName.toLowerCase()] ??
           rawName.toLowerCase();
+        if (name === 'p') return ` ${PARAGRAPH} `;
         if (DROPPED_TAGS.has(name)) return ' ';
         return closing ? `</${name}>` : `<${name}${keptAttrs(attrs)}>`;
       },
     )
     .replace(/<a[^>]*><\/a>|<\/input>/g, '')
     .replace(/\s+/g, ' ')
-    .replace(
-      new RegExp(`\\s*(</?(?:${BLOCK_TAGS})(?: [^>]*)?>)\\s*`, 'g'),
-      '$1',
-    )
+    // a paragraph boundary only matters between runs of inline content
+    .replace(new RegExp(`( ?${PARAGRAPH} ?)+`, 'g'), ` ${PARAGRAPH} `)
+    .replace(new RegExp(`\\s*${PARAGRAPH}\\s*(${BLOCK_TAG})`, 'g'), '$1')
+    .replace(new RegExp(`(${BLOCK_TAG})\\s*${PARAGRAPH}\\s*`, 'g'), '$1')
+    .replace(new RegExp(`^\\s*${PARAGRAPH}|${PARAGRAPH}\\s*$`, 'g'), '')
+    .replace(new RegExp(`\\s*(${BLOCK_TAG})\\s*`, 'g'), '$1')
     .replace(/<code>\s+|\s+<\/code>/g, (m) => m.trim())
     .replace(/&(#?\w+);/g, (m, entity) => ENTITIES[entity] ?? m)
     .trim();

@@ -34,9 +34,12 @@ Before comparing, every output goes through `normalizeHtml()` in
 keeps content:
 - `<strike>` and `<s>` are treated as `<del>`, and `<b>`/`<i>` as
   `<strong>`/`<em>`.
-- Wrapper tags (`p`, `div`, `span`, `thead`, …) are dropped.
+- Wrapper tags (`div`, `span`, `thead`, …) are dropped. `<p>` becomes a `¶`
+  boundary only between runs of inline content, so merged or split paragraphs
+  still count as a difference but tight vs. loose lists do not.
 - Only meaningful attributes are kept (`href`, `src`, `alt`, `title`, `start`,
-  `checked`, alignment).
+  `checked`, alignment). Generated footnote anchors (`#fn1`,
+  `#user-content-fn-1`) become `#`; other link fragments are kept.
 - The order of nested marks is ignored, so `<strong><em>x</em></strong>` equals
   `<em><strong>x</strong></em>`.
 - Any `<math>` element counts as the same math.
