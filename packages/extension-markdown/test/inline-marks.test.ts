@@ -69,6 +69,18 @@ Deno.test('marks markdown cannot express round-trip losslessly', async () => {
   const cases: Array<[string, string, string, Record<string, string>?]> = [
     ['a ~b\\ c~ d\n', 'b c', 'subscript'],
     ['a ^b\\ c^ d\n', 'b c', 'superscript'],
+    // delimiter characters inside the marked text
+    ['a ~b\\~c~ d\n', 'b~c', 'subscript'],
+    ['a ^b\\^c^ d\n', 'b^c', 'superscript'],
+    ['a ~~b\\~c~~ d\n', 'b~c', 'strike'],
+    ['a ==b\\=\\=c== d\n', 'b==c', 'highlight'],
+    // literal HTML-like text inside a colored range stays text
+    [
+      'a <span style="color: blue;">&lt;em&gt;x&lt;/em&gt; &amp;copy;</span> b\n',
+      '<em>x</em> &copy;',
+      'textColor',
+      { color: 'blue' },
+    ],
     [
       'a <mark style="background-color: red;">x</mark> b\n',
       'x',

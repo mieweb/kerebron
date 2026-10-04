@@ -12,22 +12,28 @@ import {
 import { CodeContentMapper } from '@kerebron/workspace/CodeContentMapper';
 import { StackableMarkdownParser } from './StackableMarkdownParser.ts';
 
-// tree-sitter inline node -> [token name, html tag]
-const WRAPPING_INLINE_NODES: Record<string, [string, string]> = {
-  strikethrough: ['strike', 'strike'],
-  subscript: ['subscript', 'sub'],
-  superscript: ['superscript', 'sup'],
-  highlight: ['highlight', 'mark'],
+// tree-sitter inline node -> [token name, html tag, chars backslash-escaped inside]
+const WRAPPING_INLINE_NODES: Record<string, [string, string, string]> = {
+  strikethrough: ['strike', 'strike', '~'],
+  subscript: ['subscript', 'sub', ' \t~'],
+  superscript: ['superscript', 'sup', ' \t^'],
+  highlight: ['highlight', 'mark', '='],
 };
 
-// Pandoc sub/superscript: `\ ` is an escaped space inside the mark
-function unescapeScriptSpaces(siblings: Token[], openToken: Token) {
+function unescapeDelimiters(
+  siblings: Token[],
+  openToken: Token,
+  chars: string,
+) {
   const texts = siblings.slice(siblings.indexOf(openToken) + 1)
     .filter((t) => t.type === 'text');
   texts.forEach((t, idx) => {
-    t.content = t.content.replace(/\\([ \t])/g, '$1');
-    const next = texts[idx + 1];
-    if (t.content.endsWith('\\') && /^[ \t]/.test(next?.content ?? '')) {
+    t.content = t.content.replace(
+      /\\(.)/g,
+      (m, c) => chars.includes(c) ? c : m,
+    );
+    const next = texts[idx + 1]?.content ?? '';
+    if (t.content.endsWith('\\') && chars.includes(next[0])) {
       t.content = t.content.slice(0, -1);
     }
   });
@@ -468,7 +474,8 @@ function treeToTokens(
         case 'superscript':
         case 'highlight':
           {
-            const [tokenName, tagName] = WRAPPING_INLINE_NODES[node.type];
+            const [tokenName, tagName, escaped] =
+              WRAPPING_INLINE_NODES[node.type];
             const openToken = new Token(
               tokenName + '_open',
               tagName,
@@ -478,12 +485,11 @@ function treeToTokens(
 
             walkInline(node.children.filter((c: any) => !!c));
 
-            if (node.type === 'subscript' || node.type === 'superscript') {
-              unescapeScriptSpaces(
-                retVal[retVal.length - 1].children!,
-                openToken,
-              );
-            }
+            unescapeDelimiters(
+              retVal[retVal.length - 1].children!,
+              openToken,
+              escaped,
+            );
 
             const closeToken = new Token(
               tokenName + '_close',

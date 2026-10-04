@@ -174,28 +174,37 @@ function getLinkTokensHandlers(): Record<string, Array<TokenHandler>> {
   };
 }
 
+// Characters backslash-escaped in text while marks are open (see
+// WRAPPING_INLINE_NODES in treeSitterTokenizer.ts for the matching unescape)
+const pushEscapes = (ctx: ContextStash, chars: string) => {
+  ctx.current.meta['markEscapes'] = [
+    ...(ctx.current.meta['markEscapes'] ?? []),
+    chars,
+  ];
+};
+const popEscapes = (ctx: ContextStash) => {
+  ctx.current.meta['markEscapes'] = (ctx.current.meta['markEscapes'] ?? [])
+    .slice(0, -1);
+};
+const escapeMarkDelimiters = (text: string, ctx: ContextStash) => {
+  const chars: string = (ctx.current.meta['markEscapes'] ?? []).join('');
+  return chars
+    ? [...text].map((c) => chars.includes(c) ? '\\' + c : c).join('')
+    : text;
+};
+
 function delimiterHandlers(
   name: string,
   markup: string,
-): Record<string, Array<TokenHandler>> {
-  const handler = (token: Token, ctx: ContextStash) => {
-    ctx.current.log(token.markup || markup, token);
-  };
-  return { [name + '_open']: [handler], [name + '_close']: [handler] };
-}
-
-// Pandoc sub/superscript content may not contain unescaped whitespace
-function scriptHandlers(
-  name: string,
-  markup: string,
+  escaped: string,
 ): Record<string, Array<TokenHandler>> {
   return {
     [name + '_open']: [(token: Token, ctx: ContextStash) => {
       ctx.current.log(token.markup || markup, token);
-      ctx.current.meta['escapeSpaces'] = true;
+      pushEscapes(ctx, escaped);
     }],
     [name + '_close']: [(token: Token, ctx: ContextStash) => {
-      ctx.current.meta['escapeSpaces'] = false;
+      popEscapes(ctx);
       ctx.current.log(token.markup || markup, token);
     }],
   };
@@ -212,12 +221,14 @@ function colorTagHandlers(
   tag: string,
   cssProp: string,
   markup?: string,
+  escaped = '',
 ): Record<string, Array<TokenHandler>> {
   return {
     [name + '_open']: [(token: Token, ctx: ContextStash) => {
       const color = token.attrGet('color');
       if (!color) {
         ctx.current.log(markup ?? `<${tag}>`, token);
+        if (markup) pushEscapes(ctx, escaped);
         return;
       }
       ctx.current.log(
@@ -229,6 +240,7 @@ function colorTagHandlers(
     }],
     [name + '_close']: [(token: Token, ctx: ContextStash) => {
       if (!token.attrGet('color')) {
+        if (markup) popEscapes(ctx);
         ctx.current.log(markup ?? `</${tag}>`, token);
         return;
       }
@@ -242,15 +254,11 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
   return {
     'text': [
       (token: Token, ctx: ContextStash) => {
-        const escapeSpaces = (text: string) =>
-          ctx.current.meta['escapeSpaces']
-            ? text.replace(/[ \t]/g, '\\$&')
-            : text;
         if (token.meta === 'noEscText') {
-          ctx.current.log(escapeSpaces(token.content));
+          ctx.current.log(escapeMarkDelimiters(token.content, ctx));
         } else {
           for (const pair of escapeMarkdown(token, ctx.current)) {
-            ctx.current.log(escapeSpaces(pair[0]), pair[1]);
+            ctx.current.log(escapeMarkDelimiters(pair[0], ctx), pair[1]);
           }
         }
       },
@@ -290,10 +298,10 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
         ctx.current.log(token.markup || '_', token);
       },
     ],
-    ...delimiterHandlers('strike', '~~'),
-    ...scriptHandlers('subscript', '~'),
-    ...scriptHandlers('superscript', '^'),
-    ...colorTagHandlers('highlight', 'mark', 'background-color', '=='),
+    ...delimiterHandlers('strike', '~~', '~'),
+    ...delimiterHandlers('subscript', '~', ' \t~'),
+    ...delimiterHandlers('superscript', '^', ' \t^'),
+    ...colorTagHandlers('highlight', 'mark', 'background-color', '==', '='),
     ...colorTagHandlers('text_color', 'span', 'color'),
 
     'link_open': [
@@ -419,8 +427,14 @@ export function getInlineTokensHandlers(): Record<string, Array<TokenHandler>> {
   };
 }
 
+const HTML_ESCAPES: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+};
+
 function escapeHtml(text: string) {
-  return text; // TODO
+  return text.replace(/[&<>]/g, (c) => HTML_ESCAPES[c]);
 }
 
 export function getHtmlInlineFormatTokensHandlers(): Record<
