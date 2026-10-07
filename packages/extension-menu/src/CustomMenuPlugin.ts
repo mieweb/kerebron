@@ -1,5 +1,3 @@
-// deno-lint-ignore-file no-window
-
 import { EditorState, Plugin, PluginKey } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 
@@ -743,7 +741,7 @@ export class CustomMenuView {
             const mousedownEvent = new MouseEvent('mousedown', {
               bubbles: true,
               cancelable: true,
-              view: window,
+              view: dom.ownerDocument.defaultView,
             });
             dom.dispatchEvent(mousedownEvent);
           }
@@ -906,7 +904,7 @@ export class CustomMenuView {
               const mousedownEvent = new MouseEvent('mousedown', {
                 bubbles: true,
                 cancelable: true,
-                view: window,
+                view: dom.ownerDocument.defaultView,
               });
               dom.dispatchEvent(mousedownEvent);
             }
@@ -919,7 +917,7 @@ export class CustomMenuView {
               const mousedownEvent = new MouseEvent('mousedown', {
                 bubbles: true,
                 cancelable: true,
-                view: window,
+                view: dom.ownerDocument.defaultView,
               });
               dom.dispatchEvent(mousedownEvent);
             }
