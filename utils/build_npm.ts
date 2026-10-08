@@ -7,6 +7,10 @@ import { expandGlob } from 'https://deno.land/std/fs/mod.ts';
 const __dirname = import.meta.dirname!;
 
 const allModules: string[] = [];
+const repository = {
+  type: 'git',
+  url: 'git+https://github.com/mieweb/kerebron.git',
+};
 
 interface DenoInfoModule {
   kind: 'esm';
@@ -120,6 +124,7 @@ async function processModule(moduleRoot: string, json: DenoJson) {
     packageJson.version = version;
     packageJson.description = packageJson.description || mainJson.description;
     packageJson.license = packageJson.license || mainJson.license;
+    packageJson.repository = repository;
 
     const outDir = path.resolve('./npm', json.name);
 
@@ -263,6 +268,7 @@ async function processModule(moduleRoot: string, json: DenoJson) {
       version,
       description: json.description || mainJson.description,
       license: json.license || mainJson.license,
+      repository,
       exports: exportsObj,
       files,
     },
