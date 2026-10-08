@@ -69,6 +69,17 @@ To generate npm packages
 deno -A ./utils/build_npm.ts
 ```
 
+### Publishing npm releases
+
+The `npm-publish.yml` workflow publishes releases using npm trusted publishing
+(OIDC), without an `NPM_TOKEN` secret. Before publishing, configure a GitHub Actions
+trusted publisher in **each published package's npm settings** with organization
+`mieweb`, repository `kerebron`, and workflow filename `npm-publish.yml` (no
+environment). Allow direct publishing with `npm publish`. Newly configured
+publishers must complete their first publish within two days.
+
+See the [npm trusted publishing documentation](https://docs.npmjs.com/trusted-publishers).
+
 ## Run through docker
 
 ```sh
