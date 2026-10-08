@@ -19,7 +19,7 @@
     "@kerebron/extension-menu": "latest",
     "@kerebron/extension-yjs": "latest",
     "meteor-node-stubs": "1.2.27",
-    "vue": "^3.3.9",
+    "vue": "^3.5.43",
     "vue-meteor-tracker": "^3.0.0-beta.7",
     "vue-router": "^4.2.5"
   },
