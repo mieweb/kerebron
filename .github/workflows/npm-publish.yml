@@ -7,6 +7,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Get tag version
         if: startsWith(github.ref, 'refs/tags/')
@@ -22,7 +25,7 @@ jobs:
           deno-version: v2.x # Use the latest stable Deno version
       - uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: '24.x'
           registry-url: 'https://registry.npmjs.org'
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -33,7 +36,5 @@ jobs:
         run: deno run -A ./utils/build_npm.ts ${{steps.get_tag_version.outputs.TAG_VERSION}}
       - name: Publish npm
         if: startsWith(github.ref, 'refs/tags/')
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           for DIR in npm/*/* ; do cd $DIR && npm publish --access=public; cd - ; done
