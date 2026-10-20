@@ -403,6 +403,7 @@ export async function extPmToMdConverter(
           const token = new Token('code_block', 'code', 0);
           token.meta = 'noEscText';
           token.attrSet('lang', node.attrs.lang);
+          token.attrSet('id', node.attrs.id);
           token.content = node.textContent;
           return Promise.resolve(token);
         },

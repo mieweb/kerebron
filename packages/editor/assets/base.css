@@ -36,6 +36,8 @@
   outline: none;
   font-size: var(--kb-text-base);
   line-height: 1.6;
+  max-height: 100%;
+  overflow: auto;
 }
 
 /* Mobile optimization */
@@ -118,7 +120,7 @@
 }
 
 .kb-shortcode-inline {
-  background-color: green;
+  background-color: #777;
   border-radius: 3px;
   margin: 0 5px 0;
   padding: 4px 10px;

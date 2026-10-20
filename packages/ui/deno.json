@@ -1,0 +1,25 @@
+{
+  "name": "@kerebron/ui",
+  "tasks": {
+    "test22:ui": "deno test -A test",
+    "test:ui": "PW_DISABLE_TS_ESM=true deno run -A playwright test --ui"
+  },
+  "imports": {},
+  "exports": {
+    ".": "./src/mod.ts",
+    "./icons": "./src/icons.ts",
+    "./utilities/toDOMElement": "./src/utilities/toDOMElement.ts",
+    "./utilities/dom": "./src/utilities/dom.ts",
+    "./popup": "./src/popup/mod.ts",
+    "./popup/utils": "./src/popup/utils.ts",
+    "./popup/ListRenderer": "./src/popup/ListRenderer.ts",
+    "./prompt": "./src/popup/prompt.ts",
+    "./autocomplete": "./src/autocomplete/mod.ts",
+    "./autocomplete/AutocompletePlugin": "./src/autocomplete/AutocompletePlugin.ts",
+    "./hover": "./src/hover/mod.ts",
+    "./events": "./src/events/mod.ts",
+    "./diagnostics": "./src/diagnostics/mod.ts",
+    "./spellcheckDocument": "./src/diagnostics/spellcheckDocument.ts",
+    "./OverLayer": "./src/popup/OverLayer.ts"
+  }
+}

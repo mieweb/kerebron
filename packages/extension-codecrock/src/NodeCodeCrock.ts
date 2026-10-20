@@ -62,8 +62,15 @@ export class NodeCodeCrock extends NodeCodeBlock {
     type: NodeType,
   ): Partial<CommandFactories> {
     return {
-      'setCodeBlock': (lang?: string) =>
-        editor.commandFactories.setBlockType(type, { lang }),
+      'setCodeBlock': (lang?: string) => {
+        return function (tr, dispatch, view) {
+          const cmd = editor.commandFactories.setBlockType(type, {
+            lang,
+            id: crypto.randomUUID(),
+          });
+          return cmd.apply(this, [ tr, dispatch, view ]);
+        }
+      },
       ArrowLeft: () => arrowHandler('left'),
       ArrowRight: () => arrowHandler('right'),
       ArrowUp: () => arrowHandler('up'),

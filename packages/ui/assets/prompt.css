@@ -1,0 +1,162 @@
+/* Prompt/dialog styles with mobile optimization */
+.kb-prompt {
+  background: var(--kb-color-surface);
+  padding: var(--kb-space-md) var(--kb-space-lg) var(--kb-space-md)
+    var(--kb-space-lg);
+  border: 1px solid var(--kb-color-border);
+  position: fixed;
+  border-radius: var(--kb-radius-md);
+  z-index: var(--kb-z-modal);
+  box-shadow: var(--kb-shadow-lg);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 300px;
+  max-width: 90vw;
+}
+
+.kb-prompt h5 {
+  margin: 0 0 var(--kb-space-md) 0;
+  font-weight: 600;
+  font-size: var(--kb-text-base);
+  color: var(--kb-color-text);
+}
+
+.kb-prompt input[type='text'],
+.kb-prompt textarea {
+  background: var(--kb-color-surface-elevated);
+  border: 1px solid var(--kb-color-border);
+  border-radius: var(--kb-radius-sm);
+  padding: var(--kb-space-sm);
+  font-size: var(--kb-text-sm);
+  color: var(--kb-color-text);
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.kb-prompt input[type='text']:focus,
+.kb-prompt textarea:focus {
+  border-color: var(--kb-color-primary);
+  box-shadow: 0 0 0 3px var(--kb-color-focus);
+}
+
+.kb-prompt--close {
+  position: absolute;
+  right: var(--kb-space-sm);
+  top: var(--kb-space-sm);
+  color: var(--kb-color-text-muted);
+  border: none;
+  background: transparent;
+  padding: var(--kb-space-xs);
+  cursor: pointer;
+  border-radius: var(--kb-radius-sm);
+  width: var(--kb-space-lg);
+  height: var(--kb-space-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kb-prompt--close:hover {
+  background: var(--kb-color-hover);
+  color: var(--kb-color-text);
+}
+
+.kb-prompt--close:after {
+  content: '✕';
+  font-size: var(--kb-text-sm);
+}
+
+.kb-invalid {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: var(--kb-radius-sm);
+  padding: var(--kb-space-sm) var(--kb-space-md);
+  position: absolute;
+  min-width: 10em;
+  font-size: var(--kb-text-sm);
+}
+
+.kb-prompt__buttons {
+  margin-top: var(--kb-space-md);
+  display: flex;
+  gap: var(--kb-space-sm);
+  justify-content: flex-end;
+}
+
+.kb-prompt__buttons button {
+  padding: var(--kb-space-sm) var(--kb-space-md);
+  border: 1px solid var(--kb-color-border);
+  border-radius: var(--kb-radius-sm);
+  background: var(--kb-color-surface);
+  color: var(--kb-color-text);
+  cursor: pointer;
+  font-size: var(--kb-text-sm);
+  min-height: var(--kb-touch-target-comfortable);
+}
+
+.kb-prompt__buttons button:hover {
+  background: var(--kb-color-hover);
+}
+
+.kb-prompt__buttons button[type='submit'] {
+  background: var(--kb-color-primary);
+  color: white;
+  border-color: var(--kb-color-primary);
+}
+
+.kb-prompt__buttons button[type='submit']:hover {
+  background: var(--kb-color-primary-hover);
+}
+
+/* Prompt/Dialog mobile optimization */
+@media (max-width: 767px) {
+  .kb-editor-prompt {
+    position: fixed;
+    bottom: var(--kb-space-md);
+    left: var(--kb-space-md);
+    right: var(--kb-space-md);
+    top: auto;
+    transform: none;
+    max-width: none;
+    border-radius: var(--kb-radius-lg);
+    padding: var(--kb-space-lg);
+  }
+
+  .kb-editor-prompt input[type='text'],
+  .kb-editor-prompt textarea {
+    min-height: var(--kb-touch-target-min);
+    padding: var(--kb-space-sm);
+    font-size: var(--kb-text-base);
+    border: 1px solid var(--kb-color-border);
+    border-radius: var(--kb-radius-sm);
+    background: var(--kb-color-surface);
+    color: var(--kb-color-text);
+  }
+
+  .kb-editor-prompt-buttons {
+    display: flex;
+    gap: var(--kb-space-sm);
+    margin-top: var(--kb-space-md);
+  }
+
+  .kb-editor-prompt-buttons button {
+    flex: 1;
+    min-height: var(--kb-touch-target-comfortable);
+    padding: var(--kb-space-sm) var(--kb-space-md);
+    border: 1px solid var(--kb-color-border);
+    border-radius: var(--kb-radius-sm);
+    background: var(--kb-color-surface);
+    color: var(--kb-color-text);
+    font-size: var(--kb-text-base);
+    cursor: pointer;
+  }
+
+  .kb-editor-prompt-buttons button[type='submit'] {
+    background: var(--kb-color-primary);
+    color: white;
+    border-color: var(--kb-color-primary);
+  }
+}

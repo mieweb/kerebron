@@ -1,12 +1,12 @@
+// deno-lint-ignore-file no-window
+
 import { EditorState, Plugin, PluginKey } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 
 import type { CoreEditor } from '@kerebron/editor';
-import { VERSION } from '@kerebron/editor';
-import { debounce } from '@kerebron/editor/utilities';
+import { getIcon } from '@kerebron/ui/icons';
 
 import type { MenuElement } from './menu.ts';
-import { getIcon } from './icons.ts';
 
 const CSS_PREFIX = 'kb-custom-menu';
 const STORAGE_KEY = 'kb-custom-menu-order';
@@ -33,7 +33,6 @@ export class CustomMenuView {
   tools: ToolItem[] = [];
   root: Document | ShadowRoot;
   private closeOverflowHandler: ((e: MouseEvent) => void) | null = null;
-  private showVersion = false;
   private closePinnedDropdownHandler: ((e: MouseEvent) => void) | null = null;
   private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
   private submenuStack: Array<{ title: string; tools: ToolItem[] }> = [];
@@ -64,8 +63,8 @@ export class CustomMenuView {
   ) {
     this.root = editorView.root;
 
-    // Create wrapper
-    this.wrapper = document.createElement('div');
+    this.wrapper = editor.wrapperElement!;
+    // this.wrapper = document.createElement('div');
     this.wrapper.classList.add(CSS_PREFIX + '__wrapper');
 
     // Create toolbar
@@ -74,19 +73,18 @@ export class CustomMenuView {
     this.toolbar.setAttribute('role', 'toolbar');
 
     // Mount toolbar before the editor DOM
-    this.wrapper.appendChild(this.toolbar);
+    this.wrapper.prepend(this.toolbar);
     if (editorView.dom.parentNode) {
-      editorView.dom.parentNode.replaceChild(this.wrapper, editorView.dom);
+      // editorView.dom.parentNode.replaceChild(this.wrapper, editorView.dom);
     }
 
-    this.wrapper.appendChild(editorView.dom);
+    // this.wrapper.appendChild(editorView.dom);
 
     // Create overflow menu (initially hidden)
     this.overflowMenu = document.createElement('div');
     this.overflowMenu.classList.add(CSS_PREFIX + '__overflow-menu');
     this.overflowMenu.style.display = 'none';
-    this.wrapper.insertBefore(this.overflowMenu, editorView.dom);
-    editorView.dom.classList.add('kb-custom-menu__editor');
+    this.wrapper.prepend(this.overflowMenu);
 
     // Initialize tools from content
     this.initializeTools();
@@ -95,18 +93,18 @@ export class CustomMenuView {
     this.loadOrderState();
 
     // Initial render
-    this.render();
+    // this.render();
 
     // Use ResizeObserver to dynamically show/hide items based on available width
     if (typeof ResizeObserver !== 'undefined') {
-      this.resizeObserver = new ResizeObserver(debounce(() => {
+      this.resizeObserver = new ResizeObserver(() => {
         this.render();
-      }, 200));
+      });
       this.resizeObserver.observe(this.toolbar);
     }
 
     // Setup keyboard navigation for accessibility
-    this.setupKeyboardNavigation();
+    // this.setupKeyboardNavigation();
   }
 
   /**
@@ -741,7 +739,7 @@ export class CustomMenuView {
             const mousedownEvent = new MouseEvent('mousedown', {
               bubbles: true,
               cancelable: true,
-              view: dom.ownerDocument.defaultView,
+              view: window,
             });
             dom.dispatchEvent(mousedownEvent);
           }
@@ -904,7 +902,7 @@ export class CustomMenuView {
               const mousedownEvent = new MouseEvent('mousedown', {
                 bubbles: true,
                 cancelable: true,
-                view: dom.ownerDocument.defaultView,
+                view: window,
               });
               dom.dispatchEvent(mousedownEvent);
             }
@@ -917,7 +915,7 @@ export class CustomMenuView {
               const mousedownEvent = new MouseEvent('mousedown', {
                 bubbles: true,
                 cancelable: true,
-                view: dom.ownerDocument.defaultView,
+                view: window,
               });
               dom.dispatchEvent(mousedownEvent);
             }
@@ -965,7 +963,7 @@ export class CustomMenuView {
           // Get the icon from the dropdown's options
           const dropdown = tool.element as any;
           if (dropdown.options?.icon) {
-            const icon = getIcon(this.root, dropdown.options.icon);
+            const icon = getIcon(dropdown.options.icon, this.root);
             button.appendChild(icon);
           }
 
@@ -1053,16 +1051,6 @@ export class CustomMenuView {
       const resetButton = this.createResetButton(false);
       footer.appendChild(resetButton);
       this.overflowMenu.appendChild(footer);
-    }
-
-    if (!isSubmenu && this.showVersion) {
-      const versionFooter = document.createElement('div');
-      versionFooter.classList.add(
-        CSS_PREFIX + '__overflow-footer',
-        CSS_PREFIX + '__version',
-      );
-      versionFooter.textContent = 'Kerebron ' + VERSION;
-      this.overflowMenu.appendChild(versionFooter);
     }
   }
 
@@ -1267,7 +1255,6 @@ export class CustomMenuView {
         if (!isOpen) {
           // Opening - reset submenu stack to show main menu
           this.submenuStack = [];
-          this.showVersion = e.shiftKey;
           this.renderOverflowMenu();
 
           // Opening - add close handler after a short delay

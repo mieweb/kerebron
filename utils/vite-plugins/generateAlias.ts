@@ -4,6 +4,8 @@ export function generateAlias() {
   return {
     '@kerebron/editor/assets': __dirname + '/../../' +
       'packages/editor/assets',
+    '@kerebron/ui/assets': __dirname + '/../../' +
+      'packages/ui/assets',
     '@kerebron/editor-kits/assets': __dirname + '/../../' +
       'packages/editor-kits/assets',
     '@kerebron/extension-tables/assets': __dirname + '/../../' +
@@ -14,8 +16,6 @@ export function generateAlias() {
       'packages/extension-menu-legacy/assets',
     '@kerebron/extension-codecrock/assets': __dirname + '/../../' +
       'packages/extension-codecrock/assets',
-    '@kerebron/extension-ui/assets': __dirname + '/../../' +
-      'packages/extension-ui/assets',
     '@kerebron/extension-basic-editor/assets': __dirname + '/../../' +
       'packages/extension-basic-editor/assets',
   };

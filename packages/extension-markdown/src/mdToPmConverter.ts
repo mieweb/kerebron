@@ -91,12 +91,18 @@ export async function mdToPmConverterText(
       },
       code_block: {
         block: 'code_block',
-        getAttrs: (tok) => ({ lang: tok.attrGet('lang') || undefined }),
+        getAttrs: (tok) => ({
+          lang: tok.attrGet('lang') || undefined,
+          id: tok.attrGet('id') || crypto.randomUUID(),
+        }),
         noCloseToken: true,
       },
       fence: {
         block: 'code_block',
-        getAttrs: (tok) => ({ lang: tok.attrGet('lang') || undefined }),
+        getAttrs: (tok) => ({
+          lang: tok.attrGet('lang') || undefined,
+          id: tok.attrGet('id') || crypto.randomUUID(),
+        }),
         noCloseToken: true,
       },
       hr: {
@@ -212,6 +218,7 @@ export async function mdToPmConverterText(
       },
       footnote_ref: {
         block: 'code_block',
+        getAttrs: (tok) => ({ id: tok.attrGet('id') || crypto.randomUUID() }),
       },
       table: {
         block: 'table',

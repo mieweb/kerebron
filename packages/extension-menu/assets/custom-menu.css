@@ -1,4 +1,823 @@
-@import 'menu.css';
+/* Toolbar items */
+.kb-menu__button {
+  border-radius: var(--kb-radius-sm);
+
+  min-width: var(--kb-touch-target-comfortable);
+  min-height: var(--kb-touch-target-comfortable);
+
+  border: none;
+  background: transparent;
+  color: var(--kb-color-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: var(--kb-text-sm);
+  flex-shrink: 0;
+}
+
+.kb-menu__button:hover {
+  background: var(--kb-color-hover);
+  border-color: var(--kb-color-border);
+}
+
+.kb-menu__button:focus {
+  outline: 2px solid var(--kb-color-primary);
+  outline-offset: 2px;
+}
+
+.kb-menu__button--active {
+  background: var(--kb-color-primary);
+  color: white;
+  border-color: var(--kb-color-primary);
+  border-radius: var(--kb-radius-sm);
+}
+
+.kb-menu__button--pressed {
+  background: var(--kb-color-active);
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}
+
+.kb-menu__button--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.kb-menu__button--disabled:hover {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* Icon styling */
+.kb-dropdown__item svg,
+.kb-menu__button svg {
+  fill: currentColor;
+  height: 1em;
+  width: 1em;
+}
+
+.kb-dropdown__item svg,
+.kb-menu__button span,
+.kb-menu__button svg {
+  vertical-align: middle;
+}
+
+/* Hide text labels in toolbar buttons - show icons only */
+.kb-menu__button span {
+  display: none;
+}
+
+/* Hide text labels in dropdown buttons - show icons only */
+.kb-dropdown__label-text {
+  display: none;
+}
+
+/* Separator */
+.kb-menu__separator {
+  width: 1px;
+  height: var(--kb-space-lg);
+  background: var(--kb-color-border);
+  margin: 0 var(--kb-space-xs);
+  flex-shrink: 0;
+}
+
+/* Dropdown menu */
+.kb-dropdown {
+  position: relative;
+  padding: 1px 0 1px var(--kb-space-sm);
+  display: inline-block;
+}
+
+.kb-dropdown__label {
+  min-width: var(--kb-touch-target-comfortable);
+  min-height: var(--kb-touch-target-comfortable);
+
+  border: none;
+  background: none;
+  font-size: var(--kb-text-sm);
+  align-items: center;
+  padding-right: var(--kb-space-lg);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.kb-dropdown__label:focus {
+  outline: 2px solid var(--kb-color-primary);
+  outline-offset: -2px;
+}
+
+.kb-dropdown__label--active {
+  background: var(--kb-color-active);
+  color: var(--kb-color-primary);
+}
+
+.kb-dropdown__label:after {
+  content: '';
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid currentColor;
+  opacity: 0.6;
+  position: absolute;
+  right: var(--kb-space-sm);
+  top: calc(50% - 2px);
+}
+
+.kb-dropdown__menu {
+  position: fixed;
+  /*min-width: 200px;*/
+  min-width: 6em;
+  background: var(--kb-color-surface);
+  border: 1px solid var(--kb-color-border);
+  border-radius: var(--kb-radius-md);
+  box-shadow: var(--kb-shadow-lg);
+  z-index: var(--kb-z-dropdown);
+  padding: var(--kb-space-xs);
+  margin-top: var(--kb-space-xs);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.kb-dropdown--open .kb-dropdown__menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.kb-dropdown__item {
+  display: flex;
+  padding: var(--kb-space-sm) var(--kb-space-md);
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--kb-radius-sm);
+  color: var(--kb-color-text);
+  font-size: var(--kb-text-sm);
+  min-height: var(--kb-touch-target-comfortable);
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.kb-dropdown__item:hover {
+  background: var(--kb-color-hover);
+}
+
+.kb-dropdown__item:focus {
+  outline: 2px solid var(--kb-color-primary);
+  outline-offset: -2px;
+}
+
+.kb-dropdown__item--active {
+  background: var(--kb-color-active);
+  color: var(--kb-color-primary);
+}
+
+/* Accessibility: High contrast mode support */
+@media (prefers-contrast: more) {
+  .kb-dropdown__item,
+  .kb-dropdown__item:focus {
+    outline-width: 3px;
+  }
+}
+
+/* Mobile: full-screen dropdown */
+@media (max-width: 767px) {
+  .kb-dropdown__menu,
+  .kb-dropdown__menu--mobile {
+    position: fixed;
+    top: auto;
+    bottom: calc(var(--kb-touch-target-comfortable) + var(--kb-space-md) * 2);
+    left: var(--kb-space-sm);
+    right: var(--kb-space-sm);
+    min-width: auto;
+    border-radius: var(--kb-radius-lg);
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: var(--kb-space-md);
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+  }
+
+  .kb-dropdown__item {
+    padding: var(--kb-space-md);
+    min-height: var(--kb-touch-target-comfortable);
+  }
+}
+
+/* Submenu support */
+.kb-submenu {
+  position: relative;
+  margin-right: var(--kb-space-sm);
+}
+
+.kb-submenu__label {
+  position: relative;
+  padding-right: var(--kb-space-lg);
+}
+
+.kb-submenu__label:after {
+  content: '';
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 4px solid currentColor;
+  opacity: 0.6;
+  position: absolute;
+  right: var(--kb-space-sm);
+  top: calc(50% - 4px);
+}
+
+.kb-submenu__content {
+  position: absolute;
+  left: 100%;
+  top: var(--kb-space-xs);
+  /*min-width: 160px;*/
+  min-width: 4em;
+  background: var(--kb-color-surface);
+  border: 1px solid var(--kb-color-border);
+  border-radius: var(--kb-radius-md);
+  box-shadow: var(--kb-shadow-lg);
+  z-index: calc(var(--kb-z-dropdown) + 1);
+  padding: var(--kb-space-xs);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-4px);
+  transition: all 0.2s ease;
+}
+
+.kb-submenu:hover .kb-submenu__content,
+.kb-submenu--open .kb-submenu__content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+}
+
+/* Mobile: no submenus, flatten structure */
+@media (max-width: 767px) {
+  .kb-submenu__content {
+    display: none;
+  }
+}
+
+/* Tooltip for button labels */
+.kb-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--kb-color-text);
+  color: var(--kb-color-surface);
+  padding: var(--kb-space-xs) var(--kb-space-sm);
+  border-radius: var(--kb-radius-sm);
+  font-size: var(--kb-text-xs);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  margin-bottom: var(--kb-space-xs);
+  z-index: var(--kb-z-tooltip);
+}
+
+.kb-tooltip:after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid var(--kb-color-text);
+}
+
+.kb-menu__button:hover .kb-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Mobile: no tooltips on touch devices */
+@media (max-width: 767px) {
+  .kb-tooltip {
+    display: none;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .kb-menu__button,
+  .kb-dropdown__menu,
+  .kb-submenu__content,
+  .kb-tooltip {
+    transition: none;
+  }
+}
+
+/* Prompt/dialog styles with mobile optimization */
+.kb-prompt {
+  background: var(--kb-color-surface);
+  padding: var(--kb-space-lg) var(--kb-space-xl);
+  border: 1px solid var(--kb-color-border);
+  position: fixed;
+  border-radius: var(--kb-radius-lg);
+  z-index: var(--kb-z-modal);
+  box-shadow: var(--kb-shadow-lg);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 320px;
+  max-width: 90vw;
+}
+
+.kb-prompt form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--kb-space-md);
+}
+
+.kb-prompt form > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.kb-prompt-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1299;
+}
+
+/* Buttons container - override the column direction for field divs */
+.kb-prompt form > div.kb-prompt__buttons {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  margin-top: var(--kb-space-sm);
+  gap: var(--kb-space-sm);
+}
+
+.kb-prompt h5 {
+  margin: 0;
+  font-weight: 600;
+  font-size: var(--kb-text-lg);
+  color: var(--kb-color-text);
+}
+
+.kb-prompt input[type='text'],
+.kb-prompt textarea {
+  background: var(--kb-color-surface-elevated);
+  border: 1px solid var(--kb-color-border);
+  border-radius: var(--kb-radius-sm);
+  padding: var(--kb-space-sm) var(--kb-space-md);
+  font-size: var(--kb-text-base);
+  color: var(--kb-color-text);
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.kb-prompt input[type='text']:focus,
+.kb-prompt textarea:focus {
+  border-color: var(--kb-color-primary);
+  box-shadow: 0 0 0 3px var(--kb-color-focus);
+}
+
+.kb-prompt--close {
+  position: absolute;
+  right: var(--kb-space-sm);
+  top: var(--kb-space-sm);
+  color: var(--kb-color-text-muted);
+  border: none;
+  background: transparent;
+  padding: var(--kb-space-xs);
+  cursor: pointer;
+  border-radius: var(--kb-radius-sm);
+  width: var(--kb-space-lg);
+  height: var(--kb-space-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kb-prompt--close:hover {
+  background: var(--kb-color-hover);
+  color: var(--kb-color-text);
+}
+
+.kb-prompt--close:after {
+  content: '✕';
+  font-size: var(--kb-text-sm);
+}
+
+.kb-invalid {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: var(--kb-radius-sm);
+  padding: var(--kb-space-sm) var(--kb-space-md);
+  position: absolute;
+  min-width: 10em;
+  font-size: var(--kb-text-sm);
+}
+
+.kb-prompt__buttons {
+  margin-top: var(--kb-space-sm);
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: var(--kb-space-sm);
+  justify-content: space-between;
+}
+
+.kb-prompt__buttons button {
+  padding: var(--kb-space-xs) var(--kb-space-md);
+  border: 1px solid var(--kb-color-border);
+  border-radius: var(--kb-radius-sm);
+  background: var(--kb-color-surface);
+  color: var(--kb-color-text);
+  cursor: pointer;
+  font-size: var(--kb-text-sm);
+  font-weight: 500;
+  min-height: auto;
+  width: auto;
+  flex: 0 0 auto;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+/* OK button (submit) comes first in DOM, push Cancel to the end visually */
+.kb-prompt__buttons button[type='submit'] {
+  order: 2;
+}
+
+.kb-prompt__buttons button[type='button'] {
+  order: 1;
+}
+
+.kb-prompt__buttons button:hover {
+  background: var(--kb-color-hover);
+}
+
+.kb-prompt__buttons button[type='submit'] {
+  background: var(--kb-color-primary);
+  color: white;
+  border-color: var(--kb-color-primary);
+}
+
+.kb-prompt__buttons button[type='submit']:hover {
+  background: var(--kb-color-primary-hover);
+}
+
+/* File field styles for image upload */
+.kb-prompt__file-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--kb-space-xs);
+}
+
+.kb-prompt__file-label {
+  font-size: var(--kb-text-sm);
+  color: var(--kb-color-text-muted);
+  font-weight: 500;
+}
+
+.kb-prompt__file-input {
+  background: var(--kb-color-surface-elevated);
+  border: 1px solid var(--kb-color-border);
+  border-radius: var(--kb-radius-sm);
+  padding: var(--kb-space-sm) var(--kb-space-md);
+  font-size: var(--kb-text-sm);
+  color: var(--kb-color-text);
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.kb-prompt__file-input::file-selector-button {
+  background: var(--kb-color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--kb-radius-sm);
+  padding: var(--kb-space-xs) var(--kb-space-md);
+  margin-right: var(--kb-space-md);
+  cursor: pointer;
+  font-size: var(--kb-text-sm);
+  font-weight: 500;
+  transition: background-color 0.15s ease;
+}
+
+.kb-prompt__file-input::file-selector-button:hover {
+  background: var(--kb-color-primary-hover);
+}
+
+.kb-prompt__file-input:focus {
+  border-color: var(--kb-color-primary);
+  box-shadow: 0 0 0 3px var(--kb-color-focus);
+  outline: none;
+}
+
+.kb-prompt__file-name {
+  font-size: var(--kb-text-xs);
+  color: var(--kb-color-text-muted);
+  font-style: italic;
+}
+
+/* Prompt/Dialog mobile optimization */
+@media (max-width: 767px) {
+  .kb-editor-prompt {
+    position: fixed;
+    bottom: var(--kb-space-md);
+    left: var(--kb-space-md);
+    right: var(--kb-space-md);
+    top: auto;
+    transform: none;
+    max-width: none;
+    border-radius: var(--kb-radius-lg);
+    padding: var(--kb-space-lg);
+  }
+
+  .kb-editor-prompt input[type='text'],
+  .kb-editor-prompt textarea {
+    min-height: var(--kb-touch-target-min);
+    padding: var(--kb-space-sm);
+    font-size: var(--kb-text-base);
+    border: 1px solid var(--kb-color-border);
+    border-radius: var(--kb-radius-sm);
+    background: var(--kb-color-surface);
+    color: var(--kb-color-text);
+  }
+
+  .kb-editor-prompt-buttons {
+    display: flex;
+    gap: var(--kb-space-sm);
+    margin-top: var(--kb-space-md);
+  }
+
+  .kb-editor-prompt-buttons button {
+    flex: 1;
+    min-height: var(--kb-touch-target-comfortable);
+    padding: var(--kb-space-sm) var(--kb-space-md);
+    border: 1px solid var(--kb-color-border);
+    border-radius: var(--kb-radius-sm);
+    background: var(--kb-color-surface);
+    color: var(--kb-color-text);
+    font-size: var(--kb-text-base);
+    cursor: pointer;
+  }
+
+  .kb-editor-prompt-buttons button[type='submit'] {
+    background: var(--kb-color-primary);
+    color: white;
+    border-color: var(--kb-color-primary);
+  }
+}
+
+/* ===========================
+   Google-Docs–style toolbar for kb-menu
+   (main look + overflow behavior)
+   =========================== */
+
+:root {
+  --kb-bg: #fff;
+  --kb-fg: #1f1f1f;
+  --kb-subtle: #5f6368;
+  --kb-border: #e0e0e0;
+  --kb-hover: #f1f3f4;
+  --kb-active: #e8f0fe;
+  --kb-focus: #1a73e8;
+  --kb-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  --kb-height: 48px;
+  --kb-btn-h: 34px;
+  --kb-radius: 10px;
+
+  --kb-gap: 8px;
+  --kb-icon: 20px;
+  --kb-font: 13px;
+}
+
+/* Keep light toolbar even for dark pages (like Google Docs) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --kb-bg: #ffffff;
+    --kb-fg: #1f1f1f;
+    --kb-subtle: #5f6368;
+    --kb-border: #e6e7e8;
+    --kb-hover: #f3f4f5;
+    --kb-active: #e8f0fe;
+  }
+}
+
+/* Wrapper around toolbar + editor (plugin inserts this) */
+.kb-menu__wrapper {
+  z-index: 50;
+  padding: 8px 12px; /* spacing around the pill */
+  background: transparent;
+}
+
+/* Spacer used when floating */
+.kb-menu__spacer {
+  height: var(--kb-height);
+}
+
+/* Items and separators from renderGrouped */
+.kb-menu__item {
+  display: inline-flex;
+  align-items: center;
+}
+.kb-menu__separator {
+  width: 1px;
+  height: 22px;
+  background: var(--kb-border);
+  flex: 0 0 auto;
+  margin: 0 2px;
+}
+
+/* Buttons */
+.kb-menu__button {
+  height: var(--kb-btn-h);
+  min-width: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--kb-fg);
+  font:
+    500 var(--kb-font)/1.2 system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Arial;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.kb-menu__button svg,
+.kb-menu__button .kb-icon {
+  width: var(--kb-icon);
+  height: var(--kb-icon);
+}
+.kb-menu__button:hover {
+  background: var(--kb-hover);
+}
+.kb-menu__button:focus-visible {
+  outline: 2px solid var(--kb-focus);
+  outline-offset: 2px;
+  background: var(--kb-hover);
+}
+.kb-menu__button--active,
+.kb-menu__button[aria-pressed='true'] {
+  background: var(--kb-active);
+  border-color: #d2e3fc;
+}
+.kb-menu__button--disabled,
+.kb-menu__button[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+.kb-menu__button--icon-only > span {
+  display: none;
+}
+
+/* Dropdowns */
+.kb-dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.kb-dropdown__label {
+  height: var(--kb-btn-h);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--kb-fg);
+  font:
+    500 var(--kb-font)/1.2 system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Arial;
+  cursor: pointer;
+}
+.kb-dropdown__label:hover {
+  background: var(--kb-hover);
+}
+.kb-dropdown--open .kb-dropdown__label {
+  background: var(--kb-active);
+  border-color: #d2e3fc;
+}
+.kb-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 240px;
+  max-height: 60vh;
+  overflow: auto;
+  background: var(--kb-bg);
+  color: var(--kb-fg);
+  border: 1px solid var(--kb-border);
+  border-radius: 10px;
+  box-shadow: var(--kb-shadow);
+  padding: 6px;
+  display: grid;
+  gap: 2px;
+  z-index: 100;
+}
+.kb-dropdown__item {
+  display: contents;
+}
+.kb-dropdown__item .kb-menu__button {
+  justify-content: flex-start;
+  width: 100%;
+  border-radius: 8px;
+}
+
+/* Submenus */
+.kb-submenu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.kb-submenu__label {
+  height: var(--kb-btn-h);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+.kb-submenu__label:hover {
+  background: var(--kb-hover);
+}
+.kb-submenu__content {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 220px;
+  max-height: 60vh;
+  overflow: auto;
+  background: var(--kb-bg);
+  border: 1px solid var(--kb-border);
+  border-radius: 10px;
+  box-shadow: var(--kb-shadow);
+  padding: 6px;
+  display: none;
+  z-index: 100;
+}
+.kb-submenu--open .kb-submenu__content {
+  display: block;
+}
+
+/* --------- Overflow behavior --------- */
+
+/* Hidden until narrow AND there is overflow (JS toggles display) */
+.kb-overflow-toggle {
+  display: none;
+}
+
+/* Second row container (hidden until toggled open) */
+.kb-menu__overflow-row {
+  display: none;
+  margin: 6px 12px 0; /* align with wrapper padding */
+  padding: 6px;
+  background: var(--kb-bg);
+  border: 1px solid var(--kb-border);
+  border-radius: 10px;
+  box-shadow: var(--kb-shadow);
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* When narrow, show 3-dots (JS may still hide if empty) */
+.kb-menu--narrow .kb-overflow-toggle {
+  display: inline-flex;
+}
+
+/* When toggled open, show the overflow row */
+.kb-menu--overflow-open .kb-menu__overflow-row {
+  display: flex;
+}
+
+/* On very small/mobile, put overflow row ABOVE the main bar */
+@media (max-width: 600px) {
+  .kb-menu__wrapper {
+    display: flex;
+    flex-direction: column;
+  }
+  .kb-menu--overflow-open .kb-menu__overflow-row {
+    order: -1;
+  }
+}
 
 /* Custom Menu - Google Docs style with customizable pinned items */
 
@@ -8,15 +827,6 @@
   flex-direction: column;
   position: relative;
   height: 100%;
-}
-
-/* Editor container with resize */
-.kb-custom-menu__editor {
-  position: relative;
-  max-height: 100%;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
 }
 
 /* Toolbar */
@@ -100,12 +910,6 @@
 }
 
 /* Center icon content vertically */
-.kb-custom-menu__item .kb-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
 
 /* Hide text labels in dropdown buttons - icons only in toolbar */
 .kb-custom-menu__item .kb-dropdown__label-text {

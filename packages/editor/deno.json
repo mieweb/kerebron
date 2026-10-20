@@ -13,6 +13,7 @@
     "./utilities": "./src/utilities/mod.ts",
     "./frontmatter": "./src/utilities/frontmatter.ts",
     "./Telemetry": "./src/utilities/Telemetry.ts",
+    "./uri": "./src/utilities/uriStore.ts",
     "./yaml": "./src/utilities/yaml.ts"
   }
 }

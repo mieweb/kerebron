@@ -4,6 +4,7 @@ import { CoreEditor } from '@kerebron/editor';
 
 interface CommandContext {
   editor: CoreEditor;
+  tr?: Transaction;
 }
 
 declare type Command = {

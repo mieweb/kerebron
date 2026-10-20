@@ -1,207 +1,355 @@
-import { EditorView } from 'prosemirror-view';
-import { EditorState, Plugin, PluginKey, Selection } from 'prosemirror-state';
+import { EditorState, Plugin, PluginKey, Transaction } from 'prosemirror-state';
 
-import { MenuElement, renderGrouped } from './menu.ts';
+import { type CoreEditor } from '@kerebron/editor';
+import { type OverLayer } from '@kerebron/ui/OverLayer';
+import { findFocusableChild } from '@kerebron/ui/popup/utils';
+import { KerebronPopup } from '@kerebron/ui/popup';
 
-const CSS_PREFIX = 'kb-menu';
+import { renderDropdown, renderItems, renderMenu } from './renderMenu.ts';
+import { MenuBar, MenuDropdown, MenuNode } from './model.ts';
+import { Ui } from '@kerebron/ui';
+import { DOMOutputSpec } from 'prosemirror-model';
 
-function isIOS() {
-  if (typeof navigator == 'undefined') return false;
-  let agent = navigator?.userAgent;
-  return !/Edge\/\d/.test(agent) && /AppleWebKit/.test(agent) &&
-    /Mobile\/\w+/.test(agent);
+export interface MenuMeta {
+  add?: { parentId: string | undefined; node: MenuNode; index?: number };
+  remove?: { id: string };
+  find?: { id: string };
+  focus?: true;
+  showCollapsedMenu?: true;
 }
 
-class MenuBarView {
-  wrapper: HTMLElement;
-  menu: HTMLElement;
-  spacer: HTMLElement | null = null;
-  maxHeight = 0;
-  widthForMaxHeight = 0;
-  floating = false;
-  contentUpdate: (state: EditorState) => boolean;
-  scrollHandler: ((event: Event) => void) | null = null;
-  root: Document | ShadowRoot;
+class MenuState {
+  private trayPopup?: KerebronPopup;
+  private collapsedMenuItems: string[] = [];
 
   constructor(
-    readonly editorView: EditorView,
-    readonly options: Parameters<typeof MenuPlugin.constructor>[0],
+    private readonly editor: CoreEditor,
+    public readonly menu: MenuBar,
   ) {
-    this.root = editorView.root;
-    this.wrapper = document.createElement('div');
-    this.wrapper.classList.add(CSS_PREFIX + '__wrapper');
-    this.menu = document.createElement('div');
-    this.menu.classList.add(CSS_PREFIX);
-    this.wrapper.appendChild(this.menu);
-    this.menu.className = CSS_PREFIX;
-
-    if (editorView.dom.parentNode) {
-      editorView.dom.parentNode.replaceChild(this.wrapper, editorView.dom);
-    }
-    this.wrapper.appendChild(editorView.dom);
-
-    let { dom, update } = renderGrouped(this.editorView, this.options.content);
-    this.contentUpdate = update;
-    this.menu.appendChild(dom);
-    this.update();
-
-    if (options.floating && !isIOS()) {
-      this.updateFloat();
-      let potentialScrollers = getAllWrapping(this.wrapper);
-      this.scrollHandler = (e: Event) => {
-        let root = this.editorView.root;
-        if (!((root as Document).body || root).contains(this.wrapper)) {
-          potentialScrollers.forEach((el) =>
-            el.removeEventListener('scroll', this.scrollHandler!)
-          );
-        } else {
-          this.updateFloat(
-            (e.target as HTMLElement).getBoundingClientRect
-              ? e.target as HTMLElement
-              : undefined,
-          );
-        }
-      };
-      potentialScrollers.forEach((el) =>
-        el.addEventListener('scroll', this.scrollHandler!)
-      );
-    }
   }
 
-  update() {
-    if (this.editorView.root != this.root) {
-      let { dom, update } = renderGrouped(
-        this.editorView,
-        this.options.content,
-      );
-      this.contentUpdate = update;
-      this.menu.replaceChild(dom, this.menu.firstChild!);
-      this.root = this.editorView.root;
-    }
-    // this.contentUpdate(this.editorView.state);
+  add(
+    { parentId, node, index }: {
+      parentId: string | undefined;
+      node: MenuNode;
+      index?: number;
+    },
+  ): void {
+    const target = parentId
+      ? this.findDropdown(parentId)?.items
+      : this.menu.items;
 
-    if (this.floating) {
-      this.updateScrollCursor();
+    if (!target) {
+      throw new Error(`Menu parent not found: ${parentId}`);
+    }
+
+    if (index === undefined) {
+      target.push(node);
     } else {
-      if (this.menu.offsetWidth != this.widthForMaxHeight) {
-        this.widthForMaxHeight = this.menu.offsetWidth;
-        this.maxHeight = 0;
-      }
-      if (this.menu.offsetHeight > this.maxHeight) {
-        this.maxHeight = this.menu.offsetHeight;
-      }
+      target.splice(index, 0, node);
     }
   }
 
-  updateScrollCursor() {
-    let selection = (this.editorView.root as Document).getSelection()!;
-    if (!selection.focusNode) return;
-    let rects = selection.getRangeAt(0).getClientRects();
-    let selRect = rects[selectionIsInverted(selection) ? 0 : rects.length - 1];
-    if (!selRect) return;
-    let menuRect = this.menu.getBoundingClientRect();
-    if (selRect.top < menuRect.bottom && selRect.bottom > menuRect.top) {
-      let scrollable = findWrappingScrollable(this.wrapper);
-      if (scrollable) scrollable.scrollTop -= menuRect.bottom - selRect.top;
-    }
+  remove(id: string): MenuNode | undefined {
+    const result = this.removeFrom(this.menu.items, id);
+    return result;
   }
 
-  updateFloat(scrollAncestor?: HTMLElement) {
-    let parent = this.wrapper,
-      editorRect = parent.getBoundingClientRect(),
-      top = scrollAncestor
-        ? Math.max(0, scrollAncestor.getBoundingClientRect().top)
-        : 0;
+  find(id: string): MenuNode | undefined {
+    return this.findIn(this.menu.items, id);
+  }
 
-    if (this.floating) {
-      if (
-        editorRect.top >= top || editorRect.bottom < this.menu.offsetHeight + 10
-      ) {
-        this.floating = false;
-        this.menu.style.position =
-          this.menu.style.left =
-          this.menu.style.top =
-          this.menu.style.width =
-            '';
-        this.menu.style.display = '';
-        this.spacer!.parentNode!.removeChild(this.spacer!);
-        this.spacer = null;
-      } else {
-        let border = (parent.offsetWidth - parent.clientWidth) / 2;
-        this.menu.style.left = (editorRect.left + border) + 'px';
-        this.menu.style.display = editorRect.top >
-            this.editorView.dom.ownerDocument.defaultView
-              .innerHeight
-          ? 'none'
-          : '';
-        if (scrollAncestor) this.menu.style.top = top + 'px';
+  private findDropdown(id: string): MenuDropdown | undefined {
+    const node = this.find(id);
+    return node?.type === 'dropdown' ? node : undefined;
+  }
+
+  private findIn(nodes: MenuNode[], id: string): MenuNode | undefined {
+    for (const node of nodes) {
+      if (node.id === id) {
+        return node;
       }
-    } else {
-      if (
-        editorRect.top < top && editorRect.bottom >= this.menu.offsetHeight + 10
-      ) {
-        this.floating = true;
-        let menuRect = this.menu.getBoundingClientRect();
-        this.menu.style.left = menuRect.left + 'px';
-        this.menu.style.width = menuRect.width + 'px';
-        if (scrollAncestor) this.menu.style.top = top + 'px';
-        this.menu.style.position = 'fixed';
-        this.spacer = document.createElement('div');
-        this.spacer.classList.add(CSS_PREFIX + '__spacer');
-        this.spacer.style.height = `${menuRect.height}px`;
-        parent.insertBefore(this.spacer, this.menu);
+
+      if (node.type === 'dropdown') {
+        const found = this.findIn(node.items, id);
+        if (found) return found;
       }
     }
+
+    return undefined;
   }
 
-  destroy() {
-    if (this.wrapper.parentNode) {
-      this.wrapper.parentNode.replaceChild(this.editorView.dom, this.wrapper);
+  private removeFrom(nodes: MenuNode[], id: string): MenuNode | undefined {
+    const index = nodes.findIndex((node) => node.id === id);
+
+    if (index !== -1) {
+      return nodes.splice(index, 1)[0];
     }
-  }
-}
 
-// Not precise, but close enough
-function selectionIsInverted(selection: Selection) {
-  if (selection.anchorNode == selection.focusNode) {
-    return selection.anchorOffset > selection.focusOffset;
-  }
-  return selection.anchorNode!.compareDocumentPosition(selection.focusNode!) ==
-    Node.DOCUMENT_POSITION_FOLLOWING;
-}
-
-function findWrappingScrollable(node: Node) {
-  for (let cur = node.parentNode; cur; cur = cur.parentNode) {
-    if ((cur as HTMLElement).scrollHeight > (cur as HTMLElement).clientHeight) {
-      return cur as HTMLElement;
+    for (const node of nodes) {
+      if (node.type === 'dropdown') {
+        const removed = this.removeFrom(node.items, id);
+        if (removed) return removed;
+      }
     }
+
+    return undefined;
   }
-}
 
-function getAllWrapping(node: Node) {
-  let res: (Node | Window)[] = [node.ownerDocument!.defaultView];
-  for (let cur = node.parentNode; cur; cur = cur.parentNode) {
-    res.push(cur);
+  handleCommands(pluginMeta: MenuMeta | undefined, transaction: Transaction) {
+    if (!pluginMeta) {
+      return false;
+    }
+
+    if (pluginMeta.add) {
+      this.add(pluginMeta.add);
+    }
+    if (pluginMeta.remove) {
+      this.remove(pluginMeta.remove.id);
+    }
+    if (pluginMeta.find) {
+      this.find(pluginMeta.find.id);
+    }
+    if (pluginMeta.focus) {
+      this.focus();
+    }
+    if (pluginMeta.showCollapsedMenu) {
+      this.showCollapsedMenu();
+    }
+
+    return false;
   }
-  return res;
-}
 
-export class MenuPlugin extends Plugin {
-  constructor(options: {
-    /// Provides the content of the menu, as a nested array to be
-    /// passed to `renderGrouped`.
-    content: readonly (readonly MenuElement[])[];
+  focus() {
+    const menuElement: HTMLElement | undefined =
+      this.editor.wrapperElement?.querySelector('.kb-menu') || undefined;
 
-    /// Determines whether the menu floats, i.e. whether it sticks to
-    /// the top of the viewport when the editor is partially scrolled
-    /// out of view.
-    floating?: boolean;
-  }) {
-    super({
-      key: new PluginKey('menu'),
-      view(editorView) {
-        return new MenuBarView(editorView, options);
-      },
+    const element = findFocusableChild(menuElement);
+    element?.focus();
+  }
+
+  async showCollapsedMenu() {
+    const ui: Ui = this.editor.ci.resolve('ui');
+
+    this.trayPopup = ui.createPopup({
+      anchorId: '--menuitem-more-tools',
+      layer: 'toplayer',
+      group: 'menu',
     });
+    this.trayPopup.addEventListener('remove', () => {
+      this.trayPopup = undefined;
+    });
+
+    await ui.setPopupContent(this.trayPopup, this.renderTray());
   }
+
+  renderTray(): DOMOutputSpec {
+    const trayItems = this.menu.items.filter((i) =>
+      this.collapsedMenuItems.includes(i.id)
+    );
+
+    return [
+      'ui',
+      { class: 'kb-menu__collapsed' },
+      ...renderItems(trayItems, this.editor),
+    ];
+  }
+
+  async resizeMenu() {
+    const menuBarElement = this.editor.wrapperElement?.querySelector(
+      '.kb-menu__bar',
+    );
+    if (!menuBarElement) {
+      return;
+    }
+
+    const items = [
+      ...menuBarElement.querySelectorAll<HTMLElement>('.kb-menu__item'),
+    ];
+
+    let currentWidth = 0;
+    const hidden = [];
+    for (const item of items) {
+      if (currentWidth > menuBarElement.clientWidth) {
+        if (item.dataset.menuId) {
+          hidden.push(item.dataset.menuId);
+        }
+      }
+      currentWidth += item.offsetWidth;
+    }
+
+    this.collapsedMenuItems = hidden;
+
+    if (this.trayPopup) {
+      const ui: Ui = this.editor.ci.resolve('ui');
+      await ui.setPopupContent(this.trayPopup, this.renderTray());
+    }
+  }
+}
+
+export const MenuPluginKey = new PluginKey<MenuState>('menu');
+
+export function createMenuPlugin(editor: CoreEditor, menuBar: MenuBar) {
+  return new Plugin<MenuState>({
+    key: MenuPluginKey,
+    props: {
+      handleKeyDown: (view, event) => {
+        console.log(
+          'handleKeyDownhandleKeyDownhandleKeyDownhandleKeyDown',
+          event.key,
+          event.ctrlKey,
+        );
+
+        if (event.key === '/' && event.ctrlKey) {
+          const m = MenuPluginKey.getState(editor.state);
+          m?.focus();
+          // console.log('MMM', event);
+          return true;
+        }
+        return false;
+      },
+    },
+    state: {
+      init() {
+        return new MenuState(editor, menuBar);
+      },
+      apply(transaction, nextPasteState: MenuState, prevState, state) {
+        if (transaction.isGeneric) {
+          return nextPasteState;
+        }
+
+        const oldClonedState: EditorState | undefined = transaction.getMeta(
+          'cloned',
+        );
+        if (oldClonedState) {
+          const oldClonedPluginState = MenuPluginKey.getState(
+            oldClonedState,
+          );
+          if (oldClonedPluginState) {
+            return oldClonedPluginState;
+          }
+        }
+
+        const pluginMeta: MenuMeta | undefined = transaction.getMeta(
+          MenuPluginKey,
+        );
+
+        if (nextPasteState.handleCommands(pluginMeta, transaction)) {
+          return nextPasteState;
+        }
+
+        return nextPasteState;
+      },
+    },
+    view(editorView) {
+      const menuState: MenuState = this.key?.getState(editor.state);
+
+      if (!editor.wrapperElement) {
+        return {};
+      }
+
+      let menuElement: HTMLElement | undefined =
+        editor.wrapperElement.querySelector('.kb-menu') || undefined;
+      if (!menuElement) {
+        menuElement = document.createElement('div');
+        menuElement.classList.add('kb-menu');
+        editor.wrapperElement.prepend(menuElement);
+
+        editor.editorElement?.addEventListener('focus', () => {
+          menuElement?.classList.add('sticky');
+        });
+
+        editor.editorElement?.addEventListener('blur', () => {
+          menuElement?.classList.remove('sticky');
+        });
+
+        const clickListener = async (pointerEvent: PointerEvent) => {
+          const target = pointerEvent.target as HTMLElement;
+          const button = target.closest('[data-menu-id]') as
+            | HTMLElement
+            | undefined;
+          if (button && button.dataset.menuId) {
+            const findItem = (
+              menuId: string,
+              items: MenuNode[],
+            ): MenuNode | undefined => {
+              for (const item of items) {
+                if (item.id === menuId) {
+                  return item;
+                }
+
+                if (item.type === 'dropdown') {
+                  const subItem = findItem(menuId, item.items);
+                  if (subItem) {
+                    return subItem;
+                  }
+                }
+              }
+            };
+
+            const menuItem = findItem(button.dataset.menuId, menuBar.items) ||
+              findItem(button.dataset.menuId, menuBar.tray);
+            if (!menuItem) {
+              return;
+            }
+
+            switch (menuItem.type) {
+              case 'item':
+                {
+                  if (menuItem.action) {
+                    menuItem.action(editor);
+                  }
+                }
+                break;
+              case 'dropdown':
+                {
+                  const spec = renderDropdown(
+                    menuItem.items,
+                    editor,
+                    menuItem.id,
+                  );
+                  const anchorId = button.dataset.anchor;
+
+                  const ui: Ui = editor.ci.resolve('ui');
+                  const popup = ui.createPopup({
+                    layer: 'toplayer',
+                    anchorId,
+                    group: 'menu',
+                  });
+                  ui.setPopupContent(popup, spec);
+                  // TODO: chevrons update
+                  ui.walkPopups((popup: KerebronPopup) => {
+                    const menuId = popup.getAttribute('data-menu-id');
+                    if (menuId === menuItem.id) {
+                      // popup.addC
+                      // popup.refresh();
+                      // parent
+                    }
+                  });
+                }
+                break;
+            }
+          }
+        };
+
+        const toplayer: OverLayer = editor.ci.resolve('toplayer')!;
+        const overlayer: OverLayer = editor.ci.resolve('overlayer')!;
+        menuElement.addEventListener('click', clickListener);
+        toplayer.overLayerContainer.addEventListener('click', clickListener);
+        overlayer.overLayerContainer.addEventListener('click', clickListener);
+      }
+
+      const { update } = renderMenu(menuElement, menuBar, editor);
+
+      const observer = new ResizeObserver(() => menuState.resizeMenu());
+      observer.observe(menuElement);
+
+      return {
+        update: () => update(),
+        destroy() {
+          observer.disconnect();
+        },
+      };
+    },
+  });
 }

@@ -23,7 +23,7 @@ export interface MediaUploadOptions {
   uploadHandler?: (file: File) => Promise<string>;
 }
 
-const mediaUploadKey = new PluginKey<MediaUploadOptions>('mediaUpload');
+export const mediaUploadKey = new PluginKey<MediaUploadOptions>('mediaUpload');
 
 /** Convert a File to a base64 data URL */
 function fileToDataURL(file: File): Promise<string> {
@@ -93,13 +93,11 @@ function insertVideo(
   view.dispatch(transaction);
 }
 
-/** Handle media files (images and videos) from drop or paste events */
-async function handleMediaFiles(
-  view: EditorView,
+export async function uploadMediaFiles(
   files: File[],
-  pos: number,
   options: MediaUploadOptions,
-): Promise<void> {
+) {
+  const retVal = [];
   const {
     maxFileSize = 10 * 1024 * 1024, // 10MB for images
     maxVideoFileSize = 50 * 1024 * 1024, // 50MB for videos
@@ -153,6 +151,39 @@ async function handleMediaFiles(
         );
       }
 
+      retVal.push({ src, file });
+    } catch (error) {
+      console.error(
+        `Failed to process ${isVideoFile ? 'video' : 'image'} "${file.name}":`,
+        error,
+      );
+    }
+  }
+  return retVal;
+}
+
+export async function handleMediaFiles(
+  view: EditorView,
+  files: File[],
+  pos: number,
+  options: MediaUploadOptions,
+): Promise<void> {
+  const {
+    allowedImageTypes = ['^image/'],
+    allowedVideoTypes = ['^video/'],
+  } = options;
+
+  const toInsert = await uploadMediaFiles(files, options);
+
+  for (const { src, file } of toInsert) {
+    const isImageFile = isImage(file, allowedImageTypes);
+    const isVideoFile = isVideo(file, allowedVideoTypes);
+
+    if (!isImageFile && !isVideoFile) {
+      continue;
+    }
+
+    try {
       // Insert the media
       if (isVideoFile) {
         insertVideo(view, pos, src, file.name);
