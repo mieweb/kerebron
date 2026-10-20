@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div ref="editor" class="kb-component"></div>
+    <div ref="editor"></div>
   </div>
 </template>
 <script lang="ts">
@@ -73,7 +73,7 @@ export default {
 <style>
 @import '@kerebron/editor/assets/index.css';
 @import '@kerebron/extension-tables/assets/tables.css';
-@import '@kerebron/extension-menu/assets/custom-menu.css';
+@import '@kerebron/menu/assets/menu.css';
 
 [data-comment-id] {
   background: #ff000080;

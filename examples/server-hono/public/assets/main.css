@@ -1,3 +1,6 @@
+@import '@kerebron/editor/assets/index.css';
+@import '@kerebron/editor-kits/assets/AdvancedEditorKit.css';
+
 .example-iframe {
   width: 100%;
   min-height: 30em;

@@ -5,7 +5,6 @@
   "exports": {
     ".": "./src/mod.ts",
     "./AdvancedEditorKit": "./src/AdvancedEditorKit.ts",
-    "./DevAdvancedEditorKit": "./src/DevAdvancedEditorKit.ts",
     "./CodeEditorKit": "./src/CodeEditorKit.ts"
   }
 }

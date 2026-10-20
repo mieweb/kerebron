@@ -54,11 +54,11 @@ export class CommandManager {
       const wrappedFactory = (...args: unknown[]) => {
         const realCommand = commandFactory(...args);
 
-        const command: Command = (state, dispatch, view) => {
+        const command: Command = function (state, dispatch, view) {
           if (dispatch) {
             console.debug(`Command: ${extName}.${name}`, ...args);
           }
-          return realCommand.apply({ editor: this.editor }, [
+          return realCommand.apply(this, [
             state,
             dispatch,
             view,
@@ -78,14 +78,18 @@ export class CommandManager {
       const command: Command = factory(...args);
       const state = this.editor.state;
       const view = this.editor.view;
+      const tr = state.tr;
       if (view instanceof EditorView) {
-        return command.apply({ editor: this.editor }, [
+        return command.apply({ editor: this.editor, tr }, [
           state,
           view.dispatch,
           view,
         ]);
       } else {
-        return command.apply({ editor: this.editor }, [state, view.dispatch]);
+        return command.apply({ editor: this.editor, tr }, [
+          state,
+          view.dispatch,
+        ]);
       }
     };
   }
@@ -119,7 +123,7 @@ export class CommandManager {
         Object.entries(commandFactories).map(([name, commandFactory]) => {
           const chainedCommand = (...args: never[]) => {
             const command = commandFactory(...args);
-            const callback = command.apply({ editor: this.editor }, [
+            const callback = command.apply({ editor: this.editor, tr }, [
               chainedState,
               shouldDispatch ? fakeDispatch : undefined,
             ]);

@@ -17,7 +17,7 @@ export class NodeCodeBlock extends Node {
       group: 'block',
       code: true,
       defining: true,
-      attrs: { lang: { default: undefined } },
+      attrs: { lang: { default: undefined }, id: { default: undefined } },
       parseDOM: [
         {
           tag: 'pre',

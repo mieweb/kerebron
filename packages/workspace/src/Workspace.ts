@@ -21,6 +21,7 @@ export interface WorkspaceOpenParams {
   lang: string;
   version: number;
   getContentMapper: () => Promise<ContentMapper>;
+  getPos: () => number | undefined;
 }
 
 export interface WorkspaceModifyParams {
@@ -28,6 +29,7 @@ export interface WorkspaceModifyParams {
   lang: string;
   version: number;
   getContentMapper: () => Promise<ContentMapper>;
+  getPos: () => number | undefined;
 }
 
 export interface WorkspaceCloseParams {

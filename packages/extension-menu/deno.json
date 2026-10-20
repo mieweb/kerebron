@@ -1,10 +1,9 @@
 {
-  "name": "@kerebron/extension-menu",
+  "name": "@kerebron/menu",
   "tasks": {},
   "imports": {},
   "exports": {
     ".": "./src/mod.ts",
-    "./icons": "./src/icons.ts",
-    "./ExtensionCustomMenu": "./src/ExtensionCustomMenu.ts"
+    "./ExtensionMenu": "./src/ExtensionMenu.ts"
   }
 }
