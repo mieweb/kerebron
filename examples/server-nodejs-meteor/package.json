@@ -16,7 +16,7 @@
     "@kerebron/extension-odt": "latest",
     "@kerebron/odt-wasm": "latest",
     "@kerebron/extension-tables": "latest",
-    "@kerebron/extension-menu": "latest",
+    "@kerebron/menu": "latest",
     "@kerebron/extension-yjs": "latest",
     "meteor-node-stubs": "1.2.27",
     "vue": "^3.3.9",

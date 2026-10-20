@@ -47,11 +47,11 @@ onMounted(async () => {
 
 <template>
   <div>
-    <div class="kb-component" id="editor">Some text</div>
+    <div id="editor">Some text</div>
   </div>
 </template>
 <style>
 @import '@kerebron/editor/assets/index.css';
 @import '@kerebron/extension-tables/assets/tables.css';
-@import '@kerebron/extension-menu/assets/menu.css';
+@import '@kerebron/menu/assets/menu.css';
 </style>

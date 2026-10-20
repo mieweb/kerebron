@@ -105,7 +105,6 @@ window.addEventListener('load', async () => {
   });
 
   editor.addEventListener('transaction', async (ev: CustomEvent) => {
-    // console.trace();
     return;
     const lastValue = ev.detail.transaction.doc;
     const buffer = await editor.saveDocument('text/code-only');

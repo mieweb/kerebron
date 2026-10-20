@@ -126,6 +126,13 @@ export class CodeCrock extends EventTarget {
     const window = this.options.window;
     const document = window.document;
 
+    this.onSelectionChange = debounce(this.onSelectionChange.bind(this), 500);
+
+    document.addEventListener(
+      'selectionchange',
+      this.onSelectionChange,
+    );
+
     editor.style.outline = 'none';
     editor.style.overflowWrap = 'break-word';
     editor.style.overflowY = 'auto';
@@ -325,13 +332,6 @@ export class CodeCrock extends EventTarget {
       if (this.prev !== this.toString()) debounceHighlight();
       debounceRecordHistory(event);
       this.onUpdateCbk(this.toString());
-
-      const selection = this.save();
-      if (selection) {
-        this.dispatchEvent(
-          new CustomEvent('selectionchange', { detail: selection }),
-        );
-      }
     });
 
     on('focus', (_event) => {
@@ -781,9 +781,24 @@ export class CodeCrock extends EventTarget {
     this.highlight(this.editor);
   }
 
+  private onSelectionChange() {
+    const selection = this.save();
+    this.dispatchEvent(
+      new CustomEvent('selectionchange', { detail: selection }),
+    );
+  }
+
   destroy() {
     for (let [type, fn] of this.listeners) {
       this.editor.removeEventListener(type, fn);
     }
+
+    const window = this.options.window;
+    const document = window.document;
+
+    document.removeEventListener(
+      'selectionchange',
+      this.onSelectionChange,
+    );
   }
 }

@@ -1,12 +1,12 @@
 <template>
   <div class="row">
-    <div ref="editor1" class="kb-component col"></div>
-    <div ref="editor2" class="kb-component col"></div>
+    <div ref="editor1" class="col"></div>
+    <div ref="editor2" class="col"></div>
   </div>
 </template>
 <script lang="ts">
 import { CoreEditor } from '@kerebron/editor';
-import { DevAdvancedEditorKit } from '@kerebron/editor-kits/DevAdvancedEditorKit';
+import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
 import { BasicEditorKit } from '@kerebron/extension-basic-editor/BasicEditorKit';
 
 import { Fragment, Node as PmNode, Schema } from 'prosemirror-model';
@@ -46,7 +46,7 @@ export default {
       this.editor1 = CoreEditor.create({
         element: this.$refs.editor1,
         editorKits: [
-          new DevAdvancedEditorKit()
+          new AdvancedEditorKit()
         ]
       });
 
@@ -67,5 +67,5 @@ export default {
 </script>
 <style>
 @import '@kerebron/editor/assets/index.css';
-@import '@kerebron/editor-kits/assets/DevAdvancedEditorKit.css';
+@import '@kerebron/editor-kits/assets/AdvancedEditorKit.css';
 </style>

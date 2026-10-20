@@ -134,7 +134,7 @@ export function replaceExt(uri: string, lang: string) {
 }
 
 export const STOP_EVENTS = [
-  'keydown',
+  // 'keydown', // autocomplete
   'keyup',
   'keypress',
   'beforeinput',

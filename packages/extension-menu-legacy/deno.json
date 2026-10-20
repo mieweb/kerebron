@@ -1,8 +1,0 @@
-{
-  "name": "@kerebron/extension-menu-legacy",
-  "tasks": {},
-  "imports": {},
-  "exports": {
-    ".": "./src/mod.ts"
-  }
-}
