@@ -1,0 +1,29 @@
+.kb-popup {
+  position: fixed;
+  position-area: bottom;
+  margin: 0;
+
+  /* Automatically try alternatives */
+  position-try-fallbacks: flip-block, flip-inline;
+
+  /* Appearance */
+  padding: 12px 16px;
+  max-width: 90vw;
+
+  background: var(--kb-color-surface);
+  border: 1px solid var(--kb-color-border);
+  border-radius: var(--kb-radius-md);
+  box-shadow: var(--kb-shadow-lg);
+
+  position-visibility: anchors-valid;
+}
+
+.kb-popup pre,
+.kb-popup pre > p:last-child {
+  margin-bottom: 0;
+}
+
+.kb-popup select[size] {
+  background: none;
+  border: none;
+}

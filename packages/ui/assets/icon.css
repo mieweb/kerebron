@@ -1,0 +1,19 @@
+.kb-icon {
+  fill: currentColor;
+  text-align: center;
+
+  min-width: var(--kb-touch-target-comfortable);
+  min-height: var(--kb-touch-target-comfortable);
+
+  width: 1em;
+  height: 1em;
+
+  display: inline-block;
+  line-height: var(--kb-touch-target-comfortable);
+  vertical-align: middle;
+}
+
+.kb-icon svg {
+  width: 1em;
+  height: 1em;
+}

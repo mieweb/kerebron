@@ -1,8 +1,10 @@
 import { Command, EditorState, NodeSelection } from 'prosemirror-state';
 import { Attrs, MarkType, NodeType, Schema } from 'prosemirror-model';
-import { EditorView } from 'prosemirror-view';
 
 import { type CoreEditor } from '@kerebron/editor';
+
+import { icons } from '@kerebron/ui/icons';
+import { FileField, openPrompt, TextField } from '@kerebron/ui/prompt';
 
 import {
   Dropdown,
@@ -11,8 +13,6 @@ import {
   MenuItem,
   type MenuItemSpec,
 } from './menu.ts';
-import { icons } from './icons.ts';
-import { FileField, openPrompt, TextField } from './prompt.ts';
 
 function canInsert(state: EditorState, nodeType: NodeType) {
   let $from = state.selection.$from;
@@ -180,6 +180,9 @@ export function buildMenu(editor: CoreEditor, schema: Schema): MenuElement[][] {
     typeMenu.push(blockTypeItem(schema.nodes.code_block, {
       title: 'Change to code block',
       label: 'Code',
+      attrs: {
+        id: crypto.randomUUID(),
+      },
     }));
   }
   if (typeMenu.length > 0) {

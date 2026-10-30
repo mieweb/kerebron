@@ -7,9 +7,10 @@ import { ExtensionTables } from '@kerebron/extension-tables';
 import { ExtensionCodeCrock } from '@kerebron/extension-codecrock';
 import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
 import { ExtensionMenuLegacy } from '@kerebron/extension-menu-legacy';
-import { ExtensionUi } from '@kerebron/extension-ui';
-import { ExtensionAutocomplete } from '@kerebron/extension-ui/autocomplete';
-import { ExtensionHover } from '@kerebron/extension-ui/hover';
+import { ExtensionUi } from '@kerebron/ui';
+import { ExtensionAutocomplete } from '@kerebron/ui/autocomplete';
+import { ExtensionHover } from '@kerebron/ui/hover';
+import { ExtensionDiagnostics } from '@kerebron/ui/diagnostics';
 
 export class DevAdvancedEditorKit implements EditorKit {
   name = 'dev-advanced-editor';
@@ -27,6 +28,7 @@ export class DevAdvancedEditorKit implements EditorKit {
       new ExtensionUi(),
       new ExtensionAutocomplete(),
       new ExtensionHover(),
+      new ExtensionDiagnostics(),
     ];
   }
 }

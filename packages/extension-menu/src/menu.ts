@@ -1,7 +1,7 @@
 import { EditorView } from 'prosemirror-view';
 import { EditorState, Transaction } from 'prosemirror-state';
 
-import { getIcon } from './icons.ts';
+import { getIcon } from '@kerebron/ui/icons';
 
 /// The types defined in this module aren't the only thing you can
 /// display in your menu. Anything that conforms to this interface can
@@ -41,7 +41,7 @@ export class MenuItem implements MenuElement {
       dom.classList.add(this.CSS_PREFIX);
 
       if (spec.icon) {
-        const icon = getIcon(view.root, spec.icon);
+        const icon = getIcon(spec.icon, view.root);
         dom.appendChild(icon);
         dom.classList.add(this.CSS_PREFIX + '--icon-only');
       }
@@ -109,23 +109,6 @@ function translate(view: EditorView, text: string): string {
     ? (view as any)._props.translate(text)
     : text;
 }
-
-/// Specifies an icon. May be either an SVG icon, in which case its
-/// `path` property should be an [SVG path
-/// spec](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/d),
-/// and `width` and `height` should provide the viewbox in which that
-/// path exists. Alternatively, it may have a `text` property
-/// specifying a string of text that makes up the icon, with an
-/// optional `css` property giving additional CSS styling for the
-/// text. _Or_ it may contain `dom` property containing a DOM node.
-type PathSpec = string | { d: string; fill?: string };
-export type IconSpec =
-  | { path: string | PathSpec[]; width: number; height: number }
-  | {
-    text: string;
-    css?: string;
-  }
-  | { dom: Node };
 
 /// The configuration object passed to the `MenuItem` constructor.
 export interface MenuItemSpec {
@@ -235,7 +218,7 @@ export class Dropdown implements MenuElement {
 
     // Add icon if specified
     if (this.options.icon) {
-      const icon = getIcon(view.root, this.options.icon);
+      const icon = getIcon(this.options.icon, view.root);
       label.appendChild(icon);
     }
 

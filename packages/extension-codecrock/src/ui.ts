@@ -5,8 +5,9 @@ import { EditorView } from 'prosemirror-view';
 import { CoreEditor } from '@kerebron/editor';
 
 import { NodeCodeCrockConfig } from './NodeCodeCrock.ts';
-import { CodeCrock, Position } from './CodeCrock.ts';
+import { CodeCrock } from './CodeCrock.ts';
 import { initLineNumbers, lineNumberOptions } from './codeCrockLineNumbers.ts';
+import { forwardSelection } from './utils.ts';
 
 export interface CodeNodeView {
   readonly editor: CoreEditor;
@@ -112,18 +113,7 @@ export function addEditable(nodeView: CodeNodeView) {
   });
 
   codeCrock.addEventListener('selectionchange', (event) => {
-    const pos: Position | undefined = (event as CustomEvent).detail;
-    if (!pos) {
-      return;
-    }
-    const selection = Selection.near(
-      nodeView.view.state.doc.resolve(pos.start),
-      pos.end - pos.start,
-    );
-
-    nodeView.view.dispatch(
-      nodeView.view.state.tr.setSelection(selection),
-    );
+    forwardSelection(codeCrock, nodeView.view, nodeView.getPos);
   });
 
   return { codeCrock, editable };

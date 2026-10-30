@@ -20,7 +20,7 @@ export interface TreeSitterNodeExt extends TreeSitterNode {
   toJSON: () => any;
 }
 
-interface Position {
+export interface Position {
   row: number;
   column: number;
 }

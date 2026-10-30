@@ -1,7 +1,7 @@
 <template>
   <div>
     <div>
-      <div ref="editor" class="kb-component" style="height: 50vh"></div>
+      <div ref="editor" style="height: 50vh"></div>
     </div>
     <div>
       <h5>Markdown</h5>
@@ -11,6 +11,7 @@
 </template>
 <script lang="ts">
 import { CoreEditor } from '@kerebron/editor';
+import { icons } from '@kerebron/ui/icons';
 import { YjsEditorKit } from '@kerebron/extension-yjs/YjsEditorKit';
 import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
 import { createAssetLoad } from '@kerebron/wasm/web';
@@ -19,7 +20,6 @@ import {
   type MenuElement,
   MenuItem,
 } from '@kerebron/extension-menu';
-import { icons } from '@kerebron/extension-menu/icons';
 
 export default {
   name: 'my-editor',
@@ -150,8 +150,3 @@ export default {
   },
 };
 </script>
-<style>
-@import '@kerebron/editor/assets/index.css';
-@import '@kerebron/extension-tables/assets/tables.css';
-@import '@kerebron/extension-menu/assets/custom-menu.css';
-</style>

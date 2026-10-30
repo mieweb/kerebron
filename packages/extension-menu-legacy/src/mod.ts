@@ -1,9 +1,3 @@
-export {
-  Dropdown,
-  DropdownSubmenu,
-  type MenuElement,
-  MenuItem,
-  type MenuItemSpec,
-} from './menu.ts';
+export * from './model.ts';
 
-export * from './ExtensionMenuLegacy.ts';
+export { ExtensionMenuLegacy } from './ExtensionMenuLegacy.ts';

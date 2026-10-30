@@ -2,7 +2,7 @@ import { type CoreEditor, Extension } from '@kerebron/editor';
 import { type EditorState, type Transaction } from 'prosemirror-state';
 import { type CommandFactories } from '@kerebron/editor/commands';
 
-type TextAlign = 'left' | 'center' | 'right' | 'justify';
+type TextAlign = undefined | 'center' | 'right' | 'justify';
 
 /**
  * Extension that adds text alignment commands.
@@ -23,7 +23,8 @@ export class ExtensionTextAlign extends Extension {
           if (
             node.isBlock &&
             node.type.spec.attrs &&
-            'textAlign' in node.type.spec.attrs
+            'textAlign' in node.type.spec.attrs &&
+            node.attrs.textAlign !== align as any
           ) {
             tr.setNodeMarkup(pos, undefined, {
               ...node.attrs,
@@ -41,7 +42,7 @@ export class ExtensionTextAlign extends Extension {
     };
 
     return {
-      setTextAlignLeft: () => setAlignment('left'),
+      setTextAlignLeft: () => setAlignment(undefined),
       setTextAlignCenter: () => setAlignment('center'),
       setTextAlignRight: () => setAlignment('right'),
       setTextAlignJustify: () => setAlignment('justify'),

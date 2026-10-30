@@ -78,6 +78,7 @@ class MarkdownPluginState {
         lang: 'markdown',
         version,
         getContentMapper,
+        getPos: () => 0,
       });
     } else {
       this.workspace.openFile({
@@ -85,6 +86,7 @@ class MarkdownPluginState {
         lang: 'markdown',
         version,
         getContentMapper,
+        getPos: () => 0,
       });
     }
   }
