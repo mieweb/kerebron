@@ -1,10 +1,12 @@
 import type { NodeSpec, NodeType } from 'prosemirror-model';
+import { EditorState, Transaction } from 'prosemirror-state';
+
 import { type CoreEditor, Node } from '@kerebron/editor';
 import {
+  Command,
   type CommandFactories,
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
-import { firstCommand } from '@kerebron/editor/commands';
 
 export class NodeHardBreak extends Node {
   override name = 'br';
@@ -31,42 +33,44 @@ export class NodeHardBreak extends Node {
     editor: CoreEditor,
     type: NodeType,
   ): Partial<CommandFactories> {
-    // TODO: refactor commands
-    // const comm2: Command = (state: EditorState, dispatch?: (tr: Transaction) => void) => {
-    //   const { selection, storedMarks } = state
+    const setHardBreak: Command = (
+      state: EditorState,
+      dispatch?: (tr: Transaction) => void,
+    ) => {
+      const { selection, storedMarks } = state;
 
-    //   if (selection.$from.parent.type.spec.isolating) {
-    //       return false
-    //   }
+      if (selection.$from.parent.type.spec.isolating) {
+        return false;
+      }
 
-    //   const { keepMarks } = this.options
-    //   // const { splittableMarks } = editor.extensionManager
-    //   const splittableMarks = [];
-    //   const marks = storedMarks
-    //       || (selection.$to.parentOffset && selection.$from.marks())
+      const { keepMarks } = this.options;
 
-    //   return editor.chain()
-    //     .insertContent({ type: this.name })
-    //     .command(({ tr, dispatch }) => {
-    //         if (dispatch && marks && keepMarks) {
-    //           for (const mark of marks) {
-    //             console.log('mteset', mark.type);
-    //           }
-    //             const filteredMarks = marks
-    //                 .filter(mark => splittableMarks.includes(mark.type.name))
+      const splittableMarks: string[] = Object.keys(state.schema.marks).filter(
+        (name) => name !== 'link',
+      );
 
-    //             tr.ensureMarks(filteredMarks)
-    //         }
+      const marks = storedMarks ||
+        (selection.$to.parentOffset && selection.$from.marks());
 
-    //         return true
-    //     })
-    //     .run();
-    // }
+      const tr = state.tr;
+      const newContent = state.schema.node(type);
 
-    const setHardBreak = firstCommand(
-      editor.run.exitCode,
-      // comm2
-    );
+      const { from, to } = tr.selection;
+
+      tr.replaceWith(from, to, newContent);
+
+      if (dispatch && marks && keepMarks) {
+        const filteredMarks = marks
+          .filter((mark) => splittableMarks.includes(mark.type.name));
+        tr.ensureMarks(filteredMarks);
+      }
+
+      if (dispatch) {
+        dispatch(tr);
+      }
+
+      return tr.docChanged;
+    };
 
     return {
       'setHardBreak': () => setHardBreak,

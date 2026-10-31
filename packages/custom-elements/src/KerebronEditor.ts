@@ -42,7 +42,11 @@ export default class KerebronEditor extends HTMLElement {
     });
 
     this.editor.addEventListener('changed', (event) => {
-      this.dispatchEvent(event);
+      this.dispatchEvent(
+        new CustomEvent('changed', {
+          detail: (event as CustomEvent).detail,
+        }),
+      );
     });
 
     if (this.getAttribute('media-type')) {
