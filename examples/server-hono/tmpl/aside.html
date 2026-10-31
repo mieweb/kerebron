@@ -4,22 +4,23 @@
     href="/"
     class="d-flex align-items-center pb-3 mb-3 link-body-emphasis text-decoration-none border-bottom"
   >
-    <span class="fs-5 fw-semibold">Collapsible</span>
+    <span class="fs-5 fw-semibold">Home</span>
   </a>
+
+  <hr />
 
   <nav>
     <details open="">
-      <summary aria-current="true">Getting started</summary>
+      <summary>Concepts</summary>
       <ul class="nav flex-column">
+        {{ for item of toc }}
         <li class="nav-item">
           <a
-            class="nav-link"
-            aria-current="page"
-            class="secondary"
-            data-discover="true"
-            href="/01-quick-start.html"
-          >Quick start</a>
+            class="nav-link {{ item.active }}"
+            href="/{{ item.slug }}.html"
+          >{{ item.title }}</a>
         </li>
+        {{ /for }}
       </ul>
     </details>
     <details open="">
@@ -28,10 +29,9 @@
         {{ for example of examples }}
         <li class="nav-item">
           <a
-            class="nav-link"
-            class="secondary"
-            href="/examples/{{example}}.html"
-          >{{example}}</a>
+            class="nav-link {{ example.active }}"
+            href="/examples/{{ example.name }}.html"
+          >{{ example.name }}</a>
         </li>
         {{ /for }}
       </ul>
