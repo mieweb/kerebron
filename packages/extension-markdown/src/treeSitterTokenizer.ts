@@ -1098,6 +1098,7 @@ function treeToTokens(
           );
           openToken.level = blockLevel;
           openToken.attrSet('margin_before', '1');
+          openToken.attrSet('pipe_table', '1');
           retVal.push(openToken);
 
           blockLevel++;
@@ -1118,7 +1119,9 @@ function treeToTokens(
               if (
                 cell.children
                   .filter((c: any) => !!c)
-                  .find((c: any) => c.type === 'pipe_table_align_right')
+                  .find((c: any) =>
+                    c.text.endsWith(':') || c.text.endsWith(': ')
+                  )
               ) {
                 cellAlign.push('right');
               } else {
@@ -1205,6 +1208,7 @@ function treeToTokens(
           );
           closeToken.level = blockLevel;
           closeToken.attrSet('margin_after', '1');
+          closeToken.attrSet('pipe_table', '1');
           retVal.push(closeToken);
         }
         break;

@@ -37,6 +37,7 @@ export class NodeTableHeader extends Node {
         colspan: { default: 1 },
         rowspan: { default: 1 },
         colwidth: { default: undefined },
+        align: { default: undefined },
       },
       tableRole: 'header_cell',
       isolating: true,

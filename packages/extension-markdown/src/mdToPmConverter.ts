@@ -224,6 +224,11 @@ export async function mdToPmConverterText(
       },
       th: {
         block: 'table_header',
+        getAttrs: (tok) => {
+          return {
+            align: tok.attrGet('align'),
+          };
+        },
       },
       thead: {
         ignore: true,

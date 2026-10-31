@@ -147,7 +147,6 @@ class TableBuilder {
 
   render(log: (txt: string, token?: Token) => void) {
     let prevType = '';
-
     let lastHeader: Array<TableCell> = [];
 
     const columnsWidth: Array<number> = [];
@@ -155,7 +154,7 @@ class TableBuilder {
       const row = this.rows[rowNo];
       for (let cellNo = 0; cellNo < row.cells.length; cellNo++) {
         while (columnsWidth.length <= cellNo) {
-          columnsWidth.push(1);
+          columnsWidth.push(0);
         }
         const headCell = lastHeader[cellNo];
         const cell = row.cells[cellNo];
@@ -163,8 +162,8 @@ class TableBuilder {
           (prev, current) => prev + current[0].length,
           0,
         );
-        if (columnsWidth[cellNo] < textLen + 1) {
-          columnsWidth[cellNo] = textLen + 1;
+        if (columnsWidth[cellNo] < textLen) {
+          columnsWidth[cellNo] = textLen;
         }
       }
     }
@@ -176,15 +175,14 @@ class TableBuilder {
         log('|');
         for (let cellNo = 0; cellNo < lastHeader.length; cellNo++) {
           const cell = lastHeader[cellNo];
-          log(' ');
-
+          log('-');
           if (cell.align === 'right') {
-            log('-'.repeat(columnsWidth[cellNo] - 2));
-            log(': |');
+            log('-'.repeat(columnsWidth[cellNo]));
+            log(':');
           } else {
-            log('-'.repeat(columnsWidth[cellNo] - 1));
-            log(' |');
+            log('-'.repeat(columnsWidth[cellNo] + 1));
           }
+          log('|');
         }
         log('\n');
       }
@@ -201,11 +199,11 @@ class TableBuilder {
         if (cell.align === 'right') {
           if (textLen === 0 && cell.startPos) {
             log(
-              ' '.repeat(columnsWidth[cellNo] - textLen),
+              ' '.repeat(columnsWidth[cellNo] - textLen + 1),
               { map: [cell.startPos + 2] } as Token,
             );
           } else {
-            log(' '.repeat(columnsWidth[cellNo] - textLen));
+            log(' '.repeat(columnsWidth[cellNo] - textLen + 1));
           }
         } else {
           log(' '.repeat(1));
@@ -213,17 +211,17 @@ class TableBuilder {
         for (const pair of cell.value) {
           log(pair[0], pair[1]);
         }
-        if (textLen < columnsWidth[cellNo]) {
+        if (textLen <= columnsWidth[cellNo]) {
           if (cell.align === 'right') {
             log(' '.repeat(1));
           } else {
             if (textLen === 0 && cell.startPos) {
               log(
-                ' '.repeat(columnsWidth[cellNo] - textLen),
+                ' '.repeat(columnsWidth[cellNo] - textLen + 1),
                 { map: [cell.startPos + 2] } as Token,
               );
             } else {
-              log(' '.repeat(columnsWidth[cellNo] - textLen));
+              log(' '.repeat(columnsWidth[cellNo] - textLen + 1));
             }
           }
         }
@@ -339,10 +337,7 @@ function getMdTableTokensHandler(): Record<string, Array<TokenHandler>> {
     ],
     'th_open': [
       (token: Token, ctx: ContextStash) => {
-        // const style = token.attrGet('style');
-        // const align = style === 'text-align:right' ? 'right' : 'left';
         const align = token.attrGet('align') || 'left';
-
         const tableBuilder: TableBuilder = ctx.current.metaObj['table_builder'];
         tableBuilder.appendCell(align as TextAlign, token);
         tableBuilder.changeRowType('header');
