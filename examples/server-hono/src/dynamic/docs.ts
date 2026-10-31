@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import type { Hono } from 'hono';
 
 import { markdownToHtml } from './markdown.ts';
-import { renderTemplate } from './vento.ts';
+import { ventoEnv } from './vento.ts';
 import { examples } from './examples.ts';
 
 const __dirname = import.meta.dirname;
@@ -27,16 +27,33 @@ export function install({ app }: { app: Hono }) {
 
     app.get('/' + targetUri, async (c) => {
       const buffer = fs.readFileSync(docsDir + docSite);
+      const toc = JSON.parse(
+        new TextDecoder().decode(fs.readFileSync(docsDir + '/toc.json')),
+      );
+
+      const slug = targetUri.replace('.html', '');
+      const activeItem = toc.find((i) => i.slug === slug);
+      if (activeItem) {
+        activeItem.active = 'active';
+      }
 
       const contentHtml = await markdownToHtml(buffer);
 
-      return c.html(
-        await renderTemplate('static.vto', { contentHtml, examples }),
-      );
+      const template = await ventoEnv.load('static.vto');
+      const result = await template({ contentHtml, examples, toc });
+
+      return c.html(result.content);
     });
   }
 
   app.notFound(async (c) => {
-    return c.html(await renderTemplate('404.vto', { examples }));
+    const toc = JSON.parse(
+      new TextDecoder().decode(fs.readFileSync(docsDir + '/toc.json')),
+    );
+
+    const template = await ventoEnv.load('404.vto');
+    const result = await template({ examples, toc });
+
+    return c.html(result.content);
   });
 }
