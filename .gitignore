@@ -6,3 +6,7 @@ node_modules
 .vite
 .playwright-mcp
 .DS_Store
+playwright-report
+test-results
+snapshots
+vite.config.ts.timestamp*
