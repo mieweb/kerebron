@@ -57,7 +57,7 @@ ___
 * List item with $\sqrt{x}$
 
 | Expression          | Result      |
-| ------------------- | ----------- |
+|---------------------|-------------|
 | $x^2$               | Square      |
 | $\sqrt{x}$          | Square root |
 | $\frac{a}{b}$       | Fraction    |

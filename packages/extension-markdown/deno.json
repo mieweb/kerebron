@@ -5,6 +5,7 @@
   "exports": {
     ".": "./src/ExtensionMarkdown.ts",
     "./MarkdownSerializer": "./src/MarkdownSerializer.ts",
+    "./StackableMarkdownParser": "./src/StackableMarkdownParser.ts",
     "./preProcess": "./src/pm2md/preProcess.ts"
   }
 }

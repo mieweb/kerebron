@@ -370,7 +370,11 @@ export async function extPmToMdConverter(
 
     table_header(node) {
       return {
-        open: 'th_open',
+        open: async (node) => {
+          const token = new Token('th_open', 'th', 1);
+          token.attrSet('align', node.attrs.align);
+          return token;
+        },
         close: 'th_close',
       };
     },
