@@ -42,8 +42,8 @@
     "npm:@playwright/test@1.63.0": "1.63.0",
     "npm:@types/node@*": "24.2.0",
     "npm:@types/react@19": "19.2.7",
-    "npm:@vitejs/plugin-react-swc@4.3.1": "4.3.1_vite@8.3.0__@types+node@24.2.0__esbuild@0.27.2_@types+node@24.2.0_esbuild@0.27.2",
-    "npm:@vitejs/plugin-vue@6.0.7": "6.0.7_vite@8.3.0__@types+node@24.2.0__esbuild@0.27.2_vue@3.5.21__typescript@5.9.3_@types+node@24.2.0_esbuild@0.27.2",
+    "npm:@vitejs/plugin-react-swc@4.3.1": "4.3.1_vite@8.3.0_@types+node@24.2.0_esbuild@0.27.2",
+    "npm:@vitejs/plugin-vue@6.0.7": "6.0.7_vite@8.3.0_vue@3.5.21_@types+node@24.2.0_esbuild@0.27.2",
     "npm:@vue/devtools-api@7.7.7": "7.7.7",
     "npm:@xmldom/xmldom@0.9.10": "0.9.10",
     "npm:esbuild@*": "0.27.2",
@@ -67,13 +67,13 @@
     "npm:temml@0.13.4": "0.13.4",
     "npm:ventojs@2.3.0": "2.3.0",
     "npm:ventojs@latest": "2.3.0",
-    "npm:vite-css-modules@latest": "1.12.0_postcss@8.5.15_vite@7.3.1__@types+node@24.2.0__picomatch@4.0.3",
-    "npm:vite-plugin-standard-css-modules@latest": "0.0.11_vite@7.1.4__@types+node@24.2.0__picomatch@4.0.3_@types+node@24.2.0",
-    "npm:vite-plugin-wasm@3.6.0": "3.6.0_vite@8.3.0__@types+node@24.2.0__esbuild@0.27.2_@types+node@24.2.0_esbuild@0.27.2",
+    "npm:vite-css-modules@latest": "1.12.0_postcss@8.5.15_vite@7.3.1",
+    "npm:vite-plugin-standard-css-modules@latest": "0.0.11_vite@7.1.4_@types+node@24.2.0",
+    "npm:vite-plugin-wasm@3.6.0": "3.6.0_vite@8.3.0_@types+node@24.2.0_esbuild@0.27.2",
     "npm:vite@8.3.0": "8.3.0_@types+node@24.2.0_esbuild@0.27.2",
     "npm:vscode-languageserver-protocol@3.17.5": "3.17.5",
     "npm:vscode-languageserver-textdocument@1.0.12": "1.0.12",
-    "npm:vue-router@4.5.1": "4.5.1_vue@3.5.21__typescript@5.9.3",
+    "npm:vue-router@4.5.1": "4.5.1_vue@3.5.21",
     "npm:vue@3.5.21": "3.5.21_typescript@5.9.3",
     "npm:web-tree-sitter@0.26.12": "0.26.12",
     "npm:wrangler@*": "4.58.0_unenv@2.0.0-rc.24_workerd@1.20260107.1",
@@ -737,7 +737,7 @@
         "@floating-ui/utils"
       ]
     },
-    "@floating-ui/react-dom@2.1.8_react@19.2.7_react-dom@19.2.7__react@19.2.7": {
+    "@floating-ui/react-dom@2.1.8_react@19.2.7_react-dom@19.2.7": {
       "integrity": "sha512-cC52bHwM/n/CxS87FH0yWdngEZrjdtLW/qVruo68qg+prK7ZQ4YGdut2GyDVpoGeAYe/h899rVeOVm6Oi40k2A==",
       "dependencies": [
         "@floating-ui/dom",
@@ -745,7 +745,7 @@
         "react-dom"
       ]
     },
-    "@floating-ui/react@0.26.28_react@19.2.7_react-dom@19.2.7__react@19.2.7": {
+    "@floating-ui/react@0.26.28_react@19.2.7_react-dom@19.2.7": {
       "integrity": "sha512-yORQuuAtVpiRjpMhdc0wJj06b9JFjrYF4qp96j++v2NBpbi6SEGF7donUJ3TMieerQ6qVkAv1tgr7L4r5roTqw==",
       "dependencies": [
         "@floating-ui/react-dom",
@@ -755,7 +755,7 @@
         "tabbable"
       ]
     },
-    "@floating-ui/react@0.27.19_react@19.2.7_react-dom@19.2.7__react@19.2.7": {
+    "@floating-ui/react@0.27.19_react@19.2.7_react-dom@19.2.7": {
       "integrity": "sha512-31B8h5mm8YxotlE7/AU/PhNAl8eWxAmjL/v2QOxroDNkTFLk3Uu82u63N3b6TXa4EGJeeZLVcd/9AlNlVqzeog==",
       "dependencies": [
         "@floating-ui/react-dom",
@@ -768,10 +768,10 @@
     "@floating-ui/utils@0.2.11": {
       "integrity": "sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg=="
     },
-    "@headlessui/react@2.2.10_react@19.2.7_react-dom@19.2.7__react@19.2.7": {
+    "@headlessui/react@2.2.10_react@19.2.7_react-dom@19.2.7": {
       "integrity": "sha512-5pVLNK9wlpxTUTy9GpgbX/SdcRh+HBnPktjM2wbiLTH4p+2EPHBO1aoSryUCuKUIItdDWO9ITlhUL8UnUN/oIA==",
       "dependencies": [
-        "@floating-ui/react@0.26.28_react@19.2.7_react-dom@19.2.7__react@19.2.7",
+        "@floating-ui/react@0.26.28_react@19.2.7_react-dom@19.2.7",
         "@react-aria/focus",
         "@react-aria/interactions",
         "@tanstack/react-virtual",
@@ -988,7 +988,7 @@
       ],
       "bin": true
     },
-    "@mermaid-js/mermaid-zenuml@0.2.3_mermaid@11.12.2__cytoscape@3.33.1_@types+react@19.2.7": {
+    "@mermaid-js/mermaid-zenuml@0.2.3_mermaid@11.12.2_@types+react@19.2.7": {
       "integrity": "sha512-RGBtgL6fc+5Y2Jm9odOH9HRJ80BP4l6atBYnAK5bBzEowF0PU3UtvZRRcbFxImPGPuLIzqZq31ur8lVO0AoF3Q==",
       "dependencies": [
         "@zenuml/core",
@@ -1247,7 +1247,7 @@
       ],
       "bin": true
     },
-    "@react-aria/focus@3.22.1_react@19.2.7_react-dom@19.2.7__react@19.2.7": {
+    "@react-aria/focus@3.22.1_react@19.2.7_react-dom@19.2.7": {
       "integrity": "sha512-CPxtkyrBi/HYY5P3lE/57sQ6qfa0lN8E55TOm89H0kNGv0lKt+/0zP7lWERzBjRr5IxBVrQX4gFEowBN52LPaA==",
       "dependencies": [
         "@swc/helpers",
@@ -1256,7 +1256,7 @@
         "react-dom"
       ]
     },
-    "@react-aria/interactions@3.28.1_react@19.2.7_react-dom@19.2.7__react@19.2.7": {
+    "@react-aria/interactions@3.28.1_react@19.2.7_react-dom@19.2.7": {
       "integrity": "sha512-Bqb+HrD5I5MHS2SKBhISYqo2SW8Y2dfzgF/Y1lIJq7xqLxheo9vzxPGEHhz+XzkgGfoqEJx8A6a3C7uiqS3HWA==",
       "dependencies": [
         "@react-types/shared",
@@ -1577,7 +1577,7 @@
         "@swc/counter"
       ]
     },
-    "@tanstack/react-virtual@3.14.2_react@19.2.7_react-dom@19.2.7__react@19.2.7": {
+    "@tanstack/react-virtual@3.14.2_react@19.2.7_react-dom@19.2.7": {
       "integrity": "sha512-IpWnmCLvuymRfeeLNVXIzNEYBFLpd3drVIS91sqV78VTZFyldlChkOocZRCPp1B+Wnk09bcLNme8WaMU/9/9bQ==",
       "dependencies": [
         "@tanstack/virtual-core",
@@ -1778,7 +1778,7 @@
         "@types/node"
       ]
     },
-    "@vitejs/plugin-react-swc@4.3.1_vite@8.3.0__@types+node@24.2.0__esbuild@0.27.2_@types+node@24.2.0_esbuild@0.27.2": {
+    "@vitejs/plugin-react-swc@4.3.1_vite@8.3.0_@types+node@24.2.0_esbuild@0.27.2": {
       "integrity": "sha512-PaeokKjAGraNN+s5SIApgsktnJprIyt3zgEIu7awnEdfn29QiB2crTcCzyi2XGpX9rUnTc0cKU07Wm0N0g7H2w==",
       "dependencies": [
         "@rolldown/pluginutils",
@@ -1786,7 +1786,7 @@
         "vite@8.3.0_@types+node@24.2.0_esbuild@0.27.2"
       ]
     },
-    "@vitejs/plugin-vue@6.0.7_vite@8.3.0__@types+node@24.2.0__esbuild@0.27.2_vue@3.5.21__typescript@5.9.3_@types+node@24.2.0_esbuild@0.27.2": {
+    "@vitejs/plugin-vue@6.0.7_vite@8.3.0_vue@3.5.21_@types+node@24.2.0_esbuild@0.27.2": {
       "integrity": "sha512-km+p+XdSz9Sxm5rqUbqcSfZYaAniKxWBj1KURl+Jr7UaPvvX7BmaWMdP69I5rrFDeQGyxAG7NXdc57vz+snhWg==",
       "dependencies": [
         "@rolldown/pluginutils",
@@ -1881,7 +1881,7 @@
         "csstype"
       ]
     },
-    "@vue/server-renderer@3.5.21_vue@3.5.21__typescript@5.9.3_typescript@5.9.3": {
+    "@vue/server-renderer@3.5.21_vue@3.5.21_typescript@5.9.3": {
       "integrity": "sha512-qr8AqgD3DJPJcGvLcJKQo2tAc8OnXRcfxhOJCPF+fcfn5bBGz7VCcO7t+qETOPxpWK1mgysXvVT/j+xWaHeMWA==",
       "dependencies": [
         "@vue/compiler-ssr",
@@ -1899,7 +1899,7 @@
     "@zenuml/core@3.49.0_@types+react@19.2.7": {
       "integrity": "sha512-15hZEYfZYtuJXYK3JVR7cwy95uRfLYn+nlJgJOALDM6Q/xsRqpP+npHoBnfQ3ZmERFjn71Icwuh5B7I3FR6vPA==",
       "dependencies": [
-        "@floating-ui/react@0.27.19_react@19.2.7_react-dom@19.2.7__react@19.2.7",
+        "@floating-ui/react@0.27.19_react@19.2.7_react-dom@19.2.7",
         "@headlessui/react",
         "@headlessui/tailwindcss",
         "antlr4",
@@ -3677,7 +3677,7 @@
     "quick-format-unescaped@4.0.4": {
       "integrity": "sha512-tYC1Q1hgyRuHgloV/YXs2w15unPVh8qfu/qCTfhTYamaw7fyhumKa2yGpdSo87vY32rIclj+4fWYQXUMs9EHvg=="
     },
-    "react-aria@3.49.0_react@19.2.7_react-dom@19.2.7__react@19.2.7": {
+    "react-aria@3.49.0_react@19.2.7_react-dom@19.2.7": {
       "integrity": "sha512-4+oK9FwJQWYhyA5zLfj/feOGY0zZbkE1muoF4gyxMroHVypjcYaRSTlJwvxph2zIlxt757KX6xIK2wJ5Aw1Kog==",
       "dependencies": [
         "@internationalized/date",
@@ -4023,7 +4023,7 @@
     "supports-preserve-symlinks-flag@1.0.0": {
       "integrity": "sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w=="
     },
-    "svelte-tree-view@1.4.2_svelte@5.45.8__acorn@8.15.0": {
+    "svelte-tree-view@1.4.2_svelte@5.45.8": {
       "integrity": "sha512-z3yQq+/4CceyefVj03t9BG9AiZ7syovmRRo96aj8V65d1FsRS/BL2AxzcD4vl5GJg7o9qbz2mWWJzyFWENISCQ==",
       "dependencies": [
         "svelte"
@@ -4215,7 +4215,7 @@
     "ventojs@2.3.0": {
       "integrity": "sha512-Vi/ZdC7QwdaaPTDL6fMWBxj+LnLTynDbef8Mb3YId3AR1Tnds2dS8YRUU/o51/Fv/5rdTNFJL4YHtBpfBbTQKg=="
     },
-    "vite-css-modules@1.12.0_postcss@8.5.15_vite@7.3.1__@types+node@24.2.0__picomatch@4.0.3": {
+    "vite-css-modules@1.12.0_postcss@8.5.15_vite@7.3.1": {
       "integrity": "sha512-1QeZAuk58qaYwPspLpG7QdOHrvcqQqTQ8sNyPhEIXM5hFwG/R4pdr4UsvReDtTkEbBHV1cdx88EMxyo6UivceA==",
       "dependencies": [
         "@jridgewell/remapping",
@@ -4230,13 +4230,13 @@
         "vite@7.3.1_@types+node@24.2.0_picomatch@4.0.3"
       ]
     },
-    "vite-plugin-standard-css-modules@0.0.11_vite@7.1.4__@types+node@24.2.0__picomatch@4.0.3_@types+node@24.2.0": {
+    "vite-plugin-standard-css-modules@0.0.11_vite@7.1.4_@types+node@24.2.0": {
       "integrity": "sha512-AWY2emxY+//1zjZQS6KIn1iQg6kPKhZqeZUEen1F8LwGSy1TEr1dUf24fKCDjHNcyq6mxGXRLIqIRpMqvDfyHQ==",
       "dependencies": [
         "vite@7.1.4_@types+node@24.2.0_picomatch@4.0.3"
       ]
     },
-    "vite-plugin-wasm@3.6.0_vite@8.3.0__@types+node@24.2.0__esbuild@0.27.2_@types+node@24.2.0_esbuild@0.27.2": {
+    "vite-plugin-wasm@3.6.0_vite@8.3.0_@types+node@24.2.0_esbuild@0.27.2": {
       "integrity": "sha512-mL/QPziiIA4RAA6DkaZZzOstdwbW5jO4Vz7Zenj0wieKWBlNvIvX5L5ljum9lcUX0ShNfBgCNLKTjNkRVVqcsw==",
       "dependencies": [
         "vite@8.3.0_@types+node@24.2.0_esbuild@0.27.2"
@@ -4320,7 +4320,7 @@
     "vscode-uri@3.0.8": {
       "integrity": "sha512-AyFQ0EVmsOZOlAnxoFOGOq1SQDWAB7C6aqMGS23svWAllfOaxbuFvcT8D1i8z3Gyn8fraVeZNNmN6e9bxxXkKw=="
     },
-    "vue-router@4.5.1_vue@3.5.21__typescript@5.9.3": {
+    "vue-router@4.5.1_vue@3.5.21": {
       "integrity": "sha512-ogAF3P97NPm8fJsE4by9dwSYtDwXIY1nFY9T6DyQnGHd1E2Da94w9JIolpe42LJGIl0DwOHBi8TcRPlPGwbTtw==",
       "dependencies": [
         "@vue/devtools-api@6.6.4",
@@ -4650,6 +4650,14 @@
           "npm:mermaid@11.12.2"
         ]
       },
+      "examples/browser-lsp": {
+        "dependencies": [
+          "npm:@vitejs/plugin-vue@6.0.7",
+          "npm:@vue/devtools-api@7.7.7",
+          "npm:vue-router@4.5.1",
+          "npm:vue@3.5.21"
+        ]
+      },
       "examples/browser-react": {
         "dependencies": [
           "npm:@vitejs/plugin-react-swc@4.3.1",
@@ -4687,14 +4695,6 @@
         ]
       },
       "examples/browser-vue-link": {
-        "dependencies": [
-          "npm:@vitejs/plugin-vue@6.0.7",
-          "npm:@vue/devtools-api@7.7.7",
-          "npm:vue-router@4.5.1",
-          "npm:vue@3.5.21"
-        ]
-      },
-      "examples/browser-vue-lsp": {
         "dependencies": [
           "npm:@vitejs/plugin-vue@6.0.7",
           "npm:@vue/devtools-api@7.7.7",
