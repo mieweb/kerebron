@@ -73,7 +73,9 @@ export async function markdownToHtml(
 
           retVal.push(
             editor.schema.nodes.code_block.createAndFill(
-              {},
+              {
+                id: crypto.randomUUID(),
+              },
               editor.schema.text(codeText),
             )!,
           );
@@ -82,7 +84,9 @@ export async function markdownToHtml(
         } catch (err: any) {
           retVal.push(
             editor.schema.nodes.code_block.createAndFill(
-              {},
+              {
+                id: crypto.randomUUID(),
+              },
               editor.schema.text(err.message),
             )!,
           );
@@ -100,5 +104,42 @@ export async function markdownToHtml(
   editor.chain().renderShortCode(replaceFunc)
     .run();
 
-  return new TextDecoder().decode(await editor.saveDocument('text/html'));
+  let html = new TextDecoder().decode(await editor.saveDocument('text/html'));
+
+  while (true) {
+    let idx = html.indexOf('html preview');
+
+    if (idx > -1) {
+      const preText = html.substring(0, idx);
+      const postText = html.substring(idx + 'html preview'.length);
+      html = preText + 'html' + postText;
+
+      const startOfPre = html.substring(0, idx).lastIndexOf('<pre');
+      const startCode = html.indexOf('<code>', idx);
+      const endCode = html.indexOf('</code>', idx);
+
+      if (startOfPre > 0 && startCode > startOfPre && endCode > startCode) {
+        const preText = html.substring(0, startOfPre);
+        const postText = html.substring(startOfPre);
+
+        const code = html.substring(startCode + '<code>'.length, endCode);
+
+        html = preText + decodeHtml(code) + '\n' + postText;
+      }
+      continue;
+    }
+
+    break;
+  }
+
+  return html;
+}
+
+function decodeHtml(html: string): string {
+  return html
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
 }

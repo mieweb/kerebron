@@ -14,7 +14,8 @@
     "@vitejs/plugin-vue": "npm:@vitejs/plugin-vue@6.0.7",
     "hono": "npm:hono@4.10.7",
     "@hono/vite-ssg": "npm:@hono/vite-ssg@0.3.0",
-    "ventojs": "npm:ventojs@2.3.0"
+    "ventojs": "npm:ventojs@2.3.0",
+    "zeromq": "npm:zeromq@6.0.0"
   },
   "exports": {}
 }
