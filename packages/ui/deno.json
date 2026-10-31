@@ -1,7 +1,6 @@
 {
   "name": "@kerebron/ui",
   "tasks": {
-    "test22:ui": "deno test -A test",
     "test:ui": "PW_DISABLE_TS_ESM=true deno run -A playwright test --ui"
   },
   "imports": {},
