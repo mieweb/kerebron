@@ -1,22 +1,21 @@
-import * as path from '@std/path';
-
-import { createParser, Parser } from '@kerebron/tree-sitter';
-import { assetLoad } from '@kerebron/wasm/deno';
-
-// import { parseMarkdown } from '../../../tree-sitter/md-to-html-incremental.ts';
-
 import { WSContext, WSEvents, WSMessageReceive } from 'hono/ws';
 
-// md-to-html-incremental.ts
-// import { createParser } from 'https://deno.land/x/deno_tree_sitter@1.0.1.2/main/main.js';
-//
+import {
+  ExtendedNode,
+  type Position,
+  TreeSitterNode,
+  TreeSitterNodeExt,
+} from '@kerebron/tree-sitter';
+import { assetLoad } from '@kerebron/wasm/deno';
+
 import type {
   Diagnostic,
   LspPosition,
   LspRange,
   PublishDiagnosticsParams,
-} from '@kerebron/extension-lsp/types';
-import { denoCdn } from '@kerebron/wasm/deno';
+} from '@kerebron/lsp/types';
+
+import { StackableMarkdownParser } from '@kerebron/extension-markdown/StackableMarkdownParser';
 
 const __dirname = import.meta.dirname!;
 
@@ -26,57 +25,17 @@ async function loadWasm(url: string): Promise<Uint8Array> {
   return new Uint8Array(await response.arrayBuffer());
 }
 
-// Load Markdown grammars (block and inline)
-const markdownWasm = await Deno.readFile(
-  path.resolve(
-    denoCdn().replace(/^file:/, ''),
-    'tree-sitter-markdown',
-    'tree-sitter-markdown.wasm',
-  ),
-);
-const inlineWasm = await Deno.readFile(
-  path.resolve(
-    denoCdn().replace(/^file:/, ''),
-    'tree-sitter-markdown',
-    'tree-sitter-markdown_inline.wasm',
-  ),
-);
-
-// const markdownWasm = await fetchWasm(blockUrl);
-// const inlineWasm = await fetchWasm(inlineUrl);
-
-const blockParser =
-  (await createParser(markdownWasm, { assetLoad })) as unknown as Parser;
-const inlineParser =
-  (await createParser(inlineWasm, { assetLoad })) as unknown as Parser;
-
-// const BlockParser = await createParser(markdownWasm);
-// const InlineParser = await createParser(inlineWasm);
+const parser = await StackableMarkdownParser.create(assetLoad);
 
 function parseMarkdown(source: string, oldTree?: any) {
-  let tree;
+  let root;
   if (false && oldTree) {
-    tree = blockParser.parse(source, oldTree); // Incremental parse
+    let [parsedRoot] = parser.parse(source, oldTree)!; // Incremental parse
+    root = parsedRoot;
   } else {
-    tree = blockParser.parse(source); // Full parse
+    let [parsedRoot] = parser.parse(source)!; // Full parse
+    root = parsedRoot;
   }
-  const root = tree.rootNode;
-
-  // Traverse and parse inline nodes (they contain raw text initially)
-  // For simplicity, we re-parse inlines fully; optimize if needed by tracking changes
-  function parseInlines(node: any): void {
-    if (node.type === 'inline') {
-      const inlineText = source.slice(node.startIndex, node.endIndex);
-      const inlineTree = inlineParser.parse(inlineText);
-      // Replace the inline node's content with the parsed inline tree
-      node.children = [inlineTree.rootNode];
-    } else {
-      for (const child of node.children) {
-        parseInlines(child);
-      }
-    }
-  }
-  parseInlines(root);
 
   // console.log(
   //   'parseMarkdown.xmlStylePreview:\n',
@@ -86,7 +45,7 @@ function parseMarkdown(source: string, oldTree?: any) {
   // const jsonPreview = typeof root.toJSON === "function" ? root.toJSON() : root;
   // console.log("JSON Tree Preview:\n", JSON.stringify(jsonPreview, null, 2));
 
-  return tree;
+  return root;
 }
 
 interface JsonRpcRequest<T> {
@@ -178,7 +137,7 @@ interface Document {
 
 interface DocumentState extends Document {
   languageId: string;
-  tree: Tree | null;
+  root: ExtendedNode | null;
   lineOffsets: number[];
 }
 
@@ -314,9 +273,10 @@ export class LspWsAdapter {
         default:
           break;
       }
-    } catch (e) {
+    } catch (err) {
       console.error(
-        `Notification error: ${e instanceof Error ? e.message : e}`,
+        `Notification error: ${err instanceof Error ? err.message : err}`,
+        err,
       );
     }
   }
@@ -478,7 +438,7 @@ export class LspWsAdapter {
         text,
         version,
         languageId,
-        tree: null,
+        root: null,
         lineOffsets: [],
       };
     }
@@ -486,7 +446,7 @@ export class LspWsAdapter {
     doc.version = version;
     doc.languageId = languageId;
     doc.lineOffsets = this.computeLineOffsets(text);
-    doc.tree = parseMarkdown(text, doc.tree ?? undefined);
+    doc.root = parseMarkdown(text, doc.root ?? undefined);
     this.documents.set(uri, doc);
     return doc;
   }
@@ -604,14 +564,12 @@ export class LspWsAdapter {
 
   private computeDiagnostics(doc: DocumentState): Diagnostic[] {
     const diagnostics: Diagnostic[] = [];
-    const tree = doc.tree;
-    if (!tree) {
+    const root = doc.root;
+    if (!root) {
       return diagnostics;
     }
 
-    const collect = (node: SyntaxNode) => {
-      // console.log('diag', node.type);
-
+    const collect = (node: TreeSitterNode) => {
       switch (node.type) {
         case 'atx_heading': {
           const text = this.extractText(doc, node).replace(/^#+\s*/, '').trim();
@@ -676,42 +634,40 @@ export class LspWsAdapter {
           break;
       }
 
-      if (node.namedChildren) {
-        node.namedChildren.forEach(collect);
-      }
       if (node.children) {
         node.children.forEach(collect);
       }
     };
 
-    collect(tree.rootNode);
+    collect(root);
     return diagnostics;
   }
 
   private getNodeAtPosition(
     doc: DocumentState,
     position: LspPosition,
-  ): SyntaxNode | null {
-    const tree = doc.tree;
-    if (!tree) {
+  ): TreeSitterNodeExt | null {
+    const root = doc.root;
+    if (!root) {
       return null;
     }
-    const point: TsPoint = { row: position.line, column: position.character };
-    return tree.rootNode.descendantForPosition(point, point);
+    const point: Position = { row: position.line, column: position.character };
+    const node = root.tree.rootNode.descendantForPosition(point, point);
+    return node ? new ExtendedNode(node, doc.text) : null;
   }
 
-  private nodeIsWithin(node: SyntaxNode | null, type: string): boolean {
-    let current: SyntaxNode | null = node;
+  private nodeIsWithin(node: TreeSitterNode | null, type: string): boolean {
+    let current: TreeSitterNode | null = node;
     while (current) {
       if (current.type === type) {
         return true;
       }
-      current = current.parent;
+      current = current.parent; // ? new ExtendedNode(current.parent, current.treeText) : null;
     }
     return false;
   }
 
-  private findSemanticNode(node: SyntaxNode): SyntaxNode | null {
+  private findSemanticNode(node: TreeSitterNode): TreeSitterNode | null {
     const interesting = new Set([
       'atx_heading',
       'fenced_code_block',
@@ -723,7 +679,7 @@ export class LspWsAdapter {
       'list_item',
       'block_quote',
     ]);
-    let current: SyntaxNode | null = node;
+    let current: TreeSitterNode | null = node;
     while (current) {
       if (interesting.has(current.type)) {
         return current;
@@ -733,7 +689,10 @@ export class LspWsAdapter {
     return null;
   }
 
-  private buildHoverText(doc: DocumentState, node: SyntaxNode): string | null {
+  private buildHoverText(
+    doc: DocumentState,
+    node: TreeSitterNode,
+  ): string | null {
     switch (node.type) {
       case 'atx_heading': {
         const raw = this.extractText(doc, node).trim();
@@ -797,25 +756,25 @@ export class LspWsAdapter {
     }
   }
 
-  private rangeFromNode(node: SyntaxNode): LspRange {
+  private rangeFromNode(node: TreeSitterNode): LspRange {
     return {
       start: this.toLspPosition(node.startPosition),
       end: this.toLspPosition(node.endPosition),
     };
   }
 
-  private extractText(doc: DocumentState, node: SyntaxNode): string {
+  private extractText(doc: DocumentState, node: TreeSitterNode): string {
     const start = this.offsetForPoint(doc, node.startPosition);
     const end = this.offsetForPoint(doc, node.endPosition);
     return doc.text.slice(start, end);
   }
 
-  private offsetForPoint(doc: DocumentState, point: TsPoint): number {
+  private offsetForPoint(doc: DocumentState, point: Position): number {
     const lineOffset = doc.lineOffsets[point.row] ?? doc.text.length;
     return Math.min(lineOffset + point.column, doc.text.length);
   }
 
-  private toLspPosition(point: TsPoint): LspPosition {
+  private toLspPosition(point: Position): LspPosition {
     return { line: point.row, character: point.column };
   }
 

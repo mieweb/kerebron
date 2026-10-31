@@ -1,5 +1,4 @@
 import { Plugin, PluginKey, Transaction } from 'prosemirror-state';
-import { Decoration, DecorationSet, EditorView } from 'prosemirror-view';
 
 import { CoreEditor } from '@kerebron/editor';
 
@@ -27,63 +26,6 @@ export class LSPPlugin extends Plugin<LSPSync> {
             pluginState?.destroy();
           },
         };
-      },
-      props: {
-        decorations(state) {
-          const decorations: Decoration[] = [];
-
-          const pluginState = LSPPluginKey.getState(editor.state);
-
-          if (pluginState) {
-            state.doc.forEach((node, pos) => {
-              const dom = (editor.view as EditorView).nodeDOM(
-                pos,
-              ) as HTMLElement;
-              if (!dom || !dom.querySelector) {
-                return;
-              }
-
-              const editorElement = dom.querySelector('[data-uri]');
-              const uri = (editorElement
-                ? editorElement.getAttribute('data-uri')
-                : undefined) ||
-                undefined;
-
-              if (uri) {
-                const diags = pluginState.uriToDiagnostics[uri];
-                if (!diags) {
-                  return;
-                }
-                const { diagnostics, version, contentMapper } = diags;
-
-                if (version === editor.version) {
-                  for (const diag of diagnostics) {
-                    const from = contentMapper.fromLineChar(
-                      diag.range.start.line,
-                      diag.range.start.character,
-                    );
-                    const end = contentMapper.fromLineChar(
-                      diag.range.end.line,
-                      diag.range.end.character,
-                    );
-
-                    if (from > -1 && end > -1) {
-                      const decoration = Decoration.inline(
-                        pos + 1 + from,
-                        pos + 1 + end,
-                        {},
-                        { class: 'kb-lsp__error', title: diag.message },
-                      );
-                      decorations.push(decoration);
-                    }
-                  }
-                }
-              }
-            });
-          }
-
-          return DecorationSet.create(state.doc, decorations);
-        },
       },
     });
   }

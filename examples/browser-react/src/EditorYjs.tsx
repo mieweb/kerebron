@@ -4,9 +4,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { CoreEditor } from '@kerebron/editor';
 import { ExtensionHistory } from '@kerebron/extension-basic-editor/ExtensionHistory';
 import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
-import { LspEditorKit } from '@kerebron/extension-lsp/LspEditorKit';
-import { LSPWebSocketTransport } from '@kerebron/extension-lsp/LSPWebSocketTransport';
-import { LSPTransportGetter, Transport } from '@kerebron/extension-lsp';
+import { LspEditorKit } from '@kerebron/lsp/LspEditorKit';
+import { LSPWebSocketTransport } from '@kerebron/lsp/LSPWebSocketTransport';
+import { LSPTransportGetter, Transport } from '@kerebron/lsp';
 
 const MyEditor: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);

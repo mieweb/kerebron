@@ -1,5 +1,5 @@
 {
-  "name": "@kerebron/extension-lsp",
+  "name": "@kerebron/lsp",
   "tasks": {},
   "imports": {},
   "exports": {
