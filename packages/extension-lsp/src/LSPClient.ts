@@ -178,6 +178,8 @@ export interface LSPClientEventMap {
 }
 
 export interface LSPClient extends EventTarget {
+  entries: Record<string, LSPEntry>;
+
   addEventListener<K extends keyof LSPClientEventMap>(
     type: K,
     listener: (event: LSPClientEventMap[K]) => void,
@@ -230,6 +232,7 @@ export interface LSPClient extends EventTarget {
 
 interface LSPEntry {
   getContentMapper: () => Promise<ContentMapper>;
+  getPos: () => number | undefined;
   uri: string;
   version: number;
   syncedText?: string;
@@ -268,10 +271,9 @@ export class LSPClientImpl extends EventTarget implements LSPClient {
     this.startInitializingListener = (event) => this.startInitializing();
 
     transport.addEventListener('open', this.startInitializingListener);
-    transport.addEventListener('initialized', () => {
+    transport.addEventListener('initialized', (event) => {
       try {
-        console.info('LSP initialized');
-        this.onInitialized();
+        this.onInitialized((event as CustomEvent).detail);
       } catch (err: any) {
         if (err.isLSP) {
           console.error(
@@ -353,7 +355,8 @@ export class LSPClientImpl extends EventTarget implements LSPClient {
     }
   }
 
-  async onInitialized() {
+  async onInitialized(result: lsp.InitializeResult) {
+    console.info('LSP Initialized', result);
     this.transport.send(
       JSON.stringify({ jsonrpc: '2.0', method: 'initialized', params: {} }),
     );
@@ -366,7 +369,7 @@ export class LSPClientImpl extends EventTarget implements LSPClient {
       await this.didOpen(entry);
     }
 
-    this.dispatchEvent(new CustomEvent('initialized'));
+    this.dispatchEvent(new CustomEvent('initialized', { detail: result }));
   }
 
   connect() {
@@ -395,6 +398,7 @@ export class LSPClientImpl extends EventTarget implements LSPClient {
 
     entry.version = modified.version;
     entry.getContentMapper = modified.getContentMapper;
+    entry.getPos = modified.getPos;
 
     if (!this.entries[modified.uri]) {
       this.entries[modified.uri] = entry;

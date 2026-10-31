@@ -34,6 +34,14 @@ export class DenoRewriter implements LspRewriter {
         (json?.params?.textDocument?.uri || 'default.txt').split('.').pop() ||
         'txt';
 
+      if (json.method === 'textDocument/completion') {
+        if (json?.params?.textDocument?.uri) {
+          const tempFilePath = this.tempDir + '/' +
+            btoa(json?.params?.textDocument?.uri) + '.' + ext;
+          json.params.textDocument.uri = 'file://' + tempFilePath;
+        }
+      }
+
       if (json.method === 'textDocument/diagnostic') {
         if (json?.params?.textDocument?.uri) {
           const tempFilePath = this.tempDir + '/' +

@@ -1,5 +1,5 @@
 {
-  "name": "browser-vue-lsp",
+  "name": "browser-lsp",
   "tasks": {
     "dev": "deno run -A npm:vite",
     "build": "deno run -A npm:vite build",
