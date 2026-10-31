@@ -1,0 +1,9 @@
+{
+  "name": "@kerebron/extension-notebook",
+  "tasks": {},
+  "imports": {},
+  "exports": {
+    ".": "./src/mod.ts",
+    "./NotebookEditorKit": "./src/NotebookEditorKit.ts"
+  }
+}

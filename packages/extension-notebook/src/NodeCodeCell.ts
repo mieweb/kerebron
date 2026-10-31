@@ -1,0 +1,135 @@
+import { EditorView, NodeViewConstructor } from 'prosemirror-view';
+import {
+  EditorState,
+  PluginKey,
+  Selection,
+  Transaction,
+} from 'prosemirror-state';
+import type { NodeSpec, NodeType } from 'prosemirror-model';
+
+import { type CoreEditor, Node } from '@kerebron/editor';
+import { getShadowRoot } from '@kerebron/editor/utilities';
+import {
+  Command,
+  type CommandFactories,
+  type CommandShortcuts,
+} from '@kerebron/editor/commands';
+
+import { NodeViewCodeCell } from './NodeViewCodeCell.ts';
+
+function arrowHandler(dir: 'left' | 'right' | 'up' | 'down'): Command {
+  return function (
+    state: EditorState,
+    dispatch?: (tr: Transaction) => void,
+    view?: EditorView,
+  ) {
+    if (!view) {
+      return false;
+    }
+    if (state.selection.empty && view.endOfTextblock(dir)) {
+      let side = dir == 'left' || dir == 'up' ? -1 : 1;
+      let $head = state.selection.$head;
+      let nextPos = Selection.near(
+        state.doc.resolve(side > 0 ? $head.after() : $head.before()),
+        side,
+      );
+      if (nextPos.$head && nextPos.$head.parent.type.name == 'code_block') {
+        if (dispatch) {
+          dispatch(state.tr.setSelection(nextPos));
+        }
+        return true;
+      }
+    }
+    return false;
+  };
+}
+
+export interface NodeCodeCellConfig {
+  readOnly?: boolean;
+  languageWhitelist?: string[];
+}
+
+export class NodeCodeCell extends Node {
+  override name = 'code_cell';
+
+  override getNodeSpec(): NodeSpec {
+    // const langs = this.config.languageWhitelist || LANGS;
+
+    return {
+      content: 'text*',
+      marks: '',
+      group: 'block',
+      // code: true,
+      // defining: true,
+      attrs: { lang: { default: undefined } },
+      parseDOM: [
+        {
+          tag: 'pre',
+          preserveWhitespace: 'full',
+          getAttrs(dom: HTMLElement) {
+            let lang = dom.getAttribute('lang');
+
+            return {
+              lang,
+            };
+          },
+        },
+      ],
+      toDOM(node) {
+        const { lang } = node.attrs;
+        return ['pre', { lang }, ['code', 0]];
+      },
+    };
+  }
+
+  constructor(override config: NodeCodeCellConfig) {
+    super(config);
+  }
+
+  override getCommandFactories(
+    editor: CoreEditor,
+    type: NodeType,
+  ): Partial<CommandFactories> {
+    return {
+      'setCodeCell': (lang?: string) =>
+        editor.commandFactories.setBlockType(type, { lang }),
+      // ArrowLeft: () => arrowHandler('left'),
+      // ArrowRight: () => arrowHandler('right'),
+      // ArrowUp: () => arrowHandler('up'),
+      // ArrowDown: () => arrowHandler('down'),
+    };
+  }
+
+  // override getKeyboardShortcuts(): Partial<CommandShortcuts> {
+  //   return {
+  //     'Shift-Ctrl-"': 'setCodeBlock',
+  //     'ArrowLeft': 'ArrowLeft',
+  //     'ArrowRight': 'ArrowRight',
+  //     'ArrowUp': 'ArrowUp',
+  //     'ArrowDown': 'ArrowDown',
+  //   };
+  // }
+
+  override getNodeView(editor: CoreEditor): NodeViewConstructor {
+    return (...args) => {
+      const node = args[0];
+
+      const shadowRoot = getShadowRoot(this.editor.config.element);
+      const settings = {
+        languageWhitelist: this.config.languageWhitelist || ['typescript'],
+        shadowRoot,
+        readOnly: this.editor.config.readOnly || this.config.readOnly,
+        undo: () => {
+          this.editor.chain().undo().run();
+        },
+        redo: () => {
+          this.editor.chain().redo().run();
+        },
+      };
+
+      const nodeView = new NodeViewCodeCell(editor, settings, ...args);
+      nodeView.init();
+      return nodeView;
+    };
+  }
+}

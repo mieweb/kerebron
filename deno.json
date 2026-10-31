@@ -18,6 +18,7 @@
     "packages/extension-ui",
     "packages/extension-dev-toolkit",
     "packages/extension-server-hono",
+    "packages/extension-notebook",
     "packages/odt-wasm",
     "packages/wasm",
     "packages/test-utils",

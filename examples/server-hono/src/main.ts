@@ -17,6 +17,7 @@ app.use(
 
 (await import('./deno/yjs.ts')).install({ app, upgradeWebSocket });
 (await import('./deno/lsp.ts')).install({ app, upgradeWebSocket });
+(await import('./deno/jupyter.ts')).install({ app, upgradeWebSocket });
 await (await import('./deno/devViteProxy.ts')).install({ app });
 (await import('./dynamic/docs.ts')).install({ app });
 await (await import('./dynamic/examples.ts')).install({ app });
