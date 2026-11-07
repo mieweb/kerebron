@@ -15,7 +15,6 @@ import { DummyEditorView } from './DummyEditorView.ts';
 import { createNodeFromObject } from './utilities/createNodeFromContent.ts';
 import { Extension } from './Extension.ts';
 import { defaultUi, EditorUi } from './ui.ts';
-import { VERSION } from './version.ts';
 import { runInputRulesTexts } from './plugins/input-rules/InputRulesPlugin.ts';
 import {
   ChainedCommands,
@@ -59,6 +58,8 @@ export class CoreEditor extends EventTarget {
 
   public readonly ci = new Container();
   version = 0;
+  wrapperElement: HTMLElement | undefined;
+  editorElement: HTMLElement | undefined;
 
   private constructor(
     config: Partial<EditorConfig>,
@@ -220,12 +221,16 @@ export class CoreEditor extends EventTarget {
     this.state = EditorState.create({ doc, selection });
 
     if (this.config.element) {
-      const view = new EditorView(this.config.element, {
+      this.wrapperElement = this.config.element;
+      this.wrapperElement!.classList.add('kb-component');
+      this.editorElement = document.createElement('div');
+      this.editorElement.classList.add('kb-editor');
+      this.wrapperElement!.appendChild(this.editorElement);
+
+      const view = new EditorView({
+        mount: this.editorElement,
+      }, {
         state: this.state,
-        attributes: {
-          class: 'kb-editor',
-          'data-kerebron-version': VERSION,
-        },
         dispatchTransaction: (tx: Transaction) => this.dispatchTransaction(tx),
         editable: () => !this.config.readOnly,
       });

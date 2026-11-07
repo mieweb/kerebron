@@ -1,12 +1,11 @@
 import { Extension } from '@kerebron/editor';
 import type { AnyExtensionOrReq, EditorKit } from '@kerebron/editor';
-
-import { LSPWebSocketTransport } from '@kerebron/extension-lsp/LSPWebSocketTransport';
-import { ExtensionLsp, type LSPTransportGetter } from '@kerebron/extension-lsp';
-
 import type { Token } from '@kerebron/extension-markdown';
 import { SmartOutput } from '@kerebron/editor/utilities';
-import { Transport } from '@kerebron/extension-lsp';
+
+import { LSPWebSocketTransport } from './LSPWebSocketTransport.ts';
+import { ExtensionLsp, type LSPTransportGetter } from './ExtensionLsp.ts';
+import { Transport } from './LSPClient.ts';
 
 export interface LspEditorKitConfig {
   getLspTransport: LSPTransportGetter;

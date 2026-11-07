@@ -1,7 +1,7 @@
 <template>
   <div class="d-flex flex-row" style="height: 85vh">
     <div>
-      <div ref="editor" class="kb-component"></div>
+      <div ref="editor"></div>
     </div>
     <div>
       <div>
@@ -14,13 +14,7 @@
 <script lang="ts">
 import { CoreEditor } from '@kerebron/editor';
 
-import {
-  Dropdown,
-  type MenuElement,
-  MenuItem,
-} from '@kerebron/extension-menu-legacy';
-
-import { DevAdvancedEditorKit } from '@kerebron/editor-kits/DevAdvancedEditorKit';
+import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
 import { YjsEditorKit } from '@kerebron/extension-yjs/YjsEditorKit';
 
 export default {
@@ -59,33 +53,43 @@ export default {
     }
   },
   methods: {
+    attachMenu(editor: CoreEditor) {
+      const ui: Ui = editor.ci.resolve('ui');
+
+      const menuFile: MenuDropdown = {
+        type: 'dropdown',
+        id: 'file',
+        title: 'File',
+        items: [
+          {
+            type: 'item',
+            id: 'myitem',
+            title: 'Simulate loadDoc',
+            action: async (_editor) => this.loadDoc(),
+          },
+          {
+            type: 'item',
+            id: 'load-file',
+            title: 'Load file',
+            action: (_editor) => this.loadDoc2(),
+          },
+        ],
+      };
+
+      this.editor.run.addMenuItem(menuFile, 0);
+    },
     async init() {
       this.$refs.editor.innerHTML = '';
 
       this.editor = CoreEditor.create({
         element: this.$refs.editor,
         editorKits: [
-          new DevAdvancedEditorKit({
-            modifyMenu: (menus: MenuElement[][]) => {
-              const fileMenu = [
-                new MenuItem({
-                  label: 'Simulate loadDoc',
-                  enable: () => true,
-                  run: () => this.loadDoc(),
-                }),
-                new MenuItem({
-                  label: 'Load',
-                  enable: () => true,
-                  run: () => this.loadDoc2(),
-                }),
-              ];
-              menus[0].unshift(new Dropdown(fileMenu, {label: 'File'}));
-              return menus;
-            },
-          }),
+          new AdvancedEditorKit(),
           YjsEditorKit.createFrom(),
         ]
       });
+
+      this.attachMenu(this.editor);
 
       this.editor.chain().changeRoom(this.roomId).run();
       if (this.user) {
@@ -123,5 +127,5 @@ export default {
 </script>
 <style>
 @import '@kerebron/editor/assets/index.css';
-@import '@kerebron/editor-kits/assets/DevAdvancedEditorKit.css';
+@import '@kerebron/editor-kits/assets/AdvancedEditorKit.css';
 </style>

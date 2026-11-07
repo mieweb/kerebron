@@ -1,0 +1,30 @@
+.kb--over-layer {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  pointer-events: none;
+}
+
+.kb--over-layer .kb-popup {
+  pointer-events: auto;
+}
+
+.kb--over-layer__center {
+  position: fixed;
+  width: 0;
+  height: 0;
+  left: 50%;
+  top: 50%;
+}
+
+.kb-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: all;
+  background: #00000070;
+}

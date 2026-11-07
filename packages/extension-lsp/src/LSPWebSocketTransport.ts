@@ -53,7 +53,9 @@ export class LSPWebSocketTransport extends EventTarget implements Transport {
         if (json?.result?.capabilities) {
           this.reconnectAttempts = 0;
           this.initialized = true;
-          this.dispatchEvent(new Event('initialized'));
+          this.dispatchEvent(
+            new CustomEvent('initialized', { detail: json?.result }),
+          );
         }
         // deno-lint-ignore no-empty
       } catch (ignoredError) {}

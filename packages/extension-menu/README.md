@@ -1,3 +1,0 @@
-# Menu extension
-
-Porting prosemirror-menu in progress...

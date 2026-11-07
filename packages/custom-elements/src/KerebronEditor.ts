@@ -30,7 +30,6 @@ export default class KerebronEditor extends HTMLElement {
     }
 
     const wrapper = document.createElement('div');
-    wrapper.setAttribute('class', 'kb-component');
     this.shadowRoot.appendChild(wrapper);
 
     this.editor = CoreEditor.create({
@@ -42,8 +41,12 @@ export default class KerebronEditor extends HTMLElement {
       ],
     });
 
-    this.editor.addEventListener('change', (event) => {
-      this.dispatchEvent(event);
+    this.editor.addEventListener('changed', (event) => {
+      this.dispatchEvent(
+        new CustomEvent('changed', {
+          detail: (event as CustomEvent).detail,
+        }),
+      );
     });
 
     if (this.getAttribute('media-type')) {

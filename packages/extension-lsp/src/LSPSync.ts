@@ -10,8 +10,9 @@ import type {
 
 import type { LspConfig } from './ExtensionLsp.ts';
 import { LSPClient, LSPClientImpl } from './LSPClient.ts';
+import { mapDiagnostics } from './mapDiagnostics.ts';
 
-export class LSPSync {
+export class LSPSync extends EventTarget {
   clients: Record<string, LSPClient> = {};
 
   uriToClient: Record<string, LSPClient> = {};
@@ -31,6 +32,8 @@ export class LSPSync {
   listenerChange: (event: CustomEvent<WorkspaceModifyParams>) => Promise<void>;
 
   constructor(private config: LspConfig, private editor: CoreEditor) {
+    super();
+
     this.listenerDiag = async (
       event: CustomEvent<{ params: lsp.PublishDiagnosticsParams }>,
     ) => {
@@ -51,8 +54,13 @@ export class LSPSync {
         contentMapper,
       };
 
-      const tr = editor.state.tr;
-      editor.dispatchTransaction(tr);
+      const pos = entry.getPos();
+      if ('undefined' !== typeof pos) {
+        const diags = mapDiagnostics(diagnostics, contentMapper, pos);
+        editor.run.publishDiagnostics(uri, version, diags);
+      }
+      // const tr = editor.state.tr;
+      // editor.dispatchTransaction(tr);
     };
 
     this.listenerDisconnect = (event: Event) => {
@@ -140,6 +148,12 @@ export class LSPSync {
       client.addEventListener('close', this.listenerDisconnect);
 
       this.clients[lang] = client;
+
+      this.dispatchEvent(
+        new CustomEvent('createClient', {
+          detail: client,
+        }),
+      );
     }
 
     return this.clients[lang];

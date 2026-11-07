@@ -1,9 +1,9 @@
 import { CoreEditor } from '@kerebron/editor';
 import { CodeEditorKit } from '@kerebron/editor-kits/CodeEditorKit';
-import { LspEditorKit } from '@kerebron/extension-lsp/LspEditorKit';
+import { LspEditorKit } from '@kerebron/lsp/LspEditorKit';
+import type { LSPTransportGetter, Transport } from '@kerebron/lsp';
+import { LSPWebSocketTransport } from '@kerebron/lsp/LSPWebSocketTransport';
 import { YjsEditorKit } from '@kerebron/extension-yjs/YjsEditorKit';
-import type { LSPTransportGetter, Transport } from '@kerebron/extension-lsp';
-import { LSPWebSocketTransport } from '@kerebron/extension-lsp/LSPWebSocketTransport';
 
 import YjsRoom from '@kerebron/custom-elements/YjsRoom';
 import type {
@@ -105,7 +105,6 @@ window.addEventListener('load', async () => {
   });
 
   editor.addEventListener('transaction', async (ev: CustomEvent) => {
-    // console.trace();
     return;
     const lastValue = ev.detail.transaction.doc;
     const buffer = await editor.saveDocument('text/code-only');

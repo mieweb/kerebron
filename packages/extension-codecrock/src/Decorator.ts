@@ -2,6 +2,7 @@ export interface DecorationInline {
   startIndex: number;
   endIndex: number;
   attrs: { [k: string]: string };
+  toDOM?: () => HTMLElement;
 }
 
 export class Decorator {
@@ -62,6 +63,10 @@ export class Decorator {
         currentIdx === d.startIndex && d.startIndex === d.endIndex
       );
       for (const decor of activeWidgetDecors) {
+        if (decor.toDOM) {
+          html += decor.toDOM().outerHTML;
+          continue;
+        }
         html += `<span `;
         for (const [k, v] of Object.entries(decor.attrs)) {
           html += ` ${k}="${escapeHtml(v || '')}"`;

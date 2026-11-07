@@ -6,25 +6,33 @@ import { renderTemplate } from './vento.ts';
 
 const __dirname = import.meta.dirname;
 const examplesDir = __dirname + '/../../../';
+const docsDir = __dirname + '/../../../../docs/';
 
 export const examples = fs.readdirSync(examplesDir, { withFileTypes: true })
   .filter((file) => file.name.startsWith('browser-'))
-  .map((file) => file.name);
+  .map((file) => ({ name: file.name }));
 
 export async function install(
   { app, isBuild }: { app: Hono; isBuild: boolean | undefined },
 ) {
-  for (const example of examples) {
-    const readmeMd = fs.readFileSync(examplesDir + example + '/README.md');
+  const toc = JSON.parse(
+    new TextDecoder().decode(fs.readFileSync(docsDir + '/toc.json')),
+  );
 
-    const readmeHtml = await markdownToHtml(readmeMd, { example });
+  for (const example of examples) {
+    const readmeMd = fs.readFileSync(examplesDir + example.name + '/README.md');
+
+    const readmeHtml = await markdownToHtml(readmeMd, {
+      example: example.name,
+    });
 
     const pageHtml = await renderTemplate('example.vto', {
       readmeHtml,
       examples,
+      toc,
     });
 
-    app.get('/examples/' + example + '.html', async (c) => {
+    app.get('/examples/' + example.name + '.html', async (c) => {
       try {
         return c.html(pageHtml);
       } catch (error) {

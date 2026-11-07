@@ -1,5 +1,5 @@
 import { CoreEditor } from '@kerebron/editor';
-import { DevAdvancedEditorKit } from '@kerebron/editor-kits/DevAdvancedEditorKit';
+import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
 import { BasicEditorKit } from '@kerebron/extension-basic-editor/BasicEditorKit';
 
 import { createAssetLoad } from '@kerebron/wasm/web';
@@ -12,7 +12,7 @@ const editor1 = CoreEditor.create({
   assetLoad: createAssetLoad('/wasm'),
   element: document.getElementById('editor') || undefined,
   editorKits: [
-    new DevAdvancedEditorKit(),
+    new AdvancedEditorKit(),
   ],
 });
 

@@ -6,10 +6,11 @@ import { ExtensionOdt } from '@kerebron/extension-odt';
 import { ExtensionTables } from '@kerebron/extension-tables';
 import { ExtensionCodeCrock } from '@kerebron/extension-codecrock';
 import { ExtensionDevToolkit } from '@kerebron/extension-dev-toolkit';
-import { ExtensionCustomMenu } from '@kerebron/extension-menu';
-import { ExtensionUi } from '@kerebron/extension-ui';
-import { ExtensionAutocomplete } from '@kerebron/extension-ui/autocomplete';
-import { ExtensionHover } from '@kerebron/extension-ui/hover';
+import { ExtensionMenu } from '@kerebron/menu/ExtensionMenu';
+import { ExtensionUi } from '@kerebron/ui';
+import { ExtensionAutocomplete } from '@kerebron/ui/autocomplete';
+import { ExtensionHover } from '@kerebron/ui/hover';
+import { ExtensionDiagnostics } from '@kerebron/ui/diagnostics';
 
 export class AdvancedEditorKit implements EditorKit {
   name = 'advanced-editor';
@@ -22,11 +23,12 @@ export class AdvancedEditorKit implements EditorKit {
       new ExtensionOdt(),
       new ExtensionTables(),
       new ExtensionDevToolkit(),
-      new ExtensionCustomMenu(),
+      new ExtensionMenu(),
       new ExtensionCodeCrock(),
       new ExtensionUi(),
       new ExtensionAutocomplete(),
       new ExtensionHover(),
+      new ExtensionDiagnostics(),
     ];
   }
 }

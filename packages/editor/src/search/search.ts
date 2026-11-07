@@ -10,7 +10,7 @@ import { Decoration, DecorationSet } from 'prosemirror-view';
 import { type Command, CommandFactory } from '../commands/types.ts';
 import { SearchQuery, SearchResult } from './query.ts';
 
-class SearchState {
+export class SearchState {
   constructor(
     readonly query: SearchQuery,
     readonly range: { from: number; to: number } | null,
@@ -24,15 +24,15 @@ function buildMatchDeco(
   range: { from: number; to: number } | null,
 ) {
   if (!query.valid) return DecorationSet.empty;
-  let deco: Decoration[] = [];
-  let sel = state.selection;
+  const deco: Decoration[] = [];
+  const sel = state.selection;
   for (
     let pos = range ? range.from : 0,
       end = range ? range.to : state.doc.content.size;;
   ) {
-    let next = query.findNext(state, pos, end);
+    const next = query.findNext(state, pos, end);
     if (!next) break;
-    let cls = next.from == sel.from && next.to == sel.to
+    const cls = next.from == sel.from && next.to == sel.to
       ? 'kb-active-search-match'
       : 'kb-search-match';
     deco.push(Decoration.inline(next.from, next.to, { class: cls }));
@@ -55,8 +55,8 @@ export function createSearchPlugin(
     key: searchKey,
     state: {
       init(_config, state) {
-        let query = options.initialQuery || new SearchQuery({ search: '' });
-        let range = options.initialRange || null;
+        const query = options.initialQuery || new SearchQuery({ search: '' });
+        const range = options.initialRange || null;
         return new SearchState(
           query,
           range,
@@ -64,7 +64,7 @@ export function createSearchPlugin(
         );
       },
       apply(tr, search, _oldState, state) {
-        let set = tr.getMeta(searchKey) as {
+        const set = tr.getMeta(searchKey) as {
           query: SearchQuery;
           range: { from: number; to: number } | null;
         } | undefined;
@@ -79,8 +79,8 @@ export function createSearchPlugin(
         if (tr.docChanged || tr.selectionSet) {
           let range = search.range;
           if (range) {
-            let from = tr.mapping.map(range.from, 1);
-            let to = tr.mapping.map(range.to, -1);
+            const from = tr.mapping.map(range.from, 1);
+            const to = tr.mapping.map(range.to, -1);
             range = from < to ? { from, to } : null;
           }
           search = new SearchState(
@@ -100,17 +100,14 @@ export function createSearchPlugin(
 
 /// Get the current active search query and searched range. Will
 /// return `undefined` is the search plugin isn't active.
-export function getSearchState(state: EditorState): {
-  query: SearchQuery;
-  range: { from: number; to: number } | null;
-} | undefined {
+export function getSearchState(state: EditorState): SearchState | undefined {
   return searchKey.getState(state);
 }
 
 /// Access the decoration set holding the currently highlighted search
 /// matches in the document.
 export function getMatchHighlights(state: EditorState) {
-  let search = searchKey.getState(state);
+  const search = searchKey.getState(state);
   return search ? search.deco : DecorationSet.empty;
 }
 
@@ -131,7 +128,7 @@ function nextMatch(
   curFrom: number,
   curTo: number,
 ) {
-  let range = search.range || { from: 0, to: state.doc.content.size };
+  const range = search.range || { from: 0, to: state.doc.content.size };
   let next = search.query.findNext(
     state,
     Math.max(curTo, range.from),
@@ -154,7 +151,7 @@ function prevMatch(
   curFrom: number,
   curTo: number,
 ) {
-  let range = search.range || { from: 0, to: state.doc.content.size };
+  const range = search.range || { from: 0, to: state.doc.content.size };
   let prev = search.query.findPrev(
     state,
     Math.min(curFrom, range.to),
@@ -168,14 +165,14 @@ function prevMatch(
 
 function findCommand(wrap: boolean, dir: -1 | 1): Command {
   return (state, dispatch) => {
-    let search = searchKey.getState(state);
+    const search = searchKey.getState(state);
     if (!search || !search.query.valid) return false;
-    let { from, to } = state.selection;
-    let next = dir > 0
+    const { from, to } = state.selection;
+    const next = dir > 0
       ? nextMatch(search, state, wrap, from, to)
       : prevMatch(search, state, wrap, from, to);
     if (!next) return false;
-    let selection = TextSelection.create(state.doc, next.from, next.to);
+    const selection = TextSelection.create(state.doc, next.from, next.to);
     if (dispatch) dispatch(state.tr.setSelection(selection).scrollIntoView());
     return true;
   };
@@ -200,21 +197,21 @@ export const findPrevNoWrap: Command = findCommand(false, -1);
 
 function replaceCommand(wrap: boolean, moveForward: boolean): Command {
   return (state, dispatch) => {
-    let search = searchKey.getState(state);
+    const search = searchKey.getState(state);
     if (!search || !search.query.valid) return false;
-    let { from } = state.selection;
-    let next = nextMatch(search, state, wrap, from, from);
+    const { from } = state.selection;
+    const next = nextMatch(search, state, wrap, from, from);
     if (!next) return false;
 
     if (!dispatch) return true;
     if (state.selection.from == next.from && state.selection.to == next.to) {
-      let tr = state.tr,
+      const tr = state.tr,
         replacements = search.query.getReplacements(state, next);
       for (let i = replacements.length - 1; i >= 0; i--) {
-        let { from, to, insert } = replacements[i];
+        const { from, to, insert } = replacements[i];
         tr.replace(from, to, insert);
       }
-      let after = moveForward &&
+      const after = moveForward &&
         nextMatch(search, state, wrap, next.from, next.to);
       if (after) {
         tr.setSelection(
@@ -258,21 +255,21 @@ export const replaceCurrent: Command = replaceCommand(false, false);
 
 /// Replace all instances of the search query.
 export const replaceAll: Command = (state, dispatch) => {
-  let search = searchKey.getState(state);
+  const search = searchKey.getState(state);
   if (!search) return false;
-  let matches: SearchResult[] = [],
+  const matches: SearchResult[] = [],
     range = search.range || { from: 0, to: state.doc.content.size };
   for (let pos = range.from;;) {
-    let next = search.query.findNext(state, pos, range.to);
+    const next = search.query.findNext(state, pos, range.to);
     if (!next) break;
     matches.push(next);
     pos = next.to;
   }
   if (dispatch) {
-    let tr = state.tr;
+    const tr = state.tr;
     for (let i = matches.length - 1; i >= 0; i--) {
-      let match = matches[i];
-      let replacements = search.query.getReplacements(state, match);
+      const match = matches[i];
+      const replacements = search.query.getReplacements(state, match);
       for (let j = replacements.length - 1; j >= 0; j--) {
         let { from, to, insert } = replacements[j];
         tr.replace(from, to, insert);
@@ -311,4 +308,12 @@ export const searchCommandFactories: Record<string, CommandFactory> = {
   replaceNextNoWrap: () => replaceNextNoWrap,
   replaceCurrent: () => replaceCurrent,
   replaceAll: () => replaceAll,
+  clearSearch: () => searchFactory(new SearchQuery({ search: '' }), null),
+  getSearchState: (callback: (value: SearchState | undefined) => void) => {
+    return (state, dispatch) => {
+      const retVal = getSearchState(state);
+      callback(retVal);
+      return true;
+    };
+  },
 };
