@@ -1,20 +1,33 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@david/path@0.2": "0.2.0",
+    "jsr:@david/temp@~0.1.1": "0.1.1",
     "jsr:@deno-library/compress@*": "0.5.6",
     "jsr:@deno-library/crc32@1.0.2": "1.0.2",
+    "jsr:@deno/wasmbuild@0.22.0": "0.22.0",
     "jsr:@hono/hono@^4.7.4": "4.12.23",
     "jsr:@std/assert@1": "1.0.19",
     "jsr:@std/bytes@^1.0.2": "1.0.6",
+    "jsr:@std/cli@^1.0.11": "1.0.32",
+    "jsr:@std/encoding@^1.0.6": "1.0.11",
+    "jsr:@std/fmt@^1.0.4": "1.0.10",
+    "jsr:@std/fs@1": "1.0.24",
     "jsr:@std/fs@1.0.5": "1.0.5",
+    "jsr:@std/fs@^1.0.10": "1.0.24",
     "jsr:@std/internal@^1.0.10": "1.0.14",
     "jsr:@std/internal@^1.0.12": "1.0.14",
+    "jsr:@std/internal@^1.0.14": "1.0.14",
     "jsr:@std/io@0.225.0": "0.225.0",
+    "jsr:@std/path@1": "1.1.6",
     "jsr:@std/path@1.0.8": "1.0.8",
     "jsr:@std/path@1.1.2": "1.1.2",
     "jsr:@std/path@^1.0.7": "1.0.8",
+    "jsr:@std/path@^1.1.5": "1.1.6",
+    "jsr:@std/streams@^1.0.17": "1.2.0",
     "jsr:@std/streams@^1.0.7": "1.0.17",
     "jsr:@std/tar@0.1.3": "0.1.3",
+    "jsr:@std/tar@~0.1.4": "0.1.10",
     "jsr:@zip-js/zip-js@2.7.53": "2.7.53",
     "npm:@arcmantle/vite-plugin-import-css-sheet@latest": "1.0.12",
     "npm:@hono/vite-ssg@0.3.0": "0.3.0_hono@4.10.7",
@@ -70,19 +83,44 @@
     "npm:zeromq@6.0.0": "6.0.0"
   },
   "jsr": {
+    "@david/path@0.2.0": {
+      "integrity": "f2d7aa7f02ce5a55e27c09f9f1381794acb09d328f8d3c8a2e3ab3ffc294dccd",
+      "dependencies": [
+        "jsr:@std/fs@1",
+        "jsr:@std/path@1"
+      ]
+    },
+    "@david/temp@0.1.1": {
+      "integrity": "3974e3aa76536bd831294b72f5b70bfb67af3f4119ae334360e321f6ded18840",
+      "dependencies": [
+        "jsr:@david/path"
+      ]
+    },
     "@deno-library/compress@0.5.6": {
       "integrity": "9d76e37e7682fc8d3d99d5641a7af454ce4689b1df3fd3062141a1deb64453cd",
       "dependencies": [
         "jsr:@deno-library/crc32",
-        "jsr:@std/fs",
+        "jsr:@std/fs@1.0.5",
         "jsr:@std/io",
         "jsr:@std/path@1.0.8",
-        "jsr:@std/tar",
+        "jsr:@std/tar@0.1.3",
         "jsr:@zip-js/zip-js"
       ]
     },
     "@deno-library/crc32@1.0.2": {
       "integrity": "d2061bfee30c87c97f285dfca0fdc4458e632dc072a33ecfc73ca5177a5a39a0"
+    },
+    "@deno/wasmbuild@0.22.0": {
+      "integrity": "dcd67ccafb06e445d8ed8c1f6cb1d6c322209825f0a9f4d4a4ec64f354593ee3",
+      "dependencies": [
+        "jsr:@david/path",
+        "jsr:@david/temp",
+        "jsr:@std/cli",
+        "jsr:@std/encoding",
+        "jsr:@std/fmt",
+        "jsr:@std/fs@^1.0.10",
+        "jsr:@std/tar@~0.1.4"
+      ]
     },
     "@hono/hono@4.9.5": {
       "integrity": "9979382257287abb33e98893247a97660adc0a9239cf37d57e207e3592040a96"
@@ -99,13 +137,29 @@
     "@std/bytes@1.0.6": {
       "integrity": "f6ac6adbd8ccd99314045f5703e23af0a68d7f7e58364b47d2c7f408aeb5820a"
     },
+    "@std/cli@1.0.32": {
+      "integrity": "188b3a100d6202d64e3f5bd3d799c7fa4f6d77f92cc65eb7f641c1fa0aa92a66"
+    },
+    "@std/encoding@1.0.11": {
+      "integrity": "e7cef2f0b3153bccc17431e7c864a1de03a4b6d9647389c43e08aaa775d37385"
+    },
     "@std/fmt@1.0.9": {
       "integrity": "2487343e8899fb2be5d0e3d35013e54477ada198854e52dd05ed0422eddcabe0"
+    },
+    "@std/fmt@1.0.10": {
+      "integrity": "90dfba288802ac6de82fb31d0917eb9e4450b9925b954d5e51fc29ac07419db5"
     },
     "@std/fs@1.0.5": {
       "integrity": "41806ad6823d0b5f275f9849a2640d87e4ef67c51ee1b8fb02426f55e02fd44e",
       "dependencies": [
         "jsr:@std/path@^1.0.7"
+      ]
+    },
+    "@std/fs@1.0.24": {
+      "integrity": "f3061b45b81673a2bece689da041df32d174be064c89eb6397fb5718d3fb7877",
+      "dependencies": [
+        "jsr:@std/internal@^1.0.14",
+        "jsr:@std/path@^1.1.5"
       ]
     },
     "@std/internal@1.0.12": {
@@ -129,13 +183,28 @@
         "jsr:@std/internal@^1.0.10"
       ]
     },
+    "@std/path@1.1.6": {
+      "integrity": "c68485c2a4dfbb5ae3cc74fae4e8c4e5d874cf8a8ed12927917235c758b46cbe",
+      "dependencies": [
+        "jsr:@std/internal@^1.0.14"
+      ]
+    },
     "@std/streams@1.0.17": {
       "integrity": "7859f3d9deed83cf4b41f19223d4a67661b3d3819e9fc117698f493bf5992140"
+    },
+    "@std/streams@1.2.0": {
+      "integrity": "256b934254778f2bf45f5713b934209ff29e9b4b7fd4ec095219966813758c5f"
     },
     "@std/tar@0.1.3": {
       "integrity": "531270fc707b37ab9b5f051aa4943e7b16b86905e0398a4ebe062983b0c93115",
       "dependencies": [
-        "jsr:@std/streams"
+        "jsr:@std/streams@^1.0.7"
+      ]
+    },
+    "@std/tar@0.1.10": {
+      "integrity": "6bf907f3a4bc8bfef42973ba132d946756a6161ef6b914a9e1c06debe664db17",
+      "dependencies": [
+        "jsr:@std/streams@^1.0.17"
       ]
     },
     "@zip-js/zip-js@2.7.53": {

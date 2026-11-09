@@ -13,7 +13,7 @@ fn main() -> std::io::Result<()> {
   // println!("files {:#?} ", files);
 
   let content = parse_content(files.get("content.xml").unwrap().to_vec());
-  let styles = parse_styles(files.get("styles.xml").unwrap().to_vec());
+  let _styles = parse_styles(files.get("styles.xml").unwrap().to_vec());
 
   println!("content {:#?} ", content.body.text.list);
 

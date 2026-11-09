@@ -21,7 +21,10 @@ pub fn unzip(zip_data: Vec<u8>) -> HashMap<String, Vec<u8>> {
       continue;
     }
 
-    let filename = file.name().to_string();
+    let filename = match file.name() {
+        Ok(name) => name.to_string(),
+        Err(_) => continue,
+    };
 
     match filename.as_str() {
       "content.xml" | "styles.xml" => {
