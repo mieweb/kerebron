@@ -226,22 +226,12 @@ export class NodeViewCodeCrock implements NodeView, CodeNodeView {
       );
 
     const decors: DecorationInline[] = [];
-    console.log('nvupdate', codeDecorations.length);
 
     for (const cd of codeDecorations) {
       const attrs: DecorationAttrs = (cd as any).type.attrs || {};
 
-      // console.log('coppppppp ccdeooooo', cd.from, cd.to, cd );
-
       if (cd.spec?.refresh) {
         this.decorator.refreshers.push(cd.spec?.refresh);
-      }
-
-      {
-        const decor = (cd as any).type;
-        if (decor.toDOM) {
-          console.log('toDOM', decor.toDOM());
-        }
       }
 
       decors.push({
@@ -254,7 +244,6 @@ export class NodeViewCodeCrock implements NodeView, CodeNodeView {
       });
     }
 
-    const oldDecors = this.decorator.decorationGroups.diag;
     this.decorator.decorationGroups.diag = decors;
 
     const oldNode = this.node;

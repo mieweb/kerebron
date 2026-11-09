@@ -56,7 +56,6 @@ test.describe('Mouse tests', () => {
       }, targetText);
 
       expect(box).not.toBeNull();
-      console.log(box);
 
       if (box) {
         await page.mouse.move(

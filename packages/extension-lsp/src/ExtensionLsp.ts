@@ -76,8 +76,6 @@ export class ExtensionLsp extends Extension {
           match,
           createPopup,
         ) => {
-          console.log('HoverSource.processRequest', match.range);
-
           if (!trigger.uri) {
             return;
           }

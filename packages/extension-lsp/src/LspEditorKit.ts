@@ -33,7 +33,6 @@ class ExtensionLspListeners extends Extension {
       if (selection) {
         const from = Math.min(selection.$anchor.pos, selection.$head.pos);
         const to = Math.max(selection.$anchor.pos, selection.$head.pos);
-        // console.log('lsp.sel', from, to);
       }
     });
 
