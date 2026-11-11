@@ -20,7 +20,7 @@ export interface MenuMeta {
 
 class MenuState {
   private trayPopup?: KerebronPopup;
-  private collapsedMenuItems: string[] = [];
+  collapsedMenuItems: string[] = [];
 
   constructor(
     private readonly editor: CoreEditor,
@@ -56,6 +56,15 @@ class MenuState {
   }
 
   find(id: string): MenuNode | undefined {
+    if (id === 'tray') {
+      return {
+        type: 'dropdown',
+        id: 'tray',
+        title: 'Tray',
+        items: this.menu.tray,
+        can: () => this.collapsedMenuItems.length > 0,
+      };
+    }
     return this.findIn(this.menu.items, id);
   }
 
@@ -140,18 +149,18 @@ class MenuState {
       this.trayPopup = undefined;
     });
 
-    await ui.setPopupContent(this.trayPopup, this.renderTray());
+    await ui.setPopupContent(this.trayPopup, this.renderCollapsed());
   }
 
-  renderTray(): DOMOutputSpec {
-    const trayItems = this.menu.items.filter((i) =>
+  renderCollapsed(): DOMOutputSpec {
+    const collapsedItems = this.menu.items.filter((i) =>
       this.collapsedMenuItems.includes(i.id)
     );
 
     return [
       'ui',
       { class: 'kb-menu__collapsed' },
-      ...renderItems(trayItems, this.editor),
+      ...renderItems(collapsedItems, this.editor),
     ];
   }
 
@@ -184,7 +193,7 @@ class MenuState {
 
     if (this.trayPopup) {
       const ui: Ui = this.editor.ci.resolve('ui');
-      await ui.setPopupContent(this.trayPopup, this.renderTray());
+      await ui.setPopupContent(this.trayPopup, this.renderCollapsed());
     }
   }
 }
@@ -285,6 +294,9 @@ export function createMenuPlugin(editor: CoreEditor, menuBar: MenuBar) {
             const menuItem = findItem(button.dataset.menuId, menuBar.items) ||
               findItem(button.dataset.menuId, menuBar.tray);
             if (!menuItem) {
+              return;
+            }
+            if ('can' in menuItem && menuItem.can && !menuItem.can(editor)) {
               return;
             }
 

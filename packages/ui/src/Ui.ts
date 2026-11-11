@@ -261,7 +261,7 @@ export class Ui {
 
   async setPopupContent(popup: HTMLElement, spec: DOMOutputSpec) {
     const contentElement = await this.toDOMElement(spec) as HTMLElement;
-    popup.innerHTML = '';
+    popup.replaceChildren();
     popup.appendChild(contentElement);
   }
 

@@ -168,7 +168,7 @@ class PasteState {
               break;
             case 'replaceBody':
               for (const node of matched) {
-                body.innerHTML = '';
+                body.replaceChildren();
                 body.appendChild(node);
               }
               break;

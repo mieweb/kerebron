@@ -1,11 +1,9 @@
 import { DOMOutputSpec, MarkType, NodeType } from 'prosemirror-model';
 import { EditorState } from 'prosemirror-state';
 
-import { toDOMElement } from '@kerebron/ui/utilities/toDOMElement';
-
-import { getIcon } from '@kerebron/ui/icons';
 import { CoreEditor } from '@kerebron/editor';
-import { type Ui } from '@kerebron/ui';
+import { toDOMElement } from '@kerebron/ui/utilities/toDOMElement';
+import { getIcon } from '@kerebron/ui/icons';
 
 import { MenuBar, MenuNode } from './model.ts';
 
@@ -115,7 +113,7 @@ export function renderMenu(
   editor: CoreEditor,
 ): { update: () => void } {
   const update = () => {
-    menuElement.innerHTML = '';
+    menuElement.replaceChildren();
     const menuBarElement = toDOMElement([
       'ul',
       { class: 'kb-menu__bar' },

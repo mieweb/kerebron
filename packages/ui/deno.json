@@ -11,13 +11,15 @@
     "./utilities/dom": "./src/utilities/dom.ts",
     "./popup": "./src/popup/mod.ts",
     "./popup/utils": "./src/popup/utils.ts",
-    "./popup/ListRenderer": "./src/popup/ListRenderer.ts",
     "./autocomplete": "./src/autocomplete/mod.ts",
     "./autocomplete/AutocompletePlugin": "./src/autocomplete/AutocompletePlugin.ts",
     "./hover": "./src/hover/mod.ts",
     "./events": "./src/events/mod.ts",
     "./diagnostics": "./src/diagnostics/mod.ts",
     "./spellcheckDocument": "./src/diagnostics/spellcheckDocument.ts",
-    "./OverLayer": "./src/popup/OverLayer.ts"
+    "./OverLayer": "./src/popup/OverLayer.ts",
+    "./templates": "./src/templates/mod.ts",
+    "./templates/bootstrap": "./src/templates/bootstrap/bootstrapTemplateRegistry.ts",
+    "./templates/roomTemplateRegistry": "./src/templates/roomTemplateRegistry.ts"
   }
 }

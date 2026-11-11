@@ -2,15 +2,15 @@ import * as lsp from 'vscode-languageserver-protocol';
 
 import { Plugin } from 'prosemirror-state';
 
-import { Extension, TextRange } from '@kerebron/editor';
+import { Extension } from '@kerebron/editor';
 import type { HoverMatch, HoverSource, HoverTrigger } from '@kerebron/ui/hover';
 import {
   AutocompleteSource,
   createPosMatcher,
 } from '@kerebron/ui/autocomplete';
-import { ListRenderer } from '@kerebron/ui/popup/ListRenderer';
 import { bindSelect } from '@kerebron/ui/events';
 import { Ui } from '@kerebron/ui';
+import { TemplatesRegistry } from '@kerebron/ui/templates';
 
 import { Transport } from './LSPClient.ts';
 import { LSPPlugin, LSPPluginKey } from './LSPPlugin.ts';
@@ -47,7 +47,6 @@ export class ExtensionLsp extends Extension {
 
       this.editor.run.addDiagnosticHover();
 
-      const listRenderer = new ListRenderer();
       const ui: Ui = this.editor.ci.resolve('ui');
 
       const hoverSource: HoverSource = {
@@ -243,14 +242,18 @@ export class ExtensionLsp extends Extension {
             return;
           }
 
+          const templates: TemplatesRegistry = this.editor.ci.resolve(
+            'templates',
+          );
+
           const popup = createPopup();
           ui.setPopupContent(
             popup,
-            listRenderer.renderList(
-              items
+            templates['dropdown-list']({
+              items: items
                 .map((i, idx) => ({ label: i.label, value: String(idx) }))
                 .slice(0, 15),
-            ),
+            }),
           );
           bindSelect(popup, (value) => {
             this.editor.chain().replaceRangeText(match.range, value).run();

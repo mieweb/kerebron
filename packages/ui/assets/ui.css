@@ -1,6 +1,7 @@
 @import 'icon.css';
 @import 'overlayer.css';
 @import 'popup.css';
+@import 'form.css';
 
 /* Autocomplete */
 .kb-autocomplete__wrapper {

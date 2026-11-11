@@ -1,0 +1,82 @@
+form.kb--default-template {
+  display: grid;
+  gap: 12px;
+}
+
+.kb--default-template fieldset {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px 8px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.kb--default-template label {
+  display: contents;
+}
+
+.kb--default-template input,
+.kb--default-template select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
+.kb--default-template input[type="file"] {
+  width: auto;
+}
+
+.kb--default-template header {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.kb--default-template footer {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.kb--default-template button {
+  background: var(--kb-color-surface);
+  border: 1px solid var(--kb-color-border);
+  border-radius: var(--kb-radius-md);
+  box-shadow: var(--kb-shadow-lg);
+  padding: 5px 12px;
+}
+
+.kb--default-template fieldset {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  padding: 0;
+}
+
+.kb--default-template fieldset label {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  gap: 8px;
+}
+
+.kb--default-template fieldset input {
+  grid-column: 2;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
+.kb--default-template fieldset button {
+  grid-column: 3;
+  white-space: nowrap;
+}
+
+.kb--default-template fieldset input[type="file"] {
+  width: auto;
+}

@@ -12,6 +12,10 @@ import { Ui } from './Ui.ts';
 import { bindReplace, bindSearch } from './events/searchBindings.ts';
 import { PopupOptions } from './popup/types.ts';
 
+import type { TemplatesRegistry } from './templates/mod.ts';
+import { popupTemplateRegistry } from './templates/popupTemplateRegistry.ts';
+import { roomTemplateRegistry } from './templates/roomTemplateRegistry.ts';
+
 export class ExtensionUi extends Extension {
   name = 'ui';
 
@@ -78,26 +82,12 @@ export class ExtensionUi extends Extension {
               layer: 'overlayer',
               group: 'dialog',
             });
-            await ui.setPopupContent(popup, [
-              'form',
-              [
-                'fieldset',
-                ['legend', 'Insert image'],
-                ['br'],
-                ['label', 'Choose image', ['input', {
-                  type: 'file',
-                  accept: 'image/*',
-                  required: true,
-                }]],
-                ['br'],
-                ['label', 'Title'],
-                ['input', { name: 'title', value: attrs && attrs.title }],
-                ['br'],
-                ['label', 'Description'],
-                ['input', { name: 'alt', value: attrs && attrs.alt }],
-              ],
-              ['button', { type: 'submit' }, 'Submit'],
-            ]);
+
+            const templates: TemplatesRegistry = editor.ci.resolve('templates');
+            await ui.setPopupContent(
+              popup,
+              templates['insert-image']({ attrs }),
+            );
 
             popup.addEventListener('submit', async (event: SubmitEvent) => {
               event.preventDefault();
@@ -162,25 +152,12 @@ export class ExtensionUi extends Extension {
               layer: 'overlayer',
               group: 'dialog',
             });
-            await ui.setPopupContent(popup, [
-              'form',
-              [
-                'fieldset',
-                ['legend', 'Create a link'],
-                ['br'],
-                ['label', 'Link target', ['input', {
-                  name: 'href',
-                  value: attrs && attrs.href,
-                  required: true,
-                }]],
-                ['br'],
-                ['label', 'Title', ['input', {
-                  name: 'title',
-                  value: attrs && attrs.title,
-                }]],
-              ],
-              ['button', { type: 'submit' }, 'Submit'],
-            ]);
+
+            const templates: TemplatesRegistry = editor.ci.resolve('templates');
+            await ui.setPopupContent(
+              popup,
+              templates['insert-link']({ attrs }),
+            );
 
             popup.addEventListener('submit', (event: SubmitEvent) => {
               event.preventDefault();
@@ -224,15 +201,11 @@ export class ExtensionUi extends Extension {
             const { from, to } = state.selection;
             const text = state.doc.textBetween(from, to, '\n');
 
-            await ui.setPopupContent(popup, [
-              'form',
-              ['fieldset', ['legend', 'Search'], ['br'], ['label', 'Text', [
-                'input',
-                { name: 'search', value: text, tabindex: 1 },
-              ]]],
-              ['button', { type: 'submit', name: 'prev', tabindex: 3 }, 'Prev'],
-              ['button', { type: 'submit', name: 'next', tabindex: 2 }, 'Next'],
-            ]);
+            const templates: TemplatesRegistry = editor.ci.resolve('templates');
+            await ui.setPopupContent(
+              popup,
+              templates['dialog-search']({ text }),
+            );
 
             bindSearch(popup, editor);
             (popup.querySelector('[name=search]') as HTMLInputElement).focus();
@@ -261,23 +234,11 @@ export class ExtensionUi extends Extension {
             const { from, to } = state.selection;
             const text = state.doc.textBetween(from, to, '\n');
 
-            await ui.setPopupContent(popup, [
-              'form',
-              [
-                'fieldset',
-                ['legend', 'Search & Replace'],
-                ['br'],
-                ['label', 'Search', ['input', { name: 'search', value: text }]],
-                ['br'],
-                ['label', 'Replace', ['input', { name: 'replace', value: '' }]],
-              ],
-              ['button', { type: 'submit', name: 'replace_next' }, 'Replace'],
-              [
-                'button',
-                { type: 'submit', name: 'replace_all' },
-                'Replace all',
-              ],
-            ]);
+            const templates: TemplatesRegistry = editor.ci.resolve('templates');
+            await ui.setPopupContent(
+              popup,
+              templates['dialog-replace']({ text, replace: '' }),
+            );
 
             bindReplace(popup, editor);
             (popup.querySelector('[name=search]') as HTMLInputElement).focus();
@@ -308,5 +269,10 @@ export class ExtensionUi extends Extension {
   override created(): void {
     const ui = new Ui(this.editor);
     this.editor.ci.register('ui', ui);
+    const templates: TemplatesRegistry = {
+      ...popupTemplateRegistry,
+      ...roomTemplateRegistry,
+    };
+    this.editor.ci.register('templates', templates);
   }
 }

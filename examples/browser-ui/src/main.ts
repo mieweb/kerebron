@@ -11,12 +11,12 @@ import {
   matchRegexAtPos,
 } from '@kerebron/ui/autocomplete';
 import type { HoverMatch, HoverSource, HoverTrigger } from '@kerebron/ui/hover';
-import { ListRenderer } from '@kerebron/ui/popup/ListRenderer';
 import { bindSelect } from '@kerebron/ui/events';
 
 import { attachSpellcheck } from './attachSpellcheck.ts';
 import { attachMenu } from './attachMenu.ts';
 import { attachTestButtons } from './attachTestButtons.ts';
+import type { TemplatesRegistry } from '@kerebron/ui/templates';
 
 const editor = CoreEditor.create({
   uri: 'test.md',
@@ -46,13 +46,13 @@ await editor.loadDocumentText('text/markdown', uiMarkdown);
 
 const ui: Ui = editor.ci.resolve('ui');
 
-const listRenderer = new ListRenderer();
-
 const keyboardAutocomplete: AutocompleteSource = {
   triggerKeys: ['ctrl- '],
   match: createPosMatcher(),
-  processRequest: async function (trigger, match, createPopup) {
+  processRequest: async function (_trigger, match, createPopup) {
     await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const templates: TemplatesRegistry = editor.ci.resolve('templates');
 
     const items = [
       '@ctrlspace_trigger',
@@ -69,7 +69,9 @@ const keyboardAutocomplete: AutocompleteSource = {
     const popup = createPopup();
     ui.setPopupContent(
       popup,
-      listRenderer.renderList(items.map((i) => ({ value: i, label: i }))),
+      templates['dropdown-list']({
+        items: items.map((i) => ({ value: i, label: i })),
+      }),
     );
     bindSelect(
       popup,
@@ -87,8 +89,9 @@ editor.chain().addAutocompleteSource(keyboardAutocomplete).run();
 const regexAutocomplete: AutocompleteSource = {
   match: createRegexMatcher(editor, [/[@\/][^\s@\/]*/]),
   processRequest: async function (trigger, match, createPopup) {
-    console.log('source2.processRequest', trigger);
     await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const templates: TemplatesRegistry = editor.ci.resolve('templates');
 
     if (match.text.startsWith('@')) {
       const items = [
@@ -106,7 +109,9 @@ const regexAutocomplete: AutocompleteSource = {
       const popup = createPopup();
       ui.setPopupContent(
         popup,
-        listRenderer.renderList(items.map((i) => ({ label: i, value: i }))),
+        templates['dropdown-list']({
+          items: items.map((i) => ({ label: i, value: i })),
+        }),
       );
       bindSelect(
         popup,
@@ -126,7 +131,9 @@ const regexAutocomplete: AutocompleteSource = {
       const popup = createPopup();
       ui.setPopupContent(
         popup,
-        listRenderer.renderList(items.map((i) => ({ label: i, value: i }))),
+        templates['dropdown-list']({
+          items: items.map((i) => ({ label: i, value: i })),
+        }),
       );
       bindSelect(popup, (value) => {
         editor.chain().replaceRangeText(

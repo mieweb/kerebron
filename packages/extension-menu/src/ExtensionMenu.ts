@@ -99,7 +99,11 @@ export class ExtensionMenu extends Extension {
           dispatch(tr);
         }
 
-        return true;
+        const pluginsState = MenuPluginKey.getState(state);
+        if (!pluginsState) {
+          return false;
+        }
+        return pluginsState.collapsedMenuItems.length > 0;
       };
     };
 

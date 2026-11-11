@@ -14,7 +14,7 @@ if (!textEditor) {
 const buffer = new TextEncoder().encode(
   richEditor.innerHTML,
 );
-richEditor.innerHTML = '';
+richEditor.replaceChildren();
 
 const editor1 = CoreEditor.create({
   uri: 'test.md',
