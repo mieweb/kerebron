@@ -70,7 +70,7 @@ export function install(
     '/lsp/deno',
     upgradeWebSocket((c) => {
       return proxyProcess(
-        '/home/gg/workspaces/mieweb/deno/target/debug/deno',
+        'deno',
         // ['-L', 'debug', 'lsp'],
         ['lsp'],
         c,
