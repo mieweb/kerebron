@@ -3,7 +3,7 @@ import { CodeEditorKit } from '@kerebron/editor-kits/CodeEditorKit';
 import { LspEditorKit } from '@kerebron/lsp/LspEditorKit';
 import type { LSPTransportGetter, Transport } from '@kerebron/lsp';
 import { LSPWebSocketTransport } from '@kerebron/lsp/LSPWebSocketTransport';
-import { YjsEditorKit } from '@kerebron/extension-yjs/YjsEditorKit';
+import { YjsEditorKit } from '@kerebron/yjs/YjsEditorKit';
 
 import YjsRoom from '@kerebron/custom-elements/YjsRoom';
 import type {
@@ -49,7 +49,7 @@ window.addEventListener('load', async () => {
     element: document.getElementById('editor') || undefined,
     editorKits: [
       new CodeEditorKit('json'),
-      YjsEditorKit.createFrom(),
+      YjsEditorKit.createFrom({ addMenu: true }),
       LspEditorKit.createFrom({ getLspTransport }),
       // lsp-ws-proxy --listen 9991 -- npx yaml-language-server --stdio
       // lsp-ws-proxy --listen 9991 -- npx vscode-json-languageserver --stdio

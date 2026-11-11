@@ -3,7 +3,7 @@ import * as Y from 'yjs';
 import { EditorState } from 'prosemirror-state';
 
 import { DummyEditorView } from '@kerebron/editor/DummyEditorView';
-import { debugYDoc } from '@kerebron/extension-yjs/debug';
+import { debugYDoc } from '@kerebron/yjs/debug';
 
 import { createEmptyMeta } from '../src/binding/convertUtils.ts';
 import {

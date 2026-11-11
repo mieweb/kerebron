@@ -182,7 +182,7 @@ interface WebsocketProviderOpts {
  *
  * @example
  *   import * as Y from 'yjs'
- *   import { WebsocketProvider } from '@kerebron/extension-yjs/WebsocketProvider'
+ *   import { WebsocketProvider } from '@kerebron/yjs/WebsocketProvider'
  *   const doc = new Y.Doc()
  *   const provider = new WebsocketProvider('http://localhost:1234', 'my-document-name', doc)
  */

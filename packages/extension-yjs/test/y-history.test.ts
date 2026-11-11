@@ -13,7 +13,7 @@ import { EditorView } from 'prosemirror-view';
 import { prependNewParagraph } from './utils/pmCommands.ts';
 import { Command } from '@kerebron/editor/commands';
 import { assetLoad } from '@kerebron/wasm/deno';
-import { debugYNode } from '@kerebron/extension-yjs/debug';
+import { debugYNode } from '@kerebron/yjs/debug';
 
 function createNewDocEditor(port: number, user = 'test-user') {
   const editor = CoreEditor.create({

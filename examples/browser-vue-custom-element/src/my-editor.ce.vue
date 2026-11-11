@@ -15,7 +15,7 @@
 import { CoreEditor } from '@kerebron/editor';
 
 import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
-import { YjsEditorKit } from '@kerebron/extension-yjs/YjsEditorKit';
+import { YjsEditorKit } from '@kerebron/yjs/YjsEditorKit';
 
 export default {
   name: 'my-editor',
@@ -79,13 +79,13 @@ export default {
       this.editor.run.addMenuItem(menuFile, 0);
     },
     async init() {
-      this.$refs.editor.innerHTML = '';
+      this.$refs.editor.replaceChildren();
 
       this.editor = CoreEditor.create({
         element: this.$refs.editor,
         editorKits: [
           new AdvancedEditorKit(),
-          YjsEditorKit.createFrom(),
+          YjsEditorKit.createFrom({ addMenu: true }),
         ]
       });
 

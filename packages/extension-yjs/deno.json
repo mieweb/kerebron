@@ -1,5 +1,5 @@
 {
-  "name": "@kerebron/extension-yjs",
+  "name": "@kerebron/yjs",
   "tasks": {},
   "imports": {
     "hono": "npm:hono@4.10.7"
@@ -10,6 +10,7 @@
     "./YjsProvider": "./src/YjsProvider.ts",
     "./WebsocketProvider": "./src/WebsocketProvider.ts",
     "./MarkYChange": "./src/MarkYChange.ts",
+    "./ui/RoomController": "./src/ui/RoomController.ts",
     "./debug": "./src/debug.ts"
   }
 }

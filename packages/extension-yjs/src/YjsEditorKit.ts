@@ -1,19 +1,22 @@
 import * as Y from 'yjs';
-import { WebsocketProvider } from '@kerebron/extension-yjs/WebsocketProvider';
 
 import type { AnyExtensionOrReq, EditorKit } from '@kerebron/editor';
-import { ExtensionYjs } from '@kerebron/extension-yjs';
-import {
-  CreateYjsProvider,
-  YjsProvider,
-} from '@kerebron/extension-yjs/YjsProvider';
 
-import { MarkYChange } from '@kerebron/extension-yjs/MarkYChange';
+import { WebsocketProvider } from './WebsocketProvider.ts';
+import { ExtensionYjs, YjsConfig } from './ExtensionYjs.ts';
+import { CreateYjsProvider, YjsProvider } from './YjsProvider.ts';
+
+import { MarkYChange } from './MarkYChange.ts';
 
 export class YjsEditorKit implements EditorKit {
   name = 'yjs-editor';
 
-  static createFrom(url?: string) {
+  static createFrom(url?: string | YjsConfig, config?: YjsConfig) {
+    if (url && 'object' === typeof url) {
+      config = url;
+      url = undefined;
+    }
+
     if (!url) {
       const protocol = globalThis.location.protocol === 'http:'
         ? 'ws:'
@@ -21,17 +24,10 @@ export class YjsEditorKit implements EditorKit {
       url = protocol + '//' + globalThis.location.host + '/yjs';
     }
 
-    return new YjsEditorKit(url);
-  }
-
-  constructor(public url: string) {
-  }
-
-  getExtensions(): AnyExtensionOrReq[] {
     const createYjsProvider: CreateYjsProvider = (roomId: string) => {
       const ydoc = new Y.Doc({ gc: false });
       const wsProvider: YjsProvider = new WebsocketProvider(
-        this.url,
+        url,
         roomId,
         ydoc,
       );
@@ -39,9 +35,24 @@ export class YjsEditorKit implements EditorKit {
       return [wsProvider, ydoc];
     };
 
+    if (!config) {
+      config = { createYjsProvider };
+    }
+
+    if (!config.createYjsProvider) {
+      config.createYjsProvider = createYjsProvider;
+    }
+
+    return new YjsEditorKit(url, config);
+  }
+
+  constructor(public url: string, private readonly config: YjsConfig) {
+  }
+
+  getExtensions(): AnyExtensionOrReq[] {
     return [
       new MarkYChange(),
-      new ExtensionYjs({ createYjsProvider }),
+      new ExtensionYjs({ ...this.config }),
     ];
   }
 }

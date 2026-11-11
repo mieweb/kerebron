@@ -12,7 +12,7 @@
 <script lang="ts">
 import { CoreEditor } from '@kerebron/editor';
 import { icons } from '@kerebron/ui/icons';
-import { YjsEditorKit } from '@kerebron/extension-yjs/YjsEditorKit';
+import { YjsEditorKit } from '@kerebron/yjs/YjsEditorKit';
 import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
 import { createAssetLoad } from '@kerebron/wasm/web';
 
@@ -34,7 +34,7 @@ export default {
         assetLoad: createAssetLoad('/wasm'),
         editorKits: [
           new AdvancedEditorKit(),
-          YjsEditorKit.createFrom()
+          YjsEditorKit.createFrom({ addMenu: true })
         ],
       });
 
