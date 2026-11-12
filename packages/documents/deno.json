@@ -1,0 +1,4 @@
+{
+  "name": "@kerebron/documents",
+  "exports": "./src/mod.ts"
+}

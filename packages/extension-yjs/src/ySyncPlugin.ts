@@ -3,10 +3,13 @@ import { Plugin } from 'prosemirror-state';
 
 import { ySyncPluginKey, yUndoPluginKey } from './keys.ts';
 import type { CreateYjsProvider } from './YjsProvider.ts';
-import { PmYjsBinding } from './binding/PmYjsBinding.ts';
+import {
+  type BodyBindingOptions,
+  PmYjsBinding,
+} from './binding/PmYjsBinding.ts';
 import { CoreEditor } from '@kerebron/editor';
 
-interface YSyncOpts {
+interface YSyncOpts extends BodyBindingOptions {
   permanentUserData?: Y.PermanentUserData;
   onFirstRender?: () => void;
   roomId?: string;
@@ -52,6 +55,7 @@ export const ySyncPlugin = (
   {
     onFirstRender = () => {
     },
+    ...bindingOptions
   }: YSyncOpts = {},
 ): any => {
   let initialContentChanged = false;
@@ -66,7 +70,7 @@ export const ySyncPlugin = (
     state: {
       init: (_initargs, state): YSyncPluginState => {
         return {
-          binding: new PmYjsBinding(editor),
+          binding: new PmYjsBinding(editor, bindingOptions),
           isChangeOrigin: false,
           isUndoRedoOperation: false,
           permanentUserData: undefined,

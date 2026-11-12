@@ -1,0 +1,49 @@
+From: =?UTF-8?B?U3ludGhldGljIFNlbmRlcg==?= <sender@example.test>
+To: User <user@example.test>
+Cc: Colleague <colleague@example.test>
+Subject: =?UTF-8?B?U3ludGhldGljIHJlY29yZCDwn5iA?=
+Message-ID: <record-1@example.test>
+Date: Thu, 12 Nov 2026 10:00:00 +0000
+X-Synthetic: first
+X-Synthetic: second
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed-test"
+
+--mixed-test
+Content-Type: multipart/related; boundary="related-test"
+
+--related-test
+Content-Type: multipart/alternative; boundary="alternative-test"
+
+--alternative-test
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Please review the synthetic record. Caf=C3=A9.
+--alternative-test
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<p>Please review the synthetic record. Caf=C3=A9.</p><img src=3D"cid:record-image@example.test"><img src=3D"https://example.test/remote.png">
+--alternative-test--
+--related-test
+Content-Type: image/png
+Content-ID: <record-image@example.test>
+Content-Disposition: inline; filename="record.png"
+Content-Transfer-Encoding: base64
+
+iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jCuoAAAAASUVORK5CYII=
+--related-test--
+--mixed-test
+Content-Type: application/pdf
+Content-Disposition: attachment; filename*=UTF-8''synthetic%20record.pdf
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQKJXN5bnRoZXRpYy10ZXN0LW9ubHkKJSVFT0Y=
+--mixed-test
+Content-Type: application/x-synthetic-opaque
+Content-Disposition: attachment; filename="opaque.bin"
+Content-Transfer-Encoding: base64
+
+AAEC/v8=
+--mixed-test--

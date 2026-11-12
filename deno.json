@@ -3,6 +3,9 @@
   "workspace": [
     "packages/pm",
     "packages/editor",
+    "packages/documents",
+    "packages/document-mime",
+    "packages/document-yjs",
     "packages/editor-browserless",
     "packages/editor-react",
     "packages/editor-kits",
@@ -50,6 +53,7 @@
     ]
   },
   "tasks": {
+    "build:documents": "deno run -A utils/build_document_packages.ts",
     "build:all": "deno task build:ext-odt && deno task -f @kerebron build",
     "dev": "deno watch --allow-net --allow-ffi --allow-read --allow-env --allow-sys --allow-write --allow-run --node-modules-dir ./examples/server-hono/src/main.ts",
     "build:legacy-compat": "deno task -f legacy-compat build",
@@ -57,7 +61,7 @@
     "build:ext-wasm": "deno task -f @kerebron/wasm build",
     "markdown:dialects": "deno run --no-check --no-lock --allow-read --allow-env --allow-run=pandoc,git --allow-write=docs/markdown-dialects.md utils/markdown-dialects/compare.ts",
     "test:spec": "deno test --no-check --allow-env --allow-read=. --allow-write=utils/markdown-dialects/specs utils/markdown-dialects/",
-    "test:pre-push": "deno test --no-check --allow-env --allow-net=localhost --allow-read=. --allow-write=. packages/extension-markdown/test/ packages/extension-odt/test/ packages/extension-yjs/test/ utils/markdown-dialects/",
+    "test:pre-push": "deno test --no-check --allow-env --allow-net=localhost --allow-read=. --allow-write=. packages/extension-markdown/test/ packages/extension-odt/test/ packages/extension-yjs/test/ packages/documents/test/ packages/document-mime/test/ packages/document-yjs/test/ utils/markdown-dialects/",
     "test:ui": "deno task -f @kerebron/ui test:ui",
     "postinstall": "ln -sf ../../utils/hooks/commit-msg .git/hooks/commit-msg && ln -sf ../../utils/hooks/pre-commit .git/hooks/pre-commit && ln -sf ../../utils/hooks/pre-push .git/hooks/pre-push",
     "clean": "rm -rf examples/*/.vite examples/*/dist packages/*/.vite packages/*/dist"
