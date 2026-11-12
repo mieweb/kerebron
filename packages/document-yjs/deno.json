@@ -1,0 +1,4 @@
+{
+  "name": "@kerebron/document-yjs",
+  "exports": "./src/mod.ts"
+}

@@ -37,7 +37,18 @@ export const createMutex = (): Mutex => {
 
 type ConnectionState = 'idle' | 'joining' | 'synced' | 'leaving' | 'error';
 
-export type YjsData = { ydoc: Y.Doc; xmlFragment: Y.XmlFragment };
+export type YjsData = {
+  ydoc: Y.Doc;
+  xmlFragment: Y.XmlFragment;
+  origin?: unknown;
+};
+
+export interface BodyBindingOptions {
+  fragment?: Y.XmlFragment | string;
+  providerOwnership?: 'owned' | 'borrowed';
+  initializeFromEditor?: boolean;
+  origin?: unknown;
+}
 
 export class PmYjsBinding extends EventTarget {
   private provider: YjsProvider | undefined;
@@ -64,7 +75,10 @@ export class PmYjsBinding extends EventTarget {
   private permanentUserData: Y.PermanentUserData | undefined;
   private user: User | undefined;
 
-  constructor(private readonly editor: CoreEditor) {
+  constructor(
+    private readonly editor: CoreEditor,
+    private readonly options: BodyBindingOptions = {},
+  ) {
     super();
 
     this.diffViewer = new DiffViewer();
@@ -105,7 +119,7 @@ export class PmYjsBinding extends EventTarget {
       return;
     }
 
-    if (this.yjs && user.id) {
+    if (this.yjs && user.id && this.options.providerOwnership !== 'borrowed') {
       const { ydoc } = this.yjs;
       this.permanentUserData = new Y.PermanentUserData(ydoc);
       this.permanentUserData.setUserMapping(ydoc, ydoc.clientID, user.id);
@@ -122,11 +136,7 @@ export class PmYjsBinding extends EventTarget {
     this.connectionState = 'joining';
     this.hasImported = false;
 
-    if (this.provider) {
-      this.provider.removeEventListener('synced', this.syncedHandler);
-      this.provider.destroy();
-      this.provider = undefined;
-    }
+    this.detachProvider();
 
     const [provider, ydoc] = createYjsProvider(
       roomId,
@@ -139,11 +149,24 @@ export class PmYjsBinding extends EventTarget {
     this.bindingMetadata.isOverlappingMark.clear();
     this.diffViewer.reset();
 
-    const fieldName = 'kerebron:' + this.editor.schema.topNodeType.name;
-    this.yjs = { ydoc, xmlFragment: ydoc.getXmlFragment(fieldName) };
-    this.permanentUserData = new Y.PermanentUserData(ydoc);
+    const fragment = this.options.fragment;
+    const xmlFragment = typeof fragment === 'string'
+      ? ydoc.getXmlFragment(fragment)
+      : fragment ??
+        ydoc.getXmlFragment('kerebron:' + this.editor.schema.topNodeType.name);
+    if (xmlFragment.doc !== ydoc) {
+      throw new Error('Borrowed fragment must belong to the provided Y.Doc.');
+    }
+    this.yjs = {
+      ydoc,
+      xmlFragment,
+      origin: this.options.origin ?? ySyncPluginKey,
+    };
+    this.permanentUserData = this.options.providerOwnership === 'borrowed'
+      ? undefined
+      : new Y.PermanentUserData(ydoc);
     if (this.user?.id) {
-      this.permanentUserData.setUserMapping(ydoc, ydoc.clientID, this.user.id);
+      this.permanentUserData?.setUserMapping(ydoc, ydoc.clientID, this.user.id);
     }
 
     this.selectionStash = new SelectionStash(
@@ -157,14 +180,33 @@ export class PmYjsBinding extends EventTarget {
 
     tr.setMeta('yjs:setAwareness', provider.awareness);
     tr.setMeta('setYjs', this.yjs);
+    if (provider.synced) {
+      queueMicrotask(() => {
+        if (
+          this.provider === provider && this.yjs?.xmlFragment === xmlFragment &&
+          !this.hasImported
+        ) {
+          this.importRemoteYdoc();
+        }
+      });
+    }
+  }
+
+  private detachProvider() {
+    this.provider?.removeEventListener('synced', this.syncedHandler);
+    if (this.provider && this.options.providerOwnership !== 'borrowed') {
+      this.provider.destroy();
+    }
+    this.provider = undefined;
+    this.selectionStash?.destroy();
+    this.selectionStash = undefined;
+    this.yjs?.xmlFragment.unobserveDeep(this._observeFunction);
+    this.yjs = undefined;
   }
 
   leaveRoom(tr: Transaction) {
     this.connectionState = 'leaving';
-    if (this.provider) {
-      this.provider.removeEventListener('synced', this.syncedHandler);
-      this.provider.destroy();
-    }
+    this.detachProvider();
 
     this.addToYjsHistory = true;
     this.provider = undefined;
@@ -196,7 +238,10 @@ export class PmYjsBinding extends EventTarget {
 
     this.addToYjsHistory = this.editor.state.doc.content.size > 2; // Non empty para
 
-    if (this.yjs.xmlFragment.length === 0) {
+    if (
+      this.yjs.xmlFragment.length === 0 &&
+      this.options.initializeFromEditor !== false
+    ) {
       this.createFromProseMirror(this.yjs);
     } else {
       this.overwriteProseMirror(this.yjs.xmlFragment);
@@ -274,7 +319,7 @@ export class PmYjsBinding extends EventTarget {
     const { ydoc, xmlFragment } = this.yjs;
 
     this.mux(() => {
-      const origin = ySyncPluginKey;
+      const origin = this.yjs?.origin ?? ySyncPluginKey;
 
       ydoc.transact((ytr) => {
         ytr.meta.set('addToYjsHistory', this.addToYjsHistory);

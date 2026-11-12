@@ -90,9 +90,12 @@ export const yUndoPlugin = ({
 
         const setYjs: YjsData | undefined = tr.getMeta('setYjs');
         if (setYjs) {
+          val.undoManager?.destroy();
           const { xmlFragment } = setYjs;
           const undoManager = new UndoManager(xmlFragment, {
-            trackedOrigins: new Set([ySyncPluginKey].concat(trackedOrigins)),
+            trackedOrigins: new Set(
+              [setYjs.origin ?? ySyncPluginKey].concat(trackedOrigins),
+            ),
             deleteFilter: (item) => defaultDeleteFilter(item, protectedNodes),
             captureTransaction: (ytr) => {
               return ytr.meta.get('addToYjsHistory') !== false;

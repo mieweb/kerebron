@@ -1,0 +1,7 @@
+From: Sender <sender@example.test>
+To: User <user@example.test>
+Subject: Single-part synthetic mail
+Message-ID: <plain-1@example.test>
+Content-Type: text/plain; charset=UTF-8
+
+This message is still email without MIME-Version or multipart structure.

@@ -1,0 +1,9 @@
+{
+  "name": "@kerebron/document-mime",
+  "exports": "./src/mod.ts",
+  "imports": {
+    "postal-mime": "npm:postal-mime@4.0.5",
+    "mimetext/browser": "npm:mimetext@3.0.24/browser",
+    "html-to-text": "npm:html-to-text@9.0.5"
+  }
+}
