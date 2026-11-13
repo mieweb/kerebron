@@ -4628,6 +4628,22 @@
       "npm:yjs@13.6.30"
     ],
     "members": {
+      "examples/browser-comments": {
+        "dependencies": [
+          "npm:@vitejs/plugin-vue@6.0.7",
+          "npm:@vue/devtools-api@7.7.7",
+          "npm:vue-router@4.5.1",
+          "npm:vue@3.5.21"
+        ]
+      },
+      "examples/browser-link": {
+        "dependencies": [
+          "npm:@vitejs/plugin-vue@6.0.7",
+          "npm:@vue/devtools-api@7.7.7",
+          "npm:vue-router@4.5.1",
+          "npm:vue@3.5.21"
+        ]
+      },
       "examples/browser-link-mermaid": {
         "dependencies": [
           "npm:mermaid@11.12.2"
@@ -4661,23 +4677,7 @@
           "npm:vue@3.5.21"
         ]
       },
-      "examples/browser-vue-comments": {
-        "dependencies": [
-          "npm:@vitejs/plugin-vue@6.0.7",
-          "npm:@vue/devtools-api@7.7.7",
-          "npm:vue-router@4.5.1",
-          "npm:vue@3.5.21"
-        ]
-      },
       "examples/browser-vue-custom-element": {
-        "dependencies": [
-          "npm:@vitejs/plugin-vue@6.0.7",
-          "npm:@vue/devtools-api@7.7.7",
-          "npm:vue-router@4.5.1",
-          "npm:vue@3.5.21"
-        ]
-      },
-      "examples/browser-vue-link": {
         "dependencies": [
           "npm:@vitejs/plugin-vue@6.0.7",
           "npm:@vue/devtools-api@7.7.7",

@@ -35,7 +35,6 @@ export default {
     }
   },
   mounted() {
-    console.log(this.$refs.roomSelector);
     this.user = this.$refs.roomSelector.user;
   }
 };

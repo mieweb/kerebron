@@ -1,5 +1,5 @@
 <template>
-<my-yjs-room @change-room="setRoom" @change-user="setUser" ref="roomSelector" />
+  <my-yjs-room @change-room="setRoom" @change-user="setUser" ref="roomSelector" />
   <my-editor v-if="roomId" ref="editor" :roomId="roomId" :user="user"></my-editor>
 </template>
 
@@ -30,7 +30,6 @@ export default {
       this.roomId = event.detail;
     },
     setUser(event) {
-      console.log('setUser1', event.detail)
       if (!event.detail) {
         return;
       }
@@ -38,7 +37,7 @@ export default {
     }
   },
   mounted() {
-    console.log(this.$refs.roomSelector);
+    this.roomId = this.$refs.roomSelector.roomID;
     this.user = this.$refs.roomSelector.user;
   },
 };

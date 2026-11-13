@@ -1,4 +1,5 @@
 import { Plugin, PluginKey } from 'prosemirror-state';
+import { EditorView } from 'prosemirror-view';
 
 import { type CoreEditor } from '@kerebron/editor';
 
@@ -39,7 +40,9 @@ export class HoverPlugin<Item, TSelected> extends Plugin<HoverState> {
             oldPos !== newSelection.from
           ) {
             pluginState.clearRequest();
-            pluginState.onKeyboardNav(newSelection.$from);
+            if (editor.view instanceof EditorView) {
+              pluginState.onKeyboardNav(editor.view, newSelection.$from);
+            }
           }
 
           pluginState.navigationPending = false;

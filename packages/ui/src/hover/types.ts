@@ -12,6 +12,7 @@ export interface HoverTrigger {
   textOffset: number;
   node?: PmNode;
   uri?: string;
+  dataset?: Record<string, string>;
 }
 
 export interface HoverMatch<I = any> {

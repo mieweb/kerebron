@@ -1,5 +1,5 @@
 {
-  "name": "browser-vue-link",
+  "name": "browser-link",
   "tasks": {
     "dev": "deno run -A npm:vite",
     "build": "deno run -A npm:vite build",

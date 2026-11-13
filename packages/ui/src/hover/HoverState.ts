@@ -89,8 +89,9 @@ export class HoverState<I = any> {
     return undefined;
   }
 
-  onKeyboardNav($from: ResolvedPos) {
+  onKeyboardNav(view: EditorView, $from: ResolvedPos) {
     const uri = getRuntimeUri($from.parent) || this.editor.config.uri;
+    const domElement = view.nodeDOM($from.pos);
 
     this.dispatchMeta({
       trigger: {
@@ -99,6 +100,10 @@ export class HoverState<I = any> {
         pos: $from.pos,
         textOffset: $from.textOffset,
         uri,
+        dataset: { ...(domElement as HTMLElement).dataset } as Record<
+          string,
+          string
+        >,
       },
     });
   }
@@ -152,6 +157,10 @@ export class HoverState<I = any> {
               pos: localPos.pos,
               textOffset: localPos.textOffset,
               uri,
+              dataset: { ...(domElement as HTMLElement).dataset } as Record<
+                string,
+                string
+              >,
             },
           });
         }
@@ -195,6 +204,10 @@ export class HoverState<I = any> {
         textOffset: 0, // result.textOffset,
         node,
         uri: this.editor.config.uri,
+        dataset: { ...(domElement as HTMLElement).dataset } as Record<
+          string,
+          string
+        >,
       },
     });
   }

@@ -54,22 +54,54 @@ export async function markdownToHtml(
       }
 
       if (content.startsWith('SOURCE ')) {
-        const fileName = content.substring('SOURCE '.length)
-          .replaceAll('"', '');
+        const [fileName, snippet] = content.substring('SOURCE '.length)
+          .replaceAll('"', '')
+          .split('#');
+
+        const fullFileName = `/examples/${ctx.example}/${fileName}`;
 
         const retVal: PmNode[] = [];
 
-        retVal.push(
-          editor.schema.nodes.heading?.createAndFill(
-            { level: 3 },
-            editor.schema.text(fileName),
-          )!,
-        );
         try {
           const buffer = fs.readFileSync(
             examplesDir + ctx.example + '/' + fileName,
           );
-          const codeText = new TextDecoder().decode(buffer);
+          let codeText = new TextDecoder().decode(buffer);
+          const lines = codeText.split('\n');
+
+          let start = -1;
+          let end = -1;
+
+          if (snippet) {
+            for (let rowNo = 0; rowNo < lines.length; rowNo++) {
+              if (start === -1 && lines[rowNo].indexOf(' ' + snippet) > -1) {
+                start = rowNo;
+              }
+              if (end === -1 && lines[rowNo].indexOf(' /' + snippet) > -1) {
+                end = rowNo;
+              }
+            }
+          }
+
+          if (start >= 0 && end > start) {
+            codeText = lines.slice(start, end + 1)
+              .map((line, no) => (no + start + 1) + ' ' + line)
+              .join('\n');
+
+            retVal.push(
+              editor.schema.nodes.heading?.createAndFill(
+                { level: 3 },
+                editor.schema.text(`${fullFileName}:${start + 1}-${end + 1}`),
+              )!,
+            );
+          } else {
+            retVal.push(
+              editor.schema.nodes.heading?.createAndFill(
+                { level: 3 },
+                editor.schema.text(fullFileName),
+              )!,
+            );
+          }
 
           retVal.push(
             editor.schema.nodes.code_block.createAndFill(

@@ -1,13 +1,11 @@
 <template>
-  <div class="d-flex flex-row" style="height: 85vh">
-    <div>
+  <div class="d-flex" style="height: 85vh">
+    <div class="flex-fill w-50">
       <div ref="editor"></div>
     </div>
-    <div>
-      <div>
-        <h5>Markdown</h5>
-        <pre>{{ md }}</pre>
-      </div>
+    <div class="flex-fill w-50">
+      <h5>Markdown</h5>
+      <pre>{{ md }}</pre>
     </div>
   </div>
 </template>
@@ -126,6 +124,17 @@ export default {
 };
 </script>
 <style>
-@import '@kerebron/editor/assets/index.css';
-@import '@kerebron/editor-kits/assets/AdvancedEditorKit.css';
+  /* This CSS is isolated from website CSS */
+  @import '@kerebron/editor/assets/index.css';
+  @import '@kerebron/editor-kits/assets/AdvancedEditorKit.css';
+
+  .d-flex {
+    display: flex;
+  }
+  .flex-fill {
+    flex: fill;
+  }
+  .w-50 {
+    width: 50%;
+  }
 </style>

@@ -1,9 +1,9 @@
 <template>
-  <div>
-    <div>
+  <div class="d-flex">
+    <div class="flex-fill w-50">
       <div ref="editor" style="height: 50vh"></div>
     </div>
-    <div>
+    <div class="flex-fill w-50">
       <h5>Markdown</h5>
       <pre>{{ md }}</pre>
     </div>

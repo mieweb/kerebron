@@ -20,19 +20,21 @@ export async function install(
   );
 
   for (const example of examples) {
-    const readmeMd = fs.readFileSync(examplesDir + example.name + '/README.md');
-
-    const readmeHtml = await markdownToHtml(readmeMd, {
-      example: example.name,
-    });
-
-    const pageHtml = await renderTemplate('example.vto', {
-      readmeHtml,
-      examples,
-      toc,
-    });
-
     app.get('/examples/' + example.name + '.html', async (c) => {
+      const readmeMd = fs.readFileSync(
+        examplesDir + example.name + '/README.md',
+      );
+
+      const readmeHtml = await markdownToHtml(readmeMd, {
+        example: example.name,
+      });
+
+      const pageHtml = await renderTemplate('example.vto', {
+        readmeHtml,
+        examples,
+        toc,
+      });
+
       try {
         return c.html(pageHtml);
       } catch (error) {

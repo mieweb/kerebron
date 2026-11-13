@@ -12,24 +12,36 @@ export default class YjsRoom extends HTMLElement {
     super();
   }
 
+  get roomID() {
+    return this.controller.roomID;
+  }
+
+  get user() {
+    return this.controller.user;
+  }
+
   async connectedCallback() {
     this.controller.bindEvents(this);
-    await this.controller.init();
-    this.renderForm();
     this.controller.addEventListener('change-room', (event) => {
       if (!this.isConnected) {
         return;
       }
       this.renderForm();
-      this.dispatchEvent(event);
+      this.dispatchEvent(
+        new CustomEvent(event.type, { detail: (event as CustomEvent).detail }),
+      );
     });
     this.controller.addEventListener('change-user', (event) => {
       if (!this.isConnected) {
         return;
       }
       this.renderForm();
-      this.dispatchEvent(event);
+      this.dispatchEvent(
+        new CustomEvent(event.type, { detail: (event as CustomEvent).detail }),
+      );
     });
+    await this.controller.init();
+    this.renderForm();
   }
 
   renderForm() {
