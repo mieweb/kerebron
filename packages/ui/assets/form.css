@@ -20,6 +20,7 @@ form.kb--default-template {
 .kb--default-template input,
 .kb--default-template select {
   box-sizing: border-box;
+  border: 1px solid var(--kb-color-border);
   width: 100%;
   min-width: 0;
 }

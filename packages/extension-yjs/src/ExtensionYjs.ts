@@ -22,7 +22,7 @@ import { TemplatesRegistry } from '@kerebron/ui/templates';
 import { RoomController } from '@kerebron/yjs/ui/RoomController';
 
 export interface YjsConfig {
-  createYjsProvider: CreateYjsProvider;
+  createYjsProvider?: CreateYjsProvider;
   addMenu?: boolean;
 }
 

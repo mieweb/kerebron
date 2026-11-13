@@ -19,7 +19,7 @@
     "./spellcheckDocument": "./src/diagnostics/spellcheckDocument.ts",
     "./OverLayer": "./src/popup/OverLayer.ts",
     "./templates": "./src/templates/mod.ts",
-    "./templates/bootstrap": "./src/templates/bootstrap/bootstrapTemplateRegistry.ts",
+    "./templates/bootstrap": "./src/templates/bootstrap/mod.ts",
     "./templates/roomTemplateRegistry": "./src/templates/roomTemplateRegistry.ts"
   }
 }

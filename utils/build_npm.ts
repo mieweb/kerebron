@@ -98,7 +98,7 @@ async function copyRecursive(src: string, dest: string) {
 }
 
 async function processModule(moduleRoot: string, json: DenoJson) {
-  const version = Deno.args[0]?.replace(/^v/, '');
+  const version = Deno.args[0]?.replace(/^v/, '') || 'dev';
 
   const exports = 'string' === typeof json.exports
     ? { '.': json.exports }

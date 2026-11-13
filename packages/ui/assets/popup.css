@@ -11,6 +11,7 @@
   max-width: 90vw;
 
   background: var(--kb-color-surface);
+  color: var(--kb-color-text);
   border: 1px solid var(--kb-color-border);
   border-radius: var(--kb-radius-md);
   box-shadow: var(--kb-shadow-lg);

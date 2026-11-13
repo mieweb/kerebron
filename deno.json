@@ -63,7 +63,7 @@
     "clean": "rm -rf examples/*/.vite examples/*/dist packages/*/.vite packages/*/dist"
   },
   "imports": {
-    "@deno/dnt": "jsr:@deno/dnt@0.42.3",
+    "@deno/dnt": "jsr:@deno/dnt@0.44.0",
     "@std/assert": "jsr:@std/assert@1",
     "@std/fs": "jsr:@std/fs@1.0.19",
     "@std/path": "jsr:@std/path@1.1.2",
