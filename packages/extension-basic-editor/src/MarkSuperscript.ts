@@ -5,6 +5,13 @@ import {
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Toggle the `superscript` mark on current selection. */
+    toggleSuperscript: () => ReturnType;
+  }
+}
+
 export class MarkSuperscript extends Mark {
   override name = 'superscript';
   requires = ['doc'];

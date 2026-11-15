@@ -5,6 +5,13 @@ import {
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Toggle the `strike` (strikethrough) mark on the current selection. */
+    toggleStrike: () => ReturnType;
+  }
+}
+
 export class MarkStrike extends Mark {
   override name = 'strike';
   requires = ['doc'];

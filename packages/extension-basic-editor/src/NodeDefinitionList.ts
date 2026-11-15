@@ -5,10 +5,14 @@ import {
   type CommandFactories,
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
-import {
-  type InputRule,
-  wrappingInputRule,
-} from '@kerebron/editor/plugins/input-rules';
+import { type InputRule } from '@kerebron/editor/plugins/input-rules';
+
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Toggle a definition list around the selection. */
+    toggleDefinitionList: () => ReturnType;
+  }
+}
 
 export class NodeDefinitionList extends Node {
   override name = 'dl';

@@ -1,11 +1,18 @@
-import type { NodeSpec, NodeType } from 'prosemirror-model';
+import type { NodeSpec } from 'prosemirror-model';
 
-import { type CoreEditor, Node } from '@kerebron/editor';
+import { Node } from '@kerebron/editor';
 import {
   type CommandFactories,
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
 import { toggleList } from './commands.ts';
+
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Toggle a task list around the selection. */
+    toggleTaskList: () => ReturnType;
+  }
+}
 
 export class NodeTaskList extends Node {
   override name = 'task_list';

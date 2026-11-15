@@ -10,6 +10,13 @@ import {
   wrappingInputRule,
 } from '@kerebron/editor/plugins/input-rules';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Wrap the selection in a blockquote, or lift it out if already wrapped. */
+    toggleBlockquote: () => ReturnType;
+  }
+}
+
 export class NodeBlockquote extends Node {
   override name = 'blockquote';
   requires = ['doc'];

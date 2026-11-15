@@ -14,7 +14,15 @@ import {
   type CommandFactories,
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
+
 import { toggleList } from './commands.ts';
+
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Toggle an ordered list around the selection. */
+    toggleOrderedList: () => ReturnType;
+  }
+}
 
 export class NodeOrderedList extends Node {
   override name = 'ordered_list';

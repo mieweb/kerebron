@@ -7,7 +7,6 @@ import {
   type CommandFactories,
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
-import { type InputRule } from '@kerebron/editor/plugins/input-rules';
 import {
   getHtmlAttributes,
   setHtmlAttributes,
@@ -36,6 +35,77 @@ import {
 } from './utilities/commands.ts';
 import { Plugin } from 'prosemirror-state';
 import { Direction } from './utilities/input.ts';
+
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Insert a column after the current cell selection. */
+    addColumnAfter: () => ReturnType;
+    /** Insert a column before the current cell selection. */
+    addColumnBefore: () => ReturnType;
+    /** Insert a row after the current cell selection. */
+    addRowAfter: () => ReturnType;
+    /** Insert a row before the current cell selection. */
+    addRowBefore: () => ReturnType;
+    /** Delete the selected column(s). */
+    deleteColumn: () => ReturnType;
+    /** Delete the selected row(s). */
+    deleteRow: () => ReturnType;
+    /** Delete the entire table. */
+    deleteTable: () => ReturnType;
+    /** Merge the selected cells. */
+    mergeCells: () => ReturnType;
+    /** Split the currently selected merged cell. */
+    splitCell: () => ReturnType;
+    /** Toggle header status of the selected cell(s). */
+    toggleHeaderCell: () => ReturnType;
+    /** Toggle header status of the selected row(s). */
+    toggleHeaderRow: () => ReturnType;
+    /** Toggle header status of the selected column(s). */
+    toggleHeaderColumn: () => ReturnType;
+    /**
+     * Move the cursor to the next or previous cell.
+     *
+     * @param direction `1` for next, `-1` for previous.
+     */
+    goToNextCell: (direction: -1 | 1) => ReturnType;
+    /**
+     * Set an attribute on the selected cell(s).
+     *
+     * @param name Attribute name, e.g. `colspan`.
+     * @param value Attribute value.
+     */
+    setCellAttr: (name: string, value: unknown) => ReturnType;
+    /**
+     * Toggle header state for a table part.
+     *
+     * @param type Which part to toggle.
+     * @param options `useDeprecatedLogic` selects the legacy behavior.
+     */
+    toggleHeader: (
+      type: 'column' | 'row' | 'cell',
+      options?: { useDeprecatedLogic: boolean },
+    ) => ReturnType;
+    /**
+     * Insert a table at the current selection.
+     *
+     * @param rows Row count.
+     * @param cols Column count.
+     * @param withHeaderRow Whether the first row is a header row.
+     */
+    insertTable: (
+      options?: { rows?: number; cols?: number; withHeaderRow?: boolean },
+    ) => ReturnType;
+    /**
+     * Set a cell selection from anchor/head positions.
+     *
+     * @param position Positions with `anchorCell` and `headCell`.
+     */
+    setCellSelection: (position: {
+      anchorCell: number;
+      headCell: number;
+    }) => ReturnType;
+  }
+}
 
 export class NodeTable extends Node {
   override name = 'table';

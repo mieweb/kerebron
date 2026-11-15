@@ -21,6 +21,36 @@ import type { CreateYjsProvider } from './YjsProvider.ts';
 import { TemplatesRegistry } from '@kerebron/ui/templates';
 import { RoomController } from '@kerebron/yjs/ui/RoomController';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /**
+     * Change Room
+     *
+     * @see /example/browser-yjs
+     */
+    changeRoom: (roomId: string) => ReturnType;
+    leaveRoom: () => ReturnType;
+    /**
+     * Returns active ydoc
+     *
+     * @param promise The Y.Doc is returned using async
+     */
+    getYDoc: (promise: {
+      resolve: (doc: Y.Doc) => void;
+      reject: (reason: any) => void;
+    }) => ReturnType;
+    getYSnapshot: ({ resolve, reject }: {
+      resolve: (snapshot: Uint8Array) => void;
+      reject: (reason: any) => void;
+    }) => ReturnType;
+    setYSnapshot: (opts: {
+      prevSnapshot: Uint8Array;
+      snapshot: Uint8Array;
+    }) => ReturnType;
+    resetYSnapshot: () => ReturnType;
+  }
+}
+
 export interface YjsConfig {
   createYjsProvider?: CreateYjsProvider;
   addMenu?: boolean;

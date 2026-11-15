@@ -20,6 +20,25 @@ import { NodeCodeBlock } from '@kerebron/extension-basic-editor/NodeCodeBlock';
 
 import { NodeViewCodeCrock } from './NodeViewCodeCrock.ts';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /**
+     * Turn the current block into a code block.
+     *
+     * @param lang Language for syntax highlighting.
+     */
+    setCodeBlock: (lang?: string) => ReturnType;
+    /** Move the selection left into an adjacent code block. */
+    ArrowLeft: () => ReturnType;
+    /** Move the selection right into an adjacent code block. */
+    ArrowRight: () => ReturnType;
+    /** Move the selection up into an adjacent code block. */
+    ArrowUp: () => ReturnType;
+    /** Move the selection down into an adjacent code block. */
+    ArrowDown: () => ReturnType;
+  }
+}
+
 function arrowHandler(dir: 'left' | 'right' | 'up' | 'down'): Command {
   return function (
     state: EditorState,

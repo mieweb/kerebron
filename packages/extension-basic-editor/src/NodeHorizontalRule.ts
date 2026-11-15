@@ -1,9 +1,17 @@
 import type { NodeSpec, NodeType } from 'prosemirror-model';
+
 import { type CoreEditor, Node } from '@kerebron/editor';
 import type {
   CommandFactories,
   CommandShortcuts,
 } from '@kerebron/editor/commands';
+
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Replace the selection with a horizontal rule (`hr`) node, scrolling into view. */
+    setHorizontalRule: () => ReturnType;
+  }
+}
 
 export class NodeHorizontalRule extends Node {
   override name = 'hr';

@@ -11,6 +11,13 @@ import {
 } from '@kerebron/editor/plugins/input-rules';
 import { toggleList } from './commands.ts';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Toggle a bullet list around the selection. */
+    toggleBulletList: () => ReturnType;
+  }
+}
+
 export class NodeBulletList extends Node {
   override name = 'bullet_list';
   requires = ['doc'];

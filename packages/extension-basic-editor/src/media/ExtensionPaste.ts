@@ -15,6 +15,23 @@ import { elementFromString } from './ExtensionHtml.ts';
 import { YamlService } from '@kerebron/editor/yaml';
 import { BlankFrontmatterServiceImpl } from '@kerebron/editor/frontmatter';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /**
+     * Read the currently registered paste rules.
+     *
+     * @param cb Called with the active paste rules.
+     */
+    getPasteRules: (cb: (pasteRules: PasteRule[]) => void) => ReturnType;
+    /**
+     * Replace the plugin's active paste rules.
+     *
+     * @param pasteRules The new paste rules.
+     */
+    setPasteRules: (pasteRules: PasteRule[]) => ReturnType;
+  }
+}
+
 type PasteRuleStep =
   | PasteRuleStepDefault
   | PasteRuleStepReplaceTag

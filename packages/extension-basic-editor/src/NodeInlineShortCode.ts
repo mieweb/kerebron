@@ -13,6 +13,22 @@ import {
   replaceInlineNode,
 } from '@kerebron/editor/plugins/input-rules';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /**
+     * Replace every `shortcode_inline` node in the document.
+     *
+     * @param createReplacementNode Builds the replacement node for each match.
+     */
+    renderShortCode: (
+      createReplacementNode: (
+        oldNode: PmNode,
+        schema: Schema,
+      ) => PmNode,
+    ) => ReturnType;
+  }
+}
+
 export function fixCharacters(text: string) {
   return text
     .replace(/’/g, "'")

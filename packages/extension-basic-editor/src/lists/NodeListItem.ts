@@ -11,6 +11,17 @@ import {
 } from '@kerebron/editor/utilities';
 import { liftListItem, sinkListItem, splitListItem } from './commands.ts';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Split the current list item at the cursor (Enter). */
+    splitListItem: () => ReturnType;
+    /** Lift the list item, decreasing nesting (Shift-Tab). */
+    liftListItem: () => ReturnType;
+    /** Increase nesting of the list item (Tab). */
+    sinkListItem: () => ReturnType;
+  }
+}
+
 export class NodeListItem extends Node {
   override name = 'list_item';
   requires = ['doc'];

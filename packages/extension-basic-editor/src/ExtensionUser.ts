@@ -4,6 +4,17 @@ import { CommandFactories, Extension } from '@kerebron/editor';
 import { CommandFactory } from '@kerebron/editor/commands';
 import { ColorMapper, generateRandomUser, User } from '@kerebron/editor/user';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /**
+     * Change the active user.
+     *
+     * @param user The new user to associate with subsequent edits.
+     */
+    changeUser: (user: User) => ReturnType;
+  }
+}
+
 export const userPluginKey = new PluginKey<UserPluginState>('user');
 
 interface UserPluginState {

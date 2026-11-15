@@ -5,6 +5,13 @@ import {
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Set the textblock type to a paragraph. */
+    setParagraph: () => ReturnType;
+  }
+}
+
 export type TextAlign = 'left' | 'center' | 'right' | 'justify' | undefined;
 
 export class NodeParagraph extends Node {

@@ -4,6 +4,13 @@ import { CommandFactories, type CoreEditor, Extension } from '@kerebron/editor';
 import { CommandShortcuts } from '@kerebron/editor/commands';
 import { EditorView } from 'prosemirror-view';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Toggle the ProseMirror dev toolkit overlay (Ctrl-`). */
+    toggleDevToolkit: () => ReturnType;
+  }
+}
+
 export interface DevToolkitConfig {
 }
 

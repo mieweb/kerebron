@@ -5,6 +5,13 @@ import {
 } from '@kerebron/editor/commands';
 import type { MarkSpec, MarkType } from 'prosemirror-model';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Toggle the `em` (italic) mark on the current selection. */
+    toggleItalic: () => ReturnType;
+  }
+}
+
 export class MarkItalic extends Mark {
   override name = 'em';
   requires = ['doc'];

@@ -39,8 +39,7 @@ export type { AsyncCommand };
 
 export type AsyncCommandFactory = (...args: any[]) => AsyncCommand;
 
-export interface Commands {
-  [name: string]: Command;
+export interface Commands<ReturnType = any> {
 }
 
 export interface CommandFactories {

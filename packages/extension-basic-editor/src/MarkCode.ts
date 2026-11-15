@@ -5,6 +5,13 @@ import {
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Toggle the `code` mark on the current selection. */
+    toggleCode: () => ReturnType;
+  }
+}
+
 export class MarkCode extends Mark {
   override name = 'code';
   requires = ['doc'];

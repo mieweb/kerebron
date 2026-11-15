@@ -5,6 +5,13 @@ import {
 } from '@kerebron/editor/commands';
 import type { MarkSpec, MarkType } from 'prosemirror-model';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Toggle the `underline` mark on the current selection. */
+    toggleUnderline: () => ReturnType;
+  }
+}
+
 export class MarkUnderline extends Mark {
   override name = 'underline';
   requires = ['doc'];

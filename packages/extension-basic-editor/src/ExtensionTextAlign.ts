@@ -2,6 +2,19 @@ import { type CoreEditor, Extension } from '@kerebron/editor';
 import { type EditorState, type Transaction } from 'prosemirror-state';
 import { type CommandFactories } from '@kerebron/editor/commands';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Reset `textAlign` on the selected blocks (align left). */
+    setTextAlignLeft: () => ReturnType;
+    /** Center-align the selected blocks. */
+    setTextAlignCenter: () => ReturnType;
+    /** Right-align the selected blocks. */
+    setTextAlignRight: () => ReturnType;
+    /** Justify the selected blocks. */
+    setTextAlignJustify: () => ReturnType;
+  }
+}
+
 type TextAlign = undefined | 'center' | 'right' | 'justify';
 
 /**

@@ -15,6 +15,25 @@ import { Ui } from '../Ui.ts';
 
 import { DiagnosticsConfig, DiagnosticsSource } from './types.ts';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /**
+     * Publish a diagnostics list for a document.
+     *
+     * @param uri Document URI.
+     * @param version Document version.
+     * @param diagnostics Diagnostics to display.
+     */
+    publishDiagnostics: (
+      uri: string,
+      version: number,
+      diagnostics: Diagnostic[],
+    ) => ReturnType;
+    /** Register a hover source showing a diagnostic's message in a popup. */
+    addDiagnosticHover: () => ReturnType;
+  }
+}
+
 export class ExtensionDiagnostics extends Extension {
   name = 'diagnostics';
 

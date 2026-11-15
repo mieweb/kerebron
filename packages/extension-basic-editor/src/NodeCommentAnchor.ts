@@ -12,6 +12,18 @@ import { type CommandFactories } from '@kerebron/editor/commands';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import { CommandFactory } from '@kerebron/editor/commands';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /**
+     * Insert opening/closing `comment` anchor nodes around the current selection.
+     *
+     * @param id Unique comment identifier.
+     * @param active Whether the comment anchor is active.
+     */
+    addComment: (id: string, active: boolean) => ReturnType;
+  }
+}
+
 function collectCommentAnchors(doc: PmNode) {
   const starts = new Map();
   const ends = new Map();

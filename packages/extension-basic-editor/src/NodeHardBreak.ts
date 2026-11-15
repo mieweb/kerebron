@@ -8,6 +8,13 @@ import {
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Replace the selection with a hard break (`br`) node. */
+    setHardBreak: () => ReturnType;
+  }
+}
+
 export class NodeHardBreak extends Node {
   override name = 'br';
   requires = ['doc'];

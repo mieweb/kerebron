@@ -18,6 +18,17 @@ import { OdtParser, OdtParserConfig } from './OdtParser.ts';
 import { getDefaultsPostProcessFilters } from './postprocess/postProcess.ts';
 import { urlRewrite } from './postprocess/urlRewrite.ts';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /**
+     * Set the URL rewriter used when importing an ODT document.
+     *
+     * @param urlRewriter Async rewriter receiving the URL and rewrite context.
+     */
+    setFromOdtUrlRewriter: (urlRewriter: UrlRewriter) => ReturnType;
+  }
+}
+
 export interface OdtConfig extends OdtParserConfig {
   debug?: boolean;
   postProcessCommands?: Command[];

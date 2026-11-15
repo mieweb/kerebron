@@ -7,6 +7,39 @@ import { createMenuPlugin, MenuMeta, MenuPluginKey } from './MenuPlugin.ts';
 import { createDefaultMenuBar } from './defaultMenuBar.ts';
 import { MenuNode } from './model.ts';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Move focus to the menu bar. */
+    focusMenu: () => ReturnType;
+    /**
+     * Add a menu item.
+     *
+     * @param node The menu item, separator, or dropdown to add.
+     * @param index Position to insert at; appended if omitted.
+     * @param parentId Parent dropdown id; top level if omitted.
+     */
+    addMenuItem: (
+      node: MenuNode,
+      index?: number,
+      parentId?: string,
+    ) => ReturnType;
+    /**
+     * Locate a menu item by id.
+     *
+     * @param id Id of the menu item to find.
+     */
+    findMenuItem: (id: string) => ReturnType;
+    /**
+     * Remove a menu item by id.
+     *
+     * @param id Id of the menu item to remove.
+     */
+    removeMenuItem: (id: string) => ReturnType;
+    /** Show the collapsed-items overflow menu; succeeds only if collapsed items exist. */
+    showCollapsedMenu: () => ReturnType;
+  }
+}
+
 export class ExtensionMenu extends Extension {
   name = 'menu';
 

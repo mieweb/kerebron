@@ -20,6 +20,17 @@ const enter = firstCommand(
   baseCommandFactories.splitBlock(),
 );
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Handle Backspace: undo input rule, delete selection, join/lift backward. */
+    backspace: () => ReturnType;
+    /** Handle Delete: delete selection, join/select forward. */
+    del: () => ReturnType;
+    /** Handle Enter: newline in code, create paragraph, lift empty block, split block. */
+    enter: () => ReturnType;
+  }
+}
+
 export const keyCommandFactories: Record<string, CommandFactory> = {
   backspace: () => backspace,
   del: () => del,

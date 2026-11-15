@@ -5,6 +5,13 @@ import {
   type CommandShortcuts,
 } from '@kerebron/editor/commands';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Toggle the `subscript` mark on current selection. */
+    toggleSubscript: () => ReturnType;
+  }
+}
+
 export class MarkSubscript extends Mark {
   override name = 'subscript';
   requires = ['doc'];

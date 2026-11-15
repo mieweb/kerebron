@@ -6,6 +6,17 @@ import { CommandFactory } from '@kerebron/editor/commands';
 import { HoverPlugin, HoverPluginKey } from './HoverPlugin.ts';
 import { HoverConfig, HoverSource } from './types.ts';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /**
+     * Register a hover source with the hover plugin.
+     *
+     * @param hoverSource Matcher plus request processor.
+     */
+    addHoverSource: (hoverSource: HoverSource) => ReturnType;
+  }
+}
+
 export class ExtensionHover extends Extension {
   name = 'hover';
 

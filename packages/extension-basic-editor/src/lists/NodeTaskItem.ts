@@ -10,6 +10,17 @@ import { liftListItem, sinkListItem, splitListItem } from './commands.ts';
 import { NodeViewConstructor } from '@kerebron/editor/DummyEditorView';
 import { NodeViewTaskItem } from './NodeViewTaskItem.ts';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Split the current task item at the cursor (Enter). */
+    splitListItem: () => ReturnType;
+    /** Lift the task item, decreasing nesting (Shift-Tab). */
+    liftListItem: () => ReturnType;
+    /** Increase nesting of the task item (Tab). */
+    sinkListItem: () => ReturnType;
+  }
+}
+
 export interface TaskItemOptions {
   onReadOnlyChecked?: (node: PmNode, checked: boolean) => boolean;
   nested: boolean;

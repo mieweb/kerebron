@@ -9,6 +9,19 @@ import {
 } from './AutocompletePlugin.ts';
 import { AutocompleteConfig, AutocompleteSource } from './types.ts';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /**
+     * Register an autocomplete source with the autocomplete plugin.
+     *
+     * @param autocompleteSource Matcher plus request processor.
+     */
+    addAutocompleteSource: (
+      autocompleteSource: AutocompleteSource,
+    ) => ReturnType;
+  }
+}
+
 export class ExtensionAutocomplete extends Extension {
   name = 'autocomplete';
 

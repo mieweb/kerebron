@@ -20,6 +20,25 @@ import type {
 import { createNodeFromObject } from '@kerebron/editor/utilities';
 import { EditorView } from 'prosemirror-view';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Select the entire document. */
+    selectAll: () => ReturnType;
+    /**
+     * Create a text selection from character offsets within a paragraph.
+     *
+     * @param textStart Zero-based character offset inside the paragraph.
+     * @param length Length of the selection in characters.
+     * @param paraNum Index of the target paragraph.
+     */
+    selectText: (
+      textStart: number,
+      length: number,
+      paraNum?: number,
+    ) => ReturnType;
+  }
+}
+
 function normalizeSiblings(fragment: Fragment, $context: ResolvedPos) {
   if (fragment.childCount < 2) return fragment;
   for (let d = $context.depth; d >= 0; d--) {

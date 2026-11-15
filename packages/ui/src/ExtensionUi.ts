@@ -16,6 +16,33 @@ import type { TemplatesRegistry } from './templates/mod.ts';
 import { popupTemplateRegistry } from './templates/popupTemplateRegistry.ts';
 import { roomTemplateRegistry } from './templates/roomTemplateRegistry.ts';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Open the insert-image popup; inserts an image node on submit. */
+    insertImage: () => ReturnType;
+    /** Remove the link mark if active, otherwise open the insert-link popup. */
+    toggleLink: () => ReturnType;
+    /**
+     * Create a popup via the `Ui` service.
+     *
+     * @param options Popup layer, anchor, backdrop, etc.
+     */
+    createPopup: (options: PopupOptions) => ReturnType;
+    /**
+     * Set the content of the popup stored in the `popup` transaction meta.
+     *
+     * @param spec Render specification for the popup content.
+     */
+    setPopupContent: (spec: DOMOutputSpec) => ReturnType;
+    /** Clear all popups via the `Ui` service. */
+    clearPopups: () => ReturnType;
+    /** Open the search dialog prefilled with the selected text (Ctrl-f). */
+    startSearch: () => ReturnType;
+    /** Open the search-and-replace dialog prefilled with the selected text (Ctrl-r). */
+    startReplace: () => ReturnType;
+  }
+}
+
 export class ExtensionUi extends Extension {
   name = 'ui';
 

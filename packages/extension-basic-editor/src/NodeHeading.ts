@@ -10,6 +10,23 @@ import {
   textblockTypeInputRule,
 } from '@kerebron/editor/plugins/input-rules';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Set the textblock type to a level-1 heading. */
+    setHeading1: () => ReturnType;
+    /** Set the textblock type to a level-2 heading. */
+    setHeading2: () => ReturnType;
+    /** Set the textblock type to a level-3 heading. */
+    setHeading3: () => ReturnType;
+    /** Set the textblock type to a level-4 heading. */
+    setHeading4: () => ReturnType;
+    /** Set the textblock type to a level-5 heading. */
+    setHeading5: () => ReturnType;
+    /** Set the textblock type to a level-6 heading. */
+    setHeading6: () => ReturnType;
+  }
+}
+
 const maxLevel = 6;
 
 export class NodeHeading extends Node {

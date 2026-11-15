@@ -37,6 +37,144 @@ import {
   undoInputRuleCommand,
 } from '../plugins/input-rules/InputRulesPlugin.ts';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /**
+     * Replace the whole document with the slice between `from` and `to`,
+     * expanding the range to list boundaries.
+     *
+     * @param from Start position.
+     * @param to End position.
+     */
+    keepRange: (from: number, to: number) => ReturnType;
+    /** Replace the whole document with the current selection's content. */
+    keepSelection: () => ReturnType;
+    /**
+     * Wrap the selection in a list of the given type.
+     *
+     * @param listType List node type.
+     * @param attrs Attributes for the list node.
+     */
+    wrapInList: (listType: NodeType, attrs?: Attrs | null) => ReturnType;
+    /**
+     * Wrap a node range in a list of the given type.
+     *
+     * @param tr Transaction to apply the wrapping to.
+     * @param range Range to wrap.
+     * @param listType List node type.
+     * @param attrs Attributes for the list node.
+     */
+    wrapRangeInList: (
+      tr: Transaction | null,
+      range: NodeRange,
+      listType: NodeType,
+      attrs?: Attrs | null,
+    ) => ReturnType;
+    /** Delete the selection if non-empty. */
+    deleteSelection: () => ReturnType;
+    /** Join the block before the cursor with the one above it. */
+    joinBackward: () => ReturnType;
+    /** Join the selected block with the textblock before it. */
+    joinTextblockBackward: () => ReturnType;
+    /** Join the selected block with the textblock after it. */
+    joinTextblockForward: () => ReturnType;
+    /** Join the block after the cursor with the one below it. */
+    joinForward: () => ReturnType;
+    /** Join the selected node with the node above it. */
+    joinUp: () => ReturnType;
+    /** Join the selected node with the node below it. */
+    joinDown: () => ReturnType;
+    /** Lift the selected block out of its parent. */
+    lift: () => ReturnType;
+    /** Lift the paragraph inside the selected list item out of the item. */
+    liftListItemParagraph: () => ReturnType;
+    /** Insert a newline when inside a code block. */
+    newlineInCode: () => ReturnType;
+    /** Escape from a code block, creating a paragraph after it. */
+    exitCode: () => ReturnType;
+    /** Insert a paragraph adjacent to the current block. */
+    createParagraphNear: () => ReturnType;
+    /** Replace the selection with a paragraph when the block is empty. */
+    liftEmptyBlock: () => ReturnType;
+    /**
+     * Split the current block, optionally with a custom split node type.
+     *
+     * @param splitNode Returns the type/attrs for the new block.
+     */
+    splitBlockAs: (
+      splitNode?: (
+        node: Node,
+        atEnd: boolean,
+        $from: ResolvedPos,
+      ) => { type: NodeType; attrs?: Attrs } | null,
+    ) => ReturnType;
+    /** Split the current block at the cursor. */
+    splitBlock: () => ReturnType;
+    /** Split the current block, preserving the active marks. */
+    splitBlockKeepMarks: () => ReturnType;
+    /** Select the whole document. */
+    selectAll: () => ReturnType;
+    /** Select the parent of the current selection. */
+    selectParentNode: () => ReturnType;
+    /** Select the node before the cursor. */
+    selectNodeBackward: () => ReturnType;
+    /** Select the node after the cursor. */
+    selectNodeForward: () => ReturnType;
+    /** Move the cursor to the start of the current textblock. */
+    selectTextblockStart: () => ReturnType;
+    /** Move the cursor to the end of the current textblock. */
+    selectTextblockEnd: () => ReturnType;
+    /**
+     * Wrap the selection in a node of the given type.
+     *
+     * @param nodeType Wrapping node type.
+     * @param attrs Attributes for the wrapping node.
+     */
+    wrapIn: (nodeType: NodeType, attrs?: Attrs | null) => ReturnType;
+    /**
+     * Change the type of the selected textblock(s).
+     *
+     * @param nodeType New block node type.
+     * @param attrs Attributes for the block node.
+     */
+    setBlockType: (nodeType: NodeType, attrs?: Attrs | null) => ReturnType;
+    /**
+     * Toggle a mark on the selection.
+     *
+     * @param markType Mark type to toggle.
+     * @param attrs Attributes for the mark.
+     * @param options `removeWhenPresent`, `enterInlineAtoms`, `includeWhitespace`.
+     */
+    toggleMark: (
+      markType: MarkType,
+      attrs?: Attrs | null,
+      options?: {
+        removeWhenPresent?: boolean;
+        enterInlineAtoms?: boolean;
+        includeWhitespace?: boolean;
+      },
+    ) => ReturnType;
+    /** Undo the last input rule transformation. */
+    undoInputRule: () => ReturnType;
+    /**
+     * Run input rules over a position range.
+     *
+     * @param from Start position.
+     * @param to End position.
+     * @param text Text to match rules against.
+     */
+    runInputRulesRange: (from: number, to: number, text: string) => ReturnType;
+    /** Run input rules over the current selection's texts. */
+    runInputRulesTexts: () => ReturnType;
+    /**
+     * Wrap an arbitrary command function.
+     *
+     * @param fn The command to run.
+     */
+    command: (fn: Command) => ReturnType;
+  }
+}
+
 /// When the cursor is at the start of a textblock that is *not* the
 /// first child of a list item, lift that textblock out of the list
 /// instead of merging it into the previous paragraph.

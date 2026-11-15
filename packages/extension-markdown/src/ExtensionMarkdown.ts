@@ -31,6 +31,40 @@ import {
 import { sitterTokenizer } from './treeSitterTokenizer.ts';
 import { Telemetry } from '@kerebron/editor/Telemetry';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /**
+     * Read the hooks registered for a markdown hook type.
+     *
+     * @param type Hook type, e.g. `pm2md.pre`.
+     * @param cb Called with the registered hooks (`[]` if none).
+     */
+    getMarkdownHooks: (
+      type: string,
+      cb: (hooks: HookArray) => void,
+    ) => ReturnType;
+    /**
+     * Replace the hooks for a markdown hook type.
+     *
+     * @param type Hook type, e.g. `pm2md.pre`.
+     * @param hooks Hook functions to register.
+     */
+    setMarkdownHooks: (type: string, hooks: HookArray) => ReturnType;
+    /**
+     * Set the URL rewriter applied when converting Markdown to ProseMirror.
+     *
+     * @param urlRewriter Async rewriter receiving the URL and rewrite context.
+     */
+    setFromMarkdownUrlRewriter: (urlRewriter: UrlRewriter) => ReturnType;
+    /**
+     * Set the URL rewriter applied when converting ProseMirror to Markdown.
+     *
+     * @param urlRewriter Async rewriter receiving the URL and rewrite context.
+     */
+    setToMarkdownUrlRewriter: (urlRewriter: UrlRewriter) => ReturnType;
+  }
+}
+
 export interface MdConfig {
   sourceMap?: boolean;
   serializerDebug?: (...args: any[]) => void;

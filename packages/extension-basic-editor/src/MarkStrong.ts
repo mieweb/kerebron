@@ -5,6 +5,13 @@ import {
 } from '@kerebron/editor/commands';
 import { MarkSpec, type MarkType } from 'prosemirror-model';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Toggle the `strong` (bold) mark on the current selection. */
+    toggleStrong: () => ReturnType;
+  }
+}
+
 export class MarkStrong extends Mark {
   override name = 'strong';
   requires = ['doc'];
