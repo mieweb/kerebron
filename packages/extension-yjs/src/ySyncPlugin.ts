@@ -7,9 +7,11 @@ import { PmYjsBinding } from './binding/PmYjsBinding.ts';
 import { CoreEditor } from '@kerebron/editor';
 
 interface YSyncOpts {
+  createYjsProvider: CreateYjsProvider;
   permanentUserData?: Y.PermanentUserData;
   onFirstRender?: () => void;
   roomId?: string;
+  fieldName?: string;
 }
 
 export interface YSyncPluginState {
@@ -48,11 +50,12 @@ interface YSyncMeta {
  */
 export const ySyncPlugin = (
   editor: CoreEditor,
-  createYjsProvider: CreateYjsProvider,
   {
     onFirstRender = () => {
     },
-  }: YSyncOpts = {},
+    createYjsProvider,
+    fieldName,
+  }: YSyncOpts,
 ): any => {
   let initialContentChanged = false;
   const plugin: Plugin<YSyncPluginState> = new Plugin<YSyncPluginState>({
@@ -66,7 +69,7 @@ export const ySyncPlugin = (
     state: {
       init: (_initargs, state): YSyncPluginState => {
         return {
-          binding: new PmYjsBinding(editor),
+          binding: new PmYjsBinding(editor, { fieldName }),
           isChangeOrigin: false,
           isUndoRedoOperation: false,
           permanentUserData: undefined,

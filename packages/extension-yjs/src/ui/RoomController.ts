@@ -84,8 +84,15 @@ export class RoomController extends EventTarget {
     target.addEventListener('click', (event) => {
       if (event.target && 'name' in event.target) {
         event.stopPropagation();
+
+        const form: HTMLFormElement = (event.target as unknown as HTMLElement)
+          .closest('form')!;
+
         switch (event.target.name) {
           case 'change-name-button':
+            this.user.name =
+              form.querySelector('user-input')?.getAttribute('value') ||
+              this.user.name;
             this.onUserChange();
             break;
           case 'new-room-button':

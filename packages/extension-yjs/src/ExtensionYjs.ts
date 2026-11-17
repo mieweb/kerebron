@@ -24,29 +24,36 @@ import { RoomController } from '@kerebron/yjs/ui/RoomController';
 declare module '@kerebron/editor/commands' {
   interface Commands<ReturnType = any> {
     /**
-     * Change Room
+     * Change the current collaboration room
      *
      * @see /example/browser-yjs
      */
     changeRoom: (roomId: string) => ReturnType;
+    /**
+     * Leave the current collaboration room and disconnect its provider.
+     *
+     * @see /example/browser-yjs
+     */
     leaveRoom: () => ReturnType;
     /**
-     * Returns active ydoc
+     * Returns the current Yjs snapshot (encoded state vector diff) of the document.
      *
-     * @param promise The Y.Doc is returned using async
+     * @param promise The snapshot is returned using async.
      */
-    getYDoc: (promise: {
-      resolve: (doc: Y.Doc) => void;
-      reject: (reason: any) => void;
-    }) => ReturnType;
     getYSnapshot: ({ resolve, reject }: {
       resolve: (snapshot: Uint8Array) => void;
       reject: (reason: any) => void;
     }) => ReturnType;
+    /**
+     * Restores the document from a Yjs snapshot.
+     *
+     * @param opts `prevSnapshot` is the state before the change, `snapshot` the target state.
+     */
     setYSnapshot: (opts: {
       prevSnapshot: Uint8Array;
       snapshot: Uint8Array;
     }) => ReturnType;
+    /** Reset the Yjs snapshot state to the current document. */
     resetYSnapshot: () => ReturnType;
   }
 }
@@ -54,6 +61,7 @@ declare module '@kerebron/editor/commands' {
 export interface YjsConfig {
   createYjsProvider?: CreateYjsProvider;
   addMenu?: boolean;
+  fieldName: string;
 }
 
 export class ExtensionYjs extends Extension {
@@ -170,7 +178,10 @@ export class ExtensionYjs extends Extension {
 
   override getProseMirrorPlugins(): Plugin[] {
     return [
-      ySyncPlugin(this.editor, this.config.createYjsProvider),
+      ySyncPlugin(this.editor, {
+        createYjsProvider: this.config.createYjsProvider!,
+        fieldName: this.config.fieldName,
+      }),
       yPositionPlugin(this.editor),
       yUndoPlugin(),
     ];
@@ -215,13 +226,28 @@ export class ExtensionYjs extends Extension {
             renderForm();
 
             controller.addEventListener('change-room', (event) => {
+              if (controller.roomID) {
+                this.editor.chain().changeRoom(controller.roomID).run();
+              }
+
               renderForm();
               popup.remove();
             });
             controller.addEventListener('change-user', (event) => {
+              if (controller.user) {
+                this.editor.chain().changeUser(controller.user).run();
+              }
+
               renderForm();
               popup.remove();
             });
+
+            if (controller.roomID) {
+              this.editor.chain().changeRoom(controller.roomID).run();
+            }
+            if (controller.user) {
+              this.editor.chain().changeUser(controller.user).run();
+            }
 
             return true;
           },

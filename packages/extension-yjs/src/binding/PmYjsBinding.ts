@@ -35,6 +35,49 @@ export const createMutex = (): Mutex => {
   };
 };
 
+function getOrCreateYPath(doc: Y.Doc, path: string) {
+  const keys = path.split('.');
+
+  if (keys.length === 0 || keys.some((key) => key.length === 0)) {
+    throw new Error('Path must not be empty or contain empty segments');
+  }
+
+  const [rootKey, ...rest] = keys;
+
+  if (rest.length === 0) {
+    return doc.getXmlFragment(rootKey);
+  }
+
+  let current: Y.Map<unknown> = doc.getMap(rootKey);
+
+  for (const key of rest.slice(0, -1)) {
+    const value = current.get(key);
+
+    let next: Y.Map<unknown>;
+
+    if (value instanceof Y.Map) {
+      next = value as Y.Map<unknown>;
+    } else {
+      next = new Y.Map<unknown>();
+      current.set(key, next);
+    }
+
+    current = next;
+  }
+
+  const lastKey = rest[rest.length - 1];
+  const value = current.get(lastKey);
+
+  if (value instanceof Y.XmlFragment) {
+    return value;
+  }
+
+  const fragment = new Y.XmlFragment();
+  current.set(lastKey, fragment);
+
+  return fragment;
+}
+
 type ConnectionState = 'idle' | 'joining' | 'synced' | 'leaving' | 'error';
 
 export type YjsData = { ydoc: Y.Doc; xmlFragment: Y.XmlFragment };
@@ -64,7 +107,10 @@ export class PmYjsBinding extends EventTarget {
   private permanentUserData: Y.PermanentUserData | undefined;
   private user: User | undefined;
 
-  constructor(private readonly editor: CoreEditor) {
+  constructor(
+    private readonly editor: CoreEditor,
+    private config: { fieldName?: string },
+  ) {
     super();
 
     this.diffViewer = new DiffViewer();
@@ -139,8 +185,11 @@ export class PmYjsBinding extends EventTarget {
     this.bindingMetadata.isOverlappingMark.clear();
     this.diffViewer.reset();
 
-    const fieldName = 'kerebron:' + this.editor.schema.topNodeType.name;
-    this.yjs = { ydoc, xmlFragment: ydoc.getXmlFragment(fieldName) };
+    const fieldName = this.config.fieldName ||
+      'kerebron:' + this.editor.schema.topNodeType.name;
+    const xmlFragment = getOrCreateYPath(ydoc, fieldName);
+
+    this.yjs = { ydoc, xmlFragment };
     this.permanentUserData = new Y.PermanentUserData(ydoc);
     if (this.user?.id) {
       this.permanentUserData.setUserMapping(ydoc, ydoc.clientID, this.user.id);
