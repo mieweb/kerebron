@@ -1,7 +1,7 @@
 import { Node } from 'prosemirror-model';
 import { EditorView } from 'prosemirror-view';
 import { CodeCrock, Position } from './CodeCrock.ts';
-import { TextSelection } from 'prosemirror-state';
+import { type Command, TextSelection } from 'prosemirror-state';
 
 import { CodeContentMapper } from '@kerebron/workspace/CodeContentMapper';
 
@@ -57,8 +57,8 @@ export const forwardSelection = (
   codeCrock: CodeCrock,
   pmView: EditorView,
   getPos: () => number | undefined,
+  codeNode: Node,
 ) => {
-  // if (!cmView.hasFocus) return;
   const codeCrockPos = codeCrock.save();
   if (!codeCrockPos) {
     return;
@@ -67,6 +67,7 @@ export const forwardSelection = (
     pmView.state.doc,
     codeCrockPos,
     getPos,
+    codeNode,
   );
   if (!selection.eq(pmView.state.selection)) {
     pmView.dispatch(pmView.state.tr.setSelection(selection));
@@ -77,13 +78,21 @@ const asProseMirrorSelection = (
   pmDoc: Node,
   pos: Position,
   getPos: () => number | undefined,
+  codeNode: Node,
 ) => {
   const offset = (typeof getPos === 'function' ? getPos() || 0 : 0) + 1;
+  // Clamp the forwarded caret into the synced code node content,
+  // otherwise TextSelection.create throws "Position x out of range" when typing fast.
+  const end = Math.min(
+    offset + codeNode.textContent.length,
+    pmDoc.content.size,
+  );
+  const anchor = Math.min(pos.start + offset, end);
+  const head = Math.min(pos.end + offset, end);
   if (pos.dir === '<-') {
-    return TextSelection.create(pmDoc, pos.start + offset, pos.end + offset);
-  } else {
-    return TextSelection.create(pmDoc, pos.end + offset, pos.start + offset);
+    return TextSelection.create(pmDoc, anchor, head);
   }
+  return TextSelection.create(pmDoc, head, anchor);
 };
 
 export function applyChangeOverPos(
@@ -132,23 +141,6 @@ export function replaceExt(uri: string, lang: string) {
   parts.push(lang);
   return parts.join('.');
 }
-
-export const STOP_EVENTS = [
-  // 'keydown', // autocomplete
-  'keyup',
-  'keypress',
-  'beforeinput',
-  'input',
-  'compositionstart',
-  'compositionupdate',
-  'compositionend',
-  'paste',
-  'cut',
-  'copy',
-  'dragstart',
-  'dragover',
-  'drop',
-];
 
 export interface SnapshotCtx {
   version: number;

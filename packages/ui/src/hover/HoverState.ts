@@ -100,7 +100,7 @@ export class HoverState<I = any> {
         pos: $from.pos,
         textOffset: $from.textOffset,
         uri,
-        dataset: { ...(domElement as HTMLElement).dataset } as Record<
+        dataset: { ...(domElement as HTMLElement || {}).dataset } as Record<
           string,
           string
         >,

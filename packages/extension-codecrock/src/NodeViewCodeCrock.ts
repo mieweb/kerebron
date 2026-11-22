@@ -23,7 +23,6 @@ import {
   computeChange,
   forwardSelection,
   performSnapshot,
-  STOP_EVENTS,
   valueChanged,
 } from './utils.ts';
 import {
@@ -74,7 +73,7 @@ export class NodeViewCodeCrock implements NodeView, CodeNodeView {
       ? editor.view.root
       : document || document;
 
-    const { codeCrock, editable } = addEditable(this);
+    const { codeCrock, editable } = addEditable(this, editor);
     this.editable = editable;
     const getLocalPos: GetLocalPos = (textOffset: number) => {
       const element = this.editable;
@@ -95,7 +94,7 @@ export class NodeViewCodeCrock implements NodeView, CodeNodeView {
 
     this.codeCrock.addEventListener('selectionchange', () => {
       if (!this.updating) {
-        forwardSelection(this.codeCrock, this.view, this.getPos);
+        forwardSelection(this.codeCrock, this.view, this.getPos, this.node);
       }
     });
 
@@ -104,7 +103,7 @@ export class NodeViewCodeCrock implements NodeView, CodeNodeView {
         const textUpdate = this.codeCrock.toString();
         valueChanged(textUpdate, this.node, this.getPos, this.view);
         if (document.activeElement === this.editable) {
-          forwardSelection(this.codeCrock, this.view, this.getPos);
+          forwardSelection(this.codeCrock, this.view, this.getPos, this.node);
         }
 
         const { version, getContentMapper } = performSnapshot(
@@ -165,18 +164,12 @@ export class NodeViewCodeCrock implements NodeView, CodeNodeView {
     this.editable.focus();
     this.updating = true;
 
-    const pos = this.getPos();
-    if (typeof pos !== 'undefined') {
-      anchor -= pos;
-      head -= pos;
-
-      const posJar: Position = {
-        start: Math.min(anchor, head),
-        end: Math.max(anchor, head),
-        dir: (anchor <= head) ? '->' : '<-',
-      };
-      this.codeCrock.restore(posJar);
-    }
+    const posJar: Position = {
+      start: Math.min(anchor, head),
+      end: Math.max(anchor, head),
+      dir: (anchor <= head) ? '->' : '<-',
+    };
+    this.codeCrock.restore(posJar);
 
     this.updating = false;
   }
@@ -294,7 +287,31 @@ export class NodeViewCodeCrock implements NodeView, CodeNodeView {
   }
 
   stopEvent(event: Event) {
-    return STOP_EVENTS.includes(event.type);
+    switch (event.type) {
+      case 'keydown': {
+        const { key, metaKey, ctrlKey, altKey } = event as KeyboardEvent;
+        if (metaKey || ctrlKey || altKey) return false;
+        return key === 'Enter' || key === 'Backspace' || key === 'Delete' ||
+          key.startsWith('Arrow');
+      }
+      case 'keyup':
+      case 'keypress':
+      case 'beforeinput':
+      case 'input':
+      case 'compositionstart':
+      case 'compositionupdate':
+      case 'compositionend':
+      case 'paste':
+      case 'cut':
+      case 'copy':
+      case 'dragstart':
+      case 'dragover':
+      case 'drop':
+        // Text editing events are handled by CodeCrock itself.
+        return true;
+      default:
+        return false;
+    }
   }
 
   ignoreMutation() {

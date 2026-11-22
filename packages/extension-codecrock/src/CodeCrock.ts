@@ -1,5 +1,7 @@
 import { debounce } from '@kerebron/editor/utilities';
 
+import { precedingCodePointLength } from './ui.ts';
+
 const globalWindow = window;
 
 type Options = {
@@ -29,6 +31,50 @@ export type Position = {
   end: number;
   dir?: '->' | '<-';
 };
+
+export const ZWSP = '\u200B';
+
+export function deleteInvisibleBeforeCaret(codeCrock: CodeCrock): boolean {
+  const sel = codeCrock.getSelection();
+  if (!sel || !sel.isCollapsed || sel.rangeCount === 0) return false;
+
+  const range = sel.getRangeAt(0);
+  const node = range.startContainer;
+  if (node.nodeType !== Node.TEXT_NODE) return false;
+
+  const value: string = node.nodeValue || '';
+  const offset = range.startOffset;
+
+  // ZWSP directly before the caret: remove it and the character
+  // preceding it within the same text node.
+  if (offset >= 2 && value[offset - 1] === ZWSP) {
+    const cut = offset - 1 - precedingCodePointLength(value, offset - 1);
+    node.nodeValue = value.slice(0, cut) + value.slice(offset);
+    sel.setBaseAndExtent(node, cut, node, cut);
+    return true;
+  }
+
+  // ZWSP at the start of the text node: the visible character is the
+  // last one of the previous text node.
+  if (offset === 1 && value.startsWith(ZWSP)) {
+    const prevNode = node.previousSibling;
+    if (prevNode?.nodeType === Node.TEXT_NODE && prevNode.nodeValue) {
+      const prevValue = prevNode.nodeValue;
+      const newEnd = prevValue.length -
+        precedingCodePointLength(prevValue, prevValue.length);
+      prevNode.nodeValue = prevValue.slice(0, newEnd);
+      node.nodeValue = value.slice(1);
+      sel.setBaseAndExtent(
+        prevNode,
+        prevNode.nodeValue.length,
+        prevNode,
+        prevNode.nodeValue.length,
+      );
+      return true;
+    }
+  }
+  return false;
+}
 
 function visit(
   editor: HTMLElement,
@@ -291,12 +337,14 @@ export class CodeCrock extends EventTarget {
           if (event.shiftKey) {
             const { row, col, lastRow, lastCol } = getRowCol(this.editor);
 
-            if (row === 0) {
+            if (row === 0 && col === 0) {
               this.dispatchEvent(new CustomEvent('prepend-empty-line'));
               event.stopPropagation();
               event.preventDefault();
             } else if (row >= lastRow) {
               this.dispatchEvent(new CustomEvent('append-empty-line'));
+              event.stopPropagation();
+              event.preventDefault();
             }
             return;
           }
@@ -309,13 +357,32 @@ export class CodeCrock extends EventTarget {
             return;
           }
           break;
+        case 'Backspace': {
+          const { row, col } = getRowCol(this.editor);
+          if (row === 0 && col === 0) {
+            event.preventDefault();
+            this.dispatchEvent(new CustomEvent('convert-to-paragraph'));
+          } else if (deleteInvisibleBeforeCaret(this)) {
+            event.preventDefault();
+            this.debounceHighlight();
+          }
+          break;
+        }
       }
 
       this.prev = this.toString();
-      if (this.options.preserveIdent) handleNewLine(event);
-      else legacyNewLineFix(event);
-      if (this.options.catchTab) handleTabCharacters(event);
-      if (this.options.addClosing) handleSelfClosingCharacters(event);
+      if (this.options.preserveIdent) {
+        handleNewLine(event);
+      } else {
+        legacyNewLineFix(event);
+      }
+
+      if (this.options.catchTab) {
+        handleTabCharacters(event);
+      }
+      if (this.options.addClosing) {
+        handleSelfClosingCharacters(event);
+      }
       if (this.options.history) {
         handleUndoRedo(event);
         if (shouldRecord(event) && !recording) {
@@ -414,13 +481,18 @@ export class CodeCrock extends EventTarget {
     };
 
     const legacyNewLineFix = (event: KeyboardEvent) => {
-      // Firefox does not support plaintext-only mode
-      // and puts <div><br></div> on Enter. Let's help.
-      if (isLegacy && event.key === 'Enter') {
+      if (event.key !== 'Enter') return;
+      const atEnd = afterCursor() == '';
+      // Firefox (legacy mode) inserts <div><br></div> on Enter.
+      // Chromium plaintext-only inserts a doubled '\n\n' when the caret
+      // is at the end of the text (an extra newline so the new line is
+      // visible for the caret). Normalize both to a single '\n' plus a
+      // zero-width space, with the caret placed between them.
+      if (isLegacy || atEnd) {
         event.preventDefault();
         event.stopPropagation();
-        if (afterCursor() == '') {
-          insert('\n\u200B');
+        if (atEnd) {
+          insert('\n' + ZWSP);
           const pos = this.save();
           if (pos) {
             pos.start = --pos.end;
@@ -540,7 +612,7 @@ export class CodeCrock extends EventTarget {
     };
   }
 
-  getSelection() {
+  getSelection(): Selection | null {
     const root = this.editor.getRootNode();
 
     if (typeof (root as any).getSelection === 'function') {
@@ -565,7 +637,7 @@ export class CodeCrock extends EventTarget {
   }
 
   override toString() {
-    return this.editor.textContent.replace(/\u200B/g, '') || '';
+    return this.editor.textContent.replaceAll(ZWSP, '') || '';
   }
 
   updateOptions(newOptions: Partial<Options>) {
@@ -605,7 +677,7 @@ export class CodeCrock extends EventTarget {
 
     const pos: Position = { start: 0, end: 0, dir: undefined };
 
-    const textContent = this.editor.textContent.replace(/\u200B/g, '');
+    const textContent = this.toString();
     // If the anchor and focus are the editor element, return either a full
     // highlight or a start/end cursor position depending on the selection
     if (anchorNode === this.editor && focusNode === this.editor) {
@@ -782,6 +854,7 @@ export class CodeCrock extends EventTarget {
   }
 
   private onSelectionChange() {
+    if (!this.focus) return;
     const selection = this.save();
     this.dispatchEvent(
       new CustomEvent('selectionchange', { detail: selection }),

@@ -1,5 +1,5 @@
 import { Node as PmNode } from 'prosemirror-model';
-import { Selection } from 'prosemirror-state';
+import { Selection, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 
 import { CoreEditor } from '@kerebron/editor';
@@ -48,7 +48,7 @@ export function addLanguageDropDown(nodeView: CodeNodeView) {
   return select;
 }
 
-export function addEditable(nodeView: CodeNodeView) {
+export function addEditable(nodeView: CodeNodeView, editor: CoreEditor) {
   const editable = document.createElement('div');
   nodeView.dom.appendChild(editable);
   editable.classList.add('codecrock');
@@ -66,23 +66,37 @@ export function addEditable(nodeView: CodeNodeView) {
   );
 
   const blur = (dir: 1 | -1) => {
-    nodeView.view.focus();
     const pos = nodeView.getPos();
     if (typeof pos === 'undefined') {
       return false;
     }
 
+    const view = nodeView.view;
+
     const targetPos = pos + (dir < 0 ? 0 : nodeView.node.nodeSize);
     const selection = Selection.near(
-      nodeView.view.state.doc.resolve(targetPos),
+      view.state.doc.resolve(targetPos),
       dir,
     );
 
-    nodeView.view.dispatch(
-      nodeView.view.state.tr.setSelection(selection).scrollIntoView(),
+    const posInsideNodeView = selection.from >= pos &&
+      selection.from < pos + nodeView.node.nodeSize;
+    if (posInsideNodeView) {
+      const newPosition = dir < 0 ? 0 : codeCrock.toString().length;
+      codeCrock.restore({ start: newPosition, end: newPosition, dir: '->' });
+      forwardSelection(
+        codeCrock,
+        nodeView.view,
+        nodeView.getPos,
+        nodeView.node,
+      );
+      return true;
+    }
+
+    view.dispatch(
+      view.state.tr.setSelection(selection).scrollIntoView(),
     );
-    // this.view.focus();
-    // editor.chain().ArrowDown().run();
+    view.focus();
 
     return true;
   };
@@ -97,23 +111,46 @@ export function addEditable(nodeView: CodeNodeView) {
   codeCrock.addEventListener('prepend-empty-line', () => {
     const pos = nodeView.getPos();
     if (typeof pos === 'undefined') {
-      return false;
+      return;
     }
-    nodeView.editor.chain().replaceRangeText({ from: pos, to: pos }, '').run();
+    editor.run.insertEmptyParagraph(pos);
   });
   codeCrock.addEventListener('append-empty-line', () => {
     const pos = nodeView.getPos();
     if (typeof pos === 'undefined') {
-      return false;
+      return;
     }
-    nodeView.editor.chain().replaceRangeText({
-      from: pos + nodeView.node.nodeSize,
-      to: pos + nodeView.node.nodeSize,
-    }, '').run();
+    editor.run.insertEmptyParagraph(pos + nodeView.node.nodeSize);
+  });
+
+  codeCrock.addEventListener('convert-to-paragraph', () => {
+    const pos = nodeView.getPos();
+    if (typeof pos === 'undefined') {
+      return;
+    }
+    const view = nodeView.view;
+    const { state } = view;
+
+    const text = codeCrock.toString();
+    const paragraphs = text.split('\n').map((line) =>
+      state.schema.nodes.paragraph.create(
+        {},
+        line ? state.schema.text(line) : undefined,
+      )
+    );
+    const tr = state.tr.replaceWith(
+      pos,
+      pos + nodeView.node.nodeSize,
+      paragraphs,
+    );
+
+    tr.setSelection(TextSelection.near(tr.doc.resolve(pos + 1)));
+    view.dispatch(tr);
+    view.focus();
   });
 
   codeCrock.addEventListener('selectionchange', (event) => {
-    forwardSelection(codeCrock, nodeView.view, nodeView.getPos);
+    forwardSelection(codeCrock, nodeView.view, nodeView.getPos, nodeView.node);
   });
 
   return { codeCrock, editable };
@@ -127,4 +164,13 @@ export function addResultsElement(nodeView: CodeNodeView) {
   const element = document.createElement('div');
   nodeView.dom.appendChild(element);
   return element;
+}
+
+// Length in UTF-16 code units of the code point ending at index `end - 1`.
+export function precedingCodePointLength(value: string, end: number): number {
+  const low = value.charCodeAt(end - 1);
+  const high = value.charCodeAt(end - 2);
+  return low >= 0xDC00 && low <= 0xDFFF && high >= 0xD800 && high <= 0xDBFF
+    ? 2
+    : 1;
 }
