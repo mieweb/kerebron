@@ -5,6 +5,7 @@
   "exports": {
     ".": "./src/mod.ts",
     "./ui": "./src/ui.ts",
+    "./NodeCodeCrock": "./src/NodeCodeCrock.ts",
     "./CodeCrock.ts": "./src/CodeCrock.ts",
     "./utils.ts": "./src/utils.ts",
     "./TreeSitterHighlighter.ts": "./src/TreeSitterHighlighter.ts",
