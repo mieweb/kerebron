@@ -8,15 +8,6 @@ import {
 
 import { history, redo, undo } from './history.ts';
 
-declare module '@kerebron/editor/commands' {
-  interface Commands<ReturnType = any> {
-    /** Undo the last change group. */
-    undo: () => ReturnType;
-    /** Redo the last undone change group. */
-    redo: () => ReturnType;
-  }
-}
-
 export class ExtensionHistory extends Extension {
   name = 'history';
 
