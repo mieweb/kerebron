@@ -37,6 +37,16 @@ import {
   undoInputRuleCommand,
 } from '../plugins/input-rules/InputRulesPlugin.ts';
 
+// For both: ExtensionHistory on ExtensionYjs
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /** Undo the last change group. */
+    undo: () => ReturnType;
+    /** Redo the last undone change group. */
+    redo: () => ReturnType;
+  }
+}
+
 declare module '@kerebron/editor/commands' {
   interface Commands<ReturnType = any> {
     /**
