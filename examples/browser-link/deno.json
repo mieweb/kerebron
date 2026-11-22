@@ -12,7 +12,7 @@
     "vue": "npm:vue@3.5.21",
     "@vue/devtools-api": "npm:@vue/devtools-api@7.7.7",
     "@vitejs/plugin-vue": "npm:@vitejs/plugin-vue@6.0.7",
-    "expr-eval": "https://esm.sh/expr-eval@2.0.2"
+    "expr-eval": "npm:expr-eval@2.0.2"
   },
   "exports": {},
   "license": "MIT"
