@@ -137,7 +137,7 @@ function findPadding(text: string): [string, number, number] {
 
 export class CodeCrock extends EventTarget {
   options: Options;
-  listeners: [string, any][] = [];
+  private controller = new AbortController();
   history: HistoryRecord[] = [];
   at = -1;
   onUpdateCbk: (code: string) => void | undefined = () => void 0;
@@ -177,6 +177,7 @@ export class CodeCrock extends EventTarget {
     document.addEventListener(
       'selectionchange',
       this.onSelectionChange,
+      { signal: this.controller.signal },
     );
 
     editor.style.outline = 'none';
@@ -230,14 +231,6 @@ export class CodeCrock extends EventTarget {
         recording = false;
       }
     }, 300);
-
-    const on = <K extends keyof HTMLElementEventMap>(
-      type: K,
-      fn: (event: HTMLElementEventMap[K]) => void,
-    ) => {
-      this.listeners.push([type, fn]);
-      this.editor.addEventListener(type, fn);
-    };
 
     const getCaretOffset = (root: HTMLElement) => {
       const sel = this.getSelection();
@@ -313,7 +306,7 @@ export class CodeCrock extends EventTarget {
       return false;
     };
 
-    on('keydown', (event) => {
+    this.editor.addEventListener('keydown', (event) => {
       if (event.defaultPrevented) return;
 
       const isSelectAll = (event.ctrlKey || event.metaKey) &&
@@ -390,38 +383,38 @@ export class CodeCrock extends EventTarget {
           recording = true;
         }
       }
-    });
+    }, { signal: this.controller.signal });
 
-    on('keyup', (event) => {
+    this.editor.addEventListener('keyup', (event) => {
       if (event.defaultPrevented) return;
       if (event.isComposing) return;
 
       if (this.prev !== this.toString()) debounceHighlight();
       debounceRecordHistory(event);
       this.onUpdateCbk(this.toString());
-    });
+    }, { signal: this.controller.signal });
 
-    on('focus', (_event) => {
+    this.editor.addEventListener('focus', (_event) => {
       this.focus = true;
-    });
+    }, { signal: this.controller.signal });
 
-    on('blur', (_event) => {
+    this.editor.addEventListener('blur', (_event) => {
       this.focus = false;
-    });
+    }, { signal: this.controller.signal });
 
-    on('paste', (event) => {
+    this.editor.addEventListener('paste', (event) => {
       this.recordHistory();
       handlePaste(event);
       this.recordHistory();
       this.onUpdateCbk(this.toString());
-    });
+    }, { signal: this.controller.signal });
 
-    on('cut', (event) => {
+    this.editor.addEventListener('cut', (event) => {
       this.recordHistory();
       handleCut(event);
       this.recordHistory();
       this.onUpdateCbk(this.toString());
-    });
+    }, { signal: this.controller.signal });
 
     const beforeCursor = () => {
       const s = this.getSelection();
@@ -862,16 +855,6 @@ export class CodeCrock extends EventTarget {
   }
 
   destroy() {
-    for (let [type, fn] of this.listeners) {
-      this.editor.removeEventListener(type, fn);
-    }
-
-    const window = this.options.window;
-    const document = window.document;
-
-    document.removeEventListener(
-      'selectionchange',
-      this.onSelectionChange,
-    );
+    this.controller.abort();
   }
 }
