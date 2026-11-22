@@ -189,7 +189,7 @@ export class ExtensionYjs extends Extension {
 
   override created(): void {
     if (this.config.addMenu) {
-      const ui: Ui = this.editor.ci.resolve('ui');
+      const ui: Ui = this.editor.di.resolve('ui');
 
       const controller = new RoomController();
 
@@ -212,7 +212,7 @@ export class ExtensionYjs extends Extension {
             controller.bindEvents(popup);
             await controller.init();
 
-            const templates: TemplatesRegistry = this.editor.ci.resolve(
+            const templates: TemplatesRegistry = this.editor.di.resolve(
               'templates',
             );
 

@@ -322,12 +322,12 @@ export class ExtensionManager {
     }
 
     for (const extension of baseExtensions) {
-      editor.ci.register(extension.name, extension);
+      editor.di.register(extension.name, extension);
     }
-    editor.ci.register('yaml', yaml);
-    editor.ci.register('frontmatter', new FrontmatterServiceImpl(yaml));
-    editor.ci.register('workspace', new WorkspaceImpl());
-    editor.ci.register('telemetry', new NoTelemetry());
+    editor.di.register('yaml', yaml);
+    editor.di.register('frontmatter', new FrontmatterServiceImpl(yaml));
+    editor.di.register('workspace', new WorkspaceImpl());
+    editor.di.register('telemetry', new NoTelemetry());
 
     this.initPlugins(editor, schema);
 

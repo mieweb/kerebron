@@ -45,7 +45,7 @@ export function initComments(editor: CoreEditor) {
     () => addComment(),
   );
 
-  const ui: Ui = editor.ci.resolve('ui');
+  const ui: Ui = editor.di.resolve('ui');
 
   const hoverSource: HoverSource = {
     match: function (trigger: HoverTrigger): HoverMatch | undefined {

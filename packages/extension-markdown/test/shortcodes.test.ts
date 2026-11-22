@@ -54,7 +54,7 @@ Deno.test('shortcodes', async () => {
 
   telemetry.map[__dirname + '/shortcodes.tree.debug.json'] = ['tree'];
 
-  editor.ci.register('telemetry', telemetry);
+  editor.di.register('telemetry', telemetry);
 
   const source = Deno.readFileSync(__dirname + '/shortcodes.md');
   await editor.loadDocument('text/x-markdown', source);

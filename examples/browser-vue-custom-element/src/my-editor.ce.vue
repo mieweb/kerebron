@@ -52,7 +52,7 @@ export default {
   },
   methods: {
     attachMenu(editor: CoreEditor) {
-      const ui: Ui = editor.ci.resolve('ui');
+      const ui: Ui = editor.di.resolve('ui');
 
       const menuFile: MenuDropdown = {
         type: 'dropdown',

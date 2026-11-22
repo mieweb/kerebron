@@ -54,7 +54,7 @@ export class ExtensionUi extends Extension {
     ) => {
       return function (state, dispatch) {
         if (dispatch && this) {
-          const ui: Ui = editor.ci.resolve('ui')!;
+          const ui: Ui = editor.di.resolve('ui')!;
           const popup = ui.createPopup(options);
           this.tr?.setMeta('popup', popup);
         }
@@ -68,7 +68,7 @@ export class ExtensionUi extends Extension {
     ) => {
       return function (state, dispatch) {
         if (dispatch && this) {
-          const ui: Ui = editor.ci.resolve('ui')!;
+          const ui: Ui = editor.di.resolve('ui')!;
           const popup = this.tr?.getMeta('popup');
           if (popup) {
             ui.setPopupContent(popup, spec);
@@ -81,7 +81,7 @@ export class ExtensionUi extends Extension {
 
     const clearPopups: CommandFactory = () => {
       return () => {
-        const ui: Ui = this.editor.ci.resolve('ui')!;
+        const ui: Ui = this.editor.di.resolve('ui')!;
         ui.clearPopups();
         return true;
       };
@@ -89,7 +89,7 @@ export class ExtensionUi extends Extension {
 
     const insertImage: CommandFactory = () => {
       const nodeType = this.editor.schema.nodes.image;
-      const ui: Ui = this.editor.ci.resolve('ui')!;
+      const ui: Ui = this.editor.di.resolve('ui')!;
       return function (
         state: EditorState,
         dispatch?: (tr: Transaction) => void,
@@ -110,7 +110,7 @@ export class ExtensionUi extends Extension {
               group: 'dialog',
             });
 
-            const templates: TemplatesRegistry = editor.ci.resolve('templates');
+            const templates: TemplatesRegistry = editor.di.resolve('templates');
             await ui.setPopupContent(
               popup,
               templates['insert-image']({ attrs }),
@@ -157,7 +157,7 @@ export class ExtensionUi extends Extension {
 
     const toggleLink: CommandFactory = () => {
       const markType = editor.schema.marks.link;
-      const ui: Ui = this.editor.ci.resolve('ui')!;
+      const ui: Ui = this.editor.di.resolve('ui')!;
 
       return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
         if (markActive(state, markType)) {
@@ -180,7 +180,7 @@ export class ExtensionUi extends Extension {
               group: 'dialog',
             });
 
-            const templates: TemplatesRegistry = editor.ci.resolve('templates');
+            const templates: TemplatesRegistry = editor.di.resolve('templates');
             await ui.setPopupContent(
               popup,
               templates['insert-link']({ attrs }),
@@ -212,7 +212,7 @@ export class ExtensionUi extends Extension {
     const startSearch: CommandFactory = () => {
       return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
         if (dispatch) {
-          const ui: Ui = this.editor.ci.resolve('ui')!;
+          const ui: Ui = this.editor.di.resolve('ui')!;
 
           (async () => {
             const popup = ui.createPopup({
@@ -228,7 +228,7 @@ export class ExtensionUi extends Extension {
             const { from, to } = state.selection;
             const text = state.doc.textBetween(from, to, '\n');
 
-            const templates: TemplatesRegistry = editor.ci.resolve('templates');
+            const templates: TemplatesRegistry = editor.di.resolve('templates');
             await ui.setPopupContent(
               popup,
               templates['dialog-search']({ text }),
@@ -245,7 +245,7 @@ export class ExtensionUi extends Extension {
     const startReplace: CommandFactory = () => {
       return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
         if (dispatch) {
-          const ui: Ui = this.editor.ci.resolve('ui')!;
+          const ui: Ui = this.editor.di.resolve('ui')!;
 
           (async () => {
             const popup = ui.createPopup({
@@ -261,7 +261,7 @@ export class ExtensionUi extends Extension {
             const { from, to } = state.selection;
             const text = state.doc.textBetween(from, to, '\n');
 
-            const templates: TemplatesRegistry = editor.ci.resolve('templates');
+            const templates: TemplatesRegistry = editor.di.resolve('templates');
             await ui.setPopupContent(
               popup,
               templates['dialog-replace']({ text, replace: '' }),
@@ -295,11 +295,11 @@ export class ExtensionUi extends Extension {
 
   override created(): void {
     const ui = new Ui(this.editor);
-    this.editor.ci.register('ui', ui);
+    this.editor.di.register('ui', ui);
     const templates: TemplatesRegistry = {
       ...popupTemplateRegistry,
       ...roomTemplateRegistry,
     };
-    this.editor.ci.register('templates', templates);
+    this.editor.di.register('templates', templates);
   }
 }

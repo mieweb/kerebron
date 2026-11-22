@@ -60,7 +60,7 @@ export class NodeViewCodeCrock implements NodeView, CodeNodeView {
 
     this.lang = this.node.attrs.lang || 'plaintext';
 
-    this.workspace = editor.ci.resolve('workspace')!;
+    this.workspace = editor.di.resolve('workspace')!;
 
     this.updating = false;
     const dom = document.createElement('div');

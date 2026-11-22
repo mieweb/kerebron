@@ -37,7 +37,7 @@ if (false) { // TODO enable
 
     telemetry.map[__dirname + '/markdown-it.tree.debug.json'] = ['tree'];
 
-    editor.ci.register('telemetry', telemetry);
+    editor.di.register('telemetry', telemetry);
 
     await editor.loadDocumentText('text/x-markdown', sampleMarkdown);
 

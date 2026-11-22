@@ -24,10 +24,10 @@ export class Ui {
     const topLayerElement = document.createElement('div');
     topLayerElement.classList.add('kb--top-layer');
     this.topLayer = new OverLayer(topLayerElement);
-    this.editor.ci.register('toplayer', this.topLayer);
+    this.editor.di.register('toplayer', this.topLayer);
 
     this.overLayer = new OverLayer();
-    this.editor.ci.register('overlayer', this.overLayer);
+    this.editor.di.register('overlayer', this.overLayer);
 
     this.editor.addEventListener('ready', () => {
       if (this.editor.wrapperElement) {

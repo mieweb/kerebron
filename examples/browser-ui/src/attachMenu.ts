@@ -3,7 +3,7 @@ import type { MenuItem } from '@kerebron/menu';
 import type { Ui } from '@kerebron/ui';
 
 export function attachMenu(editor: CoreEditor) {
-  const ui: Ui = editor.ci.resolve('ui');
+  const ui: Ui = editor.di.resolve('ui');
 
   const menuNode: MenuItem = {
     type: 'item',

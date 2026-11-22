@@ -63,7 +63,7 @@ window.addEventListener('load', async () => {
     getContentMapper: () => Promise<ContentMapper>;
   } | undefined;
 
-  const workspace: Workspace = editor.ci.resolve('workspace')!;
+  const workspace: Workspace = editor.di.resolve('workspace')!;
   workspace.addEventListener(
     'modifyFile',
     (event: CustomEvent<WorkspaceModifyParams>) => {
