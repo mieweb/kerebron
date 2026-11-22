@@ -45,6 +45,7 @@
     "npm:@xmldom/xmldom@0.9.10": "0.9.10",
     "npm:esbuild@*": "0.27.2",
     "npm:esbuild@latest": "0.27.2",
+    "npm:expr-eval@2.0.2": "2.0.2",
     "npm:hono@4.10.7": "4.10.7",
     "npm:lib0@0.2.109": "0.2.109",
     "npm:linkedom@0.18.12": "0.18.12",
@@ -2759,6 +2760,9 @@
     "exit-hook@2.2.1": {
       "integrity": "sha512-eNTPlAD67BmP31LDINZ3U7HSF8l57TxOY2PmBJ1shpCvpnxBF93mWCE8YHBnXs8qiUZJc9WDcWIeC3a2HIAMfw=="
     },
+    "expr-eval@2.0.2": {
+      "integrity": "sha512-4EMSHGOPSwAfBiibw3ndnP0AvjDWLsMvGOvWEZ2F96IGk0bIVdjQisOHxReSkE13mHcfbuCiXw+G4y0zv6N8Eg=="
+    },
     "extract-zip@2.0.1": {
       "integrity": "sha512-GDhU9ntwuKyGXdZBUgTIe+vXnWj0fppUEtMDL0+idd5Sta8TGpHssn/eusA9mrPr9qNDym6SxAYZjNvCn/9RBg==",
       "dependencies": [
@@ -4449,8 +4453,7 @@
     }
   },
   "redirects": {
-    "https://deno.land/std/fs/mod.ts": "https://deno.land/std@0.224.0/fs/mod.ts",
-    "https://esm.sh/expr-eval": "https://esm.sh/expr-eval@2.0.2"
+    "https://deno.land/std/fs/mod.ts": "https://deno.land/std@0.224.0/fs/mod.ts"
   },
   "remote": {
     "https://cdn.jsdelivr.net/npm/mermaid@11/dist/chunks/mermaid.esm.min/architecture-U656AL7Q-3ZQKGQJL.mjs": "956d2176d907e2f62c2b4ea794ff76f4be620b97f56ab21cb1b903b39b6d614b",
@@ -4594,9 +4597,7 @@
     "https://deno.land/std@0.224.0/path/windows/join_globs.ts": "a9475b44645feddceb484ee0498e456f4add112e181cb94042cdc6d47d1cdd25",
     "https://deno.land/std@0.224.0/path/windows/normalize.ts": "78126170ab917f0ca355a9af9e65ad6bfa5be14d574c5fb09bb1920f52577780",
     "https://deno.land/std@0.224.0/path/windows/normalize_glob.ts": "9c87a829b6c0f445d03b3ecadc14492e2864c3ebb966f4cea41e98326e4435c6",
-    "https://deno.land/std@0.224.0/path/windows/resolve.ts": "8dae1dadfed9d46ff46cc337c9525c0c7d959fb400a6308f34595c45bdca1972",
-    "https://esm.sh/expr-eval@2.0.2": "db4ae4c9d46740c06f053968f58c657129b5771591790e8fc62fee6fcb961d1d",
-    "https://esm.sh/expr-eval@2.0.2/denonext/expr-eval.mjs": "ffa1a98e89eeee277d5ddaf97a65f6196910f6833c46e3aff15a377287cf351a"
+    "https://deno.land/std@0.224.0/path/windows/resolve.ts": "8dae1dadfed9d46ff46cc337c9525c0c7d959fb400a6308f34595c45bdca1972"
   },
   "workspace": {
     "dependencies": [
@@ -4640,6 +4641,7 @@
         "dependencies": [
           "npm:@vitejs/plugin-vue@6.0.7",
           "npm:@vue/devtools-api@7.7.7",
+          "npm:expr-eval@2.0.2",
           "npm:vue-router@4.5.1",
           "npm:vue@3.5.21"
         ]
