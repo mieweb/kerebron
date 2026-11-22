@@ -138,7 +138,7 @@ class MenuState {
   }
 
   async showCollapsedMenu() {
-    const ui: Ui = this.editor.ci.resolve('ui');
+    const ui: Ui = this.editor.di.resolve('ui');
 
     this.trayPopup = ui.createPopup({
       anchorId: '--menuitem-more-tools',
@@ -192,7 +192,7 @@ class MenuState {
     this.collapsedMenuItems = hidden;
 
     if (this.trayPopup) {
-      const ui: Ui = this.editor.ci.resolve('ui');
+      const ui: Ui = this.editor.di.resolve('ui');
       await ui.setPopupContent(this.trayPopup, this.renderCollapsed());
     }
   }
@@ -317,7 +317,7 @@ export function createMenuPlugin(editor: CoreEditor, menuBar: MenuBar) {
                   );
                   const anchorId = button.dataset.anchor;
 
-                  const ui: Ui = editor.ci.resolve('ui');
+                  const ui: Ui = editor.di.resolve('ui');
                   const popup = ui.createPopup({
                     layer: 'toplayer',
                     anchorId,
@@ -341,8 +341,8 @@ export function createMenuPlugin(editor: CoreEditor, menuBar: MenuBar) {
           }
         };
 
-        const toplayer: OverLayer = editor.ci.resolve('toplayer')!;
-        const overlayer: OverLayer = editor.ci.resolve('overlayer')!;
+        const toplayer: OverLayer = editor.di.resolve('toplayer')!;
+        const overlayer: OverLayer = editor.di.resolve('overlayer')!;
         menuElement.addEventListener('click', clickListener);
         toplayer.overLayerContainer.addEventListener('click', clickListener);
         overlayer.overLayerContainer.addEventListener('click', clickListener);

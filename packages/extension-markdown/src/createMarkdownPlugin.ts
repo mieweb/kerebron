@@ -35,7 +35,7 @@ class MarkdownPluginState {
     private editor: CoreEditor,
     private extensionMarkdown: ExtensionMarkdown,
   ) {
-    this.workspace = editor.ci.resolve('workspace')!;
+    this.workspace = editor.di.resolve('workspace')!;
     this.performSnapshot = debounce(
       this.performSnapshot.bind(this),
       800,
@@ -170,7 +170,7 @@ export function createMarkdownPlugin(
           if (!uri) {
             return;
           }
-          const workspace: Workspace = editor.ci.resolve('workspace')!;
+          const workspace: Workspace = editor.di.resolve('workspace')!;
           workspace.closeFile(uri);
         },
       };

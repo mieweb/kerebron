@@ -44,7 +44,7 @@ editor
 const uiMarkdown = (await import('./ui.md?raw')).default;
 await editor.loadDocumentText('text/markdown', uiMarkdown);
 
-const ui: Ui = editor.ci.resolve('ui');
+const ui: Ui = editor.di.resolve('ui');
 
 const keyboardAutocomplete: AutocompleteSource = {
   triggerKeys: ['ctrl- '],
@@ -52,7 +52,7 @@ const keyboardAutocomplete: AutocompleteSource = {
   processRequest: async function (_trigger, match, createPopup) {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    const templates: TemplatesRegistry = editor.ci.resolve('templates');
+    const templates: TemplatesRegistry = editor.di.resolve('templates');
 
     const items = [
       '@ctrlspace_trigger',
@@ -91,7 +91,7 @@ const regexAutocomplete: AutocompleteSource = {
   processRequest: async function (trigger, match, createPopup) {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    const templates: TemplatesRegistry = editor.ci.resolve('templates');
+    const templates: TemplatesRegistry = editor.di.resolve('templates');
 
     if (match.text.startsWith('@')) {
       const items = [

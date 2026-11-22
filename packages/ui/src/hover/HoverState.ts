@@ -251,7 +251,7 @@ export class HoverState<I = any> {
 
       const go = async () => {
         try {
-          const ui: Ui = this.editor.ci.resolve('ui')!;
+          const ui: Ui = this.editor.di.resolve('ui')!;
           const createPopup = () => {
             const popup = ui.createPopup({
               anchorId: `--hover${id}`,

@@ -100,7 +100,7 @@ export class ExtensionMarkdown extends Extension {
       'text/x-markdown': {
         fromDoc: (source: Node) => {
           const markdownState = MarkdownPluginKey.getState(editor.state)!;
-          const telemetry: Telemetry = editor.ci.resolve('telemetry')!;
+          const telemetry: Telemetry = editor.di.resolve('telemetry')!;
           return telemetry.span('pm2md', () => {
             return pmToMdConverter(
               source,
@@ -110,7 +110,7 @@ export class ExtensionMarkdown extends Extension {
                 ...this.config,
                 urlRewriter: markdownState.urlToRewriter,
                 hooks: markdownState.hooks['pm2md.pre'],
-                frontmatter: editor.ci.resolve(
+                frontmatter: editor.di.resolve(
                   'frontmatter',
                 ) as FrontmatterService,
               },
@@ -123,12 +123,12 @@ export class ExtensionMarkdown extends Extension {
           if (!this.tokenizer && this.editor.config.assetLoad) {
             this.tokenizer = await sitterTokenizer(
               this.editor.config.assetLoad,
-              this.editor.ci.resolve('telemetry')!,
+              this.editor.di.resolve('telemetry')!,
             );
           }
 
           const markdownState = MarkdownPluginKey.getState(editor.state)!;
-          const telemetry: Telemetry = editor.ci.resolve('telemetry')!;
+          const telemetry: Telemetry = editor.di.resolve('telemetry')!;
           return telemetry.span('md2pm', async () => {
             return await mdToPmConverter(source, {
               telemetry,
@@ -137,7 +137,7 @@ export class ExtensionMarkdown extends Extension {
               ...this.config,
               urlRewriter: markdownState.urlFromRewriter,
               hooks: markdownState.hooks['md2pm.post'],
-              frontmatter: editor.ci.resolve(
+              frontmatter: editor.di.resolve(
                 'frontmatter',
               ) as FrontmatterService,
             }, schema);
@@ -150,14 +150,14 @@ export class ExtensionMarkdown extends Extension {
   }
 
   toMarkdown(source: Node): Promise<MarkdownResult> {
-    const telemetry: Telemetry = this.editor.ci.resolve('telemetry')!;
+    const telemetry: Telemetry = this.editor.di.resolve('telemetry')!;
 
     return extPmToMdConverter(
       source,
       {
         telemetry,
         sourceMap: true,
-        frontmatter: this.editor.ci.resolve(
+        frontmatter: this.editor.di.resolve(
           'frontmatter',
         ) as FrontmatterService,
       },
@@ -167,7 +167,7 @@ export class ExtensionMarkdown extends Extension {
   }
 
   async fromMarkdown(source: string): Promise<Slice> {
-    const telemetry: Telemetry = this.editor.ci.resolve('telemetry')!;
+    const telemetry: Telemetry = this.editor.di.resolve('telemetry')!;
 
     const doc = await mdToPmConverterText(
       source,

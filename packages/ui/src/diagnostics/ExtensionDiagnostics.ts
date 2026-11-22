@@ -84,7 +84,7 @@ export class ExtensionDiagnostics extends Extension {
     };
 
     const addDiagnosticHover: CommandFactory = () => {
-      const ui: Ui = this.editor.ci.resolve('ui');
+      const ui: Ui = this.editor.di.resolve('ui');
 
       return (state, dispatch) => {
         if (dispatch) {

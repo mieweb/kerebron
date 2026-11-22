@@ -138,7 +138,7 @@ class PasteState {
       let replaceDocument = false;
 
       const metaOps: any[] = [];
-      const yaml = editor.ci.resolve('yaml') as YamlService;
+      const yaml = editor.di.resolve('yaml') as YamlService;
 
       for (const rule of this.pasteRules) {
         if ('string' === typeof rule.match) {
@@ -294,7 +294,7 @@ export class ExtensionPaste extends Extension {
 
               (async () => {
                 if (!(cloned.state.selection instanceof AllSelection)) {
-                  cloned.ci.register(
+                  cloned.di.register(
                     'frontmatter',
                     new BlankFrontmatterServiceImpl(),
                   );

@@ -6,7 +6,7 @@ import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
 
 export function attachTestButtons(editor: CoreEditor) {
   const testTools = document.getElementById('test-tools');
-  const ui: Ui = editor.ci.resolve('ui');
+  const ui: Ui = editor.di.resolve('ui');
 
   {
     const button1 = toDOMElement(['button', { class: 'btn' }, 'Test Popup']);

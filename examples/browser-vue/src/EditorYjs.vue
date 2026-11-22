@@ -12,6 +12,7 @@
 <script lang="ts">
 import { CoreEditor } from '@kerebron/editor';
 import { icons } from '@kerebron/ui/icons';
+import { Ui } from '@kerebron/ui';
 import { YjsEditorKit } from '@kerebron/yjs/YjsEditorKit';
 import { AdvancedEditorKit } from '@kerebron/editor-kits/AdvancedEditorKit';
 import { createAssetLoad } from '@kerebron/wasm/web';
@@ -72,7 +73,7 @@ export default {
   },
   methods: {
     attachMenu(editor: CoreEditor) {
-      const ui: Ui = editor.ci.resolve('ui');
+      const ui: Ui = editor.di.resolve('ui');
 
       const menuFile = {
         type: 'item',

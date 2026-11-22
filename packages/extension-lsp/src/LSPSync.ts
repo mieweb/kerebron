@@ -68,7 +68,7 @@ export class LSPSync extends EventTarget {
       this.disconnected(client);
     };
 
-    const workspace: Workspace = this.editor.ci.resolve('workspace');
+    const workspace: Workspace = this.editor.di.resolve('workspace');
 
     this.listenerChange = async (event: CustomEvent<WorkspaceModifyParams>) => {
       await this.changeFile(event.detail);
@@ -160,7 +160,7 @@ export class LSPSync extends EventTarget {
   }
 
   destroy() {
-    const workspace: Workspace = this.editor.ci.resolve('workspace');
+    const workspace: Workspace = this.editor.di.resolve('workspace');
 
     workspace.removeEventListener('openFile', this.listenerChange);
     workspace.removeEventListener('modifyFile', this.listenerChange);

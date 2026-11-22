@@ -48,7 +48,7 @@ Deno.test('block-macro', async () => {
 
   telemetry.map[__dirname + '/block-macro.tree.debug.json'] = ['tree'];
 
-  editor.ci.register('telemetry', telemetry);
+  editor.di.register('telemetry', telemetry);
 
   const source = Deno.readFileSync(__dirname + '/block-macro.md');
   await editor.loadDocument('text/x-markdown', source);

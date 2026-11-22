@@ -409,7 +409,7 @@ export function wgdTest(odtName: string, opts: Opts = {}) {
       ];
       telemetry.map[__dirname + '/' + mdName + '.pm2md.debug.sourcemap.json'] =
         ['pm2md', 'sourcemap'];
-      editor.ci.register('telemetry', telemetry);
+      editor.di.register('telemetry', telemetry);
 
       await editor.loadDocument(
         'application/vnd.oasis.opendocument.text',

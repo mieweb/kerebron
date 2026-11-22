@@ -57,7 +57,7 @@ Deno.test('sourcemap test', async () => {
     'pm2md',
     'sourcemap',
   ];
-  editor.ci.register('telemetry', telemetry);
+  editor.di.register('telemetry', telemetry);
 
   const markdown = new TextDecoder().decode(
     await editor.saveDocument('text/x-markdown'),

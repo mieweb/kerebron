@@ -47,7 +47,7 @@ export class ExtensionLsp extends Extension {
 
       this.editor.run.addDiagnosticHover();
 
-      const ui: Ui = this.editor.ci.resolve('ui');
+      const ui: Ui = this.editor.di.resolve('ui');
 
       const hoverSource: HoverSource = {
         match: function (trigger: HoverTrigger): HoverMatch | undefined {
@@ -242,7 +242,7 @@ export class ExtensionLsp extends Extension {
             return;
           }
 
-          const templates: TemplatesRegistry = this.editor.ci.resolve(
+          const templates: TemplatesRegistry = this.editor.di.resolve(
             'templates',
           );
 

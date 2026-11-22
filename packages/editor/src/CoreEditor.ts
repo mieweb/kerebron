@@ -56,7 +56,7 @@ export class CoreEditor extends EventTarget {
   private linkListener?: EventListenerOrEventListenerObject;
   private linkSource?: CoreEditor;
 
-  public readonly ci = new Container();
+  public readonly di = new Container();
   version = 0;
   wrapperElement: HTMLElement | undefined;
   editorElement: HTMLElement | undefined;
@@ -130,7 +130,7 @@ export class CoreEditor extends EventTarget {
   }
 
   getExtension<T extends Extension>(name: string): T | undefined {
-    return this.ci.resolve<T>(name);
+    return this.di.resolve<T>(name);
   }
 
   public get run() {
@@ -379,7 +379,7 @@ export class CoreEditor extends EventTarget {
     const cmd = runInputRulesTexts();
     cmd(newState, dispatch);
 
-    const telemetry: Telemetry = this.ci.resolve('telemetry')!;
+    const telemetry: Telemetry = this.di.resolve('telemetry')!;
     if (telemetry.enabled) {
       telemetry.event('doc.afterInputRules', newState.doc);
     }

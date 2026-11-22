@@ -35,7 +35,7 @@ Deno.test('table-header', async () => {
 
   telemetry.map[__dirname + '/table-header.tree.debug.json'] = ['tree'];
 
-  editor.ci.register('telemetry', telemetry);
+  editor.di.register('telemetry', telemetry);
 
   const source = Deno.readFileSync(__dirname + '/table-header.md');
   await editor.loadDocument('text/x-markdown', source);
