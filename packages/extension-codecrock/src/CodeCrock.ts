@@ -142,6 +142,7 @@ export class CodeCrock extends EventTarget {
   at = -1;
   onUpdateCbk: (code: string) => void | undefined = () => void 0;
   focus = false;
+  composing = false;
   prev: string | undefined; // code content prior keydown event
   debounceHighlight: (...args: any) => void;
 
@@ -394,6 +395,14 @@ export class CodeCrock extends EventTarget {
       this.onUpdateCbk(this.toString());
     }, { signal: this.controller.signal });
 
+    this.editor.addEventListener('compositionstart', () => {
+      this.composing = true;
+    }, { signal: this.controller.signal });
+
+    this.editor.addEventListener('compositionend', () => {
+      this.composing = false;
+    }, { signal: this.controller.signal });
+
     this.editor.addEventListener('focus', (_event) => {
       this.focus = true;
     }, { signal: this.controller.signal });
@@ -644,9 +653,7 @@ export class CodeCrock extends EventTarget {
   }
 
   onUpdate(callback: (code: string) => void) {
-    this.onUpdateCbk = debounce((code: string) => {
-      callback(code);
-    }, 100);
+    this.onUpdateCbk = callback;
   }
 
   save(): Position | undefined {

@@ -48,6 +48,7 @@ export class NodeViewCodeCrock implements NodeView, CodeNodeView {
 
   lang: string;
   workspace: Workspace;
+  lastPushed?: string;
 
   constructor(
     public readonly editor: CoreEditor,
@@ -101,6 +102,7 @@ export class NodeViewCodeCrock implements NodeView, CodeNodeView {
     this.codeCrock.onUpdate(() => {
       if (!this.updating) {
         const textUpdate = this.codeCrock.toString();
+        this.lastPushed = textUpdate;
         valueChanged(textUpdate, this.node, this.getPos, this.view);
         if (document.activeElement === this.editable) {
           forwardSelection(this.codeCrock, this.view, this.getPos, this.node);
@@ -249,6 +251,13 @@ export class NodeViewCodeCrock implements NodeView, CodeNodeView {
     );
 
     if (change) {
+      if (
+        this.codeCrock.composing ||
+        updateNode.textContent === this.lastPushed
+      ) {
+        this.node = updateNode;
+        return true;
+      }
       const savedPos = this.codeCrock.save();
 
       const pos = applyChangeOverPos(savedPos, change);

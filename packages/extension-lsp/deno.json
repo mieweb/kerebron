@@ -1,6 +1,9 @@
 {
   "name": "@kerebron/lsp",
-  "tasks": {},
+  "tasks": {
+    "test:ui": "PW_DISABLE_TS_ESM=true deno run -A playwright test --ui",
+    "test:playwright": "PW_DISABLE_TS_ESM=true deno run -A playwright test"
+  },
   "imports": {},
   "exports": {
     ".": "./src/mod.ts",

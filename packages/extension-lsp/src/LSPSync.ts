@@ -42,7 +42,7 @@ export class LSPSync extends EventTarget {
       const client = event.target as LSPClientImpl;
 
       const entry = client.entries[uri];
-      if (!entry || !version) {
+      if (!entry || version === undefined) {
         return;
       }
 

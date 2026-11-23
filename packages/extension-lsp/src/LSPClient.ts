@@ -307,7 +307,7 @@ export class LSPClientImpl extends EventTarget implements LSPClient {
     if (this.initializing) {
       return;
     }
-    this.initializing = setInterval(async () => {
+    const attempt = async () => {
       const capabilities = clientCapabilities;
 
       try {
@@ -336,7 +336,10 @@ export class LSPClientImpl extends EventTarget implements LSPClient {
         }
         // deno-lint-ignore no-empty
       } catch (ignoreConnectErrors) {}
-    }, this.timeout);
+    };
+    // Retry until connected, but do not delay the first attempt.
+    attempt();
+    this.initializing = setInterval(attempt, this.timeout);
   }
 
   stopInitializing() {
