@@ -661,13 +661,60 @@ export async function extPmToMdConverter(
           const pos = item.map[0];
           const sourceCol = item.map[2];
 
-          rawTextMap.push({
-            nodeIdx: pos,
-            targetPos,
-            targetRow,
-            targetCol,
-            sourceCol,
-          });
+          const isFenced = item.type === 'code_block' &&
+            item.attrGet('lang') !== undefined;
+
+          if (isFenced) {
+            const lang = item.attrGet('lang') || '';
+            const content = item.content || '';
+            const lines = content.split('\n');
+
+            let prefix: string;
+            let rowOffset: number;
+            if (lang === 'rawmd') {
+              prefix = '';
+              rowOffset = 0;
+            } else if (lang === 'latex') {
+              prefix = '$$\n';
+              rowOffset = 1;
+            } else {
+              prefix = '```' + lang + '\n';
+              rowOffset = 1;
+            }
+
+            if (lang === 'mathml') {
+              rawTextMap.push({
+                nodeIdx: pos,
+                targetPos,
+                targetRow,
+                targetCol,
+                sourceCol,
+              });
+            } else {
+              let pmOffset = 1; // skip the node's opening boundary
+              let rawOffset = prefix.length;
+              for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                rawTextMap.push({
+                  nodeIdx: pos + pmOffset,
+                  targetPos: targetPos + rawOffset,
+                  targetRow: targetRow + rowOffset + i,
+                  targetCol: 0,
+                  sourceCol,
+                });
+                pmOffset += line.length + 1;
+                rawOffset += line.length + 1;
+              }
+            }
+          } else {
+            rawTextMap.push({
+              nodeIdx: pos,
+              targetPos,
+              targetRow,
+              targetCol,
+              sourceCol,
+            });
+          }
 
           if (debugMap[pos]) {
             return {
