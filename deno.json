@@ -59,6 +59,8 @@
     "test:spec": "deno test --no-check --allow-env --allow-read=. --allow-write=utils/markdown-dialects/specs utils/markdown-dialects/",
     "test:pre-push": "deno test --no-check --allow-env --allow-net=localhost --allow-read=. --allow-write=. packages/extension-markdown/test/ packages/extension-odt/test/ packages/extension-yjs/test/ utils/markdown-dialects/",
     "test:ui": "deno task -f @kerebron/ui test:ui",
+    "test:lsp": "deno task -f @kerebron/lsp test:ui",
+    "test:playwright": "deno task -f @kerebron/ui test:playwright && deno task -f @kerebron/lsp test:playwright",
     "postinstall": "ln -sf ../../utils/hooks/commit-msg .git/hooks/commit-msg && ln -sf ../../utils/hooks/pre-commit .git/hooks/pre-commit && ln -sf ../../utils/hooks/pre-push .git/hooks/pre-push",
     "clean": "rm -rf examples/*/.vite examples/*/dist packages/*/.vite packages/*/dist"
   },
