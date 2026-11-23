@@ -6,6 +6,7 @@ import { KerebronPopup, PopupOptions } from './popup/types.ts';
 import {
   findClosestElement,
   findFocusableChild,
+  focusChild,
   getCaretPos,
 } from './popup/utils.ts';
 import { bindLinks } from './events/linkBindings.ts';
@@ -63,7 +64,7 @@ export class Ui {
 
       if (
         this.editor.editorElement &&
-        document.activeElement === this.editor.editorElement
+        this.editor.editorElement.contains(document.activeElement)
       ) {
         if (this.topLevelPopups.size > 0) {
           if (event.key === 'ArrowUp') {
@@ -79,7 +80,7 @@ export class Ui {
                 if (child) {
                   event.preventDefault();
                   event.stopPropagation();
-                  child.focus();
+                  focusChild(child, 'last');
                   return;
                 }
               }
@@ -98,7 +99,7 @@ export class Ui {
                 if (child) {
                   event.preventDefault();
                   event.stopPropagation();
-                  child.focus();
+                  focusChild(child, 'first');
                   return;
                 }
               }
