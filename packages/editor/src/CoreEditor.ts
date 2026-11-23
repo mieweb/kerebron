@@ -223,6 +223,7 @@ export class CoreEditor extends EventTarget {
     if (this.config.element) {
       this.wrapperElement = this.config.element;
       this.wrapperElement!.classList.add('kb-component');
+      (this.wrapperElement as any).editor = this;
       this.editorElement = document.createElement('div');
       this.editorElement.classList.add('kb-editor');
       this.wrapperElement!.appendChild(this.editorElement);
@@ -453,6 +454,10 @@ export class CoreEditor extends EventTarget {
       detail: {},
     });
     this.dispatchEvent(event);
+
+    if (this.wrapperElement) {
+      delete (this.wrapperElement as any).editor;
+    }
 
     this.view.destroy();
   }

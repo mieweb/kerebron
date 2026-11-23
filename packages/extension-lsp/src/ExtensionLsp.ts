@@ -14,6 +14,7 @@ import { TemplatesRegistry } from '@kerebron/ui/templates';
 
 import { Transport } from './LSPClient.ts';
 import { LSPPlugin, LSPPluginKey } from './LSPPlugin.ts';
+import { expandLspSnippet, itemTextEditRange } from './snippets.ts';
 
 export type LSPTransportGetter = (lang: string) => Transport | undefined;
 
@@ -241,22 +242,57 @@ export class ExtensionLsp extends Extension {
           if (items.length === 0) {
             return;
           }
+          const itemDefaults = Array.isArray(response)
+            ? undefined
+            : response.itemDefaults;
 
           const templates: TemplatesRegistry = this.editor.di.resolve(
             'templates',
           );
 
           const popup = createPopup();
+          const shownItems = items.slice(0, 15);
           ui.setPopupContent(
             popup,
             templates['dropdown-list']({
-              items: items
-                .map((i, idx) => ({ label: i.label, value: String(idx) }))
-                .slice(0, 15),
+              items: shownItems
+                .map((i) => ({
+                  label: i.label,
+                  value: i.label,
+                })),
             }),
           );
-          bindSelect(popup, (value) => {
-            this.editor.chain().replaceRangeText(match.range, value).run();
+          bindSelect(popup, (_value, idx) => {
+            const item = shownItems[idx];
+            if (!item) {
+              return;
+            }
+
+            const insertText = (item.textEdit && item.textEdit.newText) ||
+              item.insertText || item.label;
+            const text = expandLspSnippet(
+              insertText,
+              item.insertTextFormat,
+            );
+
+            const editRange = itemTextEditRange(item, itemDefaults);
+            let range = match.range;
+            if (editRange) {
+              const base = trigger.pos - trigger.textOffset;
+              const from = contentMapper.fromLineChar(
+                editRange.start.line,
+                editRange.start.character,
+              );
+              const to = contentMapper.fromLineChar(
+                editRange.end.line,
+                editRange.end.character,
+              );
+              if (base >= 0 && from > -1 && to > -1) {
+                range = { from: base + from, to: base + to };
+              }
+            }
+
+            this.editor.chain().replaceRangeText(range, text).run();
           });
 
           return {

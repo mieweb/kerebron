@@ -1,8 +1,8 @@
-## Yaml lsp test
+## Javascript lsp test
 
 ```javascript
-aaa/ddd
-2
+
+console./log // Error, should be highlighted
 console.warn("TEST");
 ```
 

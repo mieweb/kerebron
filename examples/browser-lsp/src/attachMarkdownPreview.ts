@@ -13,21 +13,21 @@ export function attachMarkdownPreview(editor: CoreEditor) {
   } | undefined;
 
   const workspace: Workspace = editor.di.resolve('workspace')!;
-  workspace.addEventListener(
-    'modifyFile',
-    (event: CustomEvent<WorkspaceModifyParams>) => {
-      if (
-        event.detail.uri !== editor.config.uri ||
-        event.detail.version !== editor.version
-      ) {
-        return;
-      }
-      snapshot = {
-        version: event.detail.version,
-        getContentMapper: event.detail.getContentMapper,
-      };
-    },
-  );
+  const capture = (event: CustomEvent<WorkspaceModifyParams>) => {
+    if (
+      event.detail.uri !== editor.config.uri ||
+      event.detail.version !== editor.version
+    ) {
+      return;
+    }
+    snapshot = {
+      version: event.detail.version,
+      getContentMapper: event.detail.getContentMapper,
+    };
+  };
+
+  workspace.addEventListener('openFile', capture);
+  workspace.addEventListener('modifyFile', capture);
 
   editor.addEventListener('selection', async (event: CustomEvent) => {
     const selection = event.detail.selection;
