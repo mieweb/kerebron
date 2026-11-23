@@ -260,4 +260,13 @@ export class ExtensionMarkdown extends Extension {
       createMarkdownPlugin(this, this.editor),
     ];
   }
+
+  override created() {
+    const snapshot = () => {
+      MarkdownPluginKey.getState(this.editor.state)?.performSnapshot();
+    };
+
+    this.editor.addEventListener('doc:loaded', snapshot);
+    this.editor.addEventListener('ready', snapshot, { once: true });
+  }
 }
