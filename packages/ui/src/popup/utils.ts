@@ -58,7 +58,7 @@ export function findClosestElement(
   return closest;
 }
 
-type FocusablePosition = 'first' | 'last';
+export type FocusablePosition = 'first' | 'last';
 
 export function findFocusableChild(
   element?: HTMLElement,
@@ -94,4 +94,23 @@ export function findFocusableChild(
   return position === 'first'
     ? elements[0] ?? undefined
     : elements.at(-1) ?? undefined;
+}
+
+/**
+ * Focus the popup child; a select without a preselected option starts
+ * with selectedIndex -1, so highlight its first or last item instead.
+ */
+export function focusChild(
+  element: HTMLElement,
+  position: FocusablePosition,
+) {
+  element.focus();
+  if (
+    element instanceof HTMLSelectElement &&
+    element.selectedIndex === -1 && element.options.length > 0
+  ) {
+    element.selectedIndex = position === 'first'
+      ? 0
+      : element.options.length - 1;
+  }
 }
