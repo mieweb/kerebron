@@ -4,6 +4,47 @@ import type { Command, CommandFactory } from '@kerebron/editor/commands';
 import type { TextRange } from '@kerebron/editor';
 import { EditorState } from 'prosemirror-state';
 
+declare module '@kerebron/editor/commands' {
+  interface Commands<ReturnType = any> {
+    /**
+     * Replace the given range with plain text; an empty string clears the range.
+     *
+     * @param range The document range to replace.
+     * @param text The text to insert.
+     */
+    replaceRangeText: (range: TextRange, text: string) => ReturnType;
+    /**
+     * Replace the given range with a slice.
+     *
+     * @param range The document range to replace.
+     * @param insert The slice to insert.
+     */
+    replaceRangeSlice: (range: TextRange, insert: Slice) => ReturnType;
+    /**
+     * Insert a block node before the top-most block containing `pos`.
+     *
+     * @param pos A position inside the reference block.
+     * @param insert The block node to insert.
+     */
+    insertBlockBefore: (pos: number, insert: Node) => ReturnType;
+    /**
+     * Insert a block node after the top-most block containing `pos`.
+     *
+     * @param pos A position inside the reference block.
+     * @param insert The block node to insert.
+     */
+    insertBlockAfter: (pos: number, insert: Node) => ReturnType;
+    /**
+     * Insert a block node next to the top-most block containing `pos`:
+     * before it when `pos` is at the block start, after it otherwise.
+     *
+     * @param pos A position inside the reference block.
+     * @param insert The block node to insert.
+     */
+    insertBlockSmart: (pos: number, insert: Node) => ReturnType;
+  }
+}
+
 const replaceRangeText = (range: TextRange, text: string): Command => {
   return (state, dispatch) => {
     const tr = state.tr;
