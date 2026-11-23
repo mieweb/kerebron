@@ -1,4 +1,5 @@
 import { expect, type Locator, test } from '@playwright/test';
+import { clearEditor, expectSelection, waitForDocLoad } from './editor.ts';
 
 test.describe('Formatting tests ', () => {
   test('applies bold to entered text', async ({ page }) => {
@@ -6,10 +7,7 @@ test.describe('Formatting tests ', () => {
 
     const editor = page.locator('.kb-editor');
 
-    await editor.focus();
-
-    await page.keyboard.press('ControlOrMeta+A');
-    await page.keyboard.press('ControlOrMeta+X');
+    await clearEditor(page);
 
     await page.keyboard.type('make this bold');
 
@@ -18,6 +16,8 @@ test.describe('Formatting tests ', () => {
     for (let i = 0; i < 4; i++) {
       await page.keyboard.press('Shift+ArrowRight');
     }
+
+    await expectSelection(page, 'bold');
 
     await page.getByRole('button', { name: /bold/i }).click();
 
@@ -28,6 +28,9 @@ test.describe('Formatting tests ', () => {
     await page.goto('/examples-frame/browser-ui/');
 
     const editor = page.locator('.kb-editor');
+
+    // The document loads asynchronously - wait for content before selecting
+    await waitForDocLoad(page);
 
     async function selectText(
       editor: Locator,

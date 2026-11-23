@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { waitForDocLoad } from './editor.ts';
 
 test.describe('Mouse tests', () => {
   test('should load the main page', async ({ page }) => {
@@ -7,6 +8,8 @@ test.describe('Mouse tests', () => {
     const editor = page.locator('.kb-editor');
 
     await editor.focus();
+    // The document loads asynchronously - wait before locating text in it
+    await waitForDocLoad(page);
 
     await editor.hover({
       position: { x: 50, y: 20 },

@@ -1,4 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
+import { clearEditor } from './editor.ts';
 
 function caretRowCol(page: Page): Promise<[number, number] | null> {
   return page.evaluate(() => {
@@ -19,14 +20,7 @@ test.describe('Code editing', () => {
   test('should enter code text', async ({ page }) => {
     await page.goto('/examples-frame/browser-ui/');
 
-    const editor = page.locator('.kb-editor');
-
-    await editor.focus();
-    // The document loads asynchronously - wait for content before selecting all
-    await expect(page.locator('h2', { hasText: 'Code test' })).toBeVisible();
-
-    await page.keyboard.press('ControlOrMeta+A');
-    await page.keyboard.press('Delete');
+    await clearEditor(page);
 
     await page.keyboard.type('```');
     await page.keyboard.type('console.log();');
@@ -56,14 +50,7 @@ test.describe('Code editing', () => {
   test('should prepend codeblock', async ({ page }) => {
     await page.goto('/examples-frame/browser-ui/');
 
-    const editor = page.locator('.kb-editor');
-
-    await editor.focus();
-    // The document loads asynchronously - wait for content before selecting all
-    await expect(page.locator('h2', { hasText: 'Code test' })).toBeVisible();
-
-    await page.keyboard.press('ControlOrMeta+A');
-    await page.keyboard.press('Delete');
+    await clearEditor(page);
 
     await page.keyboard.type('```');
     await page.keyboard.type('console.log();');
@@ -90,14 +77,7 @@ test.describe('Code editing', () => {
   test('should append codeblock', async ({ page }) => {
     await page.goto('/examples-frame/browser-ui/');
 
-    const editor = page.locator('.kb-editor');
-
-    await editor.focus();
-    // The document loads asynchronously - wait for content before selecting all
-    await expect(page.locator('h2', { hasText: 'Code test' })).toBeVisible();
-
-    await page.keyboard.press('ControlOrMeta+A');
-    await page.keyboard.press('Delete');
+    await clearEditor(page);
 
     await page.keyboard.type('```');
     await page.keyboard.type('console.log();');
@@ -126,14 +106,7 @@ test.describe('Code editing', () => {
   test('should append codeblock from last line of multiline code', async ({ page }) => {
     await page.goto('/examples-frame/browser-ui/');
 
-    const editor = page.locator('.kb-editor');
-
-    await editor.focus();
-    // The document loads asynchronously - wait for content before selecting all
-    await expect(page.locator('h2', { hasText: 'Code test' })).toBeVisible();
-
-    await page.keyboard.press('ControlOrMeta+A');
-    await page.keyboard.press('Delete');
+    await clearEditor(page);
 
     await page.keyboard.type('```');
     await page.keyboard.type('console.log();');
@@ -164,14 +137,7 @@ test.describe('Code editing', () => {
   test('should navigate with arrows', async ({ page }) => {
     await page.goto('/examples-frame/browser-ui/');
 
-    const editor = page.locator('.kb-editor');
-
-    await editor.focus();
-    // The document loads asynchronously - wait for content before selecting all
-    await expect(page.locator('h2', { hasText: 'Code test' })).toBeVisible();
-
-    await page.keyboard.press('ControlOrMeta+A');
-    await page.keyboard.press('Delete');
+    await clearEditor(page);
 
     await page.keyboard.type('```');
     await page.keyboard.type('console.log();');
@@ -210,14 +176,7 @@ test.describe('Code editing', () => {
   test('should handle arrow down', async ({ page }) => {
     await page.goto('/examples-frame/browser-ui/');
 
-    const editor = page.locator('.kb-editor');
-
-    await editor.focus();
-    // The document loads asynchronously - wait for content before selecting all
-    await expect(page.locator('h2', { hasText: 'Code test' })).toBeVisible();
-
-    await page.keyboard.press('ControlOrMeta+A');
-    await page.keyboard.press('Delete');
+    await clearEditor(page);
 
     await page.keyboard.press('Enter');
     await page.keyboard.type('```');
@@ -258,14 +217,7 @@ test.describe('Code editing', () => {
   test('should handle backspace at the beginning', async ({ page }) => {
     await page.goto('/examples-frame/browser-ui/');
 
-    const editor = page.locator('.kb-editor');
-
-    await editor.focus();
-    // The document loads asynchronously - wait for content before selecting all
-    await expect(page.locator('h2', { hasText: 'Code test' })).toBeVisible();
-
-    await page.keyboard.press('ControlOrMeta+A');
-    await page.keyboard.press('Delete');
+    await clearEditor(page);
 
     await page.keyboard.type('```');
     await page.keyboard.type('Test');
@@ -287,14 +239,7 @@ test.describe('Code editing', () => {
   test('should backspace last character', async ({ page }) => {
     await page.goto('/examples-frame/browser-ui/');
 
-    const editor = page.locator('.kb-editor');
-
-    await editor.focus();
-    // The document loads asynchronously - wait for content before selecting all
-    await expect(page.locator('h2', { hasText: 'Code test' })).toBeVisible();
-
-    await page.keyboard.press('ControlOrMeta+A');
-    await page.keyboard.press('Delete');
+    await clearEditor(page);
 
     await page.keyboard.type('```');
     await page.keyboard.type('Test');
@@ -337,14 +282,7 @@ test.describe('Code editing', () => {
 
     await page.goto('/examples-frame/browser-ui/');
 
-    const editor = page.locator('.kb-editor');
-
-    await editor.focus();
-    // The document loads asynchronously - wait for content before selecting all
-    await expect(page.locator('h2', { hasText: 'Code test' })).toBeVisible();
-
-    await page.keyboard.press('ControlOrMeta+A');
-    await page.keyboard.press('Delete');
+    await clearEditor(page);
 
     await page.keyboard.type('```');
 
@@ -370,14 +308,7 @@ test.describe('Code editing', () => {
   test('should convert to one codeblock', async ({ page }) => {
     await page.goto('/examples-frame/browser-ui/');
 
-    const editor = page.locator('.kb-editor');
-
-    await editor.focus();
-    // The document loads asynchronously - wait for content before selecting all
-    await expect(page.locator('h2', { hasText: 'Code test' })).toBeVisible();
-
-    await page.keyboard.press('ControlOrMeta+A');
-    await page.keyboard.press('Delete');
+    await clearEditor(page);
 
     await page.keyboard.type('Test');
     await page.keyboard.press('Enter');

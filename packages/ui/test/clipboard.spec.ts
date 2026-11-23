@@ -1,6 +1,10 @@
 import { expect, Locator, test } from '@playwright/test';
+import { clearEditor, expectSelection } from './editor.ts';
 
 test.describe('Clipboard ', () => {
+  // Playwright only supports clipboard permissions in Chromium
+  test.skip(({ browser }) => browser.browserType().name() !== 'chromium');
+
   test('cuts selected text and updates clipboard', async ({ page, context }) => {
     await context.grantPermissions([
       'clipboard-read',
@@ -11,16 +15,15 @@ test.describe('Clipboard ', () => {
 
     const editor = page.locator('.kb-editor');
 
-    await editor.focus();
-
-    await page.keyboard.press('ControlOrMeta+A');
-    await page.keyboard.press('ControlOrMeta+X');
+    await clearEditor(page);
 
     await page.keyboard.type('Hello world');
 
     // Select "world"
     await page.keyboard.press('ControlOrMeta+ArrowRight');
     await page.keyboard.press('Shift+ControlOrMeta+ArrowLeft');
+
+    await expectSelection(page, 'world');
 
     await page.keyboard.press('ControlOrMeta+X');
 
@@ -33,8 +36,8 @@ test.describe('Clipboard ', () => {
     expect(clipboard).toBe('world');
   });
 
-  test('cuts all text and updates clipboard', async ({ page, context }) => {
-    return; // TODO markdown copy implemention
+  // TODO markdown copy implemention
+  test.fixme('cuts all text and updates clipboard', async ({ page, context }) => {
     await context.grantPermissions([
       'clipboard-read',
       'clipboard-write',
