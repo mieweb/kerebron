@@ -58,4 +58,12 @@ if [ $? -ne 0 ]; then
     exit 2
 fi
 echo -e "${GREEN}All tests passed.${NC}"
+
+echo "Running Playwright tests..."
+deno task test:playwright
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Error: Playwright tests failed. Please fix failing tests before pushing.${NC}"
+    exit 2
+fi
+echo -e "${GREEN}All Playwright tests passed.${NC}"
 exit 0

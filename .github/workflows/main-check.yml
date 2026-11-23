@@ -27,6 +27,15 @@ jobs:
       - name: Build packages
         run: deno task build:all
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-1.63.0
+
+      - name: Install Playwright browsers
+        run: deno run -A npm:playwright@1.63.0 install --with-deps
+
       - name: Make pre-push hook executable
         run: chmod +x ./utils/hooks/pre-push
 
