@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { clearEditor, expectSelection } from './editor.ts';
 
 test.describe('Basic editing', () => {
   test('should load the main page', async ({ page }) => {
@@ -6,7 +7,7 @@ test.describe('Basic editing', () => {
 
     const editor = page.locator('.kb-editor');
 
-    await editor.focus();
+    await clearEditor(page);
     await page.keyboard.type('Hello wonderful world');
 
     await page.keyboard.press('Enter');
@@ -26,6 +27,8 @@ test.describe('Basic editing', () => {
       await page.keyboard.press('Shift+ArrowRight');
     }
 
+    await expectSelection(page, 'Hello ');
+
     // Cut the selected text
     await page.keyboard.press('ControlOrMeta+X');
 
@@ -38,7 +41,7 @@ test.describe('Basic editing', () => {
 
     const editor = page.locator('.kb-editor');
 
-    await editor.focus();
+    await clearEditor(page);
     await editor.pressSequentially('Hello world');
 
     // Move to the beginning of "world"
@@ -54,7 +57,7 @@ test.describe('Basic editing', () => {
 
     const editor = page.locator('.kb-editor');
 
-    await editor.focus();
+    await clearEditor(page);
     await page.keyboard.type('The quick brown fox');
 
     await page.keyboard.press('Home');
@@ -63,11 +66,7 @@ test.describe('Basic editing', () => {
       await page.keyboard.press('Shift+ArrowRight');
     }
 
-    const selectedText = await page.evaluate(
-      () => globalThis.getSelection()?.toString(),
-    );
-
-    expect(selectedText).toBe('The quick');
+    await expectSelection(page, 'The quick');
   });
 
   test('finds text then selects and gets ranges', async ({ page }) => {
