@@ -48,7 +48,6 @@ export class NodeViewCodeCrock implements NodeView, CodeNodeView {
 
   lang: string;
   workspace: Workspace;
-  lastPushed?: string;
 
   constructor(
     public readonly editor: CoreEditor,
@@ -102,7 +101,6 @@ export class NodeViewCodeCrock implements NodeView, CodeNodeView {
     this.codeCrock.onUpdate(() => {
       if (!this.updating) {
         const textUpdate = this.codeCrock.toString();
-        this.lastPushed = textUpdate;
         valueChanged(textUpdate, this.node, this.getPos, this.view);
         if (document.activeElement === this.editable) {
           forwardSelection(this.codeCrock, this.view, this.getPos, this.node);
@@ -252,8 +250,7 @@ export class NodeViewCodeCrock implements NodeView, CodeNodeView {
 
     if (change) {
       if (
-        this.codeCrock.composing ||
-        updateNode.textContent === this.lastPushed
+        this.codeCrock.composing
       ) {
         this.node = updateNode;
         return true;
@@ -266,14 +263,9 @@ export class NodeViewCodeCrock implements NodeView, CodeNodeView {
       this.codeCrock.updateCode(updateNode.textContent, true);
       this.updating = false;
 
-      // TODO fix for yjs collab
-      // change.from, change.to, change.text.length
       if (pos) {
         this.codeCrock.restore(pos);
       }
-    } else {
-      // if (JSON.stringify(oldDecors) !== JSON.stringify(decors)) {
-      // }
     }
 
     this.codeCrock.forceHighlight();
