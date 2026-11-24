@@ -1,7 +1,7 @@
 import * as Y from 'yjs';
 
 import { Fragment, Slice } from 'prosemirror-model';
-import { Transaction } from 'prosemirror-state';
+import { Selection, Transaction } from 'prosemirror-state';
 
 import { CoreEditor } from '@kerebron/editor';
 import { User } from '@kerebron/editor/user';
@@ -356,6 +356,7 @@ export class PmYjsBinding extends EventTarget {
     const newRoot = yXmlFragmentToProseMirrorRootNode(
       yXmlFragment,
       state.schema,
+      this.bindingMetadata,
     );
 
     const tr = state.tr;
@@ -365,6 +366,7 @@ export class PmYjsBinding extends EventTarget {
       state.doc.content.size,
       newRoot,
     );
+    tr.setSelection(Selection.atStart(tr.doc));
 
     this.editor.dispatchTransaction(tr);
   }

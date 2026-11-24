@@ -1,6 +1,9 @@
 {
   "name": "@kerebron/yjs",
-  "tasks": {},
+  "tasks": {
+    "test:ui": "PW_DISABLE_TS_ESM=true deno run -A playwright test --ui",
+    "test:playwright": "PW_DISABLE_TS_ESM=true deno run -A playwright test"
+  },
   "imports": {
     "hono": "npm:hono@4.10.7"
   },
