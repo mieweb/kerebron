@@ -82,7 +82,9 @@ export function expandLspSnippet(
     const digit = text[i + 1];
     if (digit >= '0' && digit <= '9') {
       // `$1` -> empty, `$0` (cursor) -> dropped
-      i++;
+      while (text[i + 1] >= '0' && text[i + 1] <= '9') {
+        i++;
+      }
       continue;
     }
     out += char;
