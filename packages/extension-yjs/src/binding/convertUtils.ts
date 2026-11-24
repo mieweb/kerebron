@@ -19,6 +19,7 @@ export const createEmptyMeta = (): BindingMetadata => ({
 export const yXmlFragmentToProseMirrorFragment = (
   yXmlFragment: Y.XmlFragment,
   schema: Schema,
+  meta: BindingMetadata = createEmptyMeta(),
 ) => {
   const elements: Y.XmlElement[] = yXmlFragment.toArray().filter((i) =>
     i instanceof Y.XmlElement
@@ -27,22 +28,23 @@ export const yXmlFragmentToProseMirrorFragment = (
     createNodeFromYElement(
       t,
       schema,
-      createEmptyMeta(),
+      meta,
     )
   ).filter((n) => n !== null);
   return Fragment.fromArray(fragmentContent);
 };
 
 /**
- * Utility function for converting an Y.Fragment to a ProseMirror node.
+ * Utility function for converting an Y.Fragment to a ProseMirror root node.
  */
 export const yXmlFragmentToProseMirrorRootNode = (
   yXmlFragment: Y.XmlFragment,
   schema: Schema,
+  meta: BindingMetadata = createEmptyMeta(),
 ) =>
   schema.topNodeType.create(
     null,
-    yXmlFragmentToProseMirrorFragment(yXmlFragment, schema),
+    yXmlFragmentToProseMirrorFragment(yXmlFragment, schema, meta),
   );
 
 /**
