@@ -268,11 +268,13 @@ export class ExtensionLsp extends Extension {
               return;
             }
 
-            const insertText = (item.textEdit && item.textEdit.newText) ||
-              item.insertText || item.label;
+            const insertText = item.textEdit?.newText ??
+              (itemDefaults?.editRange
+                ? item.textEditText ?? item.label
+                : item.insertText ?? item.label);
             const text = expandLspSnippet(
               insertText,
-              item.insertTextFormat,
+              item.insertTextFormat ?? itemDefaults?.insertTextFormat,
             );
 
             const editRange = itemTextEditRange(item, itemDefaults);
