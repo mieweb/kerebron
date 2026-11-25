@@ -14,7 +14,9 @@ export const createPairingPlugin = (types: string[]) => {
       for (const tr of transactions) {
         if (!tr.docChanged) continue;
 
-        for (const step of tr.steps) {
+        for (let idx = 0; idx < tr.steps.length; idx++) {
+          const step = tr.steps[idx];
+          const doc = tr.docs[idx];
           if (
             !(step instanceof ReplaceStep || step instanceof ReplaceAroundStep)
           ) {
@@ -30,7 +32,7 @@ export const createPairingPlugin = (types: string[]) => {
           }
 
           if (step.from != null && step.to != null && step.from !== step.to) {
-            oldState.doc.nodesBetween(step.from, step.to, (node) => {
+            doc.nodesBetween(step.from, step.to, (node) => {
               if (types.includes(node.type.name)) {
                 typesToRebuild.add(node.type.name);
               }
