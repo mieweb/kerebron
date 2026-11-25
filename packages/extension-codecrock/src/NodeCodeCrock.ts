@@ -112,6 +112,7 @@ export class NodeCodeCrock extends NodeCodeBlock {
     type: NodeType,
   ): Partial<CommandFactories> {
     return {
+      ...super.getCommandFactories(editor, type),
       'setCodeBlock': (lang?: string) => {
         return function (state, dispatch, view) {
           const { schema } = state;
@@ -205,6 +206,7 @@ export class NodeCodeCrock extends NodeCodeBlock {
 
   override getKeyboardShortcuts(): Partial<CommandShortcuts> {
     return {
+      ...super.getKeyboardShortcuts(),
       'Shift-Ctrl-"': 'setCodeBlock',
       'ArrowLeft': 'ArrowLeft',
       'ArrowRight': 'ArrowRight',

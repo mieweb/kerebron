@@ -23,6 +23,7 @@ test.describe('Code editing', () => {
     await clearEditor(page);
 
     await page.keyboard.type('```');
+    await page.keyboard.press('Enter');
     await page.keyboard.type('console.log();');
     await page.keyboard.press('Enter');
     await page.keyboard.type('console.log();');
@@ -53,6 +54,7 @@ test.describe('Code editing', () => {
     await clearEditor(page);
 
     await page.keyboard.type('```');
+    await page.keyboard.press('Enter');
     await page.keyboard.type('console.log();');
     // Shift+Enter prepends a paragraph above the code block only when the
     // caret is at the very beginning of the block
@@ -80,6 +82,7 @@ test.describe('Code editing', () => {
     await clearEditor(page);
 
     await page.keyboard.type('```');
+    await page.keyboard.press('Enter');
     await page.keyboard.type('console.log();');
     // Caret at the end of the (last) line: Shift+Enter appends a paragraph
     // below the code block
@@ -109,6 +112,7 @@ test.describe('Code editing', () => {
     await clearEditor(page);
 
     await page.keyboard.type('```');
+    await page.keyboard.press('Enter');
     await page.keyboard.type('console.log();');
     await page.keyboard.press('Enter');
     await page.keyboard.type('return 42;');
@@ -140,6 +144,7 @@ test.describe('Code editing', () => {
     await clearEditor(page);
 
     await page.keyboard.type('```');
+    await page.keyboard.press('Enter');
     await page.keyboard.type('console.log();');
     await page.keyboard.press('Enter');
     await page.keyboard.type('console.log();');
@@ -180,6 +185,7 @@ test.describe('Code editing', () => {
 
     await page.keyboard.press('Enter');
     await page.keyboard.type('```');
+    await page.keyboard.press('Enter');
     await page.keyboard.type('12345678');
 
     // Simulate real-user timing: let the debounced (100ms) CodeCrock
@@ -220,6 +226,7 @@ test.describe('Code editing', () => {
     await clearEditor(page);
 
     await page.keyboard.type('```');
+    await page.keyboard.press('Enter');
     await page.keyboard.type('Test');
     await page.keyboard.press('Enter');
     await page.keyboard.type('Second line');
@@ -242,6 +249,7 @@ test.describe('Code editing', () => {
     await clearEditor(page);
 
     await page.keyboard.type('```');
+    await page.keyboard.press('Enter');
     await page.keyboard.type('Test');
     await page.keyboard.press('Enter');
     await page.keyboard.type('Second line');
@@ -285,6 +293,7 @@ test.describe('Code editing', () => {
     await clearEditor(page);
 
     await page.keyboard.type('```');
+    await page.keyboard.press('Enter');
 
     // Fast typing races the debounced (100ms) sync of the contenteditable
     // into the ProseMirror document - forwarding the out-of-sync caret used
