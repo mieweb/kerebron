@@ -153,6 +153,8 @@ export class CodeCrock extends EventTarget {
   ) {
     super();
 
+    this.highlight = debounce(highlight, 100);
+
     this.options = {
       tab: '\t',
       indentOn: /[({\[]$/,
@@ -215,7 +217,7 @@ export class CodeCrock extends EventTarget {
       const pos = this.save();
       this.highlight(editor, pos);
       this.restore(pos);
-    }, 30);
+    }, 500);
     this.debounceHighlight = debounceHighlight;
 
     let recording = false;

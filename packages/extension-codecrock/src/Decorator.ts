@@ -45,18 +45,28 @@ export class Decorator {
         lastIndex >= d.startIndex && currentIdx <= d.endIndex
       );
 
-      for (const decor of activeDecors) {
-        html += `<span `;
-        for (const [k, v] of Object.entries(decor.attrs || {})) {
-          html += ` ${k}="${escapeHtml(v || '')}"`;
+      const lines = text.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        if (i > 0) {
+          html += '\n';
         }
-        html += '>';
-      }
+        if (!lines[i]) {
+          continue;
+        }
 
-      html += escapeHtml(text);
+        for (const decor of activeDecors) {
+          html += `<span `;
+          for (const [k, v] of Object.entries(decor.attrs || {})) {
+            html += ` ${k}="${escapeHtml(v || '')}"`;
+          }
+          html += '>';
+        }
 
-      for (const decor of activeDecors) {
-        html += '</span>';
+        html += escapeHtml(lines[i]);
+
+        for (const decor of activeDecors) {
+          html += '</span>';
+        }
       }
 
       const activeWidgetDecors = decorations.filter((d) =>
