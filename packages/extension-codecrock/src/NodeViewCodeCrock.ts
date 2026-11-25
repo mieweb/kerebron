@@ -249,9 +249,7 @@ export class NodeViewCodeCrock implements NodeView, CodeNodeView {
     );
 
     if (change) {
-      if (
-        this.codeCrock.composing
-      ) {
+      if (this.codeCrock.composing) {
         this.node = updateNode;
         return true;
       }

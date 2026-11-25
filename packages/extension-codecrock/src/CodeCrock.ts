@@ -397,6 +397,13 @@ export class CodeCrock extends EventTarget {
       this.onUpdateCbk(this.toString());
     }, { signal: this.controller.signal });
 
+    this.editor.addEventListener('input', (event) => {
+      if ((event as InputEvent).isComposing) return;
+
+      if (this.prev !== this.toString()) debounceHighlight();
+      this.onUpdateCbk(this.toString());
+    }, { signal: this.controller.signal });
+
     this.editor.addEventListener('compositionstart', () => {
       this.composing = true;
     }, { signal: this.controller.signal });

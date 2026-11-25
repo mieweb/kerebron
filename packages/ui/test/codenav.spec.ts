@@ -138,7 +138,12 @@ test.describe('Code editing', () => {
     expect(codeText).toBe('console.log();\nreturn 42;');
   });
 
-  test('should navigate with arrows', async ({ page }) => {
+  test('should navigate with arrows', async ({ page, browserName }) => {
+    test.skip(
+      browserName === 'webkit',
+      'Known WebKit issue https://bugs.webkit.org/show_bug.cgi?id=15256',
+    );
+
     await page.goto('/examples-frame/browser-ui/');
 
     await clearEditor(page);
