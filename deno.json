@@ -74,9 +74,9 @@
     "asserts": "https://deno.land/std@0.178.0/testing/asserts.ts",
 
     "prosemirror-state": "npm:prosemirror-state@1.4.4",
-    "prosemirror-view": "npm:prosemirror-view@1.42.3",
-    "prosemirror-model": "npm:prosemirror-model@1.25.11",
-    "prosemirror-transform": "npm:prosemirror-transform@1.10.4",
+    "prosemirror-view": "npm:prosemirror-view@1.44.0",
+    "prosemirror-model": "npm:prosemirror-model@1.25.13",
+    "prosemirror-transform": "npm:prosemirror-transform@1.12.7",
     "prosemirror-dev-toolkit": "npm:prosemirror-dev-toolkit@1.1.8",
 
     "mathml2latex": "npm:mathml2latex@1.1.3",
