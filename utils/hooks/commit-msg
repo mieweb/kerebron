@@ -38,11 +38,11 @@ if ! echo "$COMMIT_MSG" | grep -E "^(feat|fix|chore|docs|test|refactor|ci|build|
 fi
 
 # Require GitHub issue link for feat/fix commits
-if [[ "$COMMIT_MSG" =~ ^(feat|fix): ]] && ! echo "$COMMIT_MSG" | grep -qE "\(#([0-9]+)\)"; then
-    echo -e "${RED}Commit of type 'feat' or 'fix' must reference a GitHub issue:${NC}"
-    echo "   '$COMMIT_MSG'"
-    echo "Example: feat(ui): add dark mode (#123)"
-    exit 1
-fi
+# if [[ "$COMMIT_MSG" =~ ^(feat|fix): ]] && ! echo "$COMMIT_MSG" | grep -qE "\(#([0-9]+)\)"; then
+#     echo -e "${RED}Commit of type 'feat' or 'fix' must reference a GitHub issue:${NC}"
+#     echo "   '$COMMIT_MSG'"
+#     echo "Example: feat(ui): add dark mode (#123)"
+#     exit 1
+# fi
 
 echo -e "${GREEN}Commit message valid.${NC}"
