@@ -13,7 +13,7 @@ test.describe('Basic editing slow', () => {
     await editor.focus();
     await page.keyboard.press('ArrowDown');
 
-    await page.keyboard.type('console.log(1);', { delay: 150 });
+    await page.keyboard.type('console.log(1);', { delay: 500 });
 
     await expect(editor).toContainText('console.log(1);');
   });
