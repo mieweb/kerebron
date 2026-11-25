@@ -8,16 +8,34 @@ export function getLangsList(): string[] {
     .filter((item) => 'string' === typeof item);
 }
 
+/** Maps language aliases and file extensions to canonical language names. */
+const LANG_ALIASES: Record<string, string> = {
+  'js': 'javascript',
+  'mjs': 'javascript',
+  'cjs': 'javascript',
+  'ts': 'typescript',
+  'mts': 'typescript',
+  'cts': 'typescript',
+  'sh': 'bash',
+  'shell': 'bash',
+  'zsh': 'bash',
+  'yml': 'yaml',
+  'md': 'markdown',
+  'htm': 'html',
+  'py': 'python',
+  'rb': 'ruby',
+  'rs': 'rust',
+};
+
+/** Resolve a language alias or file extension to its canonical language name. */
+export function normalizeLang(lang: string): string {
+  return LANG_ALIASES[lang] ?? lang;
+}
+
 export function getLangTreeSitter(
   lang: string,
 ) {
-  let langToLoad = lang;
-  if (langToLoad === 'ts') {
-    langToLoad = 'typescript';
-  }
-  if (langToLoad === 'sh') {
-    langToLoad = 'bash';
-  }
+  const langToLoad = normalizeLang(lang);
 
   const langManifest = manifest.find((item) =>
     item.repo.endsWith('-' + langToLoad)
