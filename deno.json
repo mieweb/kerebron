@@ -62,7 +62,7 @@
     "test:ui": "deno task -f @kerebron/ui test:ui",
     "test:lsp": "deno task -f @kerebron/lsp test:ui",
     "test:yjs": "deno task -f @kerebron/yjs test:ui",
-    "test:playwright": "deno task -f @kerebron/ui test:playwright && deno task -f @kerebron/lsp test:playwright",
+    "test:playwright": "deno task -f @kerebron/ui test:playwright && deno task -f @kerebron/lsp test:playwright && deno task -f @kerebron/extension-codecrock test:playwright && deno task -f @kerebron/yjs test:playwright",
     "postinstall": "ln -sf ../../utils/hooks/commit-msg .git/hooks/commit-msg && ln -sf ../../utils/hooks/pre-commit .git/hooks/pre-commit && ln -sf ../../utils/hooks/pre-push .git/hooks/pre-push",
     "clean": "rm -rf examples/*/.vite examples/*/dist packages/*/.vite packages/*/dist"
   },
