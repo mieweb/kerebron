@@ -98,7 +98,7 @@ export class NodeViewCodeCrock implements NodeView, CodeNodeView {
       }
     });
 
-    this.codeCrock.onUpdate(() => {
+    this.codeCrock.addEventListener('update', () => {
       if (!this.updating) {
         const textUpdate = this.codeCrock.toString();
         valueChanged(textUpdate, this.node, this.getPos, this.view);

@@ -1,5 +1,6 @@
 import { debounce } from '@kerebron/editor/utilities';
 
+import { CodeCrockHistoryImpl } from './CodeCrockHistory.ts';
 import { precedingCodePointLength } from './ui.ts';
 
 const globalWindow = window;
@@ -21,9 +22,12 @@ type Options = {
   };
 };
 
-type HistoryRecord = {
-  html: string;
-  pos: Position;
+const isNavKey = (event: KeyboardEvent) => {
+  return event.key.startsWith('Arrow') ||
+    event.key === 'Home' ||
+    event.key === 'End' ||
+    event.key === 'PageUp' ||
+    event.key === 'PageDown';
 };
 
 export type Position = {
@@ -31,6 +35,12 @@ export type Position = {
   end: number;
   dir?: '->' | '<-';
 };
+
+export interface CodeCrockHistory {
+  handleKeydown(event: KeyboardEvent): void;
+  handleKeyup(event: KeyboardEvent): void;
+  record(): void;
+}
 
 export const ZWSP = '\u200B';
 
@@ -91,29 +101,6 @@ function visit(
   }
 }
 
-function isCtrl(event: KeyboardEvent) {
-  return event.metaKey || event.ctrlKey;
-}
-
-function isUndo(event: KeyboardEvent) {
-  return isCtrl(event) && !event.shiftKey && getKeyCode(event) === 'Z';
-}
-
-function isRedo(event: KeyboardEvent) {
-  return isCtrl(event) && event.shiftKey && getKeyCode(event) === 'Z';
-}
-
-function isCopy(event: KeyboardEvent) {
-  return isCtrl(event) && getKeyCode(event) === 'C';
-}
-
-function getKeyCode(event: KeyboardEvent): string | undefined {
-  let key = event.key || event.keyCode || event.which;
-  if (!key) return undefined;
-  return (typeof key === 'string' ? key : String.fromCharCode(key))
-    .toUpperCase();
-}
-
 function insert(text: string) {
   text = text
     .replace(/&/g, '&amp;')
@@ -138,12 +125,10 @@ function findPadding(text: string): [string, number, number] {
 export class CodeCrock extends EventTarget {
   options: Options;
   private controller = new AbortController();
-  history: HistoryRecord[] = [];
-  at = -1;
-  onUpdateCbk: (code: string) => void | undefined = () => void 0;
+  private history?: CodeCrockHistory;
   focus = false;
   composing = false;
-  prev: string | undefined; // code content prior keydown event
+  private prev: string | undefined; // code content prior keydown event
   debounceHighlight: (...args: any) => void;
 
   constructor(
@@ -172,10 +157,23 @@ export class CodeCrock extends EventTarget {
       ...opt,
     };
 
+    if (this.options.history) {
+      this.history = new CodeCrockHistoryImpl(editor, {
+        isFocused: () => this.focus,
+        save: () => this.save(),
+        restore: (pos) => this.restore(pos),
+      });
+    }
+
     const window = this.options.window;
     const document = window.document;
 
-    this.onSelectionChange = debounce(this.onSelectionChange.bind(this), 500);
+    // Raw (non-debounced) selection sync, used for immediate forwarding of
+    // navigation keys below; `this.onSelectionChange` is the 500ms debounced
+    // variant used for the document `selectionchange` listener.
+    const syncSelectionNow = this.onSelectionChange.bind(this);
+
+    this.onSelectionChange = debounce(syncSelectionNow, 500);
 
     document.addEventListener(
       'selectionchange',
@@ -219,21 +217,6 @@ export class CodeCrock extends EventTarget {
       this.restore(pos);
     }, 500);
     this.debounceHighlight = debounceHighlight;
-
-    let recording = false;
-    const shouldRecord = (event: KeyboardEvent): boolean => {
-      return !isUndo(event) && !isRedo(event) &&
-        event.key !== 'Meta' &&
-        event.key !== 'Control' &&
-        event.key !== 'Alt' &&
-        !event.key.startsWith('Arrow');
-    };
-    const debounceRecordHistory = debounce((event: KeyboardEvent) => {
-      if (shouldRecord(event)) {
-        this.recordHistory();
-        recording = false;
-      }
-    }, 300);
 
     const getCaretOffset = (root: HTMLElement) => {
       const sel = this.getSelection();
@@ -379,29 +362,30 @@ export class CodeCrock extends EventTarget {
       if (this.options.addClosing) {
         handleSelfClosingCharacters(event);
       }
-      if (this.options.history) {
-        handleUndoRedo(event);
-        if (shouldRecord(event) && !recording) {
-          this.recordHistory();
-          recording = true;
-        }
-      }
+      this.history?.handleKeydown(event);
     }, { signal: this.controller.signal });
+
+    if (this.history) {
+      this.editor.addEventListener('keyup', (event) => {
+        if (event.defaultPrevented) return;
+        if (event.isComposing) return;
+
+        this.history?.handleKeyup(event);
+        this.emitUpdate(this.toString());
+      }, { signal: this.controller.signal });
+    }
 
     this.editor.addEventListener('keyup', (event) => {
       if (event.defaultPrevented) return;
       if (event.isComposing) return;
-
-      if (this.prev !== this.toString()) debounceHighlight();
-      debounceRecordHistory(event);
-      this.onUpdateCbk(this.toString());
+      if (isNavKey(event)) syncSelectionNow();
     }, { signal: this.controller.signal });
 
     this.editor.addEventListener('input', (event) => {
       if ((event as InputEvent).isComposing) return;
 
       if (this.prev !== this.toString()) debounceHighlight();
-      this.onUpdateCbk(this.toString());
+      this.emitUpdate(this.toString());
     }, { signal: this.controller.signal });
 
     this.editor.addEventListener('compositionstart', () => {
@@ -421,17 +405,17 @@ export class CodeCrock extends EventTarget {
     }, { signal: this.controller.signal });
 
     this.editor.addEventListener('paste', (event) => {
-      this.recordHistory();
+      this.history?.record();
       handlePaste(event);
-      this.recordHistory();
-      this.onUpdateCbk(this.toString());
+      this.history?.record();
+      this.emitUpdate(this.toString());
     }, { signal: this.controller.signal });
 
     this.editor.addEventListener('cut', (event) => {
-      this.recordHistory();
+      this.history?.record();
       handleCut(event);
-      this.recordHistory();
-      this.onUpdateCbk(this.toString());
+      this.history?.record();
+      this.emitUpdate(this.toString());
     }, { signal: this.controller.signal });
 
     const beforeCursor = () => {
@@ -559,29 +543,6 @@ export class CodeCrock extends EventTarget {
       }
     };
 
-    const handleUndoRedo = (event: KeyboardEvent) => {
-      if (isUndo(event)) {
-        event.preventDefault();
-        this.at--;
-        const record = this.history[this.at];
-        if (record) {
-          editor.innerHTML = record.html;
-          this.restore(record.pos);
-        }
-        if (this.at < 0) this.at = 0;
-      }
-      if (isRedo(event)) {
-        event.preventDefault();
-        this.at++;
-        const record = this.history[this.at];
-        if (record) {
-          editor.innerHTML = record.html;
-          this.restore(record.pos);
-        }
-        if (this.at >= history.length) this.at--;
-      }
-    };
-
     const handlePaste = (event: ClipboardEvent) => {
       if (event.defaultPrevented) return;
       event.preventDefault();
@@ -658,11 +619,11 @@ export class CodeCrock extends EventTarget {
   updateCode(code: string, callOnUpdate: boolean = true) {
     this.editor.textContent = code;
     this.highlight(this.editor);
-    callOnUpdate && this.onUpdateCbk(code);
+    callOnUpdate && this.emitUpdate(code);
   }
 
-  onUpdate(callback: (code: string) => void) {
-    this.onUpdateCbk = callback;
+  private emitUpdate(code: string) {
+    this.dispatchEvent(new CustomEvent('update', { detail: code }));
   }
 
   save(): Position | undefined {
@@ -827,35 +788,6 @@ export class CodeCrock extends EventTarget {
 
     s.setBaseAndExtent(startNode, startOffset, endNode, endOffset);
     this.editor.normalize(); // collapse empty text nodes
-  }
-
-  recordHistory() {
-    if (!focus) return;
-
-    const html = this.editor.innerHTML;
-    const pos = this.save();
-    if (!pos) {
-      return;
-    }
-
-    const lastRecord = this.history[this.at];
-    if (lastRecord) {
-      if (
-        lastRecord.html === html &&
-        lastRecord.pos.start === pos.start &&
-        lastRecord.pos.end === pos.end
-      ) return;
-    }
-
-    this.at++;
-    this.history[this.at] = { html, pos };
-    this.history.splice(this.at + 1);
-
-    const maxHistory = 300;
-    if (this.at > maxHistory) {
-      this.at = maxHistory;
-      this.history.splice(0, 1);
-    }
   }
 
   forceHighlight() {
