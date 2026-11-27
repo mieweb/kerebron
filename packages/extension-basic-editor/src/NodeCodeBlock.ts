@@ -72,7 +72,9 @@ export class NodeCodeBlock extends Node {
         return (state, dispatch) => {
           const { $from } = state.selection;
           const parent = $from.parent;
-          if (parent.type.spec.code) return false;
+          if (!state.selection.empty || parent.type.name !== 'paragraph') {
+            return false;
+          }
 
           const match = FENCE_RE.exec(parent.textContent);
           if (!match) return false;
