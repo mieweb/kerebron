@@ -157,7 +157,7 @@ Mouse moves over document
 
 | Type | Purpose |
 |------|---------|
-| `AutocompleteTrigger` | When match is triggered: `mode`, `pos`, `textOffset`, `key?` |
+| `AutocompleteTrigger` | When match is triggered: `mode`, `pos`, `parentOffset`, `key?` |
 | `AutocompletMatch` | Result of match: `source`, `trigger`, `range`, `text` |
 | `AutocompleteResponse` | Result of request: `range`, `meta` |
 | `AutocompleteMatcher` | `fn(trigger) → match \| undefined` |
@@ -167,7 +167,7 @@ Mouse moves over document
 
 | Type | Purpose |
 |------|---------|
-| `HoverTrigger` | When hover triggered: `mode`, `pos`, `textOffset`, `node?`, `uri?`, `dataset?` |
+| `HoverTrigger` | When hover triggered: `mode`, `pos`, `parentOffset`, `node?`, `uri?`, `dataset?` |
 | `HoverMatch` | Result of match: `source`, `range`, `trigger`, `text?`, `uri?` |
 | `HoverResponse` | Result of request: `range`, `meta?` |
 | `HoverMatcher` | `fn(trigger) → match \| undefined` |
@@ -197,7 +197,7 @@ Mouse moves over document
 
 | Concept | Autocomplete | Hover | Can Simplify? |
 |---------|-------------|-------|---------------|
-| **Trigger** | `mode`, `pos`, `textOffset`, `key?` | `mode`, `pos`, `textOffset`, `node`, `uri?`, `dataset?` | ✅ Unify `mode` values: `auto`/`manual`/`mouse`/`keyboard` |
+| **Trigger** | `mode`, `pos`, `parentOffset`, `key?` | `mode`, `pos`, `parentOffset`, `node`, `uri?`, `dataset?` | ✅ Unify `mode` values: `auto`/`manual`/`mouse`/`keyboard` |
 | **Match** | `source`, `trigger`, `range`, `text` | `source`, `trigger`, `range`, `text?`, `uri?` | ✅ Merge into single `Match` type with optional fields |
 | **Meta** | `meta` in response | `meta?` in response | ✅ Consistent `meta` field |
 
@@ -210,7 +210,7 @@ Mouse moves over document
 interface Trigger {
   mode: 'auto' | 'manual' | 'mouse' | 'keyboard';
   pos: number;
-  textOffset: number;
+  parentOffset: number;
   key?: string;              // autocomplete
   node?: PmNode;             // hover
   uri?: string;              // hover

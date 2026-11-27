@@ -14,7 +14,12 @@ import { TemplatesRegistry } from '@kerebron/ui/templates';
 
 import { Transport } from './LSPClient.ts';
 import { LSPPlugin, LSPPluginKey } from './LSPPlugin.ts';
-import { expandLspSnippet, itemTextEditRange } from './snippets.ts';
+import {
+  editRangeToTextRange,
+  expandLspSnippet,
+  itemTextEditRange,
+} from './snippets.ts';
+import { isEmbeddedBlock } from './embedded.ts';
 
 export type LSPTransportGetter = (lang: string) => Transport | undefined;
 
@@ -95,7 +100,9 @@ export class ExtensionLsp extends Extension {
 
           const contentMapper = await entry.getContentMapper();
 
-          const pos = contentMapper.toRawTextLineCol(trigger.textOffset);
+          const embedded = isEmbeddedBlock(trigger);
+          const rawPos = embedded ? trigger.parentOffset : trigger.pos;
+          const pos = contentMapper.toRawTextLineCol(rawPos);
           const lspPos: lsp.Position = {
             line: pos[0],
             character: pos[1],
@@ -131,11 +138,12 @@ export class ExtensionLsp extends Extension {
             )
             : -1;
 
+          const base = embedded ? trigger.pos - trigger.parentOffset : 0;
           if (from > -1) {
-            from += trigger.pos;
+            from += base;
           }
           if (to > -1) {
-            to += trigger.pos;
+            to += base;
           }
 
           const contents = hover.contents;
@@ -209,7 +217,9 @@ export class ExtensionLsp extends Extension {
 
           const contentMapper = await entry.getContentMapper();
 
-          const pos = contentMapper.toRawTextLineCol(trigger.textOffset);
+          const embedded = isEmbeddedBlock(trigger);
+          const rawPos = embedded ? trigger.parentOffset : trigger.pos;
+          const pos = contentMapper.toRawTextLineCol(rawPos);
           const lspPos: lsp.Position = {
             line: pos[0],
             character: pos[1],
@@ -280,18 +290,13 @@ export class ExtensionLsp extends Extension {
             const editRange = itemTextEditRange(item, itemDefaults);
             let range = match.range;
             if (editRange) {
-              const base = trigger.pos - trigger.textOffset;
-              const from = contentMapper.fromLineChar(
-                editRange.start.line,
-                editRange.start.character,
+              const base = embedded ? trigger.pos - trigger.parentOffset : 0;
+              range = editRangeToTextRange(
+                editRange,
+                base,
+                contentMapper,
+                range,
               );
-              const to = contentMapper.fromLineChar(
-                editRange.end.line,
-                editRange.end.character,
-              );
-              if (base >= 0 && from > -1 && to > -1) {
-                range = { from: base + from, to: base + to };
-              }
             }
 
             this.editor.chain().replaceRangeText(range, text).run();

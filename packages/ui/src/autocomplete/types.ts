@@ -15,7 +15,8 @@ export type AutocompleteTrigger =
 interface AutocompleteTriggerAuto {
   mode: 'auto';
   pos: number;
-  textOffset: number;
+  /** Offset of the position within its parent node (content-relative). */
+  parentOffset: number;
   node?: PmNode;
   uri?: string;
 }
@@ -23,7 +24,8 @@ interface AutocompleteTriggerAuto {
 interface AutocompleteTriggerKeyboard {
   mode: 'keyboard';
   pos: number;
-  textOffset: number;
+  /** Offset of the position within its parent node (content-relative). */
+  parentOffset: number;
   node?: PmNode;
   uri?: string;
   key: string;

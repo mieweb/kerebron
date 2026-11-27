@@ -1,5 +1,8 @@
 import * as lsp from 'vscode-languageserver-protocol';
 
+import type { TextRange } from '@kerebron/editor';
+import type { ContentMapper } from '@kerebron/workspace';
+
 /**
  * Expand a LSP completion insert text into plain text.
  *
@@ -46,6 +49,34 @@ function editRange(
   if ('insert' in edit) return edit.insert;
   if ('replace' in edit) return (edit as lsp.InsertReplaceEdit).replace;
   return undefined;
+}
+
+/**
+ * Map a server-supplied edit range to absolute document positions.
+ *
+ * `base` is the absolute document position the mapper's coordinate space is
+ * anchored at: the start of an embedded block's content (`pos - parentOffset`)
+ * for block-relative mappers, or 0 for a whole-document mapper whose
+ * `fromLineChar` already returns absolute positions.
+ */
+export function editRangeToTextRange(
+  editRange: lsp.Range,
+  base: number,
+  contentMapper: ContentMapper,
+  fallback: TextRange,
+): TextRange {
+  const from = contentMapper.fromLineChar(
+    editRange.start.line,
+    editRange.start.character,
+  );
+  const to = contentMapper.fromLineChar(
+    editRange.end.line,
+    editRange.end.character,
+  );
+  if (base >= 0 && from > -1 && to > -1) {
+    return { from: base + from, to: base + to };
+  }
+  return fallback;
 }
 
 export function expandLspSnippet(
