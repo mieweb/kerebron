@@ -17,7 +17,12 @@ function caretRowCol(page: Page): Promise<[number, number] | null> {
 }
 
 test.describe('Code editing', () => {
-  test('should enter code text', async ({ page }) => {
+  test('should enter code text', async ({ page, browserName }) => {
+    test.skip(
+      browserName === 'webkit',
+      'Known WebKit issue https://bugs.webkit.org/show_bug.cgi?id=15256',
+    );
+
     await page.goto('/examples-frame/browser-ui/');
 
     await clearEditor(page);
@@ -76,7 +81,12 @@ test.describe('Code editing', () => {
     expect(codeText).toBe('console.log();');
   });
 
-  test('should append codeblock', async ({ page }) => {
+  test('should append codeblock', async ({ page, browserName }) => {
+    test.skip(
+      browserName === 'webkit',
+      'Known WebKit issue https://bugs.webkit.org/show_bug.cgi?id=15256',
+    );
+
     await page.goto('/examples-frame/browser-ui/');
 
     await clearEditor(page);
@@ -106,7 +116,12 @@ test.describe('Code editing', () => {
     expect(codeText).toBe('console.log();');
   });
 
-  test('should append codeblock from last line of multiline code', async ({ page }) => {
+  test('should append codeblock from last line of multiline code', async ({ page, browserName }) => {
+    test.skip(
+      browserName === 'webkit',
+      'Known WebKit issue https://bugs.webkit.org/show_bug.cgi?id=15256',
+    );
+
     await page.goto('/examples-frame/browser-ui/');
 
     await clearEditor(page);
@@ -225,7 +240,12 @@ test.describe('Code editing', () => {
     expect(codeText).toBe('123456789');
   });
 
-  test('should handle backspace at the beginning', async ({ page }) => {
+  test('should handle backspace at the beginning', async ({ page, browserName }) => {
+    test.skip(
+      browserName === 'webkit',
+      'Known WebKit issue https://bugs.webkit.org/show_bug.cgi?id=15256',
+    );
+
     await page.goto('/examples-frame/browser-ui/');
 
     await clearEditor(page);
@@ -248,7 +268,12 @@ test.describe('Code editing', () => {
     await expect(paragraphs.nth(1)).toHaveText('Second line');
   });
 
-  test('should backspace last character', async ({ page }) => {
+  test('should backspace last character', async ({ page, browserName }) => {
+    test.skip(
+      browserName === 'webkit',
+      'Known WebKit issue https://bugs.webkit.org/show_bug.cgi?id=15256',
+    );
+
     await page.goto('/examples-frame/browser-ui/');
 
     await clearEditor(page);
