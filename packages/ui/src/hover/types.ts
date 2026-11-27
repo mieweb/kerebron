@@ -9,7 +9,8 @@ export interface HoverConfig {
 export interface HoverTrigger {
   mode: 'mouse' | 'keyboard';
   pos: number;
-  textOffset: number;
+  /** Offset of the position within its parent node (content-relative). */
+  parentOffset: number;
   node?: PmNode;
   uri?: string;
   dataset?: Record<string, string>;

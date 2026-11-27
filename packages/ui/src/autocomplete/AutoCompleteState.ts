@@ -232,8 +232,8 @@ export class AutoCompleteState<I = any> {
         mode: 'keyboard',
         node: $pos.parent,
         pos: $pos.pos,
-        textOffset: $pos.textOffset,
-        uri: getRuntimeUri($pos.parent),
+        parentOffset: $pos.parentOffset,
+        uri: getRuntimeUri($pos.parent) || this.editor.config.uri,
         key,
       },
     });
@@ -245,8 +245,8 @@ export class AutoCompleteState<I = any> {
         mode: 'auto',
         node: $pos.parent,
         pos: $pos.pos,
-        textOffset: $pos.textOffset,
-        uri: getRuntimeUri($pos.parent),
+        parentOffset: $pos.parentOffset,
+        uri: getRuntimeUri($pos.parent) || this.editor.config.uri,
       },
     });
   }

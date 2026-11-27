@@ -98,7 +98,7 @@ export class HoverState<I = any> {
         mode: 'keyboard',
         node: $from.parent,
         pos: $from.pos,
-        textOffset: $from.textOffset,
+        parentOffset: $from.parentOffset,
         uri,
         dataset: { ...(domElement as HTMLElement || {}).dataset } as Record<
           string,
@@ -155,7 +155,7 @@ export class HoverState<I = any> {
               mode: 'mouse',
               node: localPos.node,
               pos: localPos.pos,
-              textOffset: localPos.textOffset,
+              parentOffset: localPos.textOffset,
               uri,
               dataset: { ...(domElement as HTMLElement).dataset } as Record<
                 string,
@@ -201,7 +201,7 @@ export class HoverState<I = any> {
       trigger: {
         mode: 'mouse',
         pos: result.pos,
-        textOffset: 0, // result.textOffset,
+        parentOffset: view.state.doc.resolve(result.pos).parentOffset,
         node,
         uri: this.editor.config.uri,
         dataset: { ...(domElement as HTMLElement).dataset } as Record<
